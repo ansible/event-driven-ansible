@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://ansible.com/schema/event/range.json",
+    "type": "object",
+    "properties": {
+        "i": {
+            "type": "integer"
+        },
+        "additionalProperties": false
+    }
+}
