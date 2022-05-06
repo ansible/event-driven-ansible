@@ -2,8 +2,7 @@
 - name: Hello Events
   hosts: localhost
   sources:
-    - name: benthomasson.eda.range
-      range:
+    - benthomasson.eda.range:
         limit: 5
   rules:
     - name: Say Hello
