@@ -8,8 +8,7 @@ Arguments:
 
 Example:
 
-    - name: range
-      range:
+    - benthomasson.eda.range:
         limit: 5
 
 """
