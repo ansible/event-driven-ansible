@@ -20,3 +20,7 @@ that is available on quay.io.  Get the EE using the following command:
 Then run the hello events example using:
 
     docker run -it quay.io/bthomass/ansible-events:latest ansible-events --rules benthomasson.eda.hello_events -i inventory.yml
+
+
+You can build your own execution environment for running event
+driven automation using this repo as a starting point: http://github.com/benthomasson/ansible-events-ee
