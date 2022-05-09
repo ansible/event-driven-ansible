@@ -9,4 +9,4 @@ This collection contains the following example rulesets:
 
 And the following example event sources:
 
-* [range](benthomasosn/eda/plugins/event_source/range.py)
+* [range](benthomasson/eda/plugins/event_source/range.py)
