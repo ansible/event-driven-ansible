@@ -1,0 +1,73 @@
+---
+- hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: checkout code
+      git:
+        repo: "{{event.repo}}"
+        dest: /tmp/deploy
+        version: "{{event.ref | split('/') | last}}"
+        update: true
+        force: true
+    - name: install code
+      pip:
+        virtualenv: /tmp/deploy/.venv
+        virtualenv_python: python3.8
+        chdir: /tmp/deploy
+        editable: true
+        name: .
+    - name: install test code
+      pip:
+        virtualenv: /tmp/deploy/.venv
+        chdir: /tmp/deploy
+        requirements: requirements_dev.txt
+    - name: run tests
+      shell:
+        cmd: /tmp/deploy/.venv/bin/pytest -v
+        chdir: /tmp/deploy
+      register: test_result
+      ignore_errors: yes
+    - set_fact:
+        cacheable: true
+        output: "{{test_result.stdout}}"
+        returncode: "{{test_result.rc}}"
+    - file:
+        path: /tmp/deploy
+        state: absent
+    - name: update commit status
+      uri:
+        url: "https://api.github.com/repos/{{event.repository_name}}/statuses/{{event.sha}}"
+        user: "{{gh_user}}"
+        password: "{{gh_token}}"
+        method: POST
+        headers:
+          Accept: application/vnd.github.v3+json
+        force_basic_auth: True
+        status_code: [200, 201]
+        body: '{"state": "success", "context": "pytest"}'
+      when: event.pr is defined and test_result.rc == 0
+    - name: update commit status
+      uri:
+        url: "https://api.github.com/repos/{{event.repository_name}}/statuses/{{event.sha}}"
+        user: "{{gh_user}}"
+        password: "{{gh_token}}"
+        method: POST
+        headers:
+          Accept: application/vnd.github.v3+json
+        force_basic_auth: True
+        status_code: [200, 201]
+        body: '{"state": "failure", "context": "pytest"}'
+      when: event.pr is defined and test_result.rc != 0
+    - name: merge PR
+      uri:
+        url: "https://api.github.com/repos/{{event.repository_name}}/pulls/{{event.pr}}/merge"
+        user: "{{gh_user}}"
+        password: "{{gh_token}}"
+        method: PUT
+        headers:
+          Accept: application/vnd.github.v3+json
+        force_basic_auth: True
+        status_code: [200, 201]
+        body: '{"merge_method": "rebase"}'
+      when: event.pr is defined and test_result.rc == 0
+...
