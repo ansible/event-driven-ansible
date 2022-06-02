@@ -13,11 +13,17 @@ Example:
 
 """
 
+import time
+
 
 def main(queue, args):
 
+    delay = args.get("delay", 0)
+
     for i in range(int(args["limit"])):
         queue.put(dict(i=i))
+        if delay:
+            time.sleep(delay)
 
 
 if __name__ == "__main__":
@@ -26,4 +32,4 @@ if __name__ == "__main__":
         def put(self, event):
             print(event)
 
-    main(MockQueue(), dict(limit=5))
+    main(MockQueue(), dict(limit=5, delay=1))
