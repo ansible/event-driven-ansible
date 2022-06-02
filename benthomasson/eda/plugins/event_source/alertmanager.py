@@ -17,6 +17,14 @@ Example:
 
 from flask import Flask, request
 from gevent.pywsgi import WSGIServer
+import dpath
+
+
+def clean_host(host):
+    if ":" in host:
+        return host.split(":")[0]
+    else:
+        return host
 
 
 def main(queue, args):
@@ -38,10 +46,17 @@ def main(queue, args):
         )
         for item in payload:
             for alert in item.get("alerts"):
+                host = dpath.util.get(alert, 'labels.instance', separator=".")
+                host = clean_host(host)
+                hosts = []
+                if host is not None:
+                    hosts.append(host)
                 queue.put(
                     dict(
                         alert=alert,
-                        meta=dict(endpoint=endpoint, headers=dict(request.headers)),
+                        meta=dict(endpoint=endpoint,
+                                  headers=dict(request.headers),
+                                  hosts=hosts),
                     )
                 )
         return "Received", 202
