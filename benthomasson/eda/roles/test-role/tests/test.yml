@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  remote_user: root
+  collections:
+    - benthomasson.eda
+  roles:
+    - { role: test-role, test_name: fred }
