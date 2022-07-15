@@ -1,5 +1,5 @@
 ---
-# tasks file for test-role
+# tasks file for test_role
 - name: Call the module upcase
   benthomasson.eda.upcase:
     name: "{{ test_name }}"

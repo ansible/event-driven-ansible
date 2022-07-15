@@ -25,7 +25,7 @@ Including an example of how to use your role (for instance, with variables passe
       collections:
         - benthomasson.eda
       roles:
-         - { role: test-role, test_name: 42 }
+         - { role: test_role, test_name: 42 }
 
 License
 -------

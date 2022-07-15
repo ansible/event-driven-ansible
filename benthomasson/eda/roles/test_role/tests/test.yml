@@ -4,4 +4,4 @@
   collections:
     - benthomasson.eda
   roles:
-    - { role: test-role, test_name: fred }
+    - { role: test_role, test_name: fred }
