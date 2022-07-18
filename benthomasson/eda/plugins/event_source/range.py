@@ -13,23 +13,22 @@ Example:
 
 """
 
-import time
+import asyncio
+from typing import Any, Dict
 
 
-def main(queue, args):
-
+async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     delay = args.get("delay", 0)
 
     for i in range(int(args["limit"])):
-        queue.put(dict(i=i))
-        if delay:
-            time.sleep(delay)
+        await queue.put(dict(i=i))
+        await asyncio.sleep(delay)
 
 
 if __name__ == "__main__":
 
     class MockQueue:
-        def put(self, event):
+        async def put(self, event):
             print(event)
 
-    main(MockQueue(), dict(limit=5, delay=1))
+    asyncio.run(main(MockQueue(), dict(limit=5)))
