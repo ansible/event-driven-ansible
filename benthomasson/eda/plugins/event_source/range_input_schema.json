@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redhat.com/ansible_events/sources/range_input_schema.json",
+  "title": "Input of range Plugin",
+  "description": "A simple plugin to generate integer values given a limit",
+  "type": "object",
+  "properties": {
+      "limit": {
+           "description": "The max integer value",
+           "type": "integer"
+       }
+  },
+  "required": ["limit"]
+}
