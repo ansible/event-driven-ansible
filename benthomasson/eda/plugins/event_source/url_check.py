@@ -1,4 +1,3 @@
-
 """
 
 url_check.py
@@ -27,8 +26,8 @@ from typing import Any, Dict
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
-    urls = args.get('urls', [])
-    delay = args.get('delay', 1)
+    urls = args.get("urls", [])
+    delay = args.get("delay", 1)
 
     if not urls:
         return
@@ -44,9 +43,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         await asyncio.sleep(delay)
 
 
-
-
 if __name__ == "__main__":
+
     class MockQueue:
         async def put(self, event):
             print(event)

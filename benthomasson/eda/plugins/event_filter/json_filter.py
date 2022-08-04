@@ -3,15 +3,14 @@ json_filter.py:   An event filter that filters keys out of events.
 
 Includes override excludes.
 
-This is useful to exclude information from events that is unneeded by the rule engine.
+This is useful to exclude information from events that is unneeded by the rule
+engine.
 
 Arguments:
     * exclude_keys = a list of strings or patterns to remove
-    * include_keys = a list of strings or patterns to keep even if it matches exclude_keys patterns.
+    * include_keys = a list of strings or patterns to keep even if it matches
+    exclude_keys patterns.
 """
-
-import multiprocessing as mp
-
 
 import fnmatch
 
@@ -30,8 +29,13 @@ def matches_exclude_keys(exclude_keys, s):
     return False
 
 
-def main(event, exclude_keys=[], include_keys=[]):
-    logger = mp.get_logger()
+def main(event, exclude_keys=None, include_keys=None):
+    if exclude_keys is None:
+        exclude_keys = []
+
+    if include_keys is None:
+        include_keys = []
+
     q = []
     q.append(event)
     while q:
