@@ -33,14 +33,20 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         return
 
     while True:
-      async with aiohttp.ClientSession() as session:
-        for url in urls:
+        async with aiohttp.ClientSession() as session:
+            for url in urls:
                 async with session.get(url) as resp:
-                  await queue.put(dict(url_check=dict(url=url,
-                                              status='up' if resp.status == 200 else 'down',
-                                              status_code=resp.status)))
+                    await queue.put(
+                        dict(
+                            url_check=dict(
+                                url=url,
+                                status="up" if resp.status == 200 else "down",
+                                status_code=resp.status,
+                            )
+                        )
+                    )
 
-        await asyncio.sleep(delay)
+            await asyncio.sleep(delay)
 
 
 if __name__ == "__main__":
@@ -49,4 +55,4 @@ if __name__ == "__main__":
         async def put(self, event):
             print(event)
 
-    asyncio.run(main(MockQueue(), {'urls': ['http://redhat.com']}))
+    asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"]}))
