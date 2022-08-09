@@ -12,6 +12,7 @@ And the following example event sources:
 * [alertmanager](benthomasson/eda/plugins/event_source/alertmanager.py)
 * [azure_service_bus](benthomasson/eda/plugins/event_source/azure_service_bus.py)
 * [file](benthomasson/eda/plugins/event_source/file.py)
+* [kafka](benthomasson/eda/plugins/event_source/kafka.py)
 * [range](benthomasson/eda/plugins/event_source/range.py)
 * [url_check](benthomasson/eda/plugins/event_source/url_check.py)
 * [webhook](benthomasson/eda/plugins/event_source/webhook.py)
