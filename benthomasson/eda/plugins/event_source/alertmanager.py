@@ -1,10 +1,12 @@
 """
 alertmanager.py
 
-An ansible-events event source module for receiving events via a webhook from alertmanager.
+An ansible-events event source module for receiving events via a webhook from
+alertmanager.
 
 Arguments:
-    host: The hostname to listen to. Set to 0.0.0.0 to listen on all interfaces. Defaults to 127.0.0.1
+    host: The hostname to listen to. Set to 0.0.0.0 to listen on all
+          interfaces. Defaults to 127.0.0.1
     port: The TCP port to listen to.  Defaults to 5000
 
 Example:
@@ -15,9 +17,48 @@ Example:
 
 """
 
-from flask import Flask, request
-from gevent.pywsgi import WSGIServer
+import asyncio
+from typing import Any, Dict
+
+from aiohttp import web
 import dpath
+
+routes = web.RouteTableDef()
+
+
+@routes.get("/")
+async def status(request: web.Request):
+    return web.Response(status=200, text="up")
+
+
+@routes.post("/{endpoint}")
+async def webhook(request: web.Request):
+    payload = (await request.json(),)
+    endpoint = request.match_info["endpoint"]
+    data = {
+        "payload": payload,
+        "meta": {"endpoint": endpoint, "headers": dict(request.headers)},
+    }
+    await request.app["queue"].put(data)
+
+    for item in payload:
+        for alert in item.get("alerts"):
+            host = dpath.util.get(alert, 'labels.instance', separator=".")
+            host = clean_host(host)
+            hosts = []
+            if host is not None:
+                hosts.append(host)
+
+            await request.app["queue"].put(
+                dict(
+                    alert=alert,
+                    meta=dict(endpoint=endpoint,
+                              headers=dict(request.headers),
+                              hosts=hosts),
+                )
+            )
+
+    return web.Response(status=202, text="Received")
 
 
 def clean_host(host):
@@ -27,41 +68,29 @@ def clean_host(host):
         return host
 
 
-def main(queue, args):
+async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+    app = web.Application()
+    app["queue"] = queue
 
-    app = Flask(__name__)
+    app.add_routes(routes)
 
-    @app.route("/", methods=["GET"])
-    def status():
-        return "up", 200
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner,
+                       args.get("host") or "localhost",
+                       args.get("port") or 5000)
+    await site.start()
 
-    @app.route("/<path:endpoint>", methods=["POST", "PUT", "DELETE", "PATCH"])
-    def webhook(endpoint):
-        payload = (request.json,)
-        queue.put(
-            dict(
-                payload=payload,
-                meta=dict(endpoint=endpoint, headers=dict(request.headers)),
-            )
-        )
-        for item in payload:
-            for alert in item.get("alerts"):
-                host = dpath.util.get(alert, 'labels.instance', separator=".")
-                host = clean_host(host)
-                hosts = []
-                if host is not None:
-                    hosts.append(host)
-                queue.put(
-                    dict(
-                        alert=alert,
-                        meta=dict(endpoint=endpoint,
-                                  headers=dict(request.headers),
-                                  hosts=hosts),
-                    )
-                )
-        return "Received", 202
+    try:
+        await asyncio.Future()
+    finally:
+        await runner.cleanup()
 
-    http_server = WSGIServer(
-        (args.get("host") or "127.0.0.1", args.get("port") or 5000), app
-    )
-    http_server.serve_forever()
+
+if __name__ == "__main__":
+
+    class MockQueue:
+        async def put(self, event):
+            print(event)
+
+    asyncio.run(main(MockQueue(), {}))
