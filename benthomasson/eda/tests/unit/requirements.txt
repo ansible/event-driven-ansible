@@ -1,3 +1,5 @@
 aiohttp
 asyncio
+aiokafka
+asyncmock
 pytest-asyncio
