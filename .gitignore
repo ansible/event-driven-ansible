@@ -1,0 +1,6 @@
+benthomasson/eda/tests/output
+benthomasson/tests/output
+
+# Ide's
+.vscode
+.idea
