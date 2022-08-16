@@ -1,4 +1,3 @@
-
 """
 
 url_check.py
@@ -27,28 +26,33 @@ from typing import Any, Dict
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
-    urls = args.get('urls', [])
-    delay = args.get('delay', 1)
+    urls = args.get("urls", [])
+    delay = args.get("delay", 1)
 
     if not urls:
         return
 
     while True:
-      async with aiohttp.ClientSession() as session:
-        for url in urls:
+        async with aiohttp.ClientSession() as session:
+            for url in urls:
                 async with session.get(url) as resp:
-                  await queue.put(dict(url_check=dict(url=url,
-                                              status='up' if resp.status == 200 else 'down',
-                                              status_code=resp.status)))
+                    await queue.put(
+                        dict(
+                            url_check=dict(
+                                url=url,
+                                status="up" if resp.status == 200 else "down",
+                                status_code=resp.status,
+                            )
+                        )
+                    )
 
-        await asyncio.sleep(delay)
-
-
+            await asyncio.sleep(delay)
 
 
 if __name__ == "__main__":
+
     class MockQueue:
         async def put(self, event):
             print(event)
 
-    asyncio.run(main(MockQueue(), {'urls': ['http://redhat.com']}))
+    asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"]}))

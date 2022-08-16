@@ -1,7 +1,7 @@
 """
-dashes_to_underscores.py:   An event filter that changes dashes in keys to underscores.
-
-For instance, the key X-Y becomes the new key X_Y.
+dashes_to_underscores.py:
+    An event filter that changes dashes in keys to underscores.
+    For instance, the key X-Y becomes the new key X_Y.
 
 Arguments:
     * overwrite: Overwrite the values if there is a collision with a new key.
@@ -26,9 +26,9 @@ def main(event, overwrite=True):
                     del o[key]
                     if new_key in o and overwrite:
                         o[new_key] = value
-                        logger.info(f'Replacing {key} with {new_key}')
+                        logger.info('Replacing %s with %s', key, new_key)
                     elif new_key not in o:
                         o[new_key] = value
-                        logger.info(f'Replacing {key} with {new_key}')
+                        logger.info('Replacing %s with %s', key, new_key)
 
     return event

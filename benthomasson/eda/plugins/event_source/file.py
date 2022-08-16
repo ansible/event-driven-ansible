@@ -1,8 +1,8 @@
 """
 file.py
 
-An ansible-events event source plugin for loading facts from YAML files initially
-and when the file changes.
+An ansible-events event source plugin for loading facts from YAML files
+initially and when the file changes.
 
 Arguments:
     files - a list of YAML files
@@ -30,16 +30,20 @@ def send_facts(queue, filename):
             queue.put(data)
         else:
             if not isinstance(data, list):
-                raise Exception(f'Unsupported facts type, expects a list of dicts found {type(data)}')
-            if not all([True if isinstance(item, dict) else False for item in data]):
-                raise Exception(f'Unsupported facts type, expects a list of dicts found {data}')
+                raise Exception(
+                    f"Unsupported facts type, expects a list of dicts found {type(data)}"
+                )
+            if not all(True if isinstance(item, dict) else False for item in data):
+                raise Exception(
+                    f"Unsupported facts type, expects a list of dicts found {data}"
+                )
             for item in data:
                 queue.put(item)
 
 
 def main(queue, args):
 
-    files = [os.path.abspath(f) for f in args.get('files', [])]
+    files = [os.path.abspath(f) for f in args.get("files", [])]
 
     if not files:
         return
