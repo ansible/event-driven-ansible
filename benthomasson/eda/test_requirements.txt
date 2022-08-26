@@ -4,4 +4,5 @@ aiokafka
 asyncmock
 pytest-asyncio
 ansible
+requests
 git+https://github.com/benthomasson/ansible-events.git

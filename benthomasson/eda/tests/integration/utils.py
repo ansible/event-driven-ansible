@@ -54,3 +54,9 @@ class CLIRunner:
         return subprocess.run(
             args, cwd=self.cwd, capture_output=True, timeout=self.timeout, check=True
         )
+
+    def run_in_background(self):
+        args = self._process_args()
+        return subprocess.Popen(
+            args, cwd=self.cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
