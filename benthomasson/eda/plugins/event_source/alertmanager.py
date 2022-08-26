@@ -43,11 +43,14 @@ async def webhook(request: web.Request):
 
     for item in payload:
         for alert in item.get("alerts"):
-            host = dpath.util.get(alert, 'labels.instance', separator=".")
-            host = clean_host(host)
             hosts = []
-            if host is not None:
-                hosts.append(host)
+            try:
+                host = dpath.util.get(alert, 'labels.instance', separator=".")
+                host = clean_host(host)
+                if host is not None:
+                    hosts.append(host)
+            except KeyError:
+                pass
 
             await request.app["queue"].put(
                 dict(
