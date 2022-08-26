@@ -38,3 +38,7 @@ jobs:
       - name: Run sanity tests
         run: ansible-test sanity
         working-directory: ansible_collections/benthomasson/eda
+
+      - name: Run unit tests
+        run: ansible-test units --venv
+        working-directory: ansible_collections/benthomasson/eda
