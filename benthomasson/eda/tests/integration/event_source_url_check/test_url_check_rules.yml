@@ -1,0 +1,16 @@
+---
+- name: Ruleset for URL check source test
+  hosts: all
+  sources:
+    - name: check site
+      benthomasson.eda.url_check:
+        urls:
+         - http://localhost:8000/{{ URL_ENDPOINT }}
+  rules:
+    - name: Check if endpoint is responding
+      condition: event.url_check.status == "up"
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: SUCCESS
