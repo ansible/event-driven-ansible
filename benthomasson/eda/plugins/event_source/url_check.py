@@ -27,7 +27,7 @@ from typing import Any, Dict
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     urls = args.get("urls", [])
-    delay = args.get("delay", 1)
+    delay = int(args.get("delay", 1))
 
     if not urls:
         return
