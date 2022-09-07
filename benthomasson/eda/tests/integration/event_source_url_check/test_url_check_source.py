@@ -23,7 +23,6 @@ def init_webserver():
     port: int = 8000
     httpd = http.server.HTTPServer(("", port), handler)
     thread = threading.Thread(target=httpd.serve_forever)
-    thread.daemon = True
     thread.start()
     yield
     httpd.shutdown()
