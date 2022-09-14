@@ -1,0 +1,18 @@
+- name: test kafka source plugin
+  hosts: localhost
+  sources:
+    - benthomasson.eda.kafka:
+        topic: kafka-events
+        host: localhost
+        port: 9092
+  rules:
+    - name: match kafka event
+      condition: event.name == "some kafka event"
+      action:
+        debug:
+          msg: "SUCCESS"
+
+    - name:
+      condition: event.name == "stop"
+      action:
+        shutdown:

@@ -1,0 +1,7 @@
+pytest
+asyncio
+aiokafka
+asyncmock
+pytest-asyncio
+ansible
+git+https://github.com/benthomasson/ansible-events.git

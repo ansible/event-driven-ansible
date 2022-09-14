@@ -1,0 +1,31 @@
+name: integration tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: install test requirements
+        run: pip install -r test_requirements.txt
+        working-directory: benthomasson/eda
+
+      - name: install collection
+        run: ansible-galaxy collection install .
+        working-directory: benthomasson/eda
+
+      - name: run integration tests
+        run: pytest tests/integration
+        working-directory: benthomasson/eda
