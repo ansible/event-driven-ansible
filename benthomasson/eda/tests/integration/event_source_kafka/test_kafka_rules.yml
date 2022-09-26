@@ -5,6 +5,7 @@
         topic: kafka-events
         host: localhost
         port: 9092
+        offset: earliest
   rules:
     - name: match kafka event
       condition: event.name == "some kafka event"
