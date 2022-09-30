@@ -2,14 +2,14 @@
 - name: Local Deploy Git Hook Rules
   hosts: all
   sources:
-    - benthomasson.eda.webhook:
+    - ansible.eda.webhook:
         port: 5001
   rules:
     - name: run tests 1
       condition: event.payload.repo == "{{repo}}"
       action:
         run_playbook:
-          name: benthomasson.eda.continuous_integration
+          name: ansible.eda.continuous_integration
           var_root: payload
           post_events: true
     - name: print output

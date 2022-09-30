@@ -8,7 +8,7 @@ Arguments:
 
 Example:
 
-    - benthomasson.eda.range:
+    - ansible.eda.range:
         limit: 5
 
 """

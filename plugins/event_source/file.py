@@ -9,7 +9,7 @@ Arguments:
 
 Example:
 
-    - benthomasson.eda.file:
+    - ansible.eda.file:
       files:
         - fact.yml
 

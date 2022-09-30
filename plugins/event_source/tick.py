@@ -8,7 +8,7 @@ Arguments:
 
 Example:
 
-    - benthomasson.eda.tick:
+    - ansible.eda.tick:
         delay: 5
 
 """

@@ -10,7 +10,7 @@ Arguments:
 
 Example:
 
-    - benthomasson.eda.watchdog:
+    - ansible.eda.watchdog:
         path: "{{src_path}}"
         recursive: true
         ignore_regexes: ['.*.pytest.*', '.*__pycache__.*', '.*/.git.*']
