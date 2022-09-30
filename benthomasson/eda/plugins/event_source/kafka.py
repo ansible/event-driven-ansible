@@ -8,6 +8,8 @@ Arguments:
     port:      The port where the kafka server is listening
     topic:     The kafka topic
     group_id:  A kafka group id
+    offset:    Where to automatically reset the offset. [latest, earliest]
+               Default to latest
 
 
 
@@ -27,6 +29,10 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     host = args.get("host")
     port = args.get("port")
     group_id = args.get("group_id", None)
+    offset = args.get("offset", "latest")
+
+    if offset not in ("latest", "earliest"):
+        raise Exception(f"Invalid offset option: {offset}")
 
     kafka_consumer = AIOKafkaConsumer(
         topic,
@@ -34,7 +40,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         group_id=group_id,
         enable_auto_commit=True,
         max_poll_records=1,
-        auto_offset_reset="earliest",
+        auto_offset_reset=offset,
     )
     await kafka_consumer.start()
 
