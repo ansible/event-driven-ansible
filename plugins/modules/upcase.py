@@ -38,12 +38,12 @@ author:
 EXAMPLES = r'''
 # Pass in a message
 - name: Test with a lower string
-  benthomasson.eda.upcase:
+  ansible.eda.upcase:
     name: hello world
 
 # pass in a message and have it fail
 - name: Test with a fail message
-  benthomasson.eda.upcase:
+  ansible.eda.upcase:
     name: fail
 
 '''

@@ -3,7 +3,7 @@
   hosts: all
   sources:
     - name: listen for alerts
-      benthomasson.eda.alertmanager:
+      ansible.eda.alertmanager:
         host: 0.0.0.0
         port: 8000
   rules:
@@ -11,7 +11,7 @@
       condition: event.alert.labels.job == "fastapi" and event.alert.status == "firing"
       action:
         run_playbook:
-          name: benthomasson.eda.start_app
+          name: ansible.eda.start_app
           copy_files: true
           post_events: true
     - name: debug

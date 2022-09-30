@@ -9,7 +9,7 @@ Arguments:
 
 Example:
 
-    - benthomasson.eda.azure_service_bus:
+    - ansible.eda.azure_service_bus:
         conn_str: "{{connection_str}}"
         queue_name: "{{queue_name}}"
 

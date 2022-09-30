@@ -1,7 +1,7 @@
 - name: GitHub Deploy Git Hook Rules
   hosts: all
   sources:
-    - benthomasson.eda.azure_service_bus:
+    - ansible.eda.azure_service_bus:
         conn_str: "{{connection_str}}"
         queue_name: "{{queue_name}}"
       filters:
@@ -44,7 +44,7 @@
       condition: event.repository_name == "{{repo_name}}" and event.pr is defined
       action:
         run_playbook:
-          name: benthomasson.eda.continuous_integration
+          name: ansible.eda.continuous_integration
           post_events: true
     - name: print output
       condition: event.output is defined

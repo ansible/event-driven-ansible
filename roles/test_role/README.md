@@ -23,7 +23,7 @@ Including an example of how to use your role (for instance, with variables passe
 
     - hosts: servers
       collections:
-        - benthomasson.eda
+        - ansible.eda
       roles:
          - { role: test_role, test_name: 42 }
 

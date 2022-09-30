@@ -2,6 +2,6 @@
 - hosts: localhost
   remote_user: root
   collections:
-    - benthomasson.eda
+    - ansible.eda
   roles:
     - { role: test_role, test_name: fred }

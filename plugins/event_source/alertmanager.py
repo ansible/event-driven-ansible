@@ -11,7 +11,7 @@ Arguments:
 
 Example:
 
-    - benthomasson.eda.alertmanager:
+    - ansible.eda.alertmanager:
         host: 0.0.0.0
         port: 8000
 

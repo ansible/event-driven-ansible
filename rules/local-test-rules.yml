@@ -3,7 +3,7 @@
   hosts: all
   sources:
     - name: watchdog
-      benthomasson.eda.watchdog:
+      ansible.eda.watchdog:
         path: "{{src_path}}"
         recursive: true
         ignore_regexes: ['.*\.pytest.*', '.*__pycache__.*', '.*/.git.*']
@@ -12,13 +12,13 @@
       condition: event.type == "DirModifiedEvent"
       action:
         run_playbook:
-          name: benthomasson.eda.run_pytest
+          name: ansible.eda.run_pytest
           post_events: true
     - name: run tests 2
       condition: event.type == "FileModifiedEvent"
       action:
         run_playbook:
-          name: benthomasson.eda.run_pytest
+          name: ansible.eda.run_pytest
           post_events: true
     - name: print output
       condition: event.output is defined

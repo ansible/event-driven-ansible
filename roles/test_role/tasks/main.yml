@@ -1,6 +1,6 @@
 ---
 # tasks file for test_role
 - name: Call the module upcase
-  benthomasson.eda.upcase:
+  ansible.eda.upcase:
     name: "{{ test_name }}"
   register: upcase_test

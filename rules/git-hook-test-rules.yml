@@ -2,13 +2,13 @@
 - name: Local Test Runner Git Hook Rules
   hosts: all
   sources:
-    - benthomasson.eda.webhook:
+    - ansible.eda.webhook:
   rules:
     - name: run tests 1
       condition: event.payload.src_path == "{{src_path}}"
       action:
         run_playbook:
-          name: benthomasson.eda.run_pytest
+          name: ansible.eda.run_pytest
           var_root: payload
           post_events: true
     - name: print output

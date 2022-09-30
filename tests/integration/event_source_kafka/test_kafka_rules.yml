@@ -1,7 +1,7 @@
 - name: test kafka source plugin
   hosts: localhost
   sources:
-    - benthomasson.eda.kafka:
+    - ansible.eda.kafka:
         topic: kafka-events
         host: localhost
         port: 9092
