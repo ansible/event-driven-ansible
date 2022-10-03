@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          path: ansible_collections/
+          path: ansible_collections/ansible/eda
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -37,8 +37,8 @@ jobs:
 
       - name: Run sanity tests
         run: ansible-test sanity
-        working-directory: ansible_collections/benthomasson/eda
+        working-directory: ansible_collections/ansible/eda
 
       - name: Run unit tests
         run: ansible-test units --venv
-        working-directory: ansible_collections/benthomasson/eda
+        working-directory: ansible_collections/ansible/eda
