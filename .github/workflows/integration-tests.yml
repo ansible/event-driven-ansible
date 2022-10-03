@@ -24,12 +24,9 @@ jobs:
         run: |
           export GITHUB_TOKEN=$EDA_TOKEN
           pip install -r requirements.txt -r test_requirements.txt
-        working-directory: benthomasson/eda
 
       - name: install collection
         run: ansible-galaxy collection install .
-        working-directory: benthomasson/eda
 
       - name: run integration tests
         run: pytest tests/integration
-        working-directory: benthomasson/eda
