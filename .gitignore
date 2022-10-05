@@ -5,10 +5,12 @@
 venv
 
 # tests
-benthomasson/tests/output
-benthomasson/eda/tests/output
+tests/output
 .pytest_cache/
 
 # Ide's
 .vscode
 .idea
+
+# Builds
+*.tar.gz

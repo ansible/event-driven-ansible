@@ -1,0 +1,28 @@
+---
+- name: Local Test Runner Rules
+  hosts: all
+  sources:
+    - name: watchdog
+      ansible.eda.watchdog:
+        path: "{{src_path}}"
+        recursive: true
+        ignore_regexes: ['.*\.pytest.*', '.*__pycache__.*', '.*/.git.*']
+  rules:
+    - name: run tests 1
+      condition: event.type == "DirModifiedEvent"
+      action:
+        run_playbook:
+          name: ansible.eda.run_pytest
+          post_events: true
+    - name: run tests 2
+      condition: event.type == "FileModifiedEvent"
+      action:
+        run_playbook:
+          name: ansible.eda.run_pytest
+          post_events: true
+    - name: print output
+      condition: event.output is defined
+      action:
+        print_event:
+          var_root: output
+...

@@ -1,0 +1,19 @@
+- name: test kafka source plugin
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: kafka-events
+        host: localhost
+        port: 9092
+        offset: earliest
+  rules:
+    - name: match kafka event
+      condition: event.name == "some kafka event"
+      action:
+        debug:
+          msg: "SUCCESS"
+
+    - name:
+      condition: event.name == "stop"
+      action:
+        shutdown:

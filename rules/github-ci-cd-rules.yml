@@ -1,0 +1,59 @@
+- name: GitHub Deploy Git Hook Rules
+  hosts: all
+  sources:
+    - ansible.eda.azure_service_bus:
+        conn_str: "{{connection_str}}"
+        queue_name: "{{queue_name}}"
+      filters:
+        - benthomasosn.eda.json_filter:
+            include_keys: ['clone_url']
+            exclude_keys: ['*_url', '_links', 'base', 'sender', 'owner', 'user']
+        - benthomasosn.eda.dashes_to_underscores:
+  rules:
+    - name: Pull Request Open
+      condition: event.meta.headers.X_Github_Event == "pull_request" and event.payload.action == "opened"
+      action:
+        post_event:
+          fact:
+            repository_name: "{{event.payload.repository.full_name}}"
+            repo: "{{event.payload.pull_request.head.repo.clone_url}}"
+            ref: "{{event.payload.pull_request.head.ref}}"
+            pr: "{{event.payload.number}}"
+            sha: "{{event.payload.pull_request.head.sha}}"
+    - name: Pull Request Reopen
+      condition: event.meta.headers.X_Github_Event == "pull_request" and event.payload.action == "reopened"
+      action:
+        post_event:
+          fact:
+            repository_name: "{{event.payload.repository.full_name}}"
+            repo: "{{event.payload.pull_request.head.repo.clone_url}}"
+            ref: "{{event.payload.pull_request.head.ref}}"
+            pr: "{{event.payload.number}}"
+            sha: "{{event.payload.pull_request.head.sha}}"
+    - name: Push to PR
+      condition: event.meta.headers.X_Github_Event == "pull_request" and event.payload.action == "synchronize"
+      action:
+        post_event:
+          fact:
+            repository_name: "{{event.payload.repository.full_name}}"
+            repo: "{{event.payload.repository.clone_url}}"
+            ref: "{{event.payload.pull_request.head.ref}}"
+            pr: "{{event.payload.number}}"
+            sha: "{{event.payload.after}}"
+    - name: run tests
+      condition: event.repository_name == "{{repo_name}}" and event.pr is defined
+      action:
+        run_playbook:
+          name: ansible.eda.continuous_integration
+          post_events: true
+    - name: print output
+      condition: event.output is defined
+      action:
+        print_event:
+          var_root: output
+    - name: debug
+      enabled: False
+      condition: event.payload is defined
+      action:
+        debug:
+...
