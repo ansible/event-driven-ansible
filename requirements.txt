@@ -3,3 +3,4 @@ aiohttp
 aiokafka
 watchdog
 asyncio
+systemd-python
