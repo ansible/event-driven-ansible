@@ -43,14 +43,14 @@ And the following example event sources:
 You can run these examples using an execution environment
 that is available on quay.io.  Get the EE using the following command:
 
-    docker pull quay.io/bthomass/ansible-events
+    docker pull quay.io/bthomass/ansible-rulebook
 
 Then run the hello events example using:
 
-    docker run -it quay.io/bthomass/ansible-events:latest ansible-events --rules ansible.eda.hello_events -i inventory.yml
+    docker run -it quay.io/bthomass/ansible-rulebook:latest ansible-rulebook --rules ansible.eda.hello_events -i inventory.yml
 
 You can build your own execution environment for running event
-driven automation using this repo as a starting point: <http://github.com/benthomasson/ansible-events-ee>
+driven automation using this repo as a starting point: <http://github.com/benthomasson/ansible-rulebook-ee>
 
 # Integration tests
 

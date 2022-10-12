@@ -2,7 +2,7 @@
 
 url_check.py
 
-An ansible-events event source plugin that polls a set of URLs and sends
+An ansible-rulebook event source plugin that polls a set of URLs and sends
 events with their status.
 
 Arguments:

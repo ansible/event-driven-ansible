@@ -10,11 +10,11 @@ from . import TESTS_PATH
 @dataclass
 class CLIRunner:
     """
-    Wrapper of subprocess.run to compose cmd's for ansible-events CLI
+    Wrapper of subprocess.run to compose cmd's for ansible-rulebook CLI
     """
 
     cwd: str = TESTS_PATH
-    base_cmd: str = "ansible-events"
+    base_cmd: str = "ansible-rulebook"
     inventory: str = os.path.join(TESTS_PATH, "default_inventory.yml")
     rules: Optional[str] = None
     sources: Optional[str] = None

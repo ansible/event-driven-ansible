@@ -1,7 +1,7 @@
 """
 file.py
 
-An ansible-events event source plugin for loading facts from YAML files
+An ansible-rulebook event source plugin for loading facts from YAML files
 initially and when the file changes.
 
 Arguments:
