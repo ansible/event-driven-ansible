@@ -1,0 +1,10 @@
+# ansible-playbook  ansible-rulebook.yml -c local -i localhost, -K
+- name: install ansible-rulebook for mac
+  hosts: all
+  gather_facts: true
+  vars:
+    # TODO: remove token refs when repos are public
+    github_token: "{{ lookup('env','GITHUB_TOKEN') }}"
+  roles: 
+    - install_ansible_rulebook
+    

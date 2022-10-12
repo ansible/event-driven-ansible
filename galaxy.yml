@@ -17,11 +17,12 @@ readme: README.md
 # @nicks:irc/im.site#channel'
 authors:
 - bthomass@redhat.com
+- jpisciot@redhat.com
 
 
 ### OPTIONAL but strongly recommended
 # A short summary description of the collection
-description: Event Driven Ansible
+description: Event-Driven Ansible
 
 # Either a single license or a list of licenses for content inside of a collection. Ansible Galaxy currently only
 # accepts L(SPDX,https://spdx.org/licenses/) licenses. This key is mutually exclusive with 'license_file'
@@ -43,13 +44,13 @@ tags: []
 dependencies: {}
 
 # The URL of the originating SCM repository
-repository: http://example.com/repository
+repository: https://github.com/ansible/event-driven-ansible
 
 # The URL to any online docs
-documentation: http://docs.example.com
+documentation: https://github.com/ansible/event-driven-ansible
 
 # The URL to the homepage of the collection/project
-homepage: http://example.com
+homepage: http://ansible.com/event-driven
 
 # The URL to the collection issue tracker
 issues: http://example.com/issue/tracker
