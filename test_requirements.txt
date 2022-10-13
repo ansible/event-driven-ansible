@@ -4,4 +4,4 @@ aiokafka
 asyncmock
 pytest-asyncio
 ansible
-git+https://${GITHUB_TOKEN}@github.com/ansible/ansible-rulebook.git
+git+https://github.com/ansible/ansible-rulebook.git
