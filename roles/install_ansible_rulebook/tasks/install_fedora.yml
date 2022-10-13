@@ -11,17 +11,21 @@
       - maven
       - gcc
 
-- name: set global envvars
+- name: Get shell
+  set_fact:
+    _shell: "{{ lookup('env', 'SHELL') | basename }}"
+
+- name: Set user envvars
   become: true
+  when: _shell != ""
   ansible.builtin.lineinfile:
-    path: /etc/environment
+    path: "~/.{{ _shell }}rc"
     regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}" 
+    line: "{{ item.line }}"
+    create: true
   loop:
-    - regexp: '^JAVA_HOME'
+    - regexp: "^JAVA_HOME"
       line: JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-    - regexp: '^RULES_ENGINE'
-      line: RULES_ENGINE=drools
 
 - name: Upgrade pip
   become: true
@@ -41,9 +45,10 @@
 - name: install ansible-rulebook
   environment:
     PIP_NO_BINARY: jpy
+    JAVA_HOME: /usr/lib/jvm/java-17-openjdk
   ansible.builtin.pip:
-    name: "git+https://{{ github_token }}@github.com/ansible/ansible-rulebook.git"
-    state: forcereinstall
+    name: ansible-rulebook
+    state: latest
 
 - name: install collections
-  command: ansible-galaxy collection install community.general ansible.eda 
+  command: ansible-galaxy collection install community.general ansible.eda

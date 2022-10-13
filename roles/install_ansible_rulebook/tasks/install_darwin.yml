@@ -21,16 +21,16 @@
 - shell: /usr/libexec/java_home
   register: java_home
 
-- name: set global envvars
+- name: set user envvars
   ansible.builtin.lineinfile:
     path: "~/.zprofile"
     regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}" 
+    line: "{{ item.line }}"
     create: yes
   loop:
-    - regexp: '^JAVA_HOME'
+    - regexp: "^JAVA_HOME"
       line: "JAVA_HOME={{java_home.stdout_lines[0]}}"
-    - regexp: '^CPPFLAGS'
+    - regexp: "^CPPFLAGS"
       line: CPPFLAGS="-I{{ brew_jdk.stdout_lines[0] }}/include"
 
 - name: Upgrade pip
@@ -52,10 +52,8 @@
     PIP_NO_BINARY: jpy
     JAVA_HOME: "{{ java_home.stdout_lines[0] }}"
   ansible.builtin.pip:
-    name: "git+https://{{ github_token }}@github.com/ansible/ansible-rulebook.git"
+    name: ansible-rulebook
     state: forcereinstall
 
 - name: install collections
   command: ansible-galaxy collection install community.general ansible.eda --ignore-certs
-
-    
