@@ -20,13 +20,18 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: install test requirements
+      - name: Install package dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends libsystemd0
+
+      - name: Install test requirements
         run: |
           export GITHUB_TOKEN=$EDA_TOKEN
           pip install -r requirements.txt -r test_requirements.txt
 
-      - name: install collection
+      - name: Install collection
         run: ansible-galaxy collection install .
 
-      - name: run integration tests
+      - name: Run integration tests
         run: pytest tests/integration
