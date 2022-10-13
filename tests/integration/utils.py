@@ -33,7 +33,7 @@ class CLIRunner:
         args.extend(["-i", self.inventory])
 
         if self.rules:
-            args.extend(["--rules", self.rules])
+            args.extend(["--rulebook", self.rules])
         if self.sources:
             args.extend(["-S", self.sources])
         if self.extra_vars:
@@ -52,5 +52,9 @@ class CLIRunner:
     def run(self):
         args = self._process_args()
         return subprocess.run(
-            args, cwd=self.cwd, capture_output=True, timeout=self.timeout, check=True
+            args,
+            cwd=self.cwd,
+            capture_output=True,
+            timeout=self.timeout,
+            check=True,
         )
