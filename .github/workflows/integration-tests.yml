@@ -23,7 +23,7 @@ jobs:
       - name: Install package dependencies
         run: |
           sudo apt-get update
-          sudo apt-get --assume-yes --no-install-recommends libsystemd0
+          sudo apt-get --assume-yes --no-install-recommends install libsystemd0
 
       - name: Install test requirements
         run: |
