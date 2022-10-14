@@ -14,7 +14,7 @@ Example:
       file_watch:
         path: "{{src_path}}"
         recursive: true
-        ignore_regexes: ['.*\.pytest.*', '.*__pycache__.*', '.*/.git.*']
+        ignore_regexes: ['.*\\.pytest.*', '.*__pycache__.*', '.*/.git.*']
 """
 
 import asyncio
