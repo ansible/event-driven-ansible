@@ -10,11 +10,11 @@ from . import TESTS_PATH
 @dataclass
 class CLIRunner:
     """
-    Wrapper of subprocess.run to compose cmd's for ansible-events CLI
+    Wrapper of subprocess.run to compose cmd's for ansible-rulebook CLI
     """
 
     cwd: str = TESTS_PATH
-    base_cmd: str = "ansible-events"
+    base_cmd: str = "ansible-rulebook"
     inventory: str = os.path.join(TESTS_PATH, "default_inventory.yml")
     rules: Optional[str] = None
     sources: Optional[str] = None
@@ -33,7 +33,7 @@ class CLIRunner:
         args.extend(["-i", self.inventory])
 
         if self.rules:
-            args.extend(["--rules", self.rules])
+            args.extend(["--rulebook", self.rules])
         if self.sources:
             args.extend(["-S", self.sources])
         if self.extra_vars:
@@ -52,5 +52,9 @@ class CLIRunner:
     def run(self):
         args = self._process_args()
         return subprocess.run(
-            args, cwd=self.cwd, capture_output=True, timeout=self.timeout, check=True
+            args,
+            cwd=self.cwd,
+            capture_output=True,
+            timeout=self.timeout,
+            check=True,
         )

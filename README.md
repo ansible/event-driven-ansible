@@ -1,7 +1,6 @@
 # Collection for Event Driven Ansible
 
-This collection contains examples of how to use event driven automation
-using [ansible-rulebook](https://github.com/ansible/ansible-rulebook).
+This collection contains source plugins, playbooks and examples to use with [ansible-rulebook](https://github.com/ansible/ansible-rulebook).
 
 ## Install
 
@@ -25,9 +24,13 @@ pip install aiohttp aiokafka watchdog azure-servicebus asyncio
 
 ## Content
 
+### Rulesets
+
 This collection contains the following example rulesets:
 
-* [hello_events.yml](rules/hello_events.yml)
+* [hello_events.yml](rulebooks/hello_events.yml)
+
+### Source plugins
 
 And the following example event sources:
 
@@ -40,33 +43,68 @@ And the following example event sources:
 * [webhook](plugins/event_source/webhook.py)
 * [watchdog](plugins/event_source/watchdog.py)
 
-You can run these examples using an execution environment
-that is available on quay.io.  Get the EE using the following command:
+### Playbooks
 
-    docker pull quay.io/bthomass/ansible-events
+**Install ansible-rulebook CLI**
+
+This collection provides a playbook to install ansible-rulebook.
+Only Fedora and Mac os are supported for now.
+
+First, you must create an inventory. For example:
+
+```yaml
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+```
+
+Then, you can run the playbook:
+
+```sh
+ansible-playbook -i myinventory.yml ansible.eda.install-rulebook-cli
+```
+
+### Examples
+
+You can run these examples using an execution environment
+that is available on quay.io. Get the EE using the following command:
+
+    docker pull quay.io/bthomass/ansible-rulebook
 
 Then run the hello events example using:
 
-    docker run -it quay.io/bthomass/ansible-events:latest ansible-events --rules ansible.eda.hello_events -i inventory.yml
+    docker run -it quay.io/bthomass/ansible-rulebook:latest ansible-rulebook --rules ansible.eda.hello_events -i inventory.yml
 
 You can build your own execution environment for running event
-driven automation using this repo as a starting point: <http://github.com/benthomasson/ansible-events-ee>
+driven automation using this repo as a starting point: <http://github.com/benthomasson/ansible-rulebook-ee>
 
-# Integration tests
+# Running tests for source plugins
+
+Test requirements must be installed:
+
+```sh
+pip install -r test_requirements.txt
+```
+
+## Integration tests
 
 Currently integration tests require [docker](https://docs.docker.com/engine/install/)/[podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/)
 
-**NOTE: dependency on private repositories**
-
-You must [create a personal github token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) in order to be able to work with private repos and export it:
-
-```
-export GITHUB_TOKEN=your token
 ```
 
-
-```
-pip install -r test_requirements.txt
 ansible-galaxy collection install .
 pytest tests/integration
+```
+
+## Sanity tests
+
+```sh
+ansible-test sanity
+```
+
+## Units tests
+
+```sh
+ansible-test units
 ```

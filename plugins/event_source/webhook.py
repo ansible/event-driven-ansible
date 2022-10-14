@@ -1,7 +1,7 @@
 """
 webhook.py
 
-An ansible-events event source module for receiving events via a webhook.
+An ansible-rulebook event source module for receiving events via a webhook.
 
 Arguments:
     host: The hostname to listen to. Set to 0.0.0.0 to listen on all

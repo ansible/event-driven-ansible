@@ -1,7 +1,7 @@
 """
 watchdog.py
 
-An ansible-events event source plugin for watching file system changes.
+An ansible-rulebook event source plugin for watching file system changes.
 
 Arguments:
     path: The directory to watch for changes.

@@ -1,7 +1,7 @@
 """
 tick.py
 
-An ansible-events event source plugin for generating events with an increasing index i that never ends.
+An ansible-rulebook event source plugin for generating events with an increasing index i that never ends.
 
 Arguments:
     delay: time between ticks
