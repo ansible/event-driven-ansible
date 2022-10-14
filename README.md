@@ -59,7 +59,7 @@ all:
       ansible_connection: local
 ```
 
-Them, you can run the playbook:
+Then, you can run the playbook:
 
 ```sh
 ansible-playbook -i myinventory.yml ansible.eda.install-rulebook-cli
