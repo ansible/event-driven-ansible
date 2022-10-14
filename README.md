@@ -50,7 +50,7 @@ And the following example event sources:
 This collection provides a playbook to install ansible-rulebook.
 Only fedora and Mac os are supported for now.
 
-First, you must create a inventory. For example:
+First, you must create an inventory. For example:
 
 ```yaml
 all:
