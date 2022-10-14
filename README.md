@@ -48,7 +48,7 @@ And the following example event sources:
 **Install ansible-rulebook CLI**
 
 This collection provides a playbook to install ansible-rulebook.
-Only fedora and Mac os are supported for now.
+Only Fedora and Mac os are supported for now.
 
 First, you must create an inventory. For example:
 
