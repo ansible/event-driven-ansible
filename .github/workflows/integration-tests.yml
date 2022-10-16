@@ -9,8 +9,6 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    env:
-      EDA_TOKEN: ${{ secrets.EDA_SERVER_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,7 +25,6 @@ jobs:
 
       - name: Install test requirements
         run: |
-          export GITHUB_TOKEN=$EDA_TOKEN
           pip install wheel
           pip install -r requirements.txt -r test_requirements.txt
 

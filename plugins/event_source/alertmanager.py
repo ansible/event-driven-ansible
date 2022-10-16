@@ -1,7 +1,7 @@
 """
 alertmanager.py
 
-An ansible-events event source module for receiving events via a webhook from
+An ansible-rulebook event source module for receiving events via a webhook from
 alertmanager.
 
 Arguments:

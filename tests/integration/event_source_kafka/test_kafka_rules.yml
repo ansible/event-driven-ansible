@@ -13,7 +13,7 @@
         debug:
           msg: "SUCCESS"
 
-    - name:
+    - name: stop
       condition: event.name == "stop"
       action:
         shutdown:

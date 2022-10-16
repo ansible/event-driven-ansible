@@ -1,7 +1,7 @@
 """
 range.py
 
-An ansible-events event source plugin for generating events with an increasing index i.
+An ansible-rulebook event source plugin for generating events with an increasing index i.
 
 Arguments:
     limit: The upper limit of the range of the index.

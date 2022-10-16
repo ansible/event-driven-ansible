@@ -1,7 +1,7 @@
 """
 azure_service_bus.py
 
-An ansible-events event source module for receiving events from an Azure service bus
+An ansible-rulebook event source module for receiving events from an Azure service bus
 
 Arguments:
     conn_str: The connection string to connect to the Azure service bus

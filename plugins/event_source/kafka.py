@@ -1,7 +1,7 @@
 """
 kafka.py
 
-An ansible-events event source plugin for receiving events via a kafka topic.
+An ansible-rulebook event source plugin for receiving events via a kafka topic.
 
 Arguments:
     host:      The host where the kafka topic is hosted
