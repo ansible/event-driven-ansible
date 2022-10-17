@@ -1,110 +1,65 @@
-# Collection for Event Driven Ansible
+# Event-Driven Ansible
 
-This collection contains source plugins, playbooks and examples to use with [ansible-rulebook](https://github.com/ansible/ansible-rulebook).
+## What is it?
 
-## Install
+Event-Driven Ansible is a new way to enhance and expand automation. It improves IT speed and agility, while enabling consistency and resilience. The Event-Driven Ansible technology was developed by Red Hat and is available as a developer preview. Community input is essential. Since we are building a solution to best meet your needs, we’re providing an opportunity for you to advocate for those needs. 
 
-You can install the Ansible Events collection with the Ansible Galaxy CLI:
+Event-Driven Ansible is designed for simplicity and flexibility. By writing an Ansible Rulebook (similar to Ansible Playbooks, but more oriented to “if-then”  scenarios) and allowing Event-Driven Ansible to subscribe to an event listening source, your teams can more quickly and easily automate a variety of tasks across the organization. EDA is providing a way of codifying operational logic.
 
-```
-ansible-galaxy collection install ansible.eda
-```
+## Why Event-Driven?
 
-The python module dependencies are not installed by ansible-galaxy. They can be manually installed using pip:
+Automation allows us to give our systems and technology speed and agility while minimizing human error. However, when it comes to trouble tickets and issues, we are often left to traditional and often manual methods of troubleshooting and information gathering. We inherently slow things down and interrupt our businesses. We have to gather information, try our common troubleshooting steps, confirm with different teams.
 
-```
-pip install requirements.txt
-```
+One application of Event-Driven Ansible is to codify this operation knowledge in order to remediate technology issues near real-time, or at least trigger troubleshooting and information collection in an attempt to find the root cause of an outage while your support teams handle other issues. 
 
-or
+Event-Driven Ansible has the potential to change the way we respond to issues and illuminates many new automation possibilities. 
 
-```
-pip install aiohttp aiokafka watchdog azure-servicebus asyncio
-```
+It opens up the possibilities of faster resolution and greater automated observation of our environments.
 
-## Content
+## Getting Started
 
-### Rulesets
+## Why Rulebooks?
 
-This collection contains the following example rulesets:
+Event-Driven Ansible contains a decision framework that was built using Drools. We need a rulebook to tell the system what events to flag and how to respond to them. These rulebooks are also created in YAML and are used like traditional Ansible Playbooks, so this makes it easier to understand and build the rulebooks we need. One key difference between playbooks and rulebooks is the If-this-then-that coding that is needed in a rulebook to make an event driven  automation approach work. The current ansible-rulebook is easy to learn and work with, and the graphical user interface EDA-Server will simplify this further. 
 
-* [hello_events.yml](rulebooks/hello_events.yml)
+### A rulebook is comprised of three main components: 
 
-### Source plugins
+- **Sources** define which event source we will use. These sources come from source plugins which have been built to accommodate common use cases. With time, more and more sources will be available. There are some source plugins that are available already, including: webhooks, Kafka, Azure service bus, file changes, and alertmanager. 
 
-And the following example event sources:
+- **Rules** define conditionals we will try to match from the event source. Should the condition be met, then we can trigger an action.
 
-* [alertmanager](plugins/event_source/alertmanager.py)
-* [azure_service_bus](plugins/event_source/azure_service_bus.py)
-* [file](plugins/event_source/file.py)
-* [kafka](plugins/event_source/kafka.py)
-* [range](plugins/event_source/range.py)
-* [url_check](plugins/event_source/url_check.py)
-* [webhook](plugins/event_source/webhook.py)
-* [watchdog](plugins/event_source/watchdog.py)
+- **Actions** trigger what you need to happen should a condition be met. Some of the current actions are: run_playbook, run_module, set_fact, post_event, debug.
 
-### Playbooks
+So to summarize:
 
-**Install ansible-rulebook CLI**
+**Events are processed by a rules engine**
+- Rules trigger based on conditions and actions can be carried out by the rules engine 
+- Rules are organized into Ansible Rulebooks
+- Ansible rules can apply to events occurring on specific  hosts or groups
 
-This collection provides a playbook to install ansible-rulebook.
-Only Fedora and Mac os are supported for now.
 
-First, you must create an inventory. For example:
+**Conditional management of actions to events**
+- Simple YAML structure for logical conditions
+- Events can trigger different types of actions:
+- Run Ansible Playbooks
+- Run Modules directly 
+- Post new events to the event handler
 
-```yaml
-all:
-  hosts:
-    localhost:
-      ansible_connection: local
-```
+**YAML-like format familiarity**
+- Current Ansible users quickly learn and use Rulebook writing
 
-Then, you can run the playbook:
 
-```sh
-ansible-playbook -i myinventory.yml ansible.eda.install-rulebook-cli
-```
+## Other Resources
 
-### Examples
+Whether you are beginning your automation journey or a seasoned veteran, there are a variety of resources to enhance your automation knowledge:
 
-You can run these examples using an execution environment
-that is available on quay.io. Get the EE using the following command:
+- Self-paced lab exercises - We have interactive, in-browser exercises to help you get started with Event-Driven Ansible and ansible-rulebook. 
+- [Event-Driven Ansible web page](https://ansible.com/event-driven) 
+- Introducing Event-Driven Ansible blog
+- Why Event-Driven Matters - Have a look at another blog about why Event-Driven Ansible matters.
+- Event-Driven Rulebooks - Watch another example of Event-Driven Ansible on our YouTube channel.
+- EDA and Gitops- Watch another example of Event-Driven Ansible, but with GitOps, on our YouTube channel.
+- Learn more about Event-Driven Ansible at our office hours. The first one is November 16, 2022, followed by December 14, 2022.
 
-    docker pull quay.io/bthomass/ansible-rulebook
-
-Then run the hello events example using:
-
-    docker run -it quay.io/bthomass/ansible-rulebook:latest ansible-rulebook --rules ansible.eda.hello_events -i inventory.yml
-
-You can build your own execution environment for running event
-driven automation using this repo as a starting point: <http://github.com/benthomasson/ansible-rulebook-ee>
-
-# Running tests for source plugins
-
-Test requirements must be installed:
-
-```sh
-pip install -r test_requirements.txt
-```
-
-## Integration tests
-
-Currently integration tests require [docker](https://docs.docker.com/engine/install/)/[podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/)
-
-```
-
-ansible-galaxy collection install .
-pytest tests/integration
-```
-
-## Sanity tests
-
-```sh
-ansible-test sanity
-```
-
-## Units tests
-
-```sh
-ansible-test units
-```
+## Providing Feedback
+There are several ways you can give feedback - via comments/issue in here, on GitHub, or via the event-driven-automation@redhat.com email. 
