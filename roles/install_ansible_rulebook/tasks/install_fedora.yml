@@ -32,15 +32,15 @@
   ansible.builtin.pip:
     name:
       - pip
+      - wheel
     state: latest
 
-- name: Install pip dependencies
+- name: Ensure ansible dependencies
   ansible.builtin.pip:
     name:
       - ansible
       - ansible-runner
-      - wheel
-    state: latest
+    state: present
 
 - name: install ansible-rulebook
   environment:
