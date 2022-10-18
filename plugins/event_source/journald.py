@@ -59,4 +59,4 @@ if __name__ == "__main__":
         async def put(self, event):
             print(event)
 
-    asyncio.run(main(MockQueue(), {"match": "PRIORITY=6"}))
+    asyncio.run(main(MockQueue(), {"match": "ALL"}))
