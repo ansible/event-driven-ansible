@@ -32,11 +32,25 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         return
 
     journal_stream = journal.Reader()
+    journal_stream.seek_tail()
 
     while True:
-        journal_stream.add_match(match)
+        if not match == "ALL":
+            journal_stream.add_match(match)
         for entry in journal_stream:
-            await queue.put(entry)
+            stream_dict = {}
+            for field in entry:
+                if field:
+                    if (
+                        "_TIMESTAMP" not in field
+                        and "_BOOT_ID" not in field
+                        and "_MACHINE_ID" not in field
+                        and "__CURSOR" not in field
+                    ):
+                        stream_dict[field.lower()] = entry[field]
+
+            await queue.put(dict(journald=(dict(stream_dict))))
+            stream_dict.clear()
 
 
 if __name__ == "__main__":
