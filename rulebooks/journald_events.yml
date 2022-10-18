@@ -1,0 +1,16 @@
+---
+- name: Journald events
+  hosts: all
+  sources:
+    - name: Return severity 6 messages
+      ansible.eda.journald:
+        match: "ALL"
+  rules:
+    - name: Debug sshd journald event
+      condition: event.journald._comm == 'sudo'
+      action:
+        print_event:
+          pretty: true
+          var_root:
+            journald.message: journald.message
+...
