@@ -53,13 +53,13 @@ So to summarize:
 
 Whether you are beginning your automation journey or a seasoned veteran, there are a variety of resources to enhance your automation knowledge:
 
-- Self-paced lab exercises - We have interactive, in-browser exercises to help you get started with Event-Driven Ansible and ansible-rulebook. 
+- [Self-paced lab exercises](https://www.redhat.com/en/engage/redhat-ansible-automation-202108061218) - We have interactive, in-browser exercises to help you get started with Event-Driven Ansible and ansible-rulebook. 
 - [Event-Driven Ansible web page](https://ansible.com/event-driven) 
-- Introducing Event-Driven Ansible blog
-- Why Event-Driven Matters - Have a look at another blog about why Event-Driven Ansible matters.
-- Event-Driven Rulebooks - Watch another example of Event-Driven Ansible on our YouTube channel.
-- EDA and Gitops- Watch another example of Event-Driven Ansible, but with GitOps, on our YouTube channel.
-- Learn more about Event-Driven Ansible at our office hours. The first one is November 16, 2022, followed by December 14, 2022.
+- [Introducing Event-Driven Ansible blog](https://www.ansible.com/blog/introducing-event-driven-ansible)
+- [Why Event-Driven Matters](https://www.ansible.com/blog/why-event-driven-matters) - Have a look at another blog about why Event-Driven Ansible matters.
+- [Event-Driven Rulebooks](https://youtu.be/PtevBKX1SYI) - Watch another example of Event-Driven Ansible on our YouTube channel.
+- [EDA and Gitops](https://youtu.be/Bb51DftLbPE) - Watch another example of Event-Driven Ansible, but with GitOps, on our YouTube channel.
+- Learn more about Event-Driven Ansible at our office hours. The first one is [November 16, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-november), followed by [December 14, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-december).
 
 ## Providing Feedback
 There are several ways you can give feedback - via comments/issue in here, on GitHub, or via the event-driven-automation@redhat.com email. 
