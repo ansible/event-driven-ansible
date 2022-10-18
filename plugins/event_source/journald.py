@@ -14,6 +14,10 @@ Examples:
       become: true
       ansible.eda.journald:
         match: "_EXE=/usr/bin/sudo"
+
+    - name: Return all messages
+      ansible.eda.journald:
+        match: "ALL"
 """
 
 import asyncio
