@@ -17,6 +17,110 @@ Event-Driven Ansible has the potential to change the way we respond to issues an
 It opens up the possibilities of faster resolution and greater automated observation of our environments.
 
 ## Getting Started
+Now, let's install ansible-rulebook and start with our very first event.
+
+To install ansible-rulebook, we can install our Galaxy Collection, which has a playbook to install everything we need.
+
+`ansible-galaxy collection install ansible.eda`
+
+Once the Collection is installed, you can run the install-rulebook-cli.yml playbook. This will install everything you need to get started with ansible-rulebook on the command line. This is currently supported for Mac and Fedora.
+
+If you want to contribute to ansible-rulebook, you can also fork the following [GitHub repository](https://github.com/ansible/ansible-rulebook). This repository also contains instructions for setting up your development environment and how to build a test container. 
+
+Let's build an example rulebook that will trigger an action from a webhook. We will be looking for a specific payload from the webhook, and if that condition is met from the webhook event, then ansible-rulebook with trigger the desired action. Below is our example rulebook:
+
+```
+---
+- name: Listen for events on a webhook
+ hosts: all
+
+ ## Define our source for events
+
+ sources:
+   - ansible.eda.webhook:
+       host: 0.0.0.0
+       port: 5000
+
+ ## Define the conditions we are looking for
+
+ rules:
+   - name: Say Hello
+     condition: event.payload.message == "Ansible is super cool!"
+
+ ## Define the action we should take should the condition be met
+
+     action:
+       run_playbook:
+         name: say-what.yml
+```
+
+If we look at this example, we can see the structure of the rulebook. Our sources, rules and actions are defined. We are using the webhook source plugin from our ansible.eda collection, and we are looking for a message payload from our webhook that contains “Ansible is super cool”. Once this condition has been met, our defined action will trigger which in this case is to trigger a playbook. 
+
+One important thing to take note of ansible-rulebook is that it is not like ansible-playbook which runs a playbook and once the playbook has been completed it will exit. With ansible-rulebook, it will continue to run waiting for events and matching those events, it will only exit upon a shutdown action or if there is an issue with the event source itself, for example if a website you are watching with the url-check plugin stops working. 
+
+With our rulebook built, we will simply tell ansible-rulebook to use it as a ruleset and wait for events:
+
+```
+root@ansible-rulebook:/root# ansible-rulebook --rules webhook-example.yml -i inventory.yml --verbose
+
+INFO:ansible_events:Starting sources
+INFO:ansible_events:Starting sources
+INFO:ansible_events:Starting rules
+INFO:root:run_ruleset
+INFO:root:{'all': [{'m': {'payload.message': 'Ansible is super cool!'}}], 'run': <function make_fn.<locals>.fn at 0x7ff962418040>}
+INFO:root:Waiting for event
+INFO:root:load source
+INFO:root:load source filters
+INFO:root:Calling main in ansible.eda.webhook
+```
+
+Now, ansible-rulebook is ready and it's waiting for an event to match. If a webhook is triggered but the payload does not match our condition in our rule, we can see it in the ansible-rulebook verbose output:
+
+```
+…
+INFO:root:Calling main in ansible.eda.webhook
+INFO:aiohttp.access:127.0.0.1 [14/Oct/2022:09:49:32 +0000] "POST /endpoint HTTP/1.1" 200 158 "-" "curl/7.61.1"
+INFO:root:Waiting for event
+```
+
+But once our payload matches what we are looking for, that’s when the magic happens, so we will simulate a webhook with the correct payload:
+
+```
+curl -H 'Content-Type: application/json' -d "{\"message\": \"Ansible is super cool\"}" 127.0.0.1:5000/endpoint
+
+
+
+INFO:root:Calling main in ansible.eda.webhook
+INFO:aiohttp.access:127.0.0.1 [14/Oct/2022:09:50:28 +0000] "POST /endpoint HTTP/1.1" 200 158 "-" "curl/7.61.1"
+INFO:root:calling Say Hello
+INFO:root:call_action run_playbook
+INFO:root:substitute_variables [{'name': 'say-what.yml'}] [{'event': {'payload': {'message': 'Ansible is super cool'}, 'meta': {'endpoint': 'endpoint', 'headers': {'Host': '127.0.0.1:5000', 'User-Agent': 'curl/7.61.1', 'Accept': '*/*', 'Content-Type': 'application/json', 'Content-Length': '36'}}}, 'fact': {'payload': {'message': 'Ansible is super cool'}, 'meta': {'endpoint': 'endpoint', 'headers': {'Host': '127.0.0.1:5000', 'User-Agent': 'curl/7.61.1', 'Accept': '*/*', 'Content-Type': 'application/json', 'Content-Length': '36'}}}}]
+INFO:root:action args: {'name': 'say-what.yml'}
+INFO:root:running Ansible playbook: say-what.yml
+INFO:root:Calling Ansible runner
+
+PLAY [say thanks] **************************************************************
+
+TASK [debug] *******************************************************************
+ok: [localhost] => {
+    "msg": "Thank you, my friend!"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+INFO:root:Waiting for event
+
+```
+
+We can see from the output above, that the condition was met from the webhook and ansible-rulebook then triggered our action which was to run_playbook. The playbook we defined is then triggered and once it completes we can see we revert back to “Waiting for event”. 
+
+Event-Driven Ansible opens up the possibilities of faster resolution and greater automated observation of our environments. It has the possibility of simplifying the lives of many technical and sleep-deprived engineers. The current `ansible-rulebook` is easy to learn and work with, and the graphical user interface `EDA-Server` will simplify this further. 
+
+
+[EDA Server](https://github.com/ansible/eda-server)
+
+[Writing Rulebooks](https://www.youtube.com/watch?v=PtevBKX1SYI)
 
 ## Why Rulebooks?
 
@@ -60,6 +164,8 @@ Whether you are beginning your automation journey or a seasoned veteran, there a
 - [Event-Driven Rulebooks](https://youtu.be/PtevBKX1SYI) - Watch another example of Event-Driven Ansible on our YouTube channel.
 - [EDA and Gitops](https://youtu.be/Bb51DftLbPE) - Watch another example of Event-Driven Ansible, but with GitOps, on our YouTube channel.
 - Learn more about Event-Driven Ansible at our office hours. The first one is [November 16, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-november), followed by [December 14, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-december).
+- [Ansible Rulebook CLI](https://github.com/ansible/ansible-rulebook)
+- [EDA Server](https://github.com/ansible/eda-server)
 
 ## Providing Feedback
 There are several ways you can give feedback - via comments/issue in here, on GitHub, or via the event-driven-automation@redhat.com email. 
