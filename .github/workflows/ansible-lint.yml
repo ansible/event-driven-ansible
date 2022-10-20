@@ -1,0 +1,12 @@
+on: [push, pull_request]
+name: Ansible lint
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint Ansible Playbook
+        uses: ansible/ansible-lint-action@main
+        optional:
+        with:
+          path: "roles/install_ansible_rulebook/"
