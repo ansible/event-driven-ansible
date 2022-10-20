@@ -1,4 +1,4 @@
-name: integration tests
+name: Integration tests
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  tests:
+  integration:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
