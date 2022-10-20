@@ -84,7 +84,7 @@ INFO:aiohttp.access:127.0.0.1 [14/Oct/2022:09:49:32 +0000] "POST /endpoint HTTP/
 INFO:root:Waiting for event
 ```
 
-But once our payload matches what we are looking for, that’s when the magic happens, so we will simulate a webhook with the correct payload:
+But once our payload matches what we are looking for, that's when the magic happens, so we will simulate a webhook with the correct payload:
 
 ```
 curl -H 'Content-Type: application/json' -d "{\"message\": \"Ansible is super cool\"}" 127.0.0.1:5000/endpoint
