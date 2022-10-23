@@ -62,7 +62,7 @@ One important thing to take note of ansible-rulebook is that it is not like ansi
 With our rulebook built, we will simply tell ansible-rulebook to use it as a ruleset and wait for events:
 
 ```
-root@ansible-rulebook:/root# ansible-rulebook --rules webhook-example.yml -i inventory.yml --verbose
+root@ansible-rulebook:/root# ansible-rulebook --rulebook webhook-example.yml -i inventory.yml --verbose
 
 INFO:ansible_events:Starting sources
 INFO:ansible_events:Starting sources
