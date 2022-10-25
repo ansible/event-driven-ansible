@@ -3,3 +3,5 @@ aiohttp
 aiokafka
 watchdog
 asyncio
+google-cloud-pubsub
+protobuf==3.20.*
