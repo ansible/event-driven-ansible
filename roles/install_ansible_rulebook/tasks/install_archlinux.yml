@@ -1,0 +1,53 @@
+---
+- name: Ensure system dependencies
+  become: true
+  ansible.builtin.package:
+    name:
+      - git
+      - python
+      - python-pip
+      - jdk17-openjdk
+      - maven
+      - gcc
+
+- name: Get shell
+  set_fact:
+    _shell: "{{ ansible_user_shell | basename }}"
+
+- name: Set user envvars
+  become: true
+  when: _shell != ""
+  ansible.builtin.lineinfile:
+    path: "~/.{{ _shell }}rc"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    create: true
+  loop:
+    - regexp: "^(export )*JAVA_HOME"
+      line: export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+
+- name: Upgrade pip
+  become: true
+  ansible.builtin.pip:
+    name:
+      - pip
+    state: latest
+
+- name: Install pip dependencies
+  ansible.builtin.pip:
+    name:
+      - ansible
+      - ansible-runner
+      - wheel
+    state: latest
+
+- name: install ansible-rulebook
+  environment:
+    PIP_NO_BINARY: jpy
+    JAVA_HOME: /usr/lib/jvm/java-17-openjdk
+  ansible.builtin.pip:
+    name: ansible-rulebook
+    state: latest
+
+- name: install collections
+  command: ansible-galaxy collection install community.general ansible.eda
