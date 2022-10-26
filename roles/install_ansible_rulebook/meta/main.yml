@@ -1,5 +1,5 @@
 galaxy_info:
-  author: 
+  author:
     - Joseph Pisciotta
     - Alejandro Izquierdo
   description: Install Ansible Rulebook CLI
@@ -33,6 +33,13 @@ galaxy_info:
     - name: Fedora
       versions:
         - all
+    - name: Archlinux
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - 10
+        - 11
     - name: Darwin
       versions:
         - all
