@@ -6,7 +6,7 @@
 
   sources:
     - ansible.eda.gcp_pubsub:
-        project_id: "playground-s-11-73f6aaa0"
+        project_id: "eda"
         subscription_id: "test"
 
   ## Define the conditions we are looking for
