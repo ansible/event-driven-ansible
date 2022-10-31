@@ -1,10 +1,10 @@
 """
 gcp_pubsub.py
 
-An ansible-events event source module for receiving events from GCP Pub/Sub 
+An ansible-events event source module for receiving events from GCP Pub/Sub
 
 Arguments:
-    project_id:      The GCP project name 
+    project_id:      The GCP project name
     subscription_id: The name of the topic to pull messages from
     max_messages:    The number of messages to retreive
                      Default 3
@@ -27,6 +27,7 @@ from typing import Any, Dict
 from google.api_core import retry
 from google.cloud import pubsub_v1
 
+
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     subscriber = pubsub_v1.SubscriberClient()
 
@@ -45,7 +46,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             ack_ids = []
             for received_message in response.received_messages:
                 data = {"message": received_message.message.data.decode(),
-                        "attributes":  dict(received_message.message.attributes)}
+                        "attributes": dict(received_message.message.attributes)}
 
                 await queue.put(data)
 
@@ -60,9 +61,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 if __name__ == "__main__":
     class MockQueue:
         @staticmethod
-        async def put(self, event):
+        async def put(event):
             print(event)
 
     asyncio.run(main(MockQueue(), {"project_id": "lab", "subscription_id": "eda",
                                    "max_messages": 3, "retry_deadline": 300}))
-
