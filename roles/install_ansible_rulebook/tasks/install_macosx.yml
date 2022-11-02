@@ -27,7 +27,7 @@
   changed_when: java_home.rc != 0
   failed_when: java_home.rc != 0
 
-- name: Set user envvars
+- name: set user envvars
   ansible.builtin.lineinfile:
     path: "~/.zprofile"
     regexp: "{{ item.regexp }}"
