@@ -67,4 +67,3 @@
   register: collection_install
   changed_when: collection_install.rc != 0
   failed_when: collection_install.rc != 0
-

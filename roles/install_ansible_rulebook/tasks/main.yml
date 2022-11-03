@@ -1,4 +1,3 @@
 ---
 - name: "Install for {{ ansible_distribution }}"
   ansible.builtin.include_tasks: "install_{{ ansible_distribution | lower }}.yml"
-
