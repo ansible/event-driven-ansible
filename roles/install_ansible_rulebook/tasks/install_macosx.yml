@@ -8,8 +8,11 @@
       - maven
       - gcc
 
-- shell: brew --prefix openjdk@17
+- name: Register openjdk@17 path
+  ansible.builtin.command: brew --prefix openjdk@17
   register: brew_jdk
+  changed_when: brew_jdk.rc != 0
+  failed_when: brew_jdk.rc != 0
 
 - name: Creating a symlink
   ansible.builtin.file:
@@ -18,18 +21,22 @@
     state: link
   become: true
 
-- shell: /usr/libexec/java_home
+- name: Register java_home
+  ansible.builtin.command: /usr/libexec/java_home
   register: java_home
+  changed_when: java_home.rc != 0
+  failed_when: java_home.rc != 0
 
 - name: set user envvars
   ansible.builtin.lineinfile:
     path: "~/.zprofile"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
-    create: yes
+    mode: "0660"
+    create: true
   loop:
     - regexp: "^JAVA_HOME"
-      line: "JAVA_HOME={{java_home.stdout_lines[0]}}"
+      line: "JAVA_HOME={{ java_home.stdout_lines[0] }}"
     - regexp: "^CPPFLAGS"
       line: CPPFLAGS="-I{{ brew_jdk.stdout_lines[0] }}/include"
 
@@ -38,7 +45,7 @@
     name:
       - pip
       - wheel
-    state: latest
+    state: latest  # noqa package-latest
 
 - name: Ensure ansible dependencies
   ansible.builtin.pip:
@@ -47,7 +54,7 @@
       - ansible-runner
     state: present
 
-- name: install ansible-rulebook
+- name: Install ansible-rulebook
   environment:
     PIP_NO_BINARY: jpy
     JAVA_HOME: "{{ java_home.stdout_lines[0] }}"
@@ -55,5 +62,8 @@
     name: ansible-rulebook
     state: forcereinstall
 
-- name: install collections
-  command: ansible-galaxy collection install community.general ansible.eda --ignore-certs
+- name: Install collections
+  ansible.builtin.command: ansible-galaxy collection install community.general ansible.eda --ignore-certs
+  register: collection_install
+  changed_when: collection_install.rc != 0
+  failed_when: collection_install.rc != 0
