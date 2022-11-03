@@ -12,7 +12,7 @@
       - gcc
 
 - name: Get shell
-  set_fact:
+  ansible.builtin.set_fact:
     _shell: "{{ lookup('env', 'SHELL') | basename }}"
 
 - name: Set user envvars
@@ -22,6 +22,7 @@
     path: "~/.{{ _shell }}rc"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
+    mode: '0660'
     create: true
   loop:
     - regexp: "^JAVA_HOME"
@@ -32,7 +33,7 @@
   ansible.builtin.pip:
     name:
       - pip
-    state: latest
+    state: latest # noqa package-latest
 
 - name: Install pip dependencies
   ansible.builtin.pip:
@@ -40,15 +41,18 @@
       - ansible
       - ansible-runner
       - wheel
-    state: latest
+    state: latest # noqa package-latest
 
-- name: install ansible-rulebook
+- name: Install ansible-rulebook
   environment:
     PIP_NO_BINARY: jpy
     JAVA_HOME: /usr/lib/jvm/java-17-openjdk
   ansible.builtin.pip:
     name: ansible-rulebook
-    state: latest
+    state: latest  # noqa package-latest
 
-- name: install collections
-  command: ansible-galaxy collection install community.general ansible.eda
+- name: Install collections
+  ansible.builtin.command: ansible-galaxy collection install community.general ansible.eda
+  register: collection_install
+  changed_when: collection_install.rc != 0
+  failed_when: collection_install.rc != 0
