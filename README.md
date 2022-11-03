@@ -168,6 +168,10 @@ Whether you are beginning your automation journey or a seasoned veteran, there a
 - [Ansible Rulebook CLI](https://github.com/ansible/ansible-rulebook)
 - [EDA Server](https://github.com/ansible/eda-server)
 
+## Office Hours
+
+Join us for Office Hours on the Event-Driven Ansible developer preview on November 16th at 11AM ET.  Get some tips and techniques, ask questions and share your feedback!  Learn from the community.  See you there.  [https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-november?extIdCarryOver=true&sc_cid=701f2000001OH6uAAG](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-november?extIdCarryOver=true&sc_cid=701f2000001OH6uAAG)
+
 ## Providing Feedback
 
 There are several ways you can give feedback - via comments/issue in here, on GitHub, or via the event-driven-automation@redhat.com email.
