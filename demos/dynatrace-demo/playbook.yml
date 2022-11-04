@@ -1,0 +1,7 @@
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Restart main
+      shell: "(cd /root/fake-app; python3 fake_app.py >/dev/null 2>&1 &)"
+      async: 10
+      poll: 0

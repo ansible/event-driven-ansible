@@ -2,18 +2,32 @@
 alertmanager.py
 
 An ansible-rulebook event source module for receiving events via a webhook from
-alertmanager.
+alertmanager or alike system.
 
 Arguments:
-    host: The hostname to listen to. Set to 0.0.0.0 to listen on all
+    host: The webserver hostname to listen to. Set to 0.0.0.0 to listen on all
           interfaces. Defaults to 127.0.0.1
     port: The TCP port to listen to.  Defaults to 5000
+    data_alerts_path: The json path to find alert data. Default to "alerts"
+                      Use empty string "" to treat the whole payload data as
+                      one alert.
+    data_host_path: The json path inside the alert data to find alerting host.
+                    Default to  "labels.instance".
+    data_path_separator: The separator to interpret data_host_path and
+                         data_alerts_path. Default to "."
+    skip_original_data: true/false. Default to false
+                        true: put only alert data to the queue
+                        false: put sequentially both the received original
+                               data and each parsed alert item to the queue.
 
 Example:
 
     - ansible.eda.alertmanager:
         host: 0.0.0.0
         port: 8000
+        data_alerts_path: alerts
+        data_host_path: labels.instance
+        data_path_separator: .
 
 """
 
@@ -39,17 +53,39 @@ async def webhook(request: web.Request):
         "payload": payload,
         "meta": {"endpoint": endpoint, "headers": dict(request.headers)},
     }
-    await request.app["queue"].put(data)
+    if not request.app["skip_original_data"]:
+        await request.app["queue"].put(data)
 
     for item in payload:
-        for alert in item.get("alerts"):
+        if not request.app["data_alerts_path"]:
+            alerts = [item]
+        else:
+            alerts = []
+            try:
+                alerts = dpath.util.get(
+                    item,
+                    request.app["data_alerts_path"],
+                    separator=request.app["data_path_separator"]
+                )
+                if not isinstance(alerts, list):
+                    alerts = [alerts]
+            except KeyError:
+                # does not contain alerts
+                pass
+
+        for alert in alerts:
             hosts = []
             try:
-                host = dpath.util.get(alert, 'labels.instance', separator=".")
+                host = dpath.util.get(
+                    alert,
+                    request.app["data_host_path"],
+                    separator=request.app["data_path_separator"]
+                )
                 host = clean_host(host)
                 if host is not None:
                     hosts.append(host)
             except KeyError:
+                # does not contain hosts
                 pass
 
             await request.app["queue"].put(
@@ -74,14 +110,18 @@ def clean_host(host):
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     app = web.Application()
     app["queue"] = queue
+    app["data_host_path"] = args.get("data_host_path", "labels.instance")
+    app["data_path_separator"] = args.get("data_path_separator", ".")
+    app["data_alerts_path"] = args.get("data_alerts_path", "alerts")
+    app["skip_original_data"] = bool(args.get("skip_original_data", False))
 
     app.add_routes(routes)
 
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner,
-                       args.get("host") or "localhost",
-                       args.get("port") or 5000)
+                       args.get("host", "localhost"),
+                       args.get("port", 5000))
     await site.start()
 
     try:
