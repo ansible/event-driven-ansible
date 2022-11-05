@@ -16,7 +16,7 @@ def factory_cli_runner():
         ruleset = os.path.join(TESTS_PATH, rules_file)
 
         runner = CLIRunner(
-            rules=ruleset, verbose=True, envvars=env_vars
+            rules=ruleset, debug=True, envvars=env_vars
         ).run_in_background()
 
         # Ensure ansible-events is running
