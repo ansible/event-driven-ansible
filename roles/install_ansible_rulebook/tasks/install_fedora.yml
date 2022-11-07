@@ -33,15 +33,15 @@
   ansible.builtin.pip:
     name:
       - pip
+      - wheel
     state: latest # noqa package-latest
 
-- name: Install pip dependencies
+- name: Ensure ansible dependencies
   ansible.builtin.pip:
     name:
       - ansible
       - ansible-runner
-      - wheel
-    state: latest # noqa package-latest
+    state: present
 
 - name: Install ansible-rulebook
   environment:
