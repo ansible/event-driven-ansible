@@ -48,12 +48,13 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                         print(resp.status)
 
         except aiohttp.ClientError as e:
+            client_error = str(e)
             await queue.put(
                 dict(
                     url_check=dict(
                         url=url,
                         status="down",
-                        status_code="ClientError",
+                        status_code=client_error,
                     )
                 )
             )
