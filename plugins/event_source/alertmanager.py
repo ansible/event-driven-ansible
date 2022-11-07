@@ -12,6 +12,7 @@ Arguments:
                       Use empty string "" to treat the whole payload data as
                       one alert.
     data_host_path: The json path inside the alert data to find alerting host.
+                    Use empty string "" if there is no need to find host.
                     Default to  "labels.instance".
     data_path_separator: The separator to interpret data_host_path and
                          data_alerts_path. Default to "."
@@ -32,10 +33,9 @@ Example:
 """
 
 import asyncio
-from typing import Any, Dict
-
 from aiohttp import web
-import dpath
+from dpath import util
+from typing import Any, Dict
 
 routes = web.RouteTableDef()
 
@@ -47,36 +47,37 @@ async def status(request: web.Request):
 
 @routes.post("/{endpoint}")
 async def webhook(request: web.Request):
-    payload = (await request.json(),)
+    payload = await request.json()
     endpoint = request.match_info["endpoint"]
-    data = {
-        "payload": payload,
-        "meta": {"endpoint": endpoint, "headers": dict(request.headers)},
-    }
+
     if not request.app["skip_original_data"]:
+        data = {
+            "payload": payload,
+            "meta": {"endpoint": endpoint, "headers": dict(request.headers)},
+        }
         await request.app["queue"].put(data)
 
-    for item in payload:
-        if not request.app["data_alerts_path"]:
-            alerts = [item]
-        else:
-            alerts = []
-            try:
-                alerts = dpath.util.get(
-                    item,
-                    request.app["data_alerts_path"],
-                    separator=request.app["data_path_separator"]
-                )
-                if not isinstance(alerts, list):
-                    alerts = [alerts]
-            except KeyError:
-                # does not contain alerts
-                pass
+    if not request.app["data_alerts_path"]:
+        alerts = [payload]
+    else:
+        alerts = []
+        try:
+            alerts = util.get(
+                payload,
+                request.app["data_alerts_path"],
+                separator=request.app["data_path_separator"]
+            )
+            if not isinstance(alerts, list):
+                alerts = [alerts]
+        except KeyError:
+            # does not contain alerts
+            pass
 
-        for alert in alerts:
-            hosts = []
+    for alert in alerts:
+        hosts = []
+        if request.app["data_host_path"]:
             try:
-                host = dpath.util.get(
+                host = util.get(
                     alert,
                     request.app["data_host_path"],
                     separator=request.app["data_path_separator"]
@@ -88,14 +89,14 @@ async def webhook(request: web.Request):
                 # does not contain hosts
                 pass
 
-            await request.app["queue"].put(
-                dict(
-                    alert=alert,
-                    meta=dict(endpoint=endpoint,
-                              headers=dict(request.headers),
-                              hosts=hosts),
-                )
+        await request.app["queue"].put(
+            dict(
+                alert=alert,
+                meta=dict(endpoint=endpoint,
+                          headers=dict(request.headers),
+                          hosts=hosts),
             )
+        )
 
     return web.Response(status=202, text="Received")
 
@@ -110,9 +111,9 @@ def clean_host(host):
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     app = web.Application()
     app["queue"] = queue
-    app["data_host_path"] = args.get("data_host_path", "labels.instance")
-    app["data_path_separator"] = args.get("data_path_separator", ".")
-    app["data_alerts_path"] = args.get("data_alerts_path", "alerts")
+    app["data_host_path"] = str(args.get("data_host_path", "labels.instance"))
+    app["data_path_separator"] = str(args.get("data_path_separator", "."))
+    app["data_alerts_path"] = str(args.get("data_alerts_path", "alerts"))
     app["skip_original_data"] = bool(args.get("skip_original_data", False))
 
     app.add_routes(routes)
@@ -126,6 +127,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     try:
         await asyncio.Future()
+    except asyncio.CancelledError:
+        print("Plugin Task Cancelled")
     finally:
         await runner.cleanup()
 

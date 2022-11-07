@@ -37,7 +37,6 @@ class MockConsumer(AsyncMock):
         return AsyncIterator()
 
 
-@pytest.mark.asyncio
 def test_receive_from_kafka_place_in_queue(myqueue):
     with patch("plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer):
         asyncio.run(kafka_main(myqueue, {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"}))
