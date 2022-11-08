@@ -45,7 +45,6 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                                 )
                             )
                         )
-                        print(resp.status)
 
         except aiohttp.ClientError as e:
             client_error = str(e)
