@@ -46,13 +46,23 @@ Let's build an example rulebook that will trigger an action from a webhook. We w
 
   rules:
     - name: Say Hello
-      condition: event.payload.message == "Ansible is super cool!"
+      condition: event.payload.message == "Ansible is super cool"
 
   ## Define the action we should take should the condition be met
 
       action:
         run_playbook:
           name: say-what.yml
+```
+
+The playbook `say-what.yml`:
+
+```
+- hosts: localhost
+  connection: local
+  tasks:
+    - debug:
+        msg: "Thank you, my friend!"
 ```
 
 If we look at this example, we can see the structure of the rulebook. Our sources, rules and actions are defined. We are using the webhook source plugin from our ansible.eda collection, and we are looking for a message payload from our webhook that contains "Ansible is super cool". Once this condition has been met, our defined action will trigger which in this case is to trigger a playbook.
