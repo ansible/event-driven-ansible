@@ -53,7 +53,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                     url_check=dict(
                         url=url,
                         status="down",
-                        status_code=client_error,
+                        error_msg=client_error,
                     )
                 )
             )
