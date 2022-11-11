@@ -24,7 +24,7 @@ To install ansible-rulebook, we can install our Galaxy Collection, which has a p
 
 `ansible-galaxy collection install ansible.eda`
 
-Once the Collection is installed, you can run the install-rulebook-cli.yml playbook. This will install everything you need to get started with ansible-rulebook on the command line. This is currently supported for Mac and Fedora.
+Once the Collection is installed, you can run the install_rulebook_cli.yml playbook. This will install everything you need to get started with ansible-rulebook on the command line. This is currently supported for Mac and Fedora.
 
 If you want to contribute to ansible-rulebook, you can also fork the following [GitHub repository](https://github.com/ansible/ansible-rulebook). This repository also contains instructions for setting up your development environment and how to build a test container.
 
