@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Ensure ansible-rulebook can be installed
+  hosts: localhost
   remote_user: root
   roles:
     - install_ansible_rulebook

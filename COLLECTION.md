@@ -62,7 +62,7 @@ all:
 Then, you can run the playbook:
 
 ```sh
-ansible-playbook -i myinventory.yml ansible.eda.install-rulebook-cli
+ansible-playbook -i myinventory.yml ansible.eda.install_rulebook_cli
 ```
 
 ### Examples
