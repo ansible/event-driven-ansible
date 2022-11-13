@@ -23,6 +23,7 @@ import asyncio
 import aiohttp
 from typing import Any, Dict
 
+
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     urls = args.get("urls", [])
