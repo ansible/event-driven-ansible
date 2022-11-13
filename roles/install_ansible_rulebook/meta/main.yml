@@ -28,13 +28,23 @@ galaxy_info:
   # https://galaxy.ansible.com/api/v1/platforms/
   #
   platforms:
+    - name: ArchLinux
+      version:
+        - any
+    - name: Debian
+      version:
+        - bullseye
     - name: Fedora
       versions:
         - "36"
     - name: macOS
       versions:
-        - Monterey
         - Big-Sur
+        - Catalina
+        - Monterey
+    - name: Ubuntu
+      version:
+        - jammy
   #   - 1.0
   #   - 7
   #   - 99.99

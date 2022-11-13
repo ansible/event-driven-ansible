@@ -1,0 +1,31 @@
+---
+- name: Register openjdk@17 path
+  ansible.builtin.command: brew --prefix openjdk@17
+  register: brew_jdk
+  changed_when: brew_jdk.rc != 0
+  failed_when: brew_jdk.rc != 0
+
+- name: Creating a symlink
+  ansible.builtin.file:
+    src: "{{ brew_jdk.stdout_lines[0] }}/libexec/openjdk.jdk"
+    dest: "/Library/Java/JavaVirtualMachines/openjdk-17.jdk"
+    state: link
+  become: true
+
+- name: Register java_home
+  ansible.builtin.command: /usr/libexec/java_home
+  register: java_home
+  changed_when: java_home.rc != 0
+  failed_when: java_home.rc != 0
+
+- name: Set CPPFLAGS env var
+  ansible.builtin.lineinfile:
+    path: "~/.{{ _shell }}rc"
+    regexp: "^(export )*CPPFLAGS"
+    line: export CPPFLAGS="-I{{ brew_jdk.stdout_lines[0] }}/include"
+    mode: "0660"
+    create: true
+
+- name: Set java_home_path fact
+  ansible.builtin.set_fact:
+    java_home_path: "{{ java_home.stdout_lines[0] }}"

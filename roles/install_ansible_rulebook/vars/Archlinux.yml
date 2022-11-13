@@ -1,0 +1,9 @@
+package_list:
+  - git
+  - python
+  - python-pip
+  - jdk17-openjdk
+  - maven
+  - gcc
+
+java_home_path: /usr/lib/jvm/java-17-openjdk
