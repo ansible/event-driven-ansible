@@ -28,6 +28,8 @@ Once the Collection is installed, you can run the install_rulebook_cli.yml playb
 
 `ansible-playbook -i localhost, -c local ansible.eda.install_rulebook_cli`
 
+**Note:** Some tasks in this role require [privilege escalation](https://docs.ansible.com/ansible/latest/plugins/become.html) and therefore you may need to provide the necessary credentials.
+
 This will install everything you need to get started with ansible-rulebook on the command line. Currently support systems can be found in the role's [meta file](roles/install_ansible_rulebook/meta/main.yml).
 
 If you want to contribute to ansible-rulebook, you can also fork the following [GitHub repository](https://github.com/ansible/ansible-rulebook). This repository also contains instructions for setting up your development environment and how to build a test container.

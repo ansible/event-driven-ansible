@@ -9,7 +9,7 @@ A role to install the ansible-rulebook CLI. For more information please see the 
 Requirements
 ------------
 
-Some tasks in this role require privilege escalation and therefore you will need to provide the necessary credentials.
+Some tasks in this role require [privilege escalation](https://docs.ansible.com/ansible/latest/plugins/become.html) and therefore you may need to provide the necessary credentials.
 
 Example Playbook
 ----------------
