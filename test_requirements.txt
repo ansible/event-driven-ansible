@@ -2,6 +2,8 @@ pytest
 asyncio
 aiokafka
 asyncmock
+dpath
 pytest-asyncio
 ansible
+requests
 git+https://github.com/ansible/ansible-rulebook.git

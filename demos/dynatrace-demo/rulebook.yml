@@ -1,0 +1,23 @@
+---
+- name: dynatrace demo
+  hosts: all
+  sources:
+    - name: alertmanager
+      ansible.eda.alertmanager:
+        host: 0.0.0.0
+        port: 5050
+        data_alerts_path:
+        data_host_path: ImpactedEntityNames
+        skip_original_data: true
+      filters:
+        - ansible.eda.json_filter:
+            exclude_keys:
+              - ProblemDetailsMarkdown
+              - ProblemDetailsText
+              - ProblemDetailsJSON
+  rules:
+    - name: restart process
+      condition: event.alert.ProblemTitle == "No process found for rule pythonmain" and event.alert.State == "OPEN"
+      action:
+        run_playbook:
+          name: demos/dynatrace-demo/playbook.yml

@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ansible-test-sanity
+        name: Run ansible-test sanity
+        entry: ansible-test sanity
+        require_serial: true
+        language: python
+        additional_dependencies:
+          - ansible
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        language_version: python3

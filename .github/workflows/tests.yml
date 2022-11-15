@@ -1,4 +1,4 @@
-name: Run ansible tests
+name: Run Ansible tests
 
 on:
   push:
