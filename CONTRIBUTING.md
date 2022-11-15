@@ -12,7 +12,7 @@ We recommend running pre-commit prior to submitting pull requests. A [pre-commit
 
         pre-commit install
 
-Pre-commit is now set up to run each time you create a new commit. If you wish to run pre-commit against all files in the repository without performing a commit, you can run:
+Pre-commit is now set up to run each time you create a new commit. If you wish to run pre-commit against all tracked files in the repository without performing a commit, you can run:
 
 ```
 pre-commit run --all
