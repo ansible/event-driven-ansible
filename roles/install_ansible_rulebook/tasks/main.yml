@@ -3,6 +3,13 @@
   ansible.builtin.include_vars:
     file: "{{ ansible_os_family }}.yml"
 
+- name: Include RHEL8 override vars
+  ansible.builtin.include_vars:
+    file: RedHat-8.yml
+  when:
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "8"
+
 - name: Ensure dependencies are installed
   become: "{{ 'false' if ansible_distribution == 'MacOSX' else 'true' }}"
   ansible.builtin.package:
