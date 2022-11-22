@@ -2,7 +2,7 @@
 - name: Journald events
   hosts: all
   sources:
-    - name: Return severity 6 messages
+    - name: Match all messages
       ansible.eda.journald:
         match: "ALL"
   rules:
