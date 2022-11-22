@@ -11,7 +11,6 @@ Examples:
         match: "PRIORITY=6"
 
     - name: Return messages when sudo is used
-      become: true
       ansible.eda.journald:
         match: "_EXE=/usr/bin/sudo"
 
