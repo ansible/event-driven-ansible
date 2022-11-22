@@ -6,7 +6,7 @@
       ansible.eda.journald:
         match: "ALL"
   rules:
-    - name: Debug sshd journald event
+    - name: Print sudo journald event message
       condition: event.journald._comm == 'sudo'
       action:
         print_event:
