@@ -49,7 +49,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                     ):
                         stream_dict[field.lower()] = entry[field]
 
-            await queue.put(dict(journald=(dict(stream_dict))))
+            await queue.put(dict(journald=stream_dict))
             await asyncio.sleep(delay)
 
             stream_dict.clear()
