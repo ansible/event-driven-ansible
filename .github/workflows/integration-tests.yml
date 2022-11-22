@@ -18,14 +18,8 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: Install package dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get --assume-yes --no-install-recommends install libsystemd0 libsystemd-dev pkg-config
-
       - name: Install test requirements
         run: |
-          pip install wheel
           pip install -r requirements.txt -r test_requirements.txt
 
       - name: Install collection
