@@ -190,4 +190,4 @@ Join us for Office Hours on the Event-Driven Ansible developer preview on Decemb
 
 ## Providing Feedback
 
-There are several ways you can give feedback - via comments/issue in here, on GitHub, or via the event-driven-automation@redhat.com email.
+There are several ways you can give feedback - via comments/issue in here, on GitHub, the [Matrix chat](https://matrix.to/#/#eda:ansible.com), or via the event-driven-automation@redhat.com email.
