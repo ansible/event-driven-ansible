@@ -1,0 +1,24 @@
+---
+- name: Include install_ansible_rulebook role
+  ansible.builtin.include_role:
+    name: install_ansible_rulebook
+
+- name: Copy files for test
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /tmp/
+    mode: 0644
+  loop:
+    - hello.yml
+    - inventory
+
+- name: Run a simple rulebook
+  ansible.builtin.command:
+    cmd: ansible-rulebook -i /tmp/inventory --rulebook /tmp/hello.yml
+  register: result
+  environment:
+    JAVA_HOME: "{{ java_home_path }}"
+  changed_when: result.rc != 0
+  failed_when:
+    - result.rc != 0
+    - '"Hello World!" not in result.stdout'
