@@ -1,0 +1,13 @@
+---
+- name: Listen for events on a rabbitmq
+  hosts: all
+  sources:
+    - ansible.eda.rabbitmq:
+        host: localhost
+        port: 5672
+        queue: hello
+  rules:
+    - name: queue is hello and message body is world
+      condition: event.meta.queue == "hello" and event.message_body == "world"
+      action:
+        debug:

@@ -4,3 +4,4 @@ aiokafka
 watchdog
 asyncio
 dpath
+aio_pika
