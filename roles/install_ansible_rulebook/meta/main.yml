@@ -1,7 +1,5 @@
 galaxy_info:
-  author: 
-    - Joseph Pisciotta
-    - Alejandro Izquierdo
+  author: "Joseph Pisciotta, Alejandro Izquierdo"
   description: Install Ansible Rulebook CLI
   company: Red Hat
 
@@ -18,7 +16,7 @@ galaxy_info:
   # - CC-BY-4.0
   license: Apache-2.0
 
-  min_ansible_version: 2.11
+  min_ansible_version: "2.11"
 
   # If this a Container Enabled role, provide the minimum Ansible Container version.
   # min_ansible_container_version:
@@ -30,12 +28,23 @@ galaxy_info:
   # https://galaxy.ansible.com/api/v1/platforms/
   #
   platforms:
+    - name: ArchLinux
+      version:
+        - any
+    - name: Debian
+      version:
+        - bullseye
     - name: Fedora
       versions:
-        - all
-    - name: Darwin
+        - "36"
+    - name: macOS
       versions:
-        - all
+        - Big-Sur
+        - Catalina
+        - Monterey
+    - name: Ubuntu
+      version:
+        - jammy
   #   - 1.0
   #   - 7
   #   - 99.99

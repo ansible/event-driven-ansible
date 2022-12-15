@@ -24,7 +24,13 @@ To install ansible-rulebook, we can install our Galaxy Collection, which has a p
 
 `ansible-galaxy collection install ansible.eda`
 
-Once the Collection is installed, you can run the install-rulebook-cli.yml playbook. This will install everything you need to get started with ansible-rulebook on the command line. This is currently supported for Mac and Fedora.
+Once the Collection is installed, you can run the install_rulebook_cli.yml playbook. The following example would install ansible-rulebook CLI on your local system:
+
+`ansible-playbook -i localhost, -c local ansible.eda.install_rulebook_cli`
+
+**Note:** Some tasks in this role require [privilege escalation](https://docs.ansible.com/ansible/latest/plugins/become.html) and therefore you may need to provide the necessary credentials.
+
+This will install everything you need to get started with ansible-rulebook on the command line. Currently support systems can be found in the role's [meta file](roles/install_ansible_rulebook/meta/main.yml).
 
 If you want to contribute to ansible-rulebook, you can also fork the following [GitHub repository](https://github.com/ansible/ansible-rulebook). This repository also contains instructions for setting up your development environment and how to build a test container.
 
@@ -46,13 +52,23 @@ Let's build an example rulebook that will trigger an action from a webhook. We w
 
   rules:
     - name: Say Hello
-      condition: event.payload.message == "Ansible is super cool!"
+      condition: event.payload.message == "Ansible is super cool"
 
   ## Define the action we should take should the condition be met
 
       action:
         run_playbook:
           name: say-what.yml
+```
+
+The playbook `say-what.yml`:
+
+```
+- hosts: localhost
+  connection: local
+  tasks:
+    - debug:
+        msg: "Thank you, my friend!"
 ```
 
 If we look at this example, we can see the structure of the rulebook. Our sources, rules and actions are defined. We are using the webhook source plugin from our ansible.eda collection, and we are looking for a message payload from our webhook that contains "Ansible is super cool". Once this condition has been met, our defined action will trigger which in this case is to trigger a playbook.
@@ -164,10 +180,14 @@ Whether you are beginning your automation journey or a seasoned veteran, there a
 - [Why Event-Driven Matters](https://www.ansible.com/blog/why-event-driven-matters) - Have a look at another blog about why Event-Driven Ansible matters.
 - [Event-Driven Rulebooks](https://youtu.be/PtevBKX1SYI) - Watch another example of Event-Driven Ansible on our YouTube channel.
 - [EDA and Gitops](https://youtu.be/Bb51DftLbPE) - Watch another example of Event-Driven Ansible, but with GitOps, on our YouTube channel.
-- Learn more about Event-Driven Ansible at our office hours. The first one is [November 16, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-november), followed by [December 14, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-december).
+- Learn more about Event-Driven Ansible at our office hours [December 14, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-december).
 - [Ansible Rulebook CLI](https://github.com/ansible/ansible-rulebook)
 - [EDA Server](https://github.com/ansible/eda-server)
 
+## Office Hours
+
+Join us for Office Hours on the Event-Driven Ansible developer preview on December 14th at 11AM ET.  Get some tips and techniques, ask questions and share your feedback!  Learn from the community.  See you there.  [https://www.ansible.com/resources/webinars-training/event-driven-ansible-office-hours-dec](https://www.ansible.com/resources/webinars-training/event-driven-ansible-office-hours-dec)
+
 ## Providing Feedback
 
-There are several ways you can give feedback - via comments/issue in here, on GitHub, or via the event-driven-automation@redhat.com email.
+There are several ways you can give feedback - via comments/issue in here, on GitHub, the [Matrix chat](https://matrix.to/#/#eda:ansible.com), or via the event-driven-automation@redhat.com email.
