@@ -14,11 +14,20 @@ Some tasks in this role require [privilege escalation](https://docs.ansible.com/
 Example Playbook
 ----------------
 
+```
 - name: Install ansible-rulebook
   hosts: all
   gather_facts: true
   roles:
     - install_ansible_rulebook
+```
+
+
+By default, the role will install the EDA collection published on Ansible Galaxy. If you wish to install directly from the repository source you can define the following variable in your inventory file:
+
+```
+eda_collection_pkg_name: "git+https://github.com/ansible/event-driven-ansible"
+```
 
 License
 -------
