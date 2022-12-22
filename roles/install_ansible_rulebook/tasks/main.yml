@@ -49,7 +49,6 @@
 
 - name: Install ansible-rulebook
   environment:
-    PIP_NO_BINARY: jpy
     JAVA_HOME: "{{ java_home_path }}"
   ansible.builtin.pip:
     name: ansible-rulebook
