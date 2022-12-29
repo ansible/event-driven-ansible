@@ -1,0 +1,18 @@
+- name: test cmd source plugin with stdout
+  hosts: localhost
+  sources:
+    - ansible.eda.cmd:
+        command: bash event_source_cmd/shell-producer.sh good
+        send_output: true
+  rules:
+    - name: match cmd event
+      condition: event.cmd.status == "Running" and event.cmd.number == 2
+      action:
+        debug:
+          msg: "SUCCESS"
+
+    - name: match meta
+      condition: event.meta.command == "bash event_source_cmd/shell-producer.sh good"
+      action:
+        debug:
+          msg: "SUCCESS meta"

@@ -1,0 +1,13 @@
+- name: test cmd source plugin with raw stdout
+  hosts: localhost
+  sources:
+    - ansible.eda.cmd:
+        command: bash event_source_cmd/shell-producer.sh raw
+        send_output: true
+        deserialize: false
+  rules:
+    - name: match cmd event
+      condition: event.cmd == "Some raw text"
+      action:
+        debug:
+          msg: "SUCCESS"

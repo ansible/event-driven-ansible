@@ -1,0 +1,11 @@
+- name: test cmd source plugin with stdout and shutdown
+  hosts: localhost
+  sources:
+    - ansible.eda.cmd:
+        command: bash event_source_cmd/shell-producer.sh good
+        send_output: true
+  rules:
+    - name: match cmd event
+      condition: event.cmd.status == "Running" and event.cmd.number == 1
+      action:
+        shutdown:

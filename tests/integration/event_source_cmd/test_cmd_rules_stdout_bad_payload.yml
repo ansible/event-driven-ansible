@@ -1,0 +1,12 @@
+- name: test cmd source plugin with stdout and bad payload
+  hosts: localhost
+  sources:
+    - ansible.eda.cmd:
+        command: bash event_source_cmd/shell-producer.sh bad
+        send_output: true
+  rules:
+    - name: match cmd event
+      condition: event.cmd.status == "Running" and event.cmd.number == 2
+      action:
+        debug:
+          msg: "SUCCESS"

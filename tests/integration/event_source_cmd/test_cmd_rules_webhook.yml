@@ -1,0 +1,13 @@
+- name: test cmd source plugin with webhook
+  hosts: localhost
+  sources:
+    - ansible.eda.webhook:
+        port: 6000
+    - ansible.eda.cmd:
+        command: bash event_source_cmd/http-producer.sh http://localhost:6000/test
+  rules:
+    - name: match webhook event
+      condition: event.payload.status == "Running" and event.payload.number == 2
+      action:
+        debug:
+          msg: "SUCCESS"
