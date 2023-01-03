@@ -39,20 +39,12 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     certfile = args.get("certfile")
     keyfile = args.get("keyfile")
     password = args.get("password")
+    check_hostname = args.get("check_hostname", True)
     group_id = args.get("group_id", None)
     offset = args.get("offset", "latest")
 
     if offset not in ("latest", "earliest"):
         raise Exception(f"Invalid offset option: {offset}")
-
-    kafka_consumer = AIOKafkaConsumer(
-        topic,
-        bootstrap_servers="{0}:{1}".format(host, port),
-        group_id=group_id,
-        enable_auto_commit=True,
-        max_poll_records=1,
-        auto_offset_reset=offset,
-    )
 
     if cafile:
         context = create_ssl_context(
@@ -61,8 +53,18 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             keyfile=keyfile,
             password=password,
         )
-        kafka_consumer.security_protocol = "SSL"
-        kafka_consumer.ssl_context = context
+        context.check_hostname=check_hostname
+
+    kafka_consumer = AIOKafkaConsumer(
+        topic,
+        bootstrap_servers="{0}:{1}".format(host, port),
+        group_id=group_id,
+        enable_auto_commit=True,
+        max_poll_records=1,
+        auto_offset_reset=offset,
+        security_protocol="SSL" if cafile else "PLAINTEXT",
+        ssl_context=context if cafile else None,
+    )
 
     await kafka_consumer.start()
 
