@@ -12,6 +12,7 @@ Arguments:
                as well as CA certificates needed to establish the certificate's authenticity
     keyfile    The optional client key file path containing the client private key
     password   The optional password to be used when loading the certificate chain
+    check_hostname   Enable SSL hostname verification. [True (default), False]
     topic:     The kafka topic
     group_id:  A kafka group id
     offset:    Where to automatically reset the offset. [latest, earliest]
@@ -53,7 +54,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             keyfile=keyfile,
             password=password,
         )
-        context.check_hostname=check_hostname
+        context.check_hostname = check_hostname
 
     kafka_consumer = AIOKafkaConsumer(
         topic,
