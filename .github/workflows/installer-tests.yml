@@ -79,5 +79,10 @@ jobs:
       - name: Run ansible-playbook test
         if: matrix.ansible_playbook == true
         run: |
-          podman run -v .:/eda ${{ matrix.container }} bash -c "${{ matrix.pkg_install_cmd }} && python3 -m pip install ansible && ansible-galaxy collection install /eda && ansible-playbook -i localhost, -c local ansible.eda.install_rulebook_cli -v && ansible-rulebook -h"
+          podman run -v .:/eda ${{ matrix.container }} bash -c '${{ matrix.pkg_install_cmd }} \
+          && python3 -m pip install ansible && ansible-galaxy collection install /eda \
+          && ansible-playbook -i localhost, -c local \
+          -e eda_collection_pkg_name="git+https://github.com/ansible/event-driven-ansible" \
+          ansible.eda.install_rulebook_cli \
+          -v && ansible-rulebook -h'
         working-directory: ansible_collections/ansible/eda

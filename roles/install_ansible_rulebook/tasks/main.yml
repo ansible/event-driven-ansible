@@ -49,14 +49,13 @@
 
 - name: Install ansible-rulebook
   environment:
-    PIP_NO_BINARY: jpy
     JAVA_HOME: "{{ java_home_path }}"
   ansible.builtin.pip:
     name: ansible-rulebook
     state: latest # noqa package-latest
 
 - name: Install collections
-  ansible.builtin.command: ansible-galaxy collection install ansible.eda community.general
+  ansible.builtin.command: "ansible-galaxy collection install {{ eda_collection_pkg_name }} community.general"
   register: collection_install
   changed_when: collection_install.rc != 0
   failed_when: collection_install.rc != 0

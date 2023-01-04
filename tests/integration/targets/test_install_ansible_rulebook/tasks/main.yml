@@ -2,6 +2,12 @@
 - name: Include install_ansible_rulebook role
   ansible.builtin.include_role:
     name: install_ansible_rulebook
+    apply:
+      environment:
+        #  override ansible-test collection directory. See https://issues.redhat.com/browse/AAP-7849
+        ANSIBLE_COLLECTIONS_PATH: "~/.ansible/collections/ansible_collections/"
+  vars:
+    eda_collection_pkg_name: "git+https://github.com/ansible/event-driven-ansible"
 
 - name: Copy files for test
   ansible.builtin.copy:
