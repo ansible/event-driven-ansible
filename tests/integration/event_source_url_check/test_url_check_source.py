@@ -2,7 +2,8 @@ import pytest
 import os
 import http.server
 import threading
-from ..utils import TESTS_PATH
+from ..utils import CLIRunner, TESTS_PATH
+from subprocess import TimeoutExpired
 
 EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
@@ -29,14 +30,14 @@ def init_webserver():
 
 
 @pytest.mark.parametrize(
-    "endpoint, expected_response",
+    "endpoint, expected_resp_data, expected_resp_code",
     [
-        pytest.param("", 200, id="valid_endpoint"),
-        pytest.param("nonexistant", 404, id="invalid_endpoint"),
+        pytest.param("", "UP", 200, id="valid_endpoint"),
+        pytest.param("nonexistant", "UNAVAILABLE", 404, id="invalid_endpoint"),
     ],
 )
 def test_url_check_source_sanity(
-    init_webserver, factory_cli_runner, endpoint, expected_response
+    init_webserver, endpoint, expected_resp_data, expected_resp_code
 ):
     """
     Ensure the url check plugin queries the desired endpoint
@@ -45,9 +46,37 @@ def test_url_check_source_sanity(
 
     os.environ["URL_ENDPOINT"] = endpoint
 
-    rules_file = f"{EVENT_SOURCE_DIR}/test_url_check_rules.yml"
-    cli_runner = factory_cli_runner(rules_file=rules_file, env_vars="URL_ENDPOINT")
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
+    )
 
-    result = cli_runner.stderr.read1().decode()
+    runner = CLIRunner(rules=ruleset, envvars="URL_ENDPOINT").run_in_background()
 
-    assert f"'status_code': {expected_response}" in result
+    try:
+        result_stdout, _stderr = runner.communicate(timeout=5)
+    except TimeoutExpired:
+        runner.terminate()
+        result_stdout, _stderr = runner.communicate()
+
+    assert f'"msg": "{expected_resp_data}"' in result_stdout.decode()
+
+
+def test_url_check_source_error_handling():
+    """
+    Ensure the url check source plugin responds correctly
+    when the desired HTTP server is unreachable
+    """
+
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
+    )
+
+    runner = CLIRunner(rules=ruleset).run_in_background()
+
+    try:
+        result_stdout, _stderr = runner.communicate(timeout=5)
+    except TimeoutExpired:
+        runner.terminate()
+        result_stdout, _stderr = runner.communicate()
+
+    assert '"msg": "DOWN"' in result_stdout.decode()
