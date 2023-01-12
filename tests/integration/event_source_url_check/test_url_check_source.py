@@ -2,7 +2,8 @@ import pytest
 import os
 import http.server
 import threading
-from ..utils import TESTS_PATH
+from ..utils import CLIRunner, TESTS_PATH, DEFAULT_TEST_TIMEOUT
+from subprocess import TimeoutExpired
 
 EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
@@ -28,15 +29,16 @@ def init_webserver():
     httpd.shutdown()
 
 
+@pytest.mark.timeout(timeout=DEFAULT_TEST_TIMEOUT, method="signal")
 @pytest.mark.parametrize(
-    "endpoint, expected_response",
+    "endpoint, expected_resp_data",
     [
-        pytest.param("", 200, id="valid_endpoint"),
-        pytest.param("nonexistant", 404, id="invalid_endpoint"),
+        pytest.param("", "UP", id="valid_endpoint"),
+        pytest.param("nonexistant", "UNAVAILABLE", id="invalid_endpoint"),
     ],
 )
 def test_url_check_source_sanity(
-    init_webserver, factory_cli_runner, endpoint, expected_response
+    init_webserver, subprocess_teardown, endpoint, expected_resp_data
 ):
     """
     Ensure the url check plugin queries the desired endpoint
@@ -45,9 +47,34 @@ def test_url_check_source_sanity(
 
     os.environ["URL_ENDPOINT"] = endpoint
 
-    rules_file = f"{EVENT_SOURCE_DIR}/test_url_check_rules.yml"
-    cli_runner = factory_cli_runner(rules_file=rules_file, env_vars="URL_ENDPOINT")
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
+    )
 
-    result = cli_runner.stderr.read1().decode()
+    runner = CLIRunner(rules=ruleset, envvars="URL_ENDPOINT").run_in_background()
+    subprocess_teardown(runner)
 
-    assert f"'status_code': {expected_response}" in result
+    while line := runner.stdout.readline().decode():
+        if "msg" in line:
+            assert f'"msg": "{expected_resp_data}"' in line
+            break
+
+
+@pytest.mark.timeout(timeout=DEFAULT_TEST_TIMEOUT, method="signal")
+def test_url_check_source_error_handling(subprocess_teardown):
+    """
+    Ensure the url check source plugin responds correctly
+    when the desired HTTP server is unreachable
+    """
+
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
+    )
+
+    runner = CLIRunner(rules=ruleset).run_in_background()
+    subprocess_teardown(runner)
+
+    while line := runner.stdout.readline().decode():
+        if "msg" in line:
+            assert '"msg": "DOWN"' in line
+            break

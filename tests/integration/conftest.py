@@ -34,3 +34,14 @@ def factory_cli_runner():
     yield _cli_runner
     for runner in runners:
         runner.terminate()
+
+
+@pytest.fixture(scope="function")
+def subprocess_teardown():
+    processes = []
+
+    def _teardown(process):
+        processes.append(process)
+
+    yield _teardown
+    [proc.terminate() for proc in processes]
