@@ -32,6 +32,10 @@
     mode: "0660"
     create: true
 
+- name: Source user rc file when deployment is local
+  when: ansible_host == "localhost"
+  ansible.builtin.shell: "source {{ ansible_env.HOME }}/.{{ _shell }}rc"
+
 - name: Upgrade pip and wheel
   become: true
   ansible.builtin.pip:
@@ -40,11 +44,16 @@
       - wheel
     state: latest # noqa package-latest
 
-- name: Ensure ansible dependencies
+- name: Ensure ansible and collection dependencies
   ansible.builtin.pip:
     name:
       - ansible
       - ansible-runner
+      - azure-servicebus
+      - aiohttp
+      - aiokafka
+      - watchdog
+      - dpath
     state: present
 
 - name: Install ansible-rulebook
