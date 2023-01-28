@@ -1,0 +1,16 @@
+---
+
+- name: listen for events
+  hosts: all
+
+  sources:
+    - ansible.eda.nats:
+        host: nats://nats:4222
+        token: mytoken
+        subject: foo
+  rules:
+    - name: teste
+      condition: event.payload.message == "eda"
+      action:
+        run_playbook:
+          name: test.yml
