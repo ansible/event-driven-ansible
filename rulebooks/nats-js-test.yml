@@ -1,0 +1,21 @@
+---
+
+- name: listen for events
+  hosts: all
+
+  sources:
+    - ansible.eda.nats_js:
+        host: nats://nats:4222
+        username: admin
+        password: mypassword
+        subject: foo
+        stream: eda
+        durable: eda_test
+        deliver_policy: all
+
+  rules:
+    - name: test
+      condition: event.payload.message == "eda"
+      action:
+        run_playbook:
+          name: test.yml
