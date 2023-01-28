@@ -1,6 +1,7 @@
 azure-servicebus
 aiohttp
 aiokafka
+nats-py
 watchdog
 asyncio
 dpath
