@@ -5,12 +5,26 @@
     - name: check site
       ansible.eda.url_check:
         urls:
-         - http://localhost:8000/{{ URL_ENDPOINT }}
+         - http://localhost:8000/{{ URL_ENDPOINT | default("") }}
   rules:
-    - name: Check if endpoint is responding
-      condition: event.url_check.status == "up"
+    - name: Endpoint is up
+      condition: event.url_check.status == "up" and event.url_check.status_code == 200
       action:
         run_module:
           name: ansible.builtin.debug
           module_args:
-            msg: SUCCESS
+            msg: UP
+    - name: Endpoint is unavailable
+      condition: event.url_check.status == "down" and event.url_check.status_code == 404
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: UNAVAILABLE
+    - name: Host offline
+      condition: event.url_check.status == "down"
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: DOWN

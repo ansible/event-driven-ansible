@@ -54,7 +54,5 @@ def test_webhook_source_with_busy_port(factory_cli_runner):
     output = cli_runner_2.stderr.read().decode()
     assert "address already in use" in output
 
-    # uncomment when bug resolved:
-    # https://issues.redhat.com/browse/AAP-5424
-    # cli_runner_2.communicate(timeout=5)
-    # assert cli_runner_2.returncode == 1
+    cli_runner_2.communicate(timeout=5)
+    assert cli_runner_2.returncode == 1

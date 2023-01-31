@@ -6,6 +6,8 @@ from typing import Optional
 
 from . import TESTS_PATH
 
+DEFAULT_TEST_TIMEOUT: int = 5
+
 
 @dataclass
 class CLIRunner:

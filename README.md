@@ -186,7 +186,7 @@ Whether you are beginning your automation journey or a seasoned veteran, there a
 
 ## Office Hours
 
-Join us for Office Hours on the Event-Driven Ansible developer preview on December 14th at 11AM ET.  Get some tips and techniques, ask questions and share your feedback!  Learn from the community.  See you there.  [https://www.ansible.com/resources/webinars-training/event-driven-ansible-office-hours-dec](https://www.ansible.com/resources/webinars-training/event-driven-ansible-office-hours-dec)
+Join us for Office Hours on the Event-Driven Ansible developer preview on January 18th at 11AM ET.  Get some tips and techniques, ask questions and share your feedback!  Learn from the community.  See you there.  [https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-january](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-january)
 
 ## Providing Feedback
 
