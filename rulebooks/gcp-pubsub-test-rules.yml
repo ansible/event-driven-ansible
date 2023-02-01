@@ -1,0 +1,20 @@
+---
+- name: Listen for events on a GPC Pub/Sub topic 
+  hosts: all
+
+  ## Define our source for events
+
+  sources:
+    - ansible.eda.gcp_pubsub:
+        project_id: "eda"
+        subscription_id: "test"
+
+  ## Define the conditions we are looking for
+
+  rules:
+    - name: Message attribute action equals test 
+      condition: event.attributes.action == "test"
+
+  ## Define the action we should take should the condition be met
+      action:
+        debug:
