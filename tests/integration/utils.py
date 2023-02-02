@@ -26,6 +26,10 @@ class CLIRunner:
     verbose: bool = False
     debug: bool = False
     timeout: float = 10.0
+    env: Optional[dict] = None
+
+    def __post_init__(self):
+        self.env = os.environ.copy() if self.env is None else self.env
 
     def _process_args(self) -> List[str]:
         args = [
@@ -53,16 +57,23 @@ class CLIRunner:
 
     def run(self):
         args = self._process_args()
+        print("Running command: ", " ".join(args))
         return subprocess.run(
             args,
             cwd=self.cwd,
             capture_output=True,
             timeout=self.timeout,
             check=True,
+            env=self.env,
         )
 
     def run_in_background(self):
         args = self._process_args()
+        print("Running command: ", " ".join(args))
         return subprocess.Popen(
-            args, cwd=self.cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            args,
+            cwd=self.cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.env,
         )
