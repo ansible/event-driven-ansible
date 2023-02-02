@@ -2,16 +2,20 @@ import pytest
 import os
 import requests
 import json
+import time
+import subprocess
+
+from ..utils import CLIRunner, TESTS_PATH
 
 
 @pytest.mark.parametrize(
     "port",
     [
         pytest.param(5000, id="default_port"),
-        pytest.param(5001, id="custom_port")
+        pytest.param(5001, id="custom_port"),
     ],
 )
-def test_webhook_source_sanity(factory_cli_runner, port: int):
+def test_webhook_source_sanity(subprocess_teardown, port: int):
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -22,37 +26,44 @@ def test_webhook_source_sanity(factory_cli_runner, port: int):
     ]
 
     url = f"http://127.0.0.1:{port}/webhook"
-    headers = {"user-agent": "webhook_client/1.0.1"}
 
-    os.environ["WH_PORT"] = str(port)
+    env = os.environ.copy()
+    env["WH_PORT"] = str(port)
 
-    rules_file = "event_source_webhook/test_webhook_rules.yml"
-    cli_runner = factory_cli_runner(rules_file=rules_file, env_vars="WH_PORT")
+    rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
+
+    proc = CLIRunner(
+        rules=rules_file, envvars="WH_PORT", env=env, debug=True
+    ).run_in_background()
+    subprocess_teardown(proc)
+
+    time.sleep(2)
 
     for msg in msgs:
-        requests.post(url, data=msg, headers=headers)
+        requests.post(url, data=msg)
 
-    result = cli_runner.stderr.read().decode()
+    try:
+        stdout, _unused_stderr = proc.communicate(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.terminate()
+        stdout, _unused_stderr = proc.communicate()
 
-    assert "'msg': 'SUCCESS'" in result
-    assert headers["user-agent"] in result
-    assert f"'Host': '127.0.0.1:{port}'" in result
-
-    cli_runner.communicate(timeout=5)
-    assert cli_runner.returncode == 0
+    assert "'msg': 'SUCCESS'" in stdout.decode()
+    assert f"'Host': '127.0.0.1:{port}'" in stdout.decode()
+    assert proc.returncode == 0
 
 
-def test_webhook_source_with_busy_port(factory_cli_runner):
+def test_webhook_source_with_busy_port(subprocess_teardown):
     """
     Ensure the CLI responds correctly if the desired port is
     already in use.
     """
-    rules_file = "event_source_webhook/test_webhook_rules.yml"
-    cli_runner = factory_cli_runner(rules_file=rules_file)
-    cli_runner_2 = factory_cli_runner(rules_file=rules_file)
-
-    output = cli_runner_2.stderr.read().decode()
-    assert "address already in use" in output
-
-    cli_runner_2.communicate(timeout=5)
-    assert cli_runner_2.returncode == 1
+    rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
+    proc1 = CLIRunner(rules=rules_file).run_in_background()
+    subprocess_teardown(proc1)
+    time.sleep(2)
+    proc2 = CLIRunner(rules=rules_file, debug=True).run_in_background()
+    proc2.wait(timeout=5)
+    stdout, _unused_stderr = proc2.communicate()
+    assert "address already in use" in stdout.decode()
+    assert proc2.returncode == 1
