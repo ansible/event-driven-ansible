@@ -2,4 +2,5 @@ azure-servicebus
 aiohttp
 aiokafka
 watchdog
+systemd-python
 dpath
