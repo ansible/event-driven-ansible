@@ -8,6 +8,20 @@ import subprocess
 from ..utils import CLIRunner, TESTS_PATH
 
 
+def wait_for_events(proc: subprocess.Popen, timeout: float = 5.0):
+    """
+    Wait for events to be processed by ansible-rulebook, or timeout.
+    Requires the process to be running in debug mode.
+    """
+    start = time.time()
+    while stdout := proc.stdout.readline().decode():
+        if "Waiting for events" in stdout:
+            break
+        time.sleep(0.1)
+        if time.time() - start > timeout:
+            raise TimeoutError("Timeout waiting for events")
+
+
 @pytest.mark.parametrize(
     "port",
     [
@@ -37,7 +51,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
     ).run_in_background()
     subprocess_teardown(proc)
 
-    time.sleep(2)
+    wait_for_events(proc)
 
     for msg in msgs:
         requests.post(url, data=msg)
@@ -59,9 +73,11 @@ def test_webhook_source_with_busy_port(subprocess_teardown):
     already in use.
     """
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
-    proc1 = CLIRunner(rules=rules_file).run_in_background()
+    proc1 = CLIRunner(rules=rules_file, debug=True).run_in_background()
     subprocess_teardown(proc1)
-    time.sleep(2)
+
+    wait_for_events(proc1)
+
     proc2 = CLIRunner(rules=rules_file, debug=True).run_in_background()
     proc2.wait(timeout=5)
     stdout, _unused_stderr = proc2.communicate()
