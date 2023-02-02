@@ -13,6 +13,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -20,7 +26,7 @@ jobs:
 
       - name: install test requirements
         run: |
-          pip install -r requirements.txt -r test_requirements.txt
+          pip install -r test_requirements.txt
 
       - name: install collection
         run: ansible-galaxy collection install .

@@ -2,5 +2,4 @@ azure-servicebus
 aiohttp
 aiokafka
 watchdog
-asyncio
 dpath

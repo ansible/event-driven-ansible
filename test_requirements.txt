@@ -1,10 +1,8 @@
+-r requirements.txt
 pytest
-asyncio
-aiokafka
 asyncmock
-dpath
 pytest-asyncio
 pytest-timeout
 ansible
 requests
-git+https://github.com/ansible/ansible-rulebook.git
+ansible-rulebook
