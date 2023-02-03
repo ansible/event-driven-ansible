@@ -18,7 +18,7 @@ from aiohttp import web
 routes = web.RouteTableDef()
 
 
-@routes.post("/{endpoint}")
+@routes.post(r"/{endpoint:.*}")
 async def webhook(request: web.Request):
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
