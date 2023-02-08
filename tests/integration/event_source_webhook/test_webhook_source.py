@@ -1,11 +1,12 @@
-import pytest
-import os
-import requests
 import json
-import time
+import os
 import subprocess
+import time
 
-from ..utils import CLIRunner, TESTS_PATH
+import pytest
+import requests
+
+from ..utils import TESTS_PATH, CLIRunner
 
 
 def wait_for_events(proc: subprocess.Popen, timeout: float = 5.0):

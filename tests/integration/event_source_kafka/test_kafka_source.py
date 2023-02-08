@@ -1,9 +1,11 @@
-import pytest
+import json
 import os
 import subprocess
+
+import pytest
 from kafka import KafkaProducer
-import json
-from ..utils import CLIRunner, TESTS_PATH
+
+from ..utils import TESTS_PATH, CLIRunner
 
 
 @pytest.fixture()

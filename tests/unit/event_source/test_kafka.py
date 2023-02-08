@@ -1,7 +1,9 @@
-import pytest
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from asyncmock import AsyncMock
+
 from plugins.event_source.kafka import main as kafka_main
 
 

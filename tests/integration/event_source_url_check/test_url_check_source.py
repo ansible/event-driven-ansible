@@ -1,8 +1,10 @@
-import pytest
-import os
 import http.server
+import os
 import threading
-from ..utils import CLIRunner, TESTS_PATH, DEFAULT_TEST_TIMEOUT
+
+import pytest
+
+from ..utils import DEFAULT_TEST_TIMEOUT, TESTS_PATH, CLIRunner
 
 EVENT_SOURCE_DIR = os.path.dirname(__file__)
 

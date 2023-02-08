@@ -1,6 +1,7 @@
 import sys
-from aiohttp import web
 from os import environ
+
+from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 

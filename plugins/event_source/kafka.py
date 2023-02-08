@@ -25,9 +25,10 @@ Arguments:
 import asyncio
 import json
 import logging
+from typing import Any, Dict
+
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
-from typing import Any, Dict
 
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):

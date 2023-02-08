@@ -33,9 +33,10 @@ Example:
 """
 
 import asyncio
+from typing import Any, Dict
+
 from aiohttp import web
 from dpath import util
-from typing import Any, Dict
 
 routes = web.RouteTableDef()
 

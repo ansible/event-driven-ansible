@@ -1,6 +1,7 @@
-import pytest
-import aiohttp
 import asyncio
+
+import aiohttp
+import pytest
 
 from plugins.event_source.webhook import main as webhook_main
 

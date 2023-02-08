@@ -21,6 +21,7 @@ Examples:
 
 import asyncio
 from typing import Any, Dict
+
 from systemd import journal
 
 

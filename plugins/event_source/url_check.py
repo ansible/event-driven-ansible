@@ -20,8 +20,9 @@ Example:
 """
 
 import asyncio
-import aiohttp
 from typing import Any, Dict
+
+import aiohttp
 
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
