@@ -57,7 +57,7 @@ message:
     sample: 'HELLO WORLD'
 """
 
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule  # noqa: E402
 
 
 def run_module():

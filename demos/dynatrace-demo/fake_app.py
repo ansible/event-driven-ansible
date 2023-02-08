@@ -1,4 +1,3 @@
-import asyncio
 import sys
 from aiohttp import web
 from os import environ
