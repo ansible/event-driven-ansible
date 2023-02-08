@@ -46,9 +46,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
 
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
 
-    proc = CLIRunner(
-        rules=rules_file, envvars="WH_PORT", env=env, debug=True
-    ).run_in_background()
+    proc = CLIRunner(rules=rules_file, envvars="WH_PORT", env=env, debug=True).run_in_background()
     subprocess_teardown(proc)
 
     wait_for_events(proc)

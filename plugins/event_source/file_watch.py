@@ -25,7 +25,6 @@ from watchdog.observers import Observer
 
 
 def watch(loop, queue, args):
-
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):

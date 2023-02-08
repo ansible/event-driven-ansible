@@ -89,7 +89,7 @@ async def test_post_endpoint_with_options():
         "port": 8000,
         "data_alerts_path": "",
         "data_host_path": "node",
-        "skip_original_data": True
+        "skip_original_data": True,
     }
     plugin_task = asyncio.create_task(start_server(queue, args))
 

@@ -25,7 +25,7 @@ class AsyncIterator:
     async def __anext__(self):
         if self.count < 2:
             mock = MagicMock()
-            mock.value = f"{{\"i\": {self.count}}}"
+            mock.value = f'{{"i": {self.count}}}'
             self.count += 1
             return mock
         else:

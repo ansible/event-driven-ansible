@@ -18,6 +18,7 @@ async def down(request: Request) -> Response:
     # simulate program crashing
     sys.exit(1)
 
+
 if __name__ == "__main__":
     app = web.Application()
     app.add_routes(routes)

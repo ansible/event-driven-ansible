@@ -20,7 +20,6 @@ from azure.servicebus import ServiceBusClient
 
 
 def main(queue, args):
-
     servicebus_client = ServiceBusClient.from_connection_string(
         conn_str=args["conn_str"], logging_enable=args.get("logging_enable", True)
     )

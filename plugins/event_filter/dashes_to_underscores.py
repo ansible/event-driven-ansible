@@ -12,7 +12,7 @@ import multiprocessing as mp
 
 def main(event, overwrite=True):
     logger = mp.get_logger()
-    logger.info('dashes_to_underscores')
+    logger.info("dashes_to_underscores")
     q = []
     q.append(event)
     while q:
@@ -26,9 +26,9 @@ def main(event, overwrite=True):
                     del o[key]
                     if new_key in o and overwrite:
                         o[new_key] = value
-                        logger.info('Replacing %s with %s', key, new_key)
+                        logger.info("Replacing %s with %s", key, new_key)
                     elif new_key not in o:
                         o[new_key] = value
-                        logger.info('Replacing %s with %s', key, new_key)
+                        logger.info("Replacing %s with %s", key, new_key)
 
     return event

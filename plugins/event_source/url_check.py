@@ -25,7 +25,6 @@ from typing import Any, Dict
 
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
-
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
 
@@ -60,6 +59,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             )
 
         await asyncio.sleep(delay)
+
 
 if __name__ == "__main__":
 

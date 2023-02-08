@@ -80,6 +80,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         logger.info("Stopping kafka consumer")
         await kafka_consumer.stop()
 
+
 if __name__ == "__main__":
 
     class MockQueue:

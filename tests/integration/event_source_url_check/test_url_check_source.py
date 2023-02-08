@@ -36,9 +36,7 @@ def init_webserver():
         pytest.param("nonexistant", "UNAVAILABLE", id="invalid_endpoint"),
     ],
 )
-def test_url_check_source_sanity(
-    init_webserver, subprocess_teardown, endpoint, expected_resp_data
-):
+def test_url_check_source_sanity(init_webserver, subprocess_teardown, endpoint, expected_resp_data):
     """
     Ensure the url check plugin queries the desired endpoint
     and receives the expected response.
@@ -46,13 +44,9 @@ def test_url_check_source_sanity(
 
     os.environ["URL_ENDPOINT"] = endpoint
 
-    ruleset = os.path.join(
-        TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
-    )
+    ruleset = os.path.join(TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml")
 
-    runner = CLIRunner(
-        rules=ruleset, envvars="URL_ENDPOINT"
-    ).run_in_background()
+    runner = CLIRunner(rules=ruleset, envvars="URL_ENDPOINT").run_in_background()
     subprocess_teardown(runner)
 
     while line := runner.stdout.readline().decode():
@@ -68,9 +62,7 @@ def test_url_check_source_error_handling(subprocess_teardown):
     when the desired HTTP server is unreachable
     """
 
-    ruleset = os.path.join(
-        TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
-    )
+    ruleset = os.path.join(TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml")
 
     runner = CLIRunner(rules=ruleset).run_in_background()
     subprocess_teardown(runner)
