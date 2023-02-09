@@ -6,10 +6,11 @@ An ansible-rulebook event source plugin for receiving events via a kafka topic.
 Arguments:
     host:      The host where the kafka topic is hosted
     port:      The port where the kafka server is listening
-    cafile     The optional certificate authority file path containing certificates used to
-               sign kafka broker certificates
-    certfile   The optional client certificate file path containing the client certificate,
-               as well as CA certificates needed to establish the certificate's authenticity
+    cafile     The optional certificate authority file path containing certificates
+               used to sign kafka broker certificates
+    certfile   The optional client certificate file path containing the client
+               certificate, as well as CA certificates needed to establish
+               the certificate's authenticity
     keyfile    The optional client key file path containing the client private key
     password   The optional password to be used when loading the certificate chain
     check_hostname   Enable SSL hostname verification. [True (default), False]
@@ -88,4 +89,9 @@ if __name__ == "__main__":
         async def put(self, event):
             print(event)
 
-    asyncio.run(main(MockQueue(), {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"}))
+    asyncio.run(
+        main(
+            MockQueue(),
+            {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"},
+        )
+    )

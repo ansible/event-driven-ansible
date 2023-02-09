@@ -41,6 +41,16 @@ class MockConsumer(AsyncMock):
 
 def test_receive_from_kafka_place_in_queue(myqueue):
     with patch("plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer):
-        asyncio.run(kafka_main(myqueue, {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"}))
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            )
+        )
         assert myqueue.queue[0] == {"i": 0}
         assert len(myqueue.queue) == 2

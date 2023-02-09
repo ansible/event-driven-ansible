@@ -63,7 +63,11 @@ async def webhook(request: web.Request):
     else:
         alerts = []
         try:
-            alerts = util.get(payload, request.app["data_alerts_path"], separator=request.app["data_path_separator"])
+            alerts = util.get(
+                payload,
+                request.app["data_alerts_path"],
+                separator=request.app["data_path_separator"],
+            )
             if not isinstance(alerts, list):
                 alerts = [alerts]
         except KeyError:
@@ -74,7 +78,11 @@ async def webhook(request: web.Request):
         hosts = []
         if request.app["data_host_path"]:
             try:
-                host = util.get(alert, request.app["data_host_path"], separator=request.app["data_path_separator"])
+                host = util.get(
+                    alert,
+                    request.app["data_host_path"],
+                    separator=request.app["data_path_separator"],
+                )
                 host = clean_host(host)
                 if host is not None:
                     hosts.append(host)
@@ -85,7 +93,9 @@ async def webhook(request: web.Request):
         await request.app["queue"].put(
             dict(
                 alert=alert,
-                meta=dict(endpoint=endpoint, headers=dict(request.headers), hosts=hosts),
+                meta=dict(
+                    endpoint=endpoint, headers=dict(request.headers), hosts=hosts
+                ),
             )
         )
 

@@ -34,7 +34,7 @@ options:
         type: str
 author:
     - Test User (@yourGitHubHandle)
-"""
+"""  # noqa: E501
 
 EXAMPLES = r"""
 # Pass in a message

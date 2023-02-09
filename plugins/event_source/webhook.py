@@ -38,7 +38,9 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, args.get("host") or "localhost", args.get("port") or 5000)
+    site = web.TCPSite(
+        runner, args.get("host") or "localhost", args.get("port") or 5000
+    )
     await site.start()
 
     try:
