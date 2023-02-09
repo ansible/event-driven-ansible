@@ -1,8 +1,10 @@
-import pytest
-import os
 import http.server
+import os
 import threading
-from ..utils import CLIRunner, TESTS_PATH, DEFAULT_TEST_TIMEOUT
+
+import pytest
+
+from ..utils import DEFAULT_TEST_TIMEOUT, TESTS_PATH, CLIRunner
 
 EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
@@ -50,9 +52,7 @@ def test_url_check_source_sanity(
         TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
     )
 
-    runner = CLIRunner(
-        rules=ruleset, envvars="URL_ENDPOINT"
-    ).run_in_background()
+    runner = CLIRunner(rules=ruleset, envvars="URL_ENDPOINT").run_in_background()
     subprocess_teardown(runner)
 
     while line := runner.stdout.readline().decode():

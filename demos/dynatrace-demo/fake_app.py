@@ -1,7 +1,7 @@
-import asyncio
 import sys
-from aiohttp import web
 from os import environ
+
+from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
@@ -17,6 +17,7 @@ async def health(request: Request) -> Response:
 async def down(request: Request) -> Response:
     # simulate program crashing
     sys.exit(1)
+
 
 if __name__ == "__main__":
     app = web.Application()

@@ -15,10 +15,11 @@ Example:
 
 """
 
+import os
+
+import yaml
 from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
-import os
-import yaml
 
 
 def send_facts(queue, filename):
@@ -31,7 +32,8 @@ def send_facts(queue, filename):
         else:
             if not isinstance(data, list):
                 raise Exception(
-                    f"Unsupported facts type, expects a list of dicts found {type(data)}"
+                    "Unsupported facts type, expects a list of dicts found"
+                    f" {type(data)}"
                 )
             if not all(True if isinstance(item, dict) else False for item in data):
                 raise Exception(
@@ -42,7 +44,6 @@ def send_facts(queue, filename):
 
 
 def main(queue, args):
-
     files = [os.path.abspath(f) for f in args.get("files", [])]
 
     if not files:

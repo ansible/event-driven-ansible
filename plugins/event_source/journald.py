@@ -3,7 +3,7 @@ journald.py
 An ansible-events event source plugin that tails systemd journald logs.
 
 Arguments:
-    match - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
+    match - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html # noqa
 
 Examples:
     - name: Return severity 6 messages
@@ -21,6 +21,7 @@ Examples:
 
 import asyncio
 from typing import Any, Dict
+
 from systemd import journal
 
 

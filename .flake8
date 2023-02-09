@@ -1,0 +1,4 @@
+[flake8]
+# matches black's default
+max-line-length = 88
+extend-ignore = E203

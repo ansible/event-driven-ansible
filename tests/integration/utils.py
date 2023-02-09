@@ -1,8 +1,7 @@
 import os
 import subprocess
 from dataclasses import dataclass
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from . import TESTS_PATH
 
