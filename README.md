@@ -180,13 +180,13 @@ Whether you are beginning your automation journey or a seasoned veteran, there a
 - [Why Event-Driven Matters](https://www.ansible.com/blog/why-event-driven-matters) - Have a look at another blog about why Event-Driven Ansible matters.
 - [Event-Driven Rulebooks](https://youtu.be/PtevBKX1SYI) - Watch another example of Event-Driven Ansible on our YouTube channel.
 - [EDA and Gitops](https://youtu.be/Bb51DftLbPE) - Watch another example of Event-Driven Ansible, but with GitOps, on our YouTube channel.
-- Learn more about Event-Driven Ansible at our office hours [December 14, 2022](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-december).
+- Learn more about Event-Driven Ansible at our office hours [March 2, 2023](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-march).
 - [Ansible Rulebook CLI](https://github.com/ansible/ansible-rulebook)
 - [EDA Server](https://github.com/ansible/eda-server)
 
 ## Office Hours
 
-Join us for Office Hours on the Event-Driven Ansible developer preview on January 18th at 11AM ET.  Get some tips and techniques, ask questions and share your feedback!  Learn from the community.  See you there.  [https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-january](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-january)
+Join us for Office Hours on the Event-Driven Ansible developer preview on January 18th at 11AM ET.  Get some tips and techniques, ask questions and share your feedback!  Learn from the community.  See you there.  [https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-march](https://www.redhat.com/en/events/webinar/event-driven-ansible-office-hours-marchy)
 
 ## Providing Feedback
 
