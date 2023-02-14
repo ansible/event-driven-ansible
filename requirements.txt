@@ -4,5 +4,4 @@ aiokafka
 watchdog
 systemd-python
 dpath
-botocore
-boto3
+aiobotocore
