@@ -9,11 +9,11 @@
         port: 9092
         group_id: testing
   rules:
-    - name:
+    - name: Check defined
       condition: event.i is defined
       action:
         debug:
-    - name:
+    - name: Stop
       condition: event.stop == true
       action:
         shutdown:
