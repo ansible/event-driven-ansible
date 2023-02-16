@@ -10,6 +10,7 @@ Arguments:
 """
 
 import asyncio
+import json
 import logging
 from typing import Any, Dict
 
@@ -50,7 +51,14 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
             if "Messages" in response:
                 for msg in response["Messages"]:
-                    await queue.put(msg)
+                    meta = {"MessageId": msg["MessageId"]}
+                    try:
+                        msg_body = json.loads(msg["Body"])
+                    except json.JSONDecodeError:
+                        msg_body = msg["Body"]
+
+                    await queue.put({"body": msg_body, "meta": meta})
+                    await asyncio.sleep(0)
 
                     # Need to remove msg from queue or else it'll reappear
                     await client.delete_message(
@@ -67,4 +75,4 @@ if __name__ == "__main__":
         async def put(self, event):
             print(event)
 
-    asyncio.run(main(MockQueue(), {"region": "ap-northeast-1", "queue": "eda"}))
+    asyncio.run(main(MockQueue(), {"region": "us-east-1", "queue": "eda"}))
