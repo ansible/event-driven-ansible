@@ -1,3 +1,4 @@
+aiobotocore
 aiohttp
 asyncio
 aiokafka
