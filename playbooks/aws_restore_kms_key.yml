@@ -1,0 +1,26 @@
+- hosts: localhost
+
+  tasks:
+    - name: Gather information about the KMS key
+      amazon.aws.kms_key_info:
+        alias: "{{ kms_key_alias }}"
+      register: __kms_key_info
+
+    - name: Set 'kms_key_arn' variable
+      ansible.builtin.set_fact:
+        kms_key_arn: "{{ __kms_key_info.kms_keys.0.key_arn }}"
+
+    - block:
+      - name: Cancel the deletion of the KMS key and re-enable the KMS key
+        amazon.aws.kms_key:
+         state: "present"
+         alias: "{{ kms_key_alias }}"
+         enabled: true
+        register: __kms_key_restore
+
+      - name: Assert that trail has been re-enabled
+        ansible.builtin.assert:
+         that:
+           - __kms_key_restore is changed
+           - __kms_key_restore.key_state == "Enabled"
+      when: event.CloudTrailEvent.requestParameters.keyId == kms_key_arn

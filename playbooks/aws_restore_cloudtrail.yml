@@ -1,0 +1,18 @@
+- hosts: localhost
+
+  tasks:
+    - name: Include 'cloud.aws_ops.awsconfig_multiregion_cloudtrail' role
+      ansible.builtin.include_role:
+        name: cloud.aws_ops.awsconfig_multiregion_cloudtrail
+      vars:
+        operation: "create"
+        bucket_name: "{{ bucket_name }}"
+        key_prefix: "{{ key_prefix }}"
+        trail_name: "{{ trail_name }}"
+
+    - name: Include 'cloud.aws_ops.enable_cloudtrail_encryption_with_kms' role
+      ansible.builtin.include_role:
+        name: cloud.aws_ops.enable_cloudtrail_encryption_with_kms
+      vars:
+        enable_cloudtrail_encryption_with_kms_trail_name: "{{ trail_name }}"
+        enable_cloudtrail_encryption_with_kms_kms_key_id: "{{ kms_key_alias }}"

@@ -1,0 +1,31 @@
+- name: Rules for cloud.aws_ops to ensure the cloudtrail is encrypted
+  hosts: all
+
+  sources:
+    - ansible.eda.aws_cloudtrail:
+        connection:
+          region_name: 'us-east-1'
+        delay: 5
+  rules:
+    - name: Cancels the deletion of the KMS key and re-enables it
+      condition: event.CloudTrailEvent.eventName=="ScheduleKeyDeletion" or event.CloudTrailEvent.eventName=="DisableKey"
+      action:
+        run_playbook:
+           name: playbooks/aws_restore_kms_key.yml
+
+    - name: Re-create the Cloudtrail
+      condition: event.CloudTrailEvent.eventName=="DeleteTrail"
+      action:
+        run_playbook:
+           name: playbooks/aws_restore_cloudtrail.yml
+
+    - name: Enable CreateTrail encryption
+      condition: event.CloudTrailEvent.eventName=="UpdateTrail" and event.CloudTrailEvent.requestParameters.kmsKeyId==""
+      action:
+         run_playbook:
+           name: playbooks/aws_restore_cloudtrail_encryption.yml
+
+    - name: Debug when S3 bucket is deleted
+      condition: event.CloudTrailEvent.eventName=="DeleteBucket"
+      action:
+        debug:
