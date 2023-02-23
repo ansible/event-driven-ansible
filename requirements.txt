@@ -1,4 +1,5 @@
 azure-servicebus
+aiobotocore
 aiohttp
 aiokafka
 watchdog
