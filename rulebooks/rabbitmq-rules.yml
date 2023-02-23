@@ -7,7 +7,6 @@
         port: 5672
         queue: hello
   rules:
-    - name: queue is hello and message body is world
-      condition: event.meta.queue == "hello" and event.message_body == "world"
-      action:
+    - name: Event name is world
+      action: event.name == "world"
         debug:
