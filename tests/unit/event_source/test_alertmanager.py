@@ -29,7 +29,7 @@ async def cancel_code(server_task):
 async def test_cancel():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000}
+    args = {"host": "127.0.0.1", "port": 8001}
     plugin_task = asyncio.create_task(start_server(queue, args))
     cancel_task = asyncio.create_task(cancel_code(plugin_task))
 
@@ -41,7 +41,7 @@ async def test_cancel():
 async def test_post_endpoint_with_default():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000}
+    args = {"host": "127.0.0.1", "port": 8002}
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {
@@ -87,7 +87,7 @@ async def test_post_endpoint_with_options():
 
     args = {
         "host": "127.0.0.1",
-        "port": 8000,
+        "port": 8003,
         "data_alerts_path": "",
         "data_host_path": "node",
         "skip_original_data": True,
