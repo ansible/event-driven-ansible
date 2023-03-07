@@ -41,14 +41,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         for entry in journal_stream:
             stream_dict = {}
             for field in entry:
-                if field:
-                    if (
-                        "_TIMESTAMP" not in field
-                        and "_BOOT_ID" not in field
-                        and "_MACHINE_ID" not in field
-                        and "__CURSOR" not in field
-                    ):
-                        stream_dict[field.lower()] = entry[field]
+                stream_dict[field.lower()] = f"{entry[field]}"
 
             await queue.put(dict(journald=stream_dict))
             await asyncio.sleep(delay)
