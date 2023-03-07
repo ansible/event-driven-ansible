@@ -1,6 +1,8 @@
+aiobotocore
 aiohttp
-asyncio
 aiokafka
+asyncio
 asyncmock
+azure-servicebus
 dpath
 pytest-asyncio

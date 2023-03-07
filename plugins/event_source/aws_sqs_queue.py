@@ -1,12 +1,22 @@
 """
-sqs.py
+aws_sqs_queue.py
 
 An ansible-rulebook event source plugin for receiving events via an AWS SQS queue.
 
 Arguments:
-    region: AWS region containing the SQS queue.
-    queue:  Name of the SQS queue.
-    wait_seconds: The SQS long polling duration. Set to 0 to disable. Defaults to 2.
+    access_key:    Optional AWS access key ID
+    secret_key:    Optional AWS secret access key
+    session_token: Optional STS session token for use with temporary credentials
+    endpoint_url:  Optional URL to connect to instead of the default AWS endpoints
+    region:        Optional AWS region to use
+    name:          Name of the queue
+    delay_seconds: The SQS long polling duration. Set to 0 to disable. Defaults to 2.
+
+Example:
+    - ansible.eda.aws_sqs:
+        region: us-east-1
+        name: eda
+        delay_seconds: 10
 """
 
 import asyncio
@@ -17,17 +27,19 @@ from typing import Any, Dict
 import botocore.exceptions
 from aiobotocore.session import get_session
 
+from ..utils.aws_utils import connection_args
+
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     logger = logging.getLogger()
 
-    region = args.get("region")
-    queue_name = args.get("queue")
-    wait_seconds = int(args.get("wait_seconds", 2))
+    if "name" not in args:
+        raise ValueError("Missing queue name")
+    queue_name = str(args.get("name"))
+    wait_seconds = int(args.get("delay_seconds", 2))
 
-    # Boto should get credentials from ~/.aws/credentials or the environment
     session = get_session()
-    async with session.create_client("sqs", region_name=region) as client:
+    async with session.create_client("sqs", **connection_args(args)) as client:
         try:
             response = await client.get_queue_url(QueueName=queue_name)
         except botocore.exceptions.ClientError as err:
@@ -35,7 +47,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                 err.response["Error"]["Code"]
                 == "AWS.SimpleQueueService.NonExistentQueue"
             ):
-                raise RuntimeError("Queue %s does not exist" % queue_name)
+                raise ValueError("Queue %s does not exist" % queue_name)
             else:
                 raise
 
@@ -75,4 +87,4 @@ if __name__ == "__main__":
         async def put(self, event):
             print(event)
 
-    asyncio.run(main(MockQueue(), {"region": "us-east-1", "queue": "eda"}))
+    asyncio.run(main(MockQueue(), {"region": "us-east-1", "name": "eda"}))

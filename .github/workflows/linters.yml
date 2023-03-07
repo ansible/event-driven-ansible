@@ -2,14 +2,6 @@
 on: [push, pull_request]
 name: Linters
 jobs:
-  ansible-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Lint Ansible Playbook
-        uses: ansible/ansible-lint-action@main
-        with:
-          path: "roles/install_ansible_rulebook/"
   black:
     runs-on: ubuntu-latest
     steps:
