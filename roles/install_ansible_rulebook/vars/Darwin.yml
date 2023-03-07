@@ -1,6 +1,0 @@
-package_list:
-  - git
-  - "python@3.10"
-  - "openjdk@17"
-  - maven
-  - gcc

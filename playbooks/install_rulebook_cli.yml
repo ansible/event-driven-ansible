@@ -1,6 +1,0 @@
-# ansible-playbook  install_rulebook_cli.yml -c local -i localhost,
-- name: Install ansible-rulebook
-  hosts: all
-  gather_facts: true
-  roles:
-    - install_ansible_rulebook
