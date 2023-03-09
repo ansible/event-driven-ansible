@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from asyncmock import AsyncMock
 
-from plugins.event_source.aws_sqs_queue import main as sqs_main
+from ansible_collections.ansible.eda.plugins.event_source.aws_sqs_queue import main as sqs_main
 
 
 @pytest.mark.asyncio

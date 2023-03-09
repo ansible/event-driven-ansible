@@ -5,7 +5,9 @@ import pytest
 from asyncmock import AsyncMock
 from mock import MagicMock
 
-from plugins.event_source.aws_cloudtrail import main as cloudtrail_main
+from ansible_collections.ansible.eda.plugins.event_source.aws_cloudtrail import (
+    main as cloudtrail_main,
+)
 
 
 @pytest.mark.asyncio
