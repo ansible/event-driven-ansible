@@ -2,12 +2,11 @@ import datetime
 from unittest.mock import patch
 
 import pytest
-from asyncmock import AsyncMock
-from mock import MagicMock
-
 from ansible_collections.ansible.eda.plugins.event_source.aws_cloudtrail import (
     main as cloudtrail_main,
 )
+from asyncmock import AsyncMock
+from mock import MagicMock
 
 
 @pytest.mark.asyncio
@@ -30,7 +29,7 @@ async def test_receive_from_cloudtrail(eda_queue):
         ]
     }
     with patch(
-        "plugins.event_source.aws_cloudtrail.get_session",
+        "ansible_collections.ansible.eda.plugins.event_source.aws_cloudtrail.get_session",  # noqa: E501
         return_value=session,
     ):
         iterator = AsyncMock()

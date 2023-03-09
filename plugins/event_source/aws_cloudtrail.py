@@ -37,7 +37,6 @@ from datetime import datetime
 from typing import Any, Dict
 
 from aiobotocore.session import get_session
-
 from ansible_collections.ansible.eda.plugins.utils.aws_utils import connection_args
 
 
