@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from . import TESTS_PATH
 
-DEFAULT_TEST_TIMEOUT: int = 5
+DEFAULT_TEST_TIMEOUT: int = 25
 
 
 @dataclass

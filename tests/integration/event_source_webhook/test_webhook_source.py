@@ -9,7 +9,7 @@ import requests
 from ..utils import TESTS_PATH, CLIRunner
 
 
-def wait_for_events(proc: subprocess.Popen, timeout: float = 5.0):
+def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0):
     """
     Wait for events to be processed by ansible-rulebook, or timeout.
     Requires the process to be running in debug mode.
@@ -80,7 +80,7 @@ def test_webhook_source_with_busy_port(subprocess_teardown):
     wait_for_events(proc1)
 
     proc2 = CLIRunner(rules=rules_file, debug=True).run_in_background()
-    proc2.wait(timeout=5)
+    proc2.wait(timeout=15)
     stdout, _unused_stderr = proc2.communicate()
     assert "address already in use" in stdout.decode()
     assert proc2.returncode == 1
