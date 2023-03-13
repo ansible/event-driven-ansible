@@ -20,16 +20,33 @@ pre-commit run --all
 
 ## Running tests for source plugins
 
-Test requirements must be installed:
+Running the tests requires `ansible-rulebook` to be installed. Please review the [ansible-rulebook requirements](https://ansible-rulebook.readthedocs.io/en/stable/installation.html#requirements), but do not install `ansible-rulebook` manually. It will be installed via the test requirements.
 
-```sh
-pip install -r test_requirements.txt
-```
+We recommend setting up a Python virtual environment to install the test dependencies into:
+
+1. Initiate the virtual environment:
+
+        python -m venv venv
+        source venv/bin/activate
+
+2. Export the `JAVA_HOME` environment variable required by `ansible-rulebook`:
+
+        export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+
+3. Install the test requirements:
+
+        pip install -r test_requirements.txt
+
 
 ### Integration tests
 
-Currently integration tests require [docker](https://docs.docker.com/engine/install/)/[podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/)
+Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/).
+We recommend installing the Python implementation of `docker-compose` via pip:
+```
+pip install docker-compose
+```
 
+Then install the collection directly from your local repo and execute the tests:
 ```
 ansible-galaxy collection install .
 pytest tests/integration
