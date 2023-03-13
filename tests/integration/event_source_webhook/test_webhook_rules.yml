@@ -3,6 +3,7 @@
   sources:
     - ansible.eda.webhook:
         port: "{{ WH_PORT | default(5000) }}"
+        token: "{{ SECRET }}"
   rules:
     - name: match webhook event
       condition: event.payload.ping == "pong"
