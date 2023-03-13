@@ -6,14 +6,15 @@ An ansible-rulebook event source plugin for receiving events via a kafka topic.
 Arguments:
     host:      The host where the kafka topic is hosted
     port:      The port where the kafka server is listening
-    cafile     The optional certificate authority file path containing certificates
+    cafile:    The optional certificate authority file path containing certificates
                used to sign kafka broker certificates
-    certfile   The optional client certificate file path containing the client
+    certfile:  The optional client certificate file path containing the client
                certificate, as well as CA certificates needed to establish
                the certificate's authenticity
-    keyfile    The optional client key file path containing the client private key
-    password   The optional password to be used when loading the certificate chain
-    check_hostname   Enable SSL hostname verification. [True (default), False]
+    keyfile:   The optional client key file path containing the client private key
+    password:  The optional password to be used when loading the certificate chain
+    check_hostname:  Enable SSL hostname verification. [True (default), False]
+    encoding:  Message encoding scheme. Default to utf-8
     topic:     The kafka topic
     group_id:  A kafka group id
     offset:    Where to automatically reset the offset. [latest, earliest]
@@ -45,6 +46,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     check_hostname = args.get("check_hostname", True)
     group_id = args.get("group_id", None)
     offset = args.get("offset", "latest")
+    encoding = args.get("encoding", "utf-8")
 
     if offset not in ("latest", "earliest"):
         raise Exception(f"Invalid offset option: {offset}")
@@ -73,11 +75,18 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     try:
         async for msg in kafka_consumer:
+            data = None
             try:
-                data = json.loads(msg.value)
-                await queue.put(data)
-            except json.decoder.JSONDecodeError as e:
+                value = msg.value.decode(encoding)
+                data = json.loads(value)
+            except json.decoder.JSONDecodeError:
+                data = value
+            except UnicodeError as e:
                 logger.error(e)
+
+            if data:
+                await queue.put({"body": data})
+            await asyncio.sleep(0)
     finally:
         logger.info("Stopping kafka consumer")
         await kafka_consumer.stop()
