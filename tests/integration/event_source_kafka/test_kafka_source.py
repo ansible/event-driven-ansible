@@ -35,4 +35,4 @@ def test_kafka_source_sanity(kafka_producer: KafkaProducer):
 
     result = CLIRunner(rules=ruleset).run()
 
-    assert "'msg': 'SUCCESS'" in result.stdout.decode()
+    assert "Rule fired successfully" in result.stdout.decode()

@@ -11,7 +11,7 @@
       condition: event.name == "some kafka event"
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "Rule fired successfully"
 
     - name: stop
       condition: event.name == "stop"

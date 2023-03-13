@@ -63,7 +63,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
         proc.terminate()
         stdout, _unused_stderr = proc.communicate()
 
-    assert "'msg': 'SUCCESS'" in stdout.decode()
+    assert "Rule fired successfully" in stdout.decode()
     assert f"'Host': '127.0.0.1:{port}'" in stdout.decode()
     assert proc.returncode == 0
 
