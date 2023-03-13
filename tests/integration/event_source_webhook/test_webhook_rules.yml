@@ -8,7 +8,7 @@
       condition: event.payload.ping == "pong"
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "Rule fired successfully"
 
     - name: shutdown
       condition: event.payload.shutdown is defined
