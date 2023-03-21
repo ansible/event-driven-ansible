@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from plugins.event_source.azure_service_bus import main as azure_main
+from extensions.eda.plugins.event_sources.azure_service_bus import main as azure_main
 
 
 class MockQueue:
@@ -22,7 +22,7 @@ def myqueue():
 def test_receive_from_azure_service_bus(myqueue):
     client = MagicMock()
     with patch(
-        "plugins.event_source.azure_service_bus.ServiceBusClient."
+        "extensions.eda.plugins.event_sources.azure_service_bus.ServiceBusClient."
         "from_connection_string",
         return_value=client,
     ):

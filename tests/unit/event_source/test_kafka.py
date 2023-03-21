@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from asyncmock import AsyncMock
 
-from plugins.event_source.kafka import main as kafka_main
+from extensions.eda.plugins.event_sources.kafka import main as kafka_main
 
 
 class MockQueue:
@@ -40,7 +40,9 @@ class MockConsumer(AsyncMock):
 
 
 def test_receive_from_kafka_place_in_queue(myqueue):
-    with patch("plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer):
+    with patch(
+        "extensions.eda.plugins.event_sources.kafka.AIOKafkaConsumer", new=MockConsumer
+    ):
         asyncio.run(
             kafka_main(
                 myqueue,
