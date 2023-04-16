@@ -1,0 +1,14 @@
+---
+- name: Hello Events
+  hosts: all
+  sources:
+    - ansible.eda.mqtt:
+        host: localhost
+        port: 1883
+        topic: test-topic
+
+  rules:
+    - name: Debug connection
+      condition: event.test is defined
+      action:
+        debug:
