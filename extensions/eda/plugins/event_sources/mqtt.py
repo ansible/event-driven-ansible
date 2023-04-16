@@ -55,7 +55,9 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         tls_params=tls_params if ca_certs else None
     )
 
-    async with mqtt_consumer:
+    await mqtt_consumer.connect()
+
+    try:
         async with mqtt_consumer.messages() as messages:
             await mqtt_consumer.subscribe(topic)
             async for message in messages:
@@ -64,9 +66,9 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                     await queue.put(data)
                 except json.decoder.JSONDecodeError as e:
                     logger.error(e)
-                finally:
-                    logger.info("Disconnecting from MQTT broker")
-                    mqtt_consumer.disconnect()
+    finally:
+        logger.info("Disconneccting from broker")
+        mqtt_consumer.disconnect()
 
 if __name__ == "__main__":
 
