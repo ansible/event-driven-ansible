@@ -6,24 +6,25 @@ Arguments:
     port:               The port where the mqtt server is listening
     username:           The username to connect to the broker
     password:           The password to connect to the broker
-    ca_certs            The optional certificate authority file path containing certificate
-                        used to sign mqtt broker certificates
-    certfile            The optional client certificate file path containing the client certificate,
-                        as well as CA certificates needed to establish the certificate's authenticity
-    keyfile             The optional client key file path containing the client private key
-    keyfile_password    The optional password to be used when loading the certificate chain
+    ca_certs            The optional certificate authority file path containing
+                        certificate used to sign mqtt broker certificates
+    certfile            The optional client certificate file path containing
+                        the client certificate, as well as CA certificates needed
+                        to establish the certificate's authenticity
+    keyfile             The optional client key file path containing the client
+                        private key
+    keyfile_password    The optional password to be used when loading the
+                        certificate chain
     topic:              The mqtt topic to subscribe to
 
 """
 
-import logging
-import json
-from typing import Any, Dict
-import ssl
-
 import asyncio
-import asyncio_mqtt as aiomqtt
+import json
+import logging
+from typing import Any, Dict
 
+import asyncio_mqtt as aiomqtt
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     logger = logging.getLogger()
@@ -45,15 +46,15 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile,
-            keyfile_password=keyfile_password,
+            keyfile_password=keyfile_password
         )
 
-    mqtt_consumer = aiomqtt.Client(
+    mqtt_consumer=aiomqtt.Client(
         hostname=host,
         port=port,
         username=username,
         password=password,
-        tls_params=tls_params if ca_certs else None,
+        tls_params=tls_params if ca_certs else None
     )
 
     await mqtt_consumer.connect()
@@ -70,7 +71,6 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     finally:
         logger.info("Disconneccting from broker")
         mqtt_consumer.disconnect()
-
 
 if __name__ == "__main__":
 
