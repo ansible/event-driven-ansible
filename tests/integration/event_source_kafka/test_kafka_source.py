@@ -27,7 +27,7 @@ def test_kafka_source_sanity(kafka_producer: KafkaProducer):
 
     msgs = [
         json.dumps({"name": "some kafka event"}).encode("ascii"),
-        json.dumps({"name": "stop"}).encode("ascii"),
+        "stop".encode("ascii"),
     ]
 
     for msg in msgs:

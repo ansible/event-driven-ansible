@@ -10,10 +10,10 @@
         group_id: testing
   rules:
     - name: Check defined
-      condition: event.i is defined
+      condition: event.body.i is defined
       action:
         debug:
     - name: Stop
-      condition: event.stop == true
+      condition: event.body == stop
       action:
         shutdown:
