@@ -24,6 +24,7 @@ import ssl
 import asyncio
 import asyncio_mqtt as aiomqtt
 
+
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     logger = logging.getLogger()
 
@@ -44,15 +45,15 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile,
-            keyfile_password=keyfile_password
+            keyfile_password=keyfile_password,
         )
 
-    mqtt_consumer=aiomqtt.Client(
+    mqtt_consumer = aiomqtt.Client(
         hostname=host,
         port=port,
         username=username,
         password=password,
-        tls_params=tls_params if ca_certs else None
+        tls_params=tls_params if ca_certs else None,
     )
 
     await mqtt_consumer.connect()
@@ -69,6 +70,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     finally:
         logger.info("Disconneccting from broker")
         mqtt_consumer.disconnect()
+
 
 if __name__ == "__main__":
 
