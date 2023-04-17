@@ -26,6 +26,7 @@ from typing import Any, Dict
 
 import asyncio_mqtt as aiomqtt
 
+
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     logger = logging.getLogger()
 
@@ -49,7 +50,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             keyfile_password=keyfile_password
         )
 
-    mqtt_consumer=aiomqtt.Client(
+    mqtt_consumer = aiomqtt.Client(
         hostname=host,
         port=port,
         username=username,
@@ -71,6 +72,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     finally:
         logger.info("Disconneccting from broker")
         mqtt_consumer.disconnect()
+
 
 if __name__ == "__main__":
 
