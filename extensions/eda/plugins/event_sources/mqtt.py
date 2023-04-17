@@ -47,7 +47,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile,
-            keyfile_password=keyfile_password
+            keyfile_password=keyfile_password,
         )
 
     mqtt_consumer = aiomqtt.Client(
@@ -55,7 +55,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         port=port,
         username=username,
         password=password,
-        tls_params=tls_params if ca_certs else None
+        tls_params=tls_params if ca_certs else None,
     )
 
     await mqtt_consumer.connect()
