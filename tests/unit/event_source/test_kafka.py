@@ -27,7 +27,7 @@ class AsyncIterator:
     async def __anext__(self):
         if self.count < 2:
             mock = MagicMock()
-            mock.value = f'{{"i": {self.count}}}'
+            mock.value = f'{{"i": {self.count}}}'.encode("utf-8")
             self.count += 1
             return mock
         else:
@@ -54,5 +54,5 @@ def test_receive_from_kafka_place_in_queue(myqueue):
                 },
             )
         )
-        assert myqueue.queue[0] == {"i": 0}
+        assert myqueue.queue[0] == {"body": {"i": 0}}
         assert len(myqueue.queue) == 2
