@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import pytest
 
-from extensions.eda.plugins.event_sources.webhook import main as webhook_main
+from extensions.eda.plugins.event_source.webhook import main as webhook_main
 
 
 async def start_server(queue, args):

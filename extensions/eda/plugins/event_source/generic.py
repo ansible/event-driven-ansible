@@ -83,7 +83,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         for event in payload:
             if not event:
                 continue
-            for _ in range(repeat_count):
+            for _ignore in range(repeat_count):
                 data = {}
                 if create_index:
                     data[create_index] = index
