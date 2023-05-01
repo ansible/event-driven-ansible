@@ -1,0 +1,20 @@
+---
+on: [push, pull_request]
+name: Linters
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: isort/isort-action@v1.0.0
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: pip install flake8
+      - run: flake8

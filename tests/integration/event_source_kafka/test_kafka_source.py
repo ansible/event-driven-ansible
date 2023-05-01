@@ -1,9 +1,11 @@
-import pytest
+import json
 import os
 import subprocess
+
+import pytest
 from kafka import KafkaProducer
-import json
-from ..utils import CLIRunner, TESTS_PATH
+
+from ..utils import TESTS_PATH, CLIRunner
 
 
 @pytest.fixture()
@@ -21,13 +23,11 @@ def kafka_producer(kafka_broker):
 
 
 def test_kafka_source_sanity(kafka_producer: KafkaProducer):
-    ruleset = os.path.join(
-        TESTS_PATH, "event_source_kafka", "test_kafka_rules.yml"
-    )
+    ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules.yml")
 
     msgs = [
         json.dumps({"name": "some kafka event"}).encode("ascii"),
-        json.dumps({"name": "stop"}).encode("ascii"),
+        "stop".encode("ascii"),
     ]
 
     for msg in msgs:
@@ -35,4 +35,4 @@ def test_kafka_source_sanity(kafka_producer: KafkaProducer):
 
     result = CLIRunner(rules=ruleset).run()
 
-    assert "'msg': 'SUCCESS'" in result.stdout.decode()
+    assert "Rule fired successfully" in result.stdout.decode()

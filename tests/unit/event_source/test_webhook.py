@@ -1,8 +1,9 @@
-import pytest
-import aiohttp
 import asyncio
 
-from plugins.event_source.webhook import main as webhook_main
+import aiohttp
+import pytest
+
+from extensions.eda.plugins.event_source.webhook import main as webhook_main
 
 
 async def start_server(queue, args):

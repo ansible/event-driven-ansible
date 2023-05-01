@@ -1,7 +1,9 @@
 azure-servicebus
+aiobotocore
 aiohttp
 aiokafka
 nats-py
 watchdog
 asyncio
+systemd-python
 dpath

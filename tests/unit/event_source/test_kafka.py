@@ -1,8 +1,10 @@
-import pytest
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from asyncmock import AsyncMock
-from plugins.event_source.kafka import main as kafka_main
+
+from extensions.eda.plugins.event_source.kafka import main as kafka_main
 
 
 class MockQueue:
@@ -25,7 +27,7 @@ class AsyncIterator:
     async def __anext__(self):
         if self.count < 2:
             mock = MagicMock()
-            mock.value = f"{{\"i\": {self.count}}}"
+            mock.value = f'{{"i": {self.count}}}'.encode("utf-8")
             self.count += 1
             return mock
         else:
@@ -38,7 +40,19 @@ class MockConsumer(AsyncMock):
 
 
 def test_receive_from_kafka_place_in_queue(myqueue):
-    with patch("plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer):
-        asyncio.run(kafka_main(myqueue, {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"}))
-        assert myqueue.queue[0] == {"i": 0}
+    with patch(
+        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            )
+        )
+        assert myqueue.queue[0] == {"body": {"i": 0}}
         assert len(myqueue.queue) == 2

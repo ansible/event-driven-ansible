@@ -6,14 +6,15 @@
         host: localhost
         port: 9092
         offset: earliest
+        encoding: ascii
   rules:
     - name: match kafka event
-      condition: event.name == "some kafka event"
+      condition: event.body.name == "some kafka event"
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "Rule fired successfully"
 
     - name: stop
-      condition: event.name == "stop"
+      condition: event.body == "stop"
       action:
         shutdown:

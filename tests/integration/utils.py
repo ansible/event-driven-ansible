@@ -1,12 +1,11 @@
 import os
 import subprocess
 from dataclasses import dataclass
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from . import TESTS_PATH
 
-DEFAULT_TEST_TIMEOUT: int = 5
+DEFAULT_TEST_TIMEOUT: int = 25
 
 
 @dataclass
@@ -26,6 +25,10 @@ class CLIRunner:
     verbose: bool = False
     debug: bool = False
     timeout: float = 10.0
+    env: Optional[dict] = None
+
+    def __post_init__(self):
+        self.env = os.environ.copy() if self.env is None else self.env
 
     def _process_args(self) -> List[str]:
         args = [
@@ -45,24 +48,31 @@ class CLIRunner:
         if self.proc_id:
             args.extend(["--id", self.proc_id])
         if self.verbose:
-            args.append("--verbose")
+            args.append("-v")
         if self.debug:
-            args.append("--debug")
+            args.append("-vv")
 
         return args
 
     def run(self):
         args = self._process_args()
+        print("Running command: ", " ".join(args))
         return subprocess.run(
             args,
             cwd=self.cwd,
             capture_output=True,
             timeout=self.timeout,
             check=True,
+            env=self.env,
         )
 
     def run_in_background(self):
         args = self._process_args()
+        print("Running command: ", " ".join(args))
         return subprocess.Popen(
-            args, cwd=self.cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            args,
+            cwd=self.cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.env,
         )

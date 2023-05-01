@@ -13,17 +13,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
 
-      - name: install test requirements
+      - name: Install package dependencies
         run: |
-          pip install -r requirements.txt -r test_requirements.txt
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install libsystemd0 libsystemd-dev pkg-config
 
-      - name: install collection
+      - name: Install test requirements
+        run: |
+          pip install -U pip
+          pip install wheel
+          pip install -r test_requirements.txt
+
+      - name: Install collection
         run: ansible-galaxy collection install .
 
       - name: run integration tests
-        run: pytest tests/integration
+        run: pytest tests/integration -vvv -s

@@ -1,9 +1,10 @@
-import pytest
-import os
 import http.server
+import os
 import threading
-from ..utils import CLIRunner, TESTS_PATH, DEFAULT_TEST_TIMEOUT
-from subprocess import TimeoutExpired
+
+import pytest
+
+from ..utils import DEFAULT_TEST_TIMEOUT, TESTS_PATH, CLIRunner
 
 EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
@@ -33,8 +34,8 @@ def init_webserver():
 @pytest.mark.parametrize(
     "endpoint, expected_resp_data",
     [
-        pytest.param("", "UP", id="valid_endpoint"),
-        pytest.param("nonexistant", "UNAVAILABLE", id="invalid_endpoint"),
+        pytest.param("", "Endpoint available", id="valid_endpoint"),
+        pytest.param("nonexistant", "Endpoint unavailable", id="invalid_endpoint"),
     ],
 )
 def test_url_check_source_sanity(
@@ -76,5 +77,5 @@ def test_url_check_source_error_handling(subprocess_teardown):
 
     while line := runner.stdout.readline().decode():
         if "msg" in line:
-            assert '"msg": "DOWN"' in line
+            assert "Endpoint down" in line
             break

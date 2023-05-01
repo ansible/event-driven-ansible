@@ -1,8 +1,0 @@
-package_list:
-  - git
-  - python39
-  - python39-pip
-  - python39-devel
-  - java-17-openjdk-devel
-  - maven
-  - gcc
