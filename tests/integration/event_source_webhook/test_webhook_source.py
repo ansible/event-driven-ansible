@@ -44,18 +44,20 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
 
     env = os.environ.copy()
     env["WH_PORT"] = str(port)
+    env["SECRET"] = "secret"
 
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
 
     proc = CLIRunner(
-        rules=rules_file, envvars="WH_PORT", env=env, debug=True
+        rules=rules_file, envvars="WH_PORT,SECRET", env=env, debug=True
     ).run_in_background()
     subprocess_teardown(proc)
 
     wait_for_events(proc)
 
     for msg in msgs:
-        requests.post(url, data=msg)
+        headers = {"Authorization": "Bearer secret"}
+        requests.post(url, data=msg, headers=headers)
 
     try:
         stdout, _unused_stderr = proc.communicate(timeout=5)
