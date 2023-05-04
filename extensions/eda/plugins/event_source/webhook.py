@@ -30,7 +30,7 @@ async def webhook(request: web.Request):
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
-    headers.pop("Authorization")
+    headers.pop("Authorization", None)
     data = {
         "payload": payload,
         "meta": {"endpoint": endpoint, "headers": headers},
