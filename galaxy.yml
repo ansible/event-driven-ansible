@@ -59,4 +59,6 @@ issues: https://github.com/ansible/event-driven-ansible/issues
 # uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
 # and '.git' are always filtered
 build_ignore:
-  - demos
+  - "demos"
+  - ".venv"
+  - "venv"
