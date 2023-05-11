@@ -56,6 +56,8 @@ async def bearer_auth(request: web.Request, handler: Callable):
 
 
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+    if "port" not in args:
+        raise ValueError("Missing required argument: port")
     if "token" in args:
         app = web.Application(middlewares=[bearer_auth])
         app["token"] = args["token"]
@@ -81,8 +83,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     await runner.setup()
     site = web.TCPSite(
         runner,
-        args.get("host") or "localhost",
-        args.get("port") or 5000,
+        args.get("host") or "0.0.0.0",
+        args.get("port"),
         ssl_context=context,
     )
     await site.start()
