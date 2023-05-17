@@ -9,4 +9,4 @@
       condition: event.cmd.status == "Running" and event.cmd.number == 2
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "cmd plugin SUCCESS"

@@ -9,10 +9,10 @@
       condition: event.cmd.status == "Running" and event.cmd.number == 2
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "cmd plugin SUCCESS"
 
     - name: match meta
       condition: event.meta.command == "bash event_source_cmd/shell-producer.sh good"
       action:
         debug:
-          msg: "SUCCESS meta"
+          msg: "cmd plugin SUCCESS meta"

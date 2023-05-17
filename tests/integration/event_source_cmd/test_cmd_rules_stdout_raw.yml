@@ -10,4 +10,4 @@
       condition: event.cmd == "Some raw text"
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "cmd plugin SUCCESS"

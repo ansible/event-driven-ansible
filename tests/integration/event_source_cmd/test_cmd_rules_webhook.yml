@@ -10,4 +10,4 @@
       condition: event.payload.status == "Running" and event.payload.number == 2
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "cmd plugin SUCCESS"
