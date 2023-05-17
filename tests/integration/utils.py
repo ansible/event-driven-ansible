@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from . import TESTS_PATH
 
-DEFAULT_TEST_TIMEOUT: int = 5
+DEFAULT_TEST_TIMEOUT: int = 25
 
 
 @dataclass
@@ -48,9 +48,9 @@ class CLIRunner:
         if self.proc_id:
             args.extend(["--id", self.proc_id])
         if self.verbose:
-            args.append("--verbose")
+            args.append("-v")
         if self.debug:
-            args.append("--debug")
+            args.append("-vv")
 
         return args
 

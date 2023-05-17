@@ -13,7 +13,7 @@ ansible-galaxy collection install ansible.eda
 The python module dependencies are not installed by ansible-galaxy. They must be installed manually using pip:
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Contributing

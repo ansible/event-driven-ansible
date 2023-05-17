@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import pytest
 
-from plugins.event_source.alertmanager import main as alert_main
+from extensions.eda.plugins.event_source.alertmanager import main as alert_main
 
 
 async def start_server(queue, args):

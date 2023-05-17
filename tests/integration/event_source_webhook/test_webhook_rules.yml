@@ -3,12 +3,13 @@
   sources:
     - ansible.eda.webhook:
         port: "{{ WH_PORT | default(5000) }}"
+        token: "{{ SECRET }}"
   rules:
     - name: match webhook event
       condition: event.payload.ping == "pong"
       action:
         debug:
-          msg: "SUCCESS"
+          msg: "Rule fired successfully"
 
     - name: shutdown
       condition: event.payload.shutdown is defined
