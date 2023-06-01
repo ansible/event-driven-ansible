@@ -9,6 +9,7 @@ Arguments:
 
     urls - a list of urls to poll
     delay - the number of seconds to wait between polling
+    verify_ssl - verify SSL certificate
 
 Example:
 
@@ -28,6 +29,7 @@ import aiohttp
 async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
+    verify_ssl = args.get("verify_ssl", True)
 
     if not urls:
         return
@@ -36,7 +38,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         try:
             async with aiohttp.ClientSession() as session:
                 for url in urls:
-                    async with session.get(url) as resp:
+                    async with session.get(url, verify_ssl=verify_ssl) as resp:
                         await queue.put(
                             dict(
                                 url_check=dict(
