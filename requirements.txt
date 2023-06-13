@@ -2,6 +2,7 @@ azure-servicebus
 aiobotocore
 aiohttp
 aiokafka
-watchdog
-systemd-python
 dpath
+kubernetes
+systemd-python
+watchdog

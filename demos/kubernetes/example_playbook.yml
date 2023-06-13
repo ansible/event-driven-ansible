@@ -1,0 +1,7 @@
+---
+- name: Example triggered playbook
+  hosts: localhost
+  tasks:
+    - name: Print a debug message
+      ansible.builtin.debug:
+        msg: This is just an example of a triggered event

@@ -1,0 +1,15 @@
+---
+- name: Listen for changes in pods on a Kubernetes cluster
+  hosts: localhost
+  sources:
+    - name: Check for deployments in the cluster
+      ansible.eda.kubernetes:
+        api: AppsV1Api
+        method: list_deployment_for_all_namespaces
+        params: {}
+  rules:
+    - name: A deployment creation was found with a name nginx-deployment
+      condition: event.type == "ADDED" and event.resource.kind == 'Deployment' and event.resource.name == 'nginx-deployment'
+      action:
+        run_playbook:
+          name: example_playbook.yml

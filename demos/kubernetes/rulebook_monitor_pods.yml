@@ -1,0 +1,15 @@
+---
+- name: Listen for changes in pods on a Kubernetes cluster
+  hosts: localhost
+  sources:
+    - name: Check for pods in the cluster
+      ansible.eda.kubernetes:
+        api: CoreV1Api
+        method: list_pod_for_all_namespaces
+        params: {}
+  rules:
+    - name: A pod condition was found
+      condition: event.type == "ADDED" and event.resource.kind == 'Pod'
+      action:
+        run_playbook:
+          name: example_playbook.yml
