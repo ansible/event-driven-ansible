@@ -1,9 +1,9 @@
-"""
-kafka.py
+"""kafka.py.
 
 An ansible-rulebook event source plugin for receiving events via a kafka topic.
 
 Arguments:
+---------
     host:      The host where the kafka topic is hosted
     port:      The port where the kafka server is listening
     cafile:    The optional certificate authority file path containing certificates
@@ -27,13 +27,13 @@ Arguments:
 import asyncio
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]):
     logger = logging.getLogger()
 
     topic = args.get("topic")
@@ -49,7 +49,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     encoding = args.get("encoding", "utf-8")
 
     if offset not in ("latest", "earliest"):
-        raise Exception(f"Invalid offset option: {offset}")
+        msg = f"Invalid offset option: {offset}"
+        raise Exception(msg)
 
     if cafile:
         context = create_ssl_context(
@@ -62,7 +63,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     kafka_consumer = AIOKafkaConsumer(
         topic,
-        bootstrap_servers="{0}:{1}".format(host, port),
+        bootstrap_servers=f"{host}:{port}",
         group_id=group_id,
         enable_auto_commit=True,
         max_poll_records=1,
@@ -102,5 +103,5 @@ if __name__ == "__main__":
         main(
             MockQueue(),
             {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"},
-        )
+        ),
     )

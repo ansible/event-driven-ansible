@@ -1,5 +1,4 @@
-"""
-json_filter.py:   An event filter that filters keys out of events.
+"""json_filter.py:   An event filter that filters keys out of events.
 
 Includes override excludes.
 
@@ -7,26 +6,22 @@ This is useful to exclude information from events that is unneeded by the rule
 engine.
 
 Arguments:
+---------
     * exclude_keys = a list of strings or patterns to remove
     * include_keys = a list of strings or patterns to keep even if it matches
     exclude_keys patterns.
+
 """
 
 import fnmatch
 
 
 def matches_include_keys(include_keys, s):
-    for pattern in include_keys:
-        if fnmatch.fnmatch(s, pattern):
-            return True
-    return False
+    return any(fnmatch.fnmatch(s, pattern) for pattern in include_keys)
 
 
 def matches_exclude_keys(exclude_keys, s):
-    for pattern in exclude_keys:
-        if fnmatch.fnmatch(s, pattern):
-            return True
-    return False
+    return any(fnmatch.fnmatch(s, pattern) for pattern in exclude_keys)
 
 
 def main(event, exclude_keys=None, include_keys=None):

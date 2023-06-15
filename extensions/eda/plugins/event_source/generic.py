@@ -16,7 +16,7 @@ import asyncio
 import random
 import time
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 """ A generic source plugin that allows you to insert custom data
 
@@ -48,7 +48,7 @@ from typing import Any, Dict
 """
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]):
     payload = args.get("payload")
     randomize = args.get("randomize", False)
     display = args.get("display", False)
@@ -65,7 +65,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     loop_count = int(args.get("loop_count", 1))  # -1 infinite
     repeat_count = int(args.get("repeat_count", 1))
     if time_format not in ["local", "iso8601", "epoch"]:
-        raise ValueError("time_format must be one of local, iso8601, epoch")
+        msg = "time_format must be one of local, iso8601, epoch"
+        raise ValueError(msg)
 
     if not isinstance(payload, list):
         payload = [payload]
@@ -116,19 +117,19 @@ if __name__ == "__main__":
     asyncio.run(
         main(
             MockQueue(),
-            dict(
-                randomize=True,
-                startup_delay=1,
-                create_index="my_index",
-                loop_count=2,
-                repeat_count=2,
-                repeat_delay=1,
-                event_delay=2,
-                loop_delay=3,
-                shutdown_after=11,
-                timestamp=True,
-                display=True,
-                payload=[dict(i=1), dict(f=3.14159), dict(b=False)],
-            ),
-        )
+            {
+                "randomize": True,
+                "startup_delay": 1,
+                "create_index": "my_index",
+                "loop_count": 2,
+                "repeat_count": 2,
+                "repeat_delay": 1,
+                "event_delay": 2,
+                "loop_delay": 3,
+                "shutdown_after": 11,
+                "timestamp": True,
+                "display": True,
+                "payload": [{"i": 1}, {"f": 3.14159}, {"b": False}],
+            },
+        ),
     )

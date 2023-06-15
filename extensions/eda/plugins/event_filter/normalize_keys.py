@@ -1,18 +1,18 @@
-"""
-normalize_keys.py:
+"""normalize_keys.py:
     An event filter that changes keys that contain non alpha numeric or
     underscore to undersocres.
     For instance, the key server-name becomes the new key server_name
     If there are consecutive non alpa numeric or under score, they would
     be coalesced into a single underscore
     For instance the key server.com/&abc becomes server_com_abc
-    instead of server_com__abc
+    instead of server_com__abc.
 
     If there is a existing key with the normalized name, it will get overwritten
     by default. If you don't want to over write it you can pass in overwrite: False
     The default value of overwrite is True.
 
 Arguments:
+---------
     * overwrite: Overwrite the values if there is a collision with a new key.
 
 Usage in a rulebook, a filter is usually attached to a source in the rulebook:
@@ -50,17 +50,17 @@ def main(event, overwrite=True):
 
 def _normalize_embedded_keys(obj, overwrite, logger):
     if isinstance(obj, dict):
-        new_dict = dict()
+        new_dict = {}
         original_keys = list(obj.keys())
         for key in original_keys:
             new_key = normalize_regex.sub("_", key)
             if new_key == key or new_key not in original_keys:
                 new_dict[new_key] = _normalize_embedded_keys(
-                    obj[key], overwrite, logger
+                    obj[key], overwrite, logger,
                 )
             elif new_key in original_keys and overwrite:
                 new_dict[new_key] = _normalize_embedded_keys(
-                    obj[key], overwrite, logger
+                    obj[key], overwrite, logger,
                 )
                 logger.warning("Replacing existing key %s", new_key)
         return new_dict

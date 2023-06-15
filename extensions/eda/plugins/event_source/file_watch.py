@@ -1,20 +1,21 @@
-"""
-file_watch.py
+"""file_watch.py.
 
 An ansible-rulebook event source plugin for watching file system changes.
 
 Arguments:
+---------
     path: The directory to watch for changes.
     ignore_regexes: A list of regular expressions to ignore changes
     recursive: Recursively watch the path if true
 
 Example:
-
+-------
     - name: file_watch
       file_watch:
         path: "{{src_path}}"
         recursive: true
         ignore_regexes: ['.*\\.pytest.*', '.*__pycache__.*', '.*/.git.*']
+
 """
 
 import asyncio
@@ -28,51 +29,51 @@ def watch(loop, queue, args):
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self, event):
             loop.call_soon_threadsafe(
                 queue.put_nowait,
-                dict(
-                    change="created",
-                    src_path=event.src_path,
-                    type=event.__class__.__name__,
-                    root_path=root_path,
-                ),
+                {
+                    "change": "created",
+                    "src_path": event.src_path,
+                    "type": event.__class__.__name__,
+                    "root_path": root_path,
+                },
             )
 
         def on_deleted(self, event):
             loop.call_soon_threadsafe(
                 queue.put_nowait,
-                dict(
-                    change="deleted",
-                    src_path=event.src_path,
-                    type=event.__class__.__name__,
-                    root_path=root_path,
-                ),
+                {
+                    "change": "deleted",
+                    "src_path": event.src_path,
+                    "type": event.__class__.__name__,
+                    "root_path": root_path,
+                },
             )
 
         def on_modified(self, event):
             loop.call_soon_threadsafe(
                 queue.put_nowait,
-                dict(
-                    change="modified",
-                    src_path=event.src_path,
-                    type=event.__class__.__name__,
-                    root_path=root_path,
-                ),
+                {
+                    "change": "modified",
+                    "src_path": event.src_path,
+                    "type": event.__class__.__name__,
+                    "root_path": root_path,
+                },
             )
 
         def on_moved(self, event):
             loop.call_soon_threadsafe(
                 queue.put_nowait,
-                dict(
-                    change="moved",
-                    src_path=event.src_path,
-                    type=event.__class__.__name__,
-                    root_path=root_path,
-                ),
+                {
+                    "change": "moved",
+                    "src_path": event.src_path,
+                    "type": event.__class__.__name__,
+                    "root_path": root_path,
+                },
             )
 
     observer = Observer()

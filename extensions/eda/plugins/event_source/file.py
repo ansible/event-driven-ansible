@@ -1,14 +1,14 @@
-"""
-file.py
+"""file.py.
 
 An ansible-rulebook event source plugin for loading facts from YAML files
 initially and when the file changes.
 
 Arguments:
+---------
     files - a list of YAML files
 
 Example:
-
+-------
     - ansible.eda.file:
       files:
         - fact.yml
@@ -31,13 +31,14 @@ def send_facts(queue, filename):
             queue.put(data)
         else:
             if not isinstance(data, list):
+                msg = f"Unsupported facts type, expects a list of dicts found {type(data)}"
                 raise Exception(
-                    "Unsupported facts type, expects a list of dicts found"
-                    f" {type(data)}"
+                    msg,
                 )
-            if not all(True if isinstance(item, dict) else False for item in data):
+            if not all(bool(isinstance(item, dict)) for item in data):
+                msg = f"Unsupported facts type, expects a list of dicts found {data}"
                 raise Exception(
-                    f"Unsupported facts type, expects a list of dicts found {data}"
+                    msg,
                 )
             for item in data:
                 queue.put(item)
@@ -53,7 +54,7 @@ def main(queue, args):
         send_facts(queue, filename)
 
     class Handler(RegexMatchingEventHandler):
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self, event):

@@ -1,9 +1,9 @@
-"""
-webhook.py
+"""webhook.py.
 
 An ansible-rulebook event source module for receiving events via a webhook.
 
 Arguments:
+---------
     host:     The hostname to listen to. Set to 0.0.0.0 to listen on all
               interfaces. Defaults to 127.0.0.1
     port:     The TCP port to listen to.  Defaults to 5000
@@ -17,7 +17,8 @@ Arguments:
 import asyncio
 import logging
 import ssl
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from aiohttp import web
 
@@ -55,9 +56,10 @@ async def bearer_auth(request: web.Request, handler: Callable):
     return await handler(request)
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]):
     if "port" not in args:
-        raise ValueError("Missing required argument: port")
+        msg = "Missing required argument: port"
+        raise ValueError(msg)
     if "token" in args:
         app = web.Application(middlewares=[bearer_auth])
         app["token"] = args["token"]
@@ -112,5 +114,5 @@ if __name__ == "__main__":
                 "certfile": "cert.pem",
                 "keyfile": "key.pem",
             },
-        )
+        ),
     )
