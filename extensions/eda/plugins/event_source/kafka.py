@@ -33,7 +33,8 @@ from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via a kafka topic."""
     logger = logging.getLogger()
 
     topic = args.get("topic")
@@ -94,10 +95,14 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(
         main(
