@@ -24,8 +24,10 @@ from typing import Any
 
 import aiohttp
 
+OK = 200
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Poll a set of URLs and send events with status."""
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
     verify_ssl = args.get("verify_ssl", True)
@@ -42,7 +44,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
                             {
                                 "url_check": {
                                     "url": url,
-                                    "status": "up" if resp.status == 200 else "down",
+                                    "status": "up" if resp.status == OK else "down",
                                     "status_code": resp.status,
                                 },
                             },
@@ -64,9 +66,13 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"]}))
