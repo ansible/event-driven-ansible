@@ -1,9 +1,11 @@
-"""journald.py
+"""journald.py.
+
 An ansible-events event source plugin that tails systemd journald logs.
 
 Arguments:
 ---------
-    match - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html # noqa
+    match - return messages that matches this field,
+    see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
 
 Examples:
 --------
@@ -27,7 +29,8 @@ from typing import Any
 from systemd import journal
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Tail systemd journald logs."""
     delay = args.get("delay", 0)
     match = args.get("match", [])
 
@@ -52,9 +55,13 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(main(MockQueue(), {"match": "ALL"}))
