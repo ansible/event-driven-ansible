@@ -1,4 +1,5 @@
-"""normalize_keys.py:
+"""normalize_keys.py.
+
     An event filter that changes keys that contain non alpha numeric or
     underscore to undersocres.
     For instance, the key server-name becomes the new key server_name
@@ -42,13 +43,14 @@ import re
 normalize_regex = re.compile("[^0-9a-zA-Z_]+")
 
 
-def main(event, overwrite=True):
+def main(event: dict, overwrite: bool = True) -> dict:
+    """Change keys that contain non-alphanumeric characters to underscores."""
     logger = mp.get_logger()
     logger.info("normalize_keys")
     return _normalize_embedded_keys(event, overwrite, logger)
 
 
-def _normalize_embedded_keys(obj, overwrite, logger):
+def _normalize_embedded_keys(obj: dict, overwrite: bool, logger) -> dict:
     if isinstance(obj, dict):
         new_dict = {}
         original_keys = list(obj.keys())
