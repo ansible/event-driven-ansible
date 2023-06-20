@@ -27,9 +27,11 @@ from azure.servicebus import ServiceBusClient
 
 def receive_events(
     loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: dict[str, Any],
-):
+) -> None:
+    """Receive events from service bus."""
     servicebus_client = ServiceBusClient.from_connection_string(
-        conn_str=args["conn_str"], logging_enable=bool(args.get("logging_enable", True)),
+        conn_str=args["conn_str"],
+        logging_enable=bool(args.get("logging_enable", True)),
     )
 
     with servicebus_client:
@@ -47,7 +49,8 @@ def receive_events(
                 receiver.complete_message(msg)
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events from service bus in a loop."""
     loop = asyncio.get_running_loop()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as task_pool:
@@ -55,10 +58,14 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        def put_nowait(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put_nowait(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     args = {
         "conn_str": "Endpoint=sb://foo.servicebus.windows.net/",
