@@ -1,4 +1,5 @@
 -r requirements.txt
+tox
 pytest
 asyncmock
 pytest-asyncio
@@ -6,3 +7,8 @@ pytest-timeout
 ansible
 requests
 ansible-rulebook
+flake8
+shyaml
+ruff
+darglint
+pylint

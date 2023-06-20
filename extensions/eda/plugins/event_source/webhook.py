@@ -14,15 +14,19 @@ Arguments:
     password: The optional password to be used when loading the certificate chain
 
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from aiohttp import web
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 import asyncio
 import json
 import logging
 import ssl
-from collections.abc import Callable
-from typing import Any
-
-from aiohttp import web
 
 logger = logging.getLogger(__name__)
 routes = web.RouteTableDef()
@@ -119,7 +123,7 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: MockQueue, event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+"""Upcase plugin."""
 
 # Ansible is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,10 +12,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
@@ -60,10 +56,10 @@ message:
 from ansible.module_utils.basic import AnsibleModule  # noqa: E402
 
 
-def run_module():
-    module_args = dict(name=dict(type="str", required=True))
-
-    result = dict(changed=False, message="")
+def run_module() -> None:
+    """Call to the run module plugin action."""
+    module_args = {"name": {"type": "str", "required": True}}
+    result = {"changed": False, "message": ""}
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
@@ -85,7 +81,8 @@ def run_module():
     module.exit_json(**result)
 
 
-def main():
+def main() -> None:
+    """Call to the main method to run the plugin."""
     run_module()
 
 
