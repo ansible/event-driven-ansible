@@ -42,12 +42,14 @@ routes = web.RouteTableDef()
 
 
 @routes.get("/")
-async def status(request: web.Request):
+async def status(request: web.Request) -> web.Response:
+    """Return status of a web request."""
     return web.Response(status=200, text="up")
 
 
 @routes.post("/{endpoint}")
-async def webhook(request: web.Request):
+async def webhook(request: web.Request) -> web.Response:
+    """Read events from webhook."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
 
@@ -102,14 +104,15 @@ async def webhook(request: web.Request):
     return web.Response(status=202, text="Received")
 
 
-def clean_host(host):
+def clean_host(host: str) -> str:
+    """Remove port from host string if it exists."""
     if ":" in host:
         return host.split(":")[0]
-    else:
-        return host
+    return host
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via alertmanager webhook."""
     app = web.Application()
     app["queue"] = queue
     app["data_host_path"] = str(args.get("data_host_path", "labels.instance"))
@@ -133,9 +136,13 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(main(MockQueue(), {}))
