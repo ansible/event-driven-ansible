@@ -27,7 +27,8 @@ routes = web.RouteTableDef()
 
 
 @routes.post(r"/{endpoint:.*}")
-async def webhook(request: web.Request):
+async def webhook(request: web.Request) -> web.Response:
+    """Return response to webhook request."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
@@ -42,6 +43,7 @@ async def webhook(request: web.Request):
 
 @web.middleware
 async def bearer_auth(request: web.Request, handler: Callable):
+    """Verify authorization is Bearer type."""
     try:
         scheme, token = request.headers["Authorization"].strip().split(" ")
         if scheme != "Bearer":
@@ -56,7 +58,8 @@ async def bearer_auth(request: web.Request, handler: Callable):
     return await handler(request)
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via webhook."""
     if "port" not in args:
         msg = "Missing required argument: port"
         raise ValueError(msg)
@@ -100,10 +103,14 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(
         main(
