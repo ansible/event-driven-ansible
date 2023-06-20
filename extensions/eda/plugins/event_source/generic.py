@@ -1,3 +1,32 @@
+"""A generic source plugin that allows you to insert custom data.
+
+The event data to insert into the queue is specified in the required
+parameter payload and is an array of events.
+
+Optional Parameters:
+randomize    True|False Randomize the events in the payload, default False
+display      True|False Display the event data in stdout, default False
+add_timestamp True|False Add an event timestamp, default False
+time_format   local|iso8601|epoch  The time format of event timestamp,
+              default local
+create_index str   The index to create for each event starts at 0
+startup_delay float  Number of seconds to wait before injecting events
+                   into the queue. Default 0
+event_delay float    Number of seconds to wait before injecting the next
+                   event from the payload. Default 0
+repeat_delay float   Number of seconds to wait before injecting a repeated
+                   event from the payload. Default 0
+loop_delay float     Number of seconds to wait before inserting the
+                   next set of events. Default 0
+shutdown_after float Number of seconds to wait before shutting down the
+                   plugin. Default 0
+loop_count int     Number of times the set of events in the playload
+                   should be repeated. Default 0
+repeat_count int   Number of times each individual event in the playload
+                   should be repeated. Default 1
+
+"""
+
 #  Copyright 2022 Red Hat, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,37 +47,9 @@ import time
 from datetime import datetime
 from typing import Any
 
-""" A generic source plugin that allows you to insert custom data
 
-    The event data to insert into the queue is specified in the required
-    parameter payload and is an array of events.
-
-    Optional Parameters:
-    randomize    True|False Randomize the events in the payload, default False
-    display      True|False Display the event data in stdout, default False
-    add_timestamp True|False Add an event timestamp, default False
-    time_format   local|iso8601|epoch  The time format of event timestamp,
-                  default local
-    create_index str   The index to create for each event starts at 0
-    startup_delay float  Number of seconds to wait before injecting events
-                       into the queue. Default 0
-    event_delay float    Number of seconds to wait before injecting the next
-                       event from the payload. Default 0
-    repeat_delay float   Number of seconds to wait before injecting a repeated
-                       event from the payload. Default 0
-    loop_delay float     Number of seconds to wait before inserting the
-                       next set of events. Default 0
-    shutdown_after float Number of seconds to wait before shutting down the
-                       plugin. Default 0
-    loop_count int     Number of times the set of events in the playload
-                       should be repeated. Default 0
-    repeat_count int   Number of times each individual event in the playload
-                       should be repeated. Default 1
-
-"""
-
-
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Insert event data into the queue."""
     payload = args.get("payload")
     randomize = args.get("randomize", False)
     display = args.get("display", False)
@@ -109,10 +110,14 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(
         main(
