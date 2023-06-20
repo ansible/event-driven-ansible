@@ -1,11 +1,15 @@
 name: Run Ansible tests
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
+  # Run the unit tests every 8 hours.
+  # This will help to identify faster if
+  # there is a CI failure related to a
+  # change in any dependency.
+  schedule:
+    - cron: '0 */8 * * *'
 jobs:
   tests:
     runs-on: ubuntu-latest

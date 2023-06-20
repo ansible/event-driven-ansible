@@ -1,6 +1,16 @@
 ---
-on: [push, pull_request]
-name: Linters
+name: Run linters
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  # Run the linters tests every 8 hours.
+  # This will help to identify faster if
+  # there is a CI failure related to a
+  # change in any dependency.
+  schedule:
+    - cron: '0 */8 * * *'
 jobs:
   black:
     runs-on: ubuntu-latest
