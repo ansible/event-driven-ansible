@@ -22,7 +22,8 @@ from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
-def send_facts(queue, filename):
+def send_facts(queue, filename: str) -> None:
+    """Send facts to the queue."""
     with open(filename) as f:
         data = yaml.safe_load(f.read())
         if data is None:
@@ -44,7 +45,8 @@ def send_facts(queue, filename):
                 queue.put(item)
 
 
-def main(queue, args):
+def main(queue, args: dict) -> None:
+    """Load facts from YAML files initially and when the file changes."""
     files = [os.path.abspath(f) for f in args.get("files", [])]
 
     if not files:
@@ -57,18 +59,18 @@ def main(queue, args):
         def __init__(self, **kwargs) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self, event):
+        def on_created(self, event: dict) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
-        def on_deleted(self, event):
+        def on_deleted(self, event: dict) -> None:
             pass
 
-        def on_modified(self, event):
+        def on_modified(self, event: dict) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
-        def on_moved(self, event):
+        def on_moved(self, event: dict) -> None:
             pass
 
     observer = Observer()
@@ -87,9 +89,13 @@ def main(queue, args):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     main(MockQueue(), {"files": ["facts.yml"]})
