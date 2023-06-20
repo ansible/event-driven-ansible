@@ -35,6 +35,7 @@ def main(
     host_separator: str = None,
     path_separator: str = ".",
 ) -> dict[str, Any]:
+    """Extract hosts from event data and insert into meta dict."""
     if not host_path:
         return event
 
