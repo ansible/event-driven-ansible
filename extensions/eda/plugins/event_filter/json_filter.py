@@ -16,15 +16,16 @@ Arguments:
 import fnmatch
 
 
-def matches_include_keys(include_keys, s):
+def _matches_include_keys(include_keys: list, s: str) -> bool:
     return any(fnmatch.fnmatch(s, pattern) for pattern in include_keys)
 
 
-def matches_exclude_keys(exclude_keys, s):
+def _matches_exclude_keys(exclude_keys: list, s: str) -> bool:
     return any(fnmatch.fnmatch(s, pattern) for pattern in exclude_keys)
 
 
-def main(event, exclude_keys=None, include_keys=None):
+def main(event: dict, exclude_keys: list = None, include_keys: list = None) -> dict:
+    """Filter keys out of events."""
     if exclude_keys is None:
         exclude_keys = []
 
@@ -37,13 +38,9 @@ def main(event, exclude_keys=None, include_keys=None):
         o = q.pop()
         if isinstance(o, dict):
             for i in list(o.keys()):
-                if i in include_keys:
+                if (i in include_keys) or _matches_include_keys(include_keys, i):
                     q.append(o[i])
-                elif matches_include_keys(include_keys, i):
-                    q.append(o[i])
-                elif i in exclude_keys:
-                    del o[i]
-                elif matches_exclude_keys(exclude_keys, i):
+                elif (i in exclude_keys) or _matches_exclude_keys(exclude_keys, i):
                     del o[i]
                 else:
                     q.append(o[i])
