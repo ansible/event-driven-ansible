@@ -1,4 +1,4 @@
-"""file_watch.py.
+r"""file_watch.py.
 
 An ansible-rulebook event source plugin for watching file system changes.
 
@@ -25,14 +25,15 @@ from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
-def watch(loop, queue, args):
+def watch(loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: dict) -> None:
+    """Watch for changes and put events on the queue."""
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
         def __init__(self, **kwargs) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self, event):
+        def on_created(self, event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -43,7 +44,7 @@ def watch(loop, queue, args):
                 },
             )
 
-        def on_deleted(self, event):
+        def on_deleted(self, event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -54,7 +55,7 @@ def watch(loop, queue, args):
                 },
             )
 
-        def on_modified(self, event):
+        def on_modified(self, event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -65,7 +66,7 @@ def watch(loop, queue, args):
                 },
             )
 
-        def on_moved(self, event):
+        def on_moved(self, event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -88,7 +89,8 @@ def watch(loop, queue, args):
         observer.join()
 
 
-async def main(queue, args):
+async def main(queue: asyncio.Queue, args: dict) -> None:
+    """Watch for changes to a file and put events on the queue."""
     loop = asyncio.get_event_loop()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as task_pool:
@@ -96,9 +98,13 @@ async def main(queue, args):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        def put_nowait(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put_nowait(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(main(MockQueue(), {"path": "/tmp", "recursive": True}))
