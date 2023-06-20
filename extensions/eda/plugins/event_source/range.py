@@ -18,7 +18,8 @@ import asyncio
 from typing import Any
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Generate events with an increasing index i with a limit."""
     delay = args.get("delay", 0)
 
     for i in range(int(args["limit"])):
@@ -27,9 +28,13 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self, event: dict) -> None:
+            """Print the event."""
+            print(event) # noqa: T201
 
     asyncio.run(main(MockQueue(), {"limit": 5}))
