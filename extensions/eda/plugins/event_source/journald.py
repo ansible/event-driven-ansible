@@ -1,9 +1,9 @@
-"""
-journald.py
+"""journald.py.
+
 An ansible-events event source plugin that tails systemd journald logs.
 
 Arguments:
-    match - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html # noqa
+    match - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
 
 Examples:
     - name: Return severity 6 messages
@@ -20,12 +20,12 @@ Examples:
 """
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 from systemd import journal
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]):
     delay = args.get("delay", 0)
     match = args.get("match", [])
 
@@ -36,14 +36,14 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     journal_stream.seek_tail()
 
     while True:
-        if not match == "ALL":
+        if match != "ALL":
             journal_stream.add_match(match)
         for entry in journal_stream:
             stream_dict = {}
             for field in entry:
                 stream_dict[field.lower()] = f"{entry[field]}"
 
-            await queue.put(dict(journald=stream_dict))
+            await queue.put({"journald": stream_dict})
             await asyncio.sleep(delay)
 
             stream_dict.clear()
