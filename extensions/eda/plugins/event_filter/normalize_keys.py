@@ -37,20 +37,25 @@ Usage in a rulebook, a filter is usually attached to a source in the rulebook:
 
 """
 
+import logging
 import multiprocessing as mp
 import re
 
 normalize_regex = re.compile("[^0-9a-zA-Z_]+")
 
 
-def main(event: dict, overwrite: bool = True) -> dict:
+def main(event: dict, overwrite: bool = True) -> dict:  # noqa: FBT001, FBT002
     """Change keys that contain non-alphanumeric characters to underscores."""
     logger = mp.get_logger()
     logger.info("normalize_keys")
     return _normalize_embedded_keys(event, overwrite, logger)
 
 
-def _normalize_embedded_keys(obj: dict, overwrite: bool, logger) -> dict:
+def _normalize_embedded_keys(
+    obj: dict,
+    overwrite: bool,  # noqa: FBT001
+    logger: logging.Logger,
+) -> dict:
     if isinstance(obj, dict):
         new_dict = {}
         original_keys = list(obj.keys())
@@ -58,14 +63,18 @@ def _normalize_embedded_keys(obj: dict, overwrite: bool, logger) -> dict:
             new_key = normalize_regex.sub("_", key)
             if new_key == key or new_key not in original_keys:
                 new_dict[new_key] = _normalize_embedded_keys(
-                    obj[key], overwrite, logger,
+                    obj[key],
+                    overwrite,
+                    logger,
                 )
             elif new_key in original_keys and overwrite:
                 new_dict[new_key] = _normalize_embedded_keys(
-                    obj[key], overwrite, logger,
+                    obj[key],
+                    overwrite,
+                    logger,
                 )
                 logger.warning("Replacing existing key %s", new_key)
         return new_dict
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [_normalize_embedded_keys(item, overwrite, logger) for item in obj]
     return obj

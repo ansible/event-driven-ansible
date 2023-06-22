@@ -13,6 +13,8 @@ Arguments:
 
 """
 
+from __future__ import annotations
+
 import fnmatch
 
 
@@ -24,7 +26,11 @@ def _matches_exclude_keys(exclude_keys: list, s: str) -> bool:
     return any(fnmatch.fnmatch(s, pattern) for pattern in exclude_keys)
 
 
-def main(event: dict, exclude_keys: list = None, include_keys: list = None) -> dict:
+def main(
+    event: dict,
+    exclude_keys: list | None = None,
+    include_keys: list | None = None,
+) -> dict:
     """Filter keys out of events."""
     if exclude_keys is None:
         exclude_keys = []

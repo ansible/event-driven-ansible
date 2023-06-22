@@ -41,19 +41,24 @@ async def webhook(request: web.Request) -> web.Response:
     return web.Response(text=endpoint)
 
 
+def _parse_token(request: web.Request) -> (str, str):
+    scheme, token = request.headers["Authorization"].strip().split(" ")
+    if scheme != "Bearer":
+        raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
+    if token != request.app["token"]:
+        raise web.HTTPUnauthorized(text="Invalid authorization token")
+    return scheme, token
+
+
 @web.middleware
-async def bearer_auth(request: web.Request, handler: Callable):
+async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResponse:
     """Verify authorization is Bearer type."""
     try:
-        scheme, token = request.headers["Authorization"].strip().split(" ")
-        if scheme != "Bearer":
-            raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
-        elif token != request.app["token"]:
-            raise web.HTTPUnauthorized(text="Invalid authorization token")
+        scheme, token = _parse_token(request)
     except KeyError:
-        raise web.HTTPUnauthorized(reason="Missing authorization token")
+        raise web.HTTPUnauthorized(reason="Missing authorization token") from None
     except ValueError:
-        raise web.HTTPUnauthorized(text="Invalid authorization token")
+        raise web.HTTPUnauthorized(text="Invalid authorization token") from None
 
     return await handler(request)
 
@@ -81,14 +86,14 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
         try:
             context.load_cert_chain(certfile, keyfile, password)
         except Exception:
-            logger.error("Failed to load certificates. Check they are valid")
+            logger.exception("Failed to load certificates. Check they are valid")
             raise
 
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(
         runner,
-        args.get("host") or "0.0.0.0",
+        args.get("host") or "127.0.0.1",
         args.get("port"),
         ssl_context=context,
     )
@@ -108,9 +113,9 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self, event: dict) -> None:
+        async def put(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(

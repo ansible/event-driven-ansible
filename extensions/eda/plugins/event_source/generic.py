@@ -86,21 +86,12 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
             if not event:
                 continue
             for _ignore in range(repeat_count):
-                data = {}
-                if create_index:
-                    data[create_index] = index
-                if add_timestamp:
-                    if time_format == "local":
-                        data["timestamp"] = str(datetime.now())
-                    elif time_format == "epoch":
-                        data["timestamp"] = int(time.time())
-                    elif time_format == "iso8601":
-                        data["timestamp"] = datetime.now().isoformat()
+                data = _create_data(create_index, index, add_timestamp, time_format)
 
                 index += 1
                 data.update(event)
                 if display:
-                    print(data)
+                    print(data)  # noqa: T201
                 await queue.put(data)
                 await asyncio.sleep(repeat_delay)
 
@@ -109,15 +100,34 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     await asyncio.sleep(shutdown_after)
 
 
+def _create_data(
+    create_index: str,
+    index: int,
+    add_timestamp: str,
+    time_format: str,
+) -> dict:
+    data = {}
+    if create_index:
+        data[create_index] = index
+    if add_timestamp:
+        if time_format == "local":
+            data["timestamp"] = str(datetime.now())  # noqa: DTZ005
+        elif time_format == "epoch":
+            data["timestamp"] = int(time.time())
+        elif time_format == "iso8601":
+            data["timestamp"] = datetime.now(tz=None).isoformat()  # noqa: DTZ005
+    return data
+
+
 if __name__ == "__main__":
     """MockQueue if running directly."""
 
     class MockQueue:
         """A fake queue."""
 
-        async def put(self, event: dict) -> None:
+        async def put(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(

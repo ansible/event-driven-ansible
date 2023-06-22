@@ -51,7 +51,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
-        raise Exception(msg)
+        raise ValueError(msg)
 
     if cafile:
         context = create_ssl_context(
@@ -83,8 +83,8 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                 data = json.loads(value)
             except json.decoder.JSONDecodeError:
                 data = value
-            except UnicodeError as e:
-                logger.error(e)
+            except UnicodeError:
+                logger.exception("Unicode Error")
 
             if data:
                 await queue.put({"body": data})
@@ -100,9 +100,9 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self, event: dict) -> None:
+        async def put(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(

@@ -33,6 +33,7 @@ Example:
 """
 
 import asyncio
+import logging
 from typing import Any
 
 from aiohttp import web
@@ -42,7 +43,7 @@ routes = web.RouteTableDef()
 
 
 @routes.get("/")
-async def status(request: web.Request) -> web.Response:
+async def status(_request: web.Request) -> web.Response:
     """Return status of a web request."""
     return web.Response(status=200, text="up")
 
@@ -96,7 +97,9 @@ async def webhook(request: web.Request) -> web.Response:
             {
                 "alert": alert,
                 "meta": {
-                    "endpoint": endpoint, "headers": dict(request.headers), "hosts": hosts,
+                    "endpoint": endpoint,
+                    "headers": dict(request.headers),
+                    "hosts": hosts,
                 },
             },
         )
@@ -130,7 +133,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     try:
         await asyncio.Future()
     except asyncio.CancelledError:
-        print("Plugin Task Cancelled")
+        logging.getLogger().info("Plugin Task Cancelled")
     finally:
         await runner.cleanup()
 
@@ -141,8 +144,8 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self, event: dict) -> None:
+        async def put(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
     asyncio.run(main(MockQueue(), {}))

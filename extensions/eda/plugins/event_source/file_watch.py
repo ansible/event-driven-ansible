@@ -20,20 +20,25 @@ Example:
 
 import asyncio
 import concurrent.futures
+from typing import Optional
 
 from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
-def watch(loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: dict) -> None:
+def watch(
+    loop: asyncio.events.AbstractEventLoop,
+    queue: asyncio.Queue,
+    args: dict,
+) -> None:
     """Watch for changes and put events on the queue."""
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
-        def __init__(self, **kwargs) -> None:
+        def __init__(self: "Handler", **kwargs: Optional(list[str])) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self, event: dict) -> None:
+        def on_created(self: "Handler", event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -44,7 +49,7 @@ def watch(loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: di
                 },
             )
 
-        def on_deleted(self, event: dict) -> None:
+        def on_deleted(self: "Handler", event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -55,7 +60,7 @@ def watch(loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: di
                 },
             )
 
-        def on_modified(self, event: dict) -> None:
+        def on_modified(self: "Handler", event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -66,7 +71,7 @@ def watch(loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: di
                 },
             )
 
-        def on_moved(self, event: dict) -> None:
+        def on_moved(self: "Handler", event: dict) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -103,8 +108,8 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put_nowait(self, event: dict) -> None:
+        async def put_nowait(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
-    asyncio.run(main(MockQueue(), {"path": "/tmp", "recursive": True}))
+    asyncio.run(main(MockQueue(), {"path": "/tmp", "recursive": True}))  # noqa: S108

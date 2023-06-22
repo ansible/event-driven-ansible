@@ -26,7 +26,9 @@ from azure.servicebus import ServiceBusClient
 
 
 def receive_events(
-    loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: dict[str, Any],
+    loop: asyncio.events.AbstractEventLoop,
+    queue: asyncio.Queue,
+    args: dict[str, Any],
 ) -> None:
     """Receive events from service bus."""
     servicebus_client = ServiceBusClient.from_connection_string(
@@ -44,7 +46,8 @@ def receive_events(
                     body = json.loads(body)
 
                 loop.call_soon_threadsafe(
-                    queue.put_nowait, {"body": body, "meta": meta},
+                    queue.put_nowait,
+                    {"body": body, "meta": meta},
                 )
                 receiver.complete_message(msg)
 
@@ -63,9 +66,9 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put_nowait(self, event: dict) -> None:
+        async def put_nowait(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
     args = {
         "conn_str": "Endpoint=sb://foo.servicebus.windows.net/",

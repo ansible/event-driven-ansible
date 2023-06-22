@@ -26,6 +26,7 @@ import aiohttp
 
 OK = 200
 
+
 async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     """Poll a set of URLs and send events with status."""
     urls = args.get("urls", [])
@@ -71,8 +72,8 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self, event: dict) -> None:
+        async def put(self: "MockQueue", event: dict) -> None:
             """Print the event."""
-            print(event) # noqa: T201
+            print(event)  # noqa: T201
 
     asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"]}))

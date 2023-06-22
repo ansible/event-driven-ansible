@@ -12,7 +12,7 @@ Arguments:
 import multiprocessing as mp
 
 
-def main(event: dict, overwrite: bool = True) -> dict:
+def main(event: dict, overwrite: bool = True) -> dict:  # noqa: FBT001, FBT002
     """Change dashes in keys to underscores."""
     logger = mp.get_logger()
     logger.info("dashes_to_underscores")

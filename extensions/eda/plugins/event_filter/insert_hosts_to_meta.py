@@ -24,6 +24,8 @@ Example:
 
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 import dpath
@@ -31,8 +33,8 @@ import dpath
 
 def main(
     event: dict[str, Any],
-    host_path: str = None,
-    host_separator: str = None,
+    host_path: str | None = None,
+    host_separator: str | None = None,
     path_separator: str = ".",
 ) -> dict[str, Any]:
     """Extract hosts from event data and insert into meta dict."""
