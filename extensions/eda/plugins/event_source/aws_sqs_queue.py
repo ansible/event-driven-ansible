@@ -1,9 +1,9 @@
-"""
-aws_sqs_queue.py
+"""aws_sqs_queue.py.
 
 An ansible-rulebook event source plugin for receiving events via an AWS SQS queue.
 
 Arguments:
+---------
     access_key:    Optional AWS access key ID
     secret_key:    Optional AWS secret access key
     session_token: Optional STS session token for use with temporary credentials
@@ -13,26 +13,30 @@ Arguments:
     delay_seconds: The SQS long polling duration. Set to 0 to disable. Defaults to 2.
 
 Example:
+-------
     - ansible.eda.aws_sqs:
         region: us-east-1
         name: eda
         delay_seconds: 10
+
 """
 
 import asyncio
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import botocore.exceptions
 from aiobotocore.session import get_session
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via an AWS SQS queue."""
     logger = logging.getLogger()
 
     if "name" not in args:
-        raise ValueError("Missing queue name")
+        msg = "Missing queue name"
+        raise ValueError(msg)
     queue_name = str(args.get("name"))
     wait_seconds = int(args.get("delay_seconds", 2))
 
@@ -45,9 +49,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                 err.response["Error"]["Code"]
                 == "AWS.SimpleQueueService.NonExistentQueue"
             ):
-                raise ValueError("Queue %s does not exist" % queue_name)
-            else:
-                raise
+                raise ValueError("Queue %s does not exist" % queue_name) from None
+            raise
 
         queue_url = response["QueueUrl"]
 
@@ -79,7 +82,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                 logger.debug("No messages in queue")
 
 
-def connection_args(args: Dict[str, Any]) -> Dict[str, Any]:
+def connection_args(args: dict[str, Any]) -> dict[str, Any]:
+    """Provide connection arguments to AWS SQS queue."""
     selected_args = {}
 
     # Best Practice: get credentials from ~/.aws/credentials or the environment
@@ -99,9 +103,13 @@ def connection_args(args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(main(MockQueue(), {"region": "us-east-1", "name": "eda"}))

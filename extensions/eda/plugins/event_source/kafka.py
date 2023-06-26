@@ -1,9 +1,9 @@
-"""
-kafka.py
+"""kafka.py.
 
 An ansible-rulebook event source plugin for receiving events via a kafka topic.
 
 Arguments:
+---------
     host:      The host where the kafka topic is hosted
     port:      The port where the kafka server is listening
     cafile:    The optional certificate authority file path containing certificates
@@ -27,13 +27,14 @@ Arguments:
 import asyncio
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via a kafka topic."""
     logger = logging.getLogger()
 
     topic = args.get("topic")
@@ -49,7 +50,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     encoding = args.get("encoding", "utf-8")
 
     if offset not in ("latest", "earliest"):
-        raise Exception(f"Invalid offset option: {offset}")
+        msg = f"Invalid offset option: {offset}"
+        raise ValueError(msg)
 
     if cafile:
         context = create_ssl_context(
@@ -62,7 +64,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
     kafka_consumer = AIOKafkaConsumer(
         topic,
-        bootstrap_servers="{0}:{1}".format(host, port),
+        bootstrap_servers=f"{host}:{port}",
         group_id=group_id,
         enable_auto_commit=True,
         max_poll_records=1,
@@ -81,8 +83,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                 data = json.loads(value)
             except json.decoder.JSONDecodeError:
                 data = value
-            except UnicodeError as e:
-                logger.error(e)
+            except UnicodeError:
+                logger.exception("Unicode Error")
 
             if data:
                 await queue.put({"body": data})
@@ -93,14 +95,18 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(
             MockQueue(),
             {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"},
-        )
+        ),
     )
