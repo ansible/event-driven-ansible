@@ -29,7 +29,21 @@ from typing import Any
 from systemd import journal
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> str:  # noqa=D417
+    """Read journal entries and add them to the provided queue.
+
+    Args:
+    ----
+        queue (asyncio.Queue): The queue to which journal entries will be added.
+        args (dict[str, Any]): Additional arguments:
+            - delay (int): The delay in seconds. Defaults to 0.
+            - match (list[str]): A list of strings to match.
+              Defaults to empty list.
+
+    Returns:
+    -------
+        None
+    """
     delay = args.get("delay", 0)
     match = args.get("match", [])
 
@@ -54,9 +68,15 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """
+    Entry point of the program.
+    """
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A mock implementation of a queue that prints the event."""
+
+        async def put(self: str, event: str) -> str:
+            """Add the event to the queue and print it."""
+            print(event)  # noqa=T201
 
     asyncio.run(main(MockQueue(), {"match": "ALL"}))
