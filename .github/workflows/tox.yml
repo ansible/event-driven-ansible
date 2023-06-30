@@ -1,10 +1,8 @@
 ---
-name: Tox
+name: Run Tox linters checks
 on:
   push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
   # Run the tox tests every 8 hours.
   # This will help to identify faster if
   # there is a CI failure related to a
@@ -21,4 +19,4 @@ jobs:
       - name: Move to tox conf file and run tox
         run: | 
           cd .github/workflows
-          python -m tox -- ../..
+          python3 -m tox -- ../..
