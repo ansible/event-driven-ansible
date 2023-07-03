@@ -1,35 +1,40 @@
-"""
-range.py
+"""range.py.
 
 An ansible-rulebook event source plugin for generating events with an
 increasing index i.
 
 Arguments:
+---------
     limit: The upper limit of the range of the index.
 
 Example:
-
+-------
     - ansible.eda.range:
         limit: 5
 
 """
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Generate events with an increasing index i with a limit."""
     delay = args.get("delay", 0)
 
     for i in range(int(args["limit"])):
-        await queue.put(dict(i=i))
+        await queue.put({"i": i})
         await asyncio.sleep(delay)
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
 
-    asyncio.run(main(MockQueue(), dict(limit=5)))
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
+
+    asyncio.run(main(MockQueue(), {"limit": 5}))

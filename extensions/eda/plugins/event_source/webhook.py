@@ -1,9 +1,9 @@
-"""
-webhook.py
+"""webhook.py.
 
 An ansible-rulebook event source module for receiving events via a webhook.
 
 Arguments:
+---------
     host:     The hostname to listen to. Set to 0.0.0.0 to listen on all
               interfaces. Defaults to 127.0.0.1
     port:     The TCP port to listen to.  Defaults to 5000
@@ -17,7 +17,8 @@ Arguments:
 import asyncio
 import logging
 import ssl
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from aiohttp import web
 
@@ -26,7 +27,8 @@ routes = web.RouteTableDef()
 
 
 @routes.post(r"/{endpoint:.*}")
-async def webhook(request: web.Request):
+async def webhook(request: web.Request) -> web.Response:
+    """Return response to webhook request."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
@@ -39,25 +41,33 @@ async def webhook(request: web.Request):
     return web.Response(text=endpoint)
 
 
-@web.middleware
-async def bearer_auth(request: web.Request, handler: Callable):
-    try:
-        scheme, token = request.headers["Authorization"].strip().split(" ")
-        if scheme != "Bearer":
-            raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
-        elif token != request.app["token"]:
-            raise web.HTTPUnauthorized(text="Invalid authorization token")
-    except KeyError:
-        raise web.HTTPUnauthorized(reason="Missing authorization token")
-    except ValueError:
+def _parse_token(request: web.Request) -> (str, str):
+    scheme, token = request.headers["Authorization"].strip().split(" ")
+    if scheme != "Bearer":
+        raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
+    if token != request.app["token"]:
         raise web.HTTPUnauthorized(text="Invalid authorization token")
+    return scheme, token
+
+
+@web.middleware
+async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResponse:
+    """Verify authorization is Bearer type."""
+    try:
+        scheme, token = _parse_token(request)
+    except KeyError:
+        raise web.HTTPUnauthorized(reason="Missing authorization token") from None
+    except ValueError:
+        raise web.HTTPUnauthorized(text="Invalid authorization token") from None
 
     return await handler(request)
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via webhook."""
     if "port" not in args:
-        raise ValueError("Missing required argument: port")
+        msg = "Missing required argument: port"
+        raise ValueError(msg)
     if "token" in args:
         app = web.Application(middlewares=[bearer_auth])
         app["token"] = args["token"]
@@ -76,14 +86,14 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         try:
             context.load_cert_chain(certfile, keyfile, password)
         except Exception:
-            logger.error("Failed to load certificates. Check they are valid")
+            logger.exception("Failed to load certificates. Check they are valid")
             raise
 
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(
         runner,
-        args.get("host") or "0.0.0.0",
+        args.get("host") or "127.0.0.1",
         args.get("port"),
         ssl_context=context,
     )
@@ -98,10 +108,14 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(
@@ -112,5 +126,5 @@ if __name__ == "__main__":
                 "certfile": "cert.pem",
                 "keyfile": "key.pem",
             },
-        )
+        ),
     )

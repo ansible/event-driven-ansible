@@ -1,9 +1,9 @@
-"""
-aws_cloudtrail.py
+"""aws_cloudtrail.py.
 
 An ansible-rulebook event source module for getting events from an AWS CloudTrail
 
 Arguments:
+---------
     access_key:    Optional AWS access key ID
     secret_key:    Optional AWS secret access key
     session_token: Optional STS session token for use with temporary credentials
@@ -19,7 +19,7 @@ Arguments:
     event_category:     The optional event category to return. (e.g. 'insight')
 
 Example:
-
+-------
     - ansible.eda.aws_cloudtrail:
         region: us-east-1
         lookup_attributes:
@@ -34,18 +34,19 @@ Example:
 import asyncio
 import json
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
+from aiobotocore.client import BaseClient
 from aiobotocore.session import get_session
 
 
-def _cloudtrail_event_to_dict(event):
+def _cloudtrail_event_to_dict(event: dict) -> dict:
     event["EventTime"] = event["EventTime"].isoformat()
     event["CloudTrailEvent"] = json.loads(event["CloudTrailEvent"])
     return event
 
 
-def get_events(events, last_event_ids):
+def _get_events(events: list[dict], last_event_ids: list) -> list:
     event_time = None
     event_ids = []
     result = []
@@ -62,7 +63,7 @@ def get_events(events, last_event_ids):
     return result, event_time, event_ids
 
 
-async def get_cloudtrail_events(client, params):
+async def _get_cloudtrail_events(client: BaseClient, params: dict) -> list[dict]:
     paginator = client.get_paginator("lookup_events")
     results = await paginator.paginate(**params).build_full_result()
     return results.get("Events", [])
@@ -74,7 +75,8 @@ ARGS_MAPPING = {
 }
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via AWS CloudTrail."""
     delay = int(args.get("delay_seconds", 10))
 
     session = get_session()
@@ -83,17 +85,17 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         if args.get(k) is not None:
             params[v] = args.get(k)
 
-    params["StartTime"] = datetime.utcnow()
+    params["StartTime"] = datetime.utcnow()  # noqa: DTZ003
 
     async with session.create_client("cloudtrail", **connection_args(args)) as client:
         event_time = None
         event_ids = []
         while True:
-            events = await get_cloudtrail_events(client, params)
+            events = await _get_cloudtrail_events(client, params)
             if event_time is not None:
                 params["StartTime"] = event_time
 
-            events, c_event_time, c_event_ids = get_events(events, event_ids)
+            events, c_event_time, c_event_ids = _get_events(events, event_ids)
             for event in events:
                 await queue.put(_cloudtrail_event_to_dict(event))
 
@@ -103,7 +105,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             await asyncio.sleep(delay)
 
 
-def connection_args(args: Dict[str, Any]) -> Dict[str, Any]:
+def connection_args(args: dict[str, Any]) -> dict[str, Any]:
+    """Provide connection arguments to AWS CloudTrail."""
     selected_args = {}
 
     # Best Practice: get credentials from ~/.aws/credentials or the environment
@@ -123,9 +126,13 @@ def connection_args(args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(main(MockQueue(), {}))
