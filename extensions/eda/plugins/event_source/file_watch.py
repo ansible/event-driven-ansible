@@ -20,7 +20,6 @@ Example:
 
 import asyncio
 import concurrent.futures
-from typing import Optional
 
 from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
@@ -35,7 +34,7 @@ def watch(
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
-        def __init__(self: "Handler", **kwargs: Optional(list[str])) -> None:
+        def __init__(self: "Handler", **kwargs: dict) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self: "Handler", event: dict) -> None:
