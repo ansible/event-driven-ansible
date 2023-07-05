@@ -1,10 +1,10 @@
-"""
-alertmanager.py
+"""alertmanager.py.
 
 An ansible-rulebook event source module for receiving events via a webhook from
 alertmanager or alike system.
 
 Arguments:
+---------
     host: The webserver hostname to listen to. Set to 0.0.0.0 to listen on all
           interfaces. Defaults to 127.0.0.1
     port: The TCP port to listen to.  Defaults to 5000
@@ -22,7 +22,7 @@ Arguments:
                                data and each parsed alert item to the queue.
 
 Example:
-
+-------
     - ansible.eda.alertmanager:
         host: 0.0.0.0
         port: 8000
@@ -33,7 +33,8 @@ Example:
 """
 
 import asyncio
-from typing import Any, Dict
+import logging
+from typing import Any
 
 from aiohttp import web
 from dpath import util
@@ -42,12 +43,14 @@ routes = web.RouteTableDef()
 
 
 @routes.get("/")
-async def status(request: web.Request):
+async def status(_request: web.Request) -> web.Response:
+    """Return status of a web request."""
     return web.Response(status=200, text="up")
 
 
 @routes.post("/{endpoint}")
-async def webhook(request: web.Request):
+async def webhook(request: web.Request) -> web.Response:
+    """Read events from webhook."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
 
@@ -91,25 +94,28 @@ async def webhook(request: web.Request):
                 pass
 
         await request.app["queue"].put(
-            dict(
-                alert=alert,
-                meta=dict(
-                    endpoint=endpoint, headers=dict(request.headers), hosts=hosts
-                ),
-            )
+            {
+                "alert": alert,
+                "meta": {
+                    "endpoint": endpoint,
+                    "headers": dict(request.headers),
+                    "hosts": hosts,
+                },
+            },
         )
 
     return web.Response(status=202, text="Received")
 
 
-def clean_host(host):
+def clean_host(host: str) -> str:
+    """Remove port from host string if it exists."""
     if ":" in host:
         return host.split(":")[0]
-    else:
-        return host
+    return host
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via alertmanager webhook."""
     app = web.Application()
     app["queue"] = queue
     app["data_host_path"] = str(args.get("data_host_path", "labels.instance"))
@@ -127,15 +133,19 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     try:
         await asyncio.Future()
     except asyncio.CancelledError:
-        print("Plugin Task Cancelled")
+        logging.getLogger().info("Plugin Task Cancelled")
     finally:
         await runner.cleanup()
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(main(MockQueue(), {}))

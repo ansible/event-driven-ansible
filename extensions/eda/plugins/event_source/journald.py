@@ -4,8 +4,8 @@ An ansible-events event source plugin that tails systemd journald logs.
 
 Arguments:
 ---------
-    match - return messages that matches this field, see
-            https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
+    match - return messages that matches this field,
+    see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
 
 Examples:
 --------
@@ -44,6 +44,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> str:  # noqa=D417
     -------
         None
     """
+
     delay = args.get("delay", 0)
     match = args.get("match", [])
 
