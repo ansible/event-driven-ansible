@@ -44,7 +44,6 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> str:  # noqa=D417
     -------
         None
     """
-
     delay = args.get("delay", 0)
     match = args.get("match", [])
 
