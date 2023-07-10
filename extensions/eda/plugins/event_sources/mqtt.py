@@ -1,6 +1,7 @@
-"""
-mqtt.py
+"""mqtt.py.
+
 An ansible-rulebook event source plugin for receiving events via a mqtt topic.
+
 Arguments:
     host:               The host where the mqtt topic is hosted
     port:               The port where the mqtt server is listening
@@ -23,12 +24,13 @@ Arguments:
 import asyncio
 import json
 import logging
-from typing import Any, Dict
+from typing import Any, dict
 
 import asyncio_mqtt as aiomqtt
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events via a MQTT topic."""
     logger = logging.getLogger()
 
     topic = args.get("topic")
@@ -50,7 +52,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             certfile=certfile,
             keyfile=keyfile,
             keyfile_password=keyfile_password,
-            cert_reqs=validate_certs if validate_certs is not None else True
+            cert_reqs=validate_certs if validate_certs is not None else True,
         )
 
     mqtt_consumer = aiomqtt.Client(
@@ -58,7 +60,7 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
         port=port,
         username=username,
         password=password,
-        tls_params=tls_params if ca_certs else None
+        tls_params=tls_params if ca_certs else None,
     )
 
     await mqtt_consumer.connect()
@@ -71,16 +73,21 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
                     data = json.loads(message.payload.decode())
                     await queue.put(data)
                 except json.decoder.JSONDecodeError as e:
-                    logger.error(e)
+                    logger.exception(e)
     finally:
         logger.info("Disconneccting from broker")
         mqtt_consumer.disconnect()
 
+
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(
@@ -88,3 +95,4 @@ if __name__ == "__main__":
             {"topic": "eda", "host": "localhost", "port": "1883"},
         )
     )
+    
