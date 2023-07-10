@@ -73,7 +73,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                 try:
                     data = json.loads(message.payload.decode())
                     await queue.put(data)
-                except json.decoder.JSONDecodeError as e:
+                except json.decoder.JSONDecodeError:
                     logger.exception("Decoding exception for incoming message")
     finally:
         logger.info("Disconneccting from broker")
