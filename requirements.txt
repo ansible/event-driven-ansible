@@ -3,5 +3,4 @@ aiobotocore
 aiohttp
 aiokafka
 watchdog
-systemd-python
 dpath

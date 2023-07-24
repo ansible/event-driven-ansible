@@ -23,6 +23,12 @@ The python module dependencies are not installed by ansible-galaxy. They must be
 pip install -r requirements.txt
 ```
 
+The binary module dependencies are not installed by ansible-galaxy. They must also  be installed manually using dnf:
+
+```
+dnf install python3-systemd
+```
+
 ## Contributing
 
 Please refer to the [contributing guide](./CONTRIBUTING.md) for information about how you can contribute to the project.
