@@ -1,4 +1,5 @@
 import asyncio
+from http import HTTPStatus
 
 import aiohttp
 import pytest
@@ -59,3 +60,20 @@ async def test_post_endpoint():
     assert data["payload"] == task_info["payload"]
     assert data["meta"]["endpoint"] == task_info["endpoint"]
     assert data["meta"]["headers"]["Host"] == task_info["host"]
+
+
+@pytest.mark.asyncio
+async def test_post_unsupported_body():
+    queue = asyncio.Queue()
+    args = {"host": "127.0.0.1", "port": 8000}
+
+    async def do_request():
+        async with aiohttp.ClientSession() as session:
+            url = f'http://{args["host"]}:{args["port"]}/test'
+            async with session.post(url, data="not a json") as resp:
+                plugin_task.cancel()
+                assert resp.status == HTTPStatus.BAD_REQUEST
+
+    plugin_task = asyncio.create_task(start_server(queue, args))
+    request_task = asyncio.create_task(do_request())
+    await asyncio.gather(plugin_task, request_task)
