@@ -34,8 +34,8 @@ async def webhook(request: web.Request) -> web.Response:
     try:
         payload = await request.json()
     except json.JSONDecodeError as e:
-        logger.error("Wrong body request: failed to decode JSON payload: %s", e)
-        raise web.HTTPBadRequest(text="Invalid JSON payload")
+        logger.warning("Wrong body request: failed to decode JSON payload: %s", e)
+        raise web.HTTPBadRequest(text="Invalid JSON payload") from None
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
     headers.pop("Authorization", None)
