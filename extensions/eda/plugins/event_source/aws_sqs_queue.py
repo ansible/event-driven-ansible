@@ -14,7 +14,7 @@ Arguments:
 
 Example:
 -------
-    - ansible.eda.aws_sqs:
+    - ansible.eda.aws_sqs_queue:
         region: us-east-1
         name: eda
         delay_seconds: 10
@@ -67,7 +67,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                     meta = {"MessageId": msg["MessageId"]}
                     try:
                         msg_body = json.loads(msg["Body"])
-                    except json.JSONDecodeError:
+                    except json.JSONDecodeError:  # noqa: perf203
                         msg_body = msg["Body"]
 
                     await queue.put({"body": msg_body, "meta": meta})
