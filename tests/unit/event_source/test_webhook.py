@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import pytest
 
-from extensions.eda.plugins.event_sources.webhook import main as webhook_main
+from extensions.eda.plugins.event_source.webhook import main as webhook_main
 
 
 async def start_server(queue, args):
@@ -15,7 +15,8 @@ async def post_code(server_task, info):
     payload = info["payload"]
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=payload) as resp:
+        headers = {"Authorization": "Bearer secret"}
+        async with session.post(url, json=payload, headers=headers) as resp:
             print(resp.status)
 
     server_task.cancel()
@@ -29,7 +30,7 @@ async def cancel_code(server_task):
 async def test_cancel():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000}
+    args = {"host": "127.0.0.1", "port": 8000, "token": "secret"}
     plugin_task = asyncio.create_task(start_server(queue, args))
     cancel_task = asyncio.create_task(cancel_code(plugin_task))
 
@@ -41,7 +42,7 @@ async def test_cancel():
 async def test_post_endpoint():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000}
+    args = {"host": "127.0.0.1", "port": 8000, "token": "secret"}
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {

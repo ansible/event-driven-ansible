@@ -1,15 +1,15 @@
-"""
-azure_service_bus.py
+"""azure_service_bus.py.
 
 An ansible-rulebook event source module for receiving events from an Azure service bus
 
 Arguments:
+---------
     conn_str: The connection string to connect to the Azure service bus
     queue_name: The name of the queue to pull messages from
     logging_enable: Whether to turn on logging. Default to True
 
 Example:
-
+-------
     - ansible.eda.azure_service_bus:
         conn_str: "{{connection_str}}"
         queue_name: "{{queue_name}}"
@@ -18,17 +18,22 @@ Example:
 
 import asyncio
 import concurrent.futures
+import contextlib
 import json
-from typing import Any, Dict
+from typing import Any
 
 from azure.servicebus import ServiceBusClient
 
 
 def receive_events(
-    loop: asyncio.events.AbstractEventLoop, queue: asyncio.Queue, args: Dict[str, Any]
-):
+    loop: asyncio.events.AbstractEventLoop,
+    queue: asyncio.Queue,
+    args: dict[str, Any],
+) -> None:
+    """Receive events from service bus."""
     servicebus_client = ServiceBusClient.from_connection_string(
-        conn_str=args["conn_str"], logging_enable=bool(args.get("logging_enable", True))
+        conn_str=args["conn_str"],
+        logging_enable=bool(args.get("logging_enable", True)),
     )
 
     with servicebus_client:
@@ -37,17 +42,18 @@ def receive_events(
             for msg in receiver:
                 meta = {"message_id": msg.message_id}
                 body = str(msg)
-                try:
+                with contextlib.suppress(json.JSONDecodeError):
                     body = json.loads(body)
-                except json.JSONDecodeError:
-                    pass
+
                 loop.call_soon_threadsafe(
-                    queue.put_nowait, {"body": body, "meta": meta}
+                    queue.put_nowait,
+                    {"body": body, "meta": meta},
                 )
                 receiver.complete_message(msg)
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Receive events from service bus in a loop."""
     loop = asyncio.get_running_loop()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as task_pool:
@@ -55,10 +61,14 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
 
 
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        def put_nowait(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put_nowait(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     args = {
         "conn_str": "Endpoint=sb://foo.servicebus.windows.net/",

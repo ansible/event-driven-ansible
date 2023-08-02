@@ -1,6 +1,6 @@
 import pytest
 
-from extensions.eda.plugins.event_filters.insert_hosts_to_meta import main as hosts_main
+from extensions.eda.plugins.event_filter.insert_hosts_to_meta import main as hosts_main
 
 EVENT_DATA_1 = [
     (
