@@ -1,11 +1,15 @@
-name: Integration tests
-
+name: Run integration tests
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
+  # Run the integration tests every 8 hours.
+  # This will help to identify faster if
+  # there is a CI failure related to a
+  # change in any dependency.
+  schedule:
+    - cron: '0 */8 * * *'
 jobs:
   integration:
     runs-on: ubuntu-latest
@@ -22,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: "3.9"
 
       - name: Install package dependencies
         run: |

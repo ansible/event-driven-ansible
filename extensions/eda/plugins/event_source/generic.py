@@ -1,3 +1,32 @@
+"""A generic source plugin that allows you to insert custom data.
+
+The event data to insert into the queue is specified in the required
+parameter payload and is an array of events.
+
+Optional Parameters:
+randomize    True|False Randomize the events in the payload, default False
+display      True|False Display the event data in stdout, default False
+add_timestamp True|False Add an event timestamp, default False
+time_format   local|iso8601|epoch  The time format of event timestamp,
+              default local
+create_index str   The index to create for each event starts at 0
+startup_delay float  Number of seconds to wait before injecting events
+                   into the queue. Default 0
+event_delay float    Number of seconds to wait before injecting the next
+                   event from the payload. Default 0
+repeat_delay float   Number of seconds to wait before injecting a repeated
+                   event from the payload. Default 0
+loop_delay float     Number of seconds to wait before inserting the
+                   next set of events. Default 0
+shutdown_after float Number of seconds to wait before shutting down the
+                   plugin. Default 0
+loop_count int     Number of times the set of events in the playload
+                   should be repeated. Default 0
+repeat_count int   Number of times each individual event in the playload
+                   should be repeated. Default 1
+
+"""
+
 #  Copyright 2022 Red Hat, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,39 +45,11 @@ import asyncio
 import random
 import time
 from datetime import datetime
-from typing import Any, Dict
-
-""" A generic source plugin that allows you to insert custom data
-
-    The event data to insert into the queue is specified in the required
-    parameter payload and is an array of events.
-
-    Optional Parameters:
-    randomize    True|False Randomize the events in the payload, default False
-    display      True|False Display the event data in stdout, default False
-    add_timestamp True|False Add an event timestamp, default False
-    time_format   local|iso8601|epoch  The time format of event timestamp,
-                  default local
-    create_index str   The index to create for each event starts at 0
-    startup_delay float  Number of seconds to wait before injecting events
-                       into the queue. Default 0
-    event_delay float    Number of seconds to wait before injecting the next
-                       event from the payload. Default 0
-    repeat_delay float   Number of seconds to wait before injecting a repeated
-                       event from the payload. Default 0
-    loop_delay float     Number of seconds to wait before inserting the
-                       next set of events. Default 0
-    shutdown_after float Number of seconds to wait before shutting down the
-                       plugin. Default 0
-    loop_count int     Number of times the set of events in the playload
-                       should be repeated. Default 0
-    repeat_count int   Number of times each individual event in the playload
-                       should be repeated. Default 1
-
-"""
+from typing import Any
 
 
-async def main(queue: asyncio.Queue, args: Dict[str, Any]):
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    """Insert event data into the queue."""
     payload = args.get("payload")
     randomize = args.get("randomize", False)
     display = args.get("display", False)
@@ -65,7 +66,8 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     loop_count = int(args.get("loop_count", 1))  # -1 infinite
     repeat_count = int(args.get("repeat_count", 1))
     if time_format not in ["local", "iso8601", "epoch"]:
-        raise ValueError("time_format must be one of local, iso8601, epoch")
+        msg = "time_format must be one of local, iso8601, epoch"
+        raise ValueError(msg)
 
     if not isinstance(payload, list):
         payload = [payload]
@@ -84,21 +86,12 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
             if not event:
                 continue
             for _ignore in range(repeat_count):
-                data = {}
-                if create_index:
-                    data[create_index] = index
-                if add_timestamp:
-                    if time_format == "local":
-                        data["timestamp"] = str(datetime.now())
-                    elif time_format == "epoch":
-                        data["timestamp"] = int(time.time())
-                    elif time_format == "iso8601":
-                        data["timestamp"] = datetime.now().isoformat()
+                data = _create_data(create_index, index, add_timestamp, time_format)
 
                 index += 1
                 data.update(event)
                 if display:
-                    print(data)
+                    print(data)  # noqa: T201
                 await queue.put(data)
                 await asyncio.sleep(repeat_delay)
 
@@ -107,28 +100,51 @@ async def main(queue: asyncio.Queue, args: Dict[str, Any]):
     await asyncio.sleep(shutdown_after)
 
 
+def _create_data(
+    create_index: str,
+    index: int,
+    add_timestamp: str,
+    time_format: str,
+) -> dict:
+    data = {}
+    if create_index:
+        data[create_index] = index
+    if add_timestamp:
+        if time_format == "local":
+            data["timestamp"] = str(datetime.now())  # noqa: DTZ005
+        elif time_format == "epoch":
+            data["timestamp"] = int(time.time())
+        elif time_format == "iso8601":
+            data["timestamp"] = datetime.now(tz=None).isoformat()  # noqa: DTZ005
+    return data
+
+
 if __name__ == "__main__":
+    """MockQueue if running directly."""
 
     class MockQueue:
-        async def put(self, event):
-            print(event)
+        """A fake queue."""
+
+        async def put(self: "MockQueue", event: dict) -> None:
+            """Print the event."""
+            print(event)  # noqa: T201
 
     asyncio.run(
         main(
             MockQueue(),
-            dict(
-                randomize=True,
-                startup_delay=1,
-                create_index="my_index",
-                loop_count=2,
-                repeat_count=2,
-                repeat_delay=1,
-                event_delay=2,
-                loop_delay=3,
-                shutdown_after=11,
-                timestamp=True,
-                display=True,
-                payload=[dict(i=1), dict(f=3.14159), dict(b=False)],
-            ),
-        )
+            {
+                "randomize": True,
+                "startup_delay": 1,
+                "create_index": "my_index",
+                "loop_count": 2,
+                "repeat_count": 2,
+                "repeat_delay": 1,
+                "event_delay": 2,
+                "loop_delay": 3,
+                "shutdown_after": 11,
+                "timestamp": True,
+                "display": True,
+                "payload": [{"i": 1}, {"f": 3.14159}, {"b": False}],
+            },
+        ),
     )
