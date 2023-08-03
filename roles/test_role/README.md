@@ -34,5 +34,3 @@ BSD
 
 Author Information
 ------------------
-
-

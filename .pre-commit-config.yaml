@@ -15,11 +15,11 @@ repos:
         language: python
         additional_dependencies:
           - ansible
+        pass_filenames: false
 
-      -   id: tox
-          name: run tox
-          entry: tox
-          language: python
-          require_serial: true
-
-
+      - id: tox
+        name: Run tox
+        entry: tox
+        language: python
+        require_serial: true
+        pass_filenames: false

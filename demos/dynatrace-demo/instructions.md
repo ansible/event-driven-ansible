@@ -17,9 +17,9 @@ rulebook CLI runs a remedy playbook to restart the process.
 2. Install Dynatrace OneAgent. Host `lamp` then should appear in Dynatrace
 console
 3. Have python3 installed
-4. Copy `fake_app.py` under path `/root/fake-app`. Run `python3 fake_app.py`.  
-`fake_app.py` is a web app with two GET endpoints running on port 5080.  
-`<lamp ip>:5080/health` will return `{"status": "RUNNING"}`.  
+4. Copy `fake_app.py` under path `/root/fake-app`. Run `python3 fake_app.py`.
+`fake_app.py` is a web app with two GET endpoints running on port 5080.
+`<lamp ip>:5080/health` will return `{"status": "RUNNING"}`.
 `<lamp ip>:5080/down` will force the app to exit, simulating a process
 crashing.
 5. Make the client node ansible accessible from the rulebook node.
