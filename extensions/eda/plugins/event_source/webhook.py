@@ -1,6 +1,7 @@
 """webhook.py.
 
 An ansible-rulebook event source module for receiving events via a webhook.
+The message must be a valid JSON object.
 
 Arguments:
 ---------
@@ -15,6 +16,7 @@ Arguments:
 """
 
 import asyncio
+import json
 import logging
 import ssl
 from collections.abc import Callable
@@ -29,7 +31,11 @@ routes = web.RouteTableDef()
 @routes.post(r"/{endpoint:.*}")
 async def webhook(request: web.Request) -> web.Response:
     """Return response to webhook request."""
-    payload = await request.json()
+    try:
+        payload = await request.json()
+    except json.JSONDecodeError as e:
+        logger.warning("Wrong body request: failed to decode JSON payload: %s", e)
+        raise web.HTTPBadRequest(text="Invalid JSON payload") from None
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
     headers.pop("Authorization", None)
