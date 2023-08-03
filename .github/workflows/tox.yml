@@ -11,6 +11,8 @@ on:
   # change in any dependency.
   schedule:
     - cron: '0 */8 * * *'
+  # Run on demand
+  workflow_dispatch:
 jobs:
   tox:
     runs-on: ubuntu-latest
@@ -20,7 +22,6 @@ jobs:
       - name: Install deps
         run: python -m pip install tox
 
-      - name: Move to tox conf file and run tox
+      - name: Run tox
         run: | 
-          cd .github/workflows
-          python -m tox -- ../..
+          python -m tox

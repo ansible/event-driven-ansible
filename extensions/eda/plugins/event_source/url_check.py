@@ -51,8 +51,8 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                             },
                         )
 
-        except aiohttp.ClientError as e:
-            client_error = str(e)
+        except aiohttp.ClientError as exc:
+            client_error = str(exc)
             await queue.put(
                 {
                     "url_check": {
