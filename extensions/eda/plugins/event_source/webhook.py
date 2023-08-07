@@ -18,7 +18,8 @@ Arguments:
                Defaults to sha256
     hmac_header: The optional HMAC header sent by the client with the payload signature.
                  Defaults to x-hub-signature-256
-    hmac_format: The optional HMAC signature format format. Supported formats: hex, base64
+    hmac_format: The optional HMAC signature format format.
+                 Supported formats: hex, base64
                  Defaults to hex
 
 """
@@ -68,8 +69,6 @@ def _parse_token(request: web.Request) -> (str, str):
 
 
 async def _hmac_verify(request: web.Request) -> bool:
-    result = False
-
     hmac_secret = request.app["hmac_secret"]
     hmac_header = request.app["hmac_header"]
     hmac_algo = request.app["hmac_algo"]
@@ -92,9 +91,7 @@ async def _hmac_verify(request: web.Request) -> bool:
     elif hmac_format == "hex":
         event_digest = event_hmac.hexdigest()
 
-    result = hmac.compare_digest(hmac_header_digest, event_digest)
-
-    return result
+    return hmac.compare_digest(hmac_header_digest, event_digest)
 
 
 @web.middleware

@@ -23,7 +23,8 @@ async def post_code(server_task, info):
     server_task.cancel()
 
 
-async def assert_post(server_task, info, expected_status=HTTPStatus.OK, expected_text=None):
+async def assert_post(server_task, info, expected_status=HTTPStatus.OK,
+                      expected_text=None):
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
     headers = {}
@@ -110,7 +111,7 @@ async def test_post_hmac_hex_endpoint():
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": args["hmac_header"],
-        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",
+        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",  # noqa: E501
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
@@ -137,7 +138,7 @@ async def test_post_hmac_hex_wo_digest_prefix_endpoint():
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": args["hmac_header"],
-        "hmac_digest": "9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",
+        "hmac_digest": "9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",  # noqa: E501
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
@@ -165,12 +166,13 @@ async def test_post_hmac_hex_endpoint_invalid_signature():
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": args["hmac_header"],
-        "hmac_digest": "sha256=11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",
+        "hmac_digest": "sha256=11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",  # noqa: E501
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
 
-    post_task = asyncio.create_task(assert_post(plugin_task, task_info, HTTPStatus.UNAUTHORIZED))
+    post_task = asyncio.create_task(assert_post(plugin_task, task_info,
+                                                HTTPStatus.UNAUTHORIZED))
 
     await asyncio.gather(plugin_task, post_task)
 
@@ -188,12 +190,13 @@ async def test_post_hmac_hex_endpoint_missing_signature():
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-not-a-signature-header",
-        "hmac_digest": "sha256=205009e3e895e0fe0ff982e1020dd0fb4b6d16cf9c666652b3492e20429ccdb8",
+        "hmac_digest": "sha256=205009e3e895e0fe0ff982e1020dd0fb4b6d16cf9c666652b3492e20429ccdb8",  # noqa: E501
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
 
-    post_task = asyncio.create_task(assert_post(plugin_task, task_info, HTTPStatus.BAD_REQUEST))
+    post_task = asyncio.create_task(assert_post(plugin_task, task_info,
+                                                HTTPStatus.BAD_REQUEST))
 
     await asyncio.gather(plugin_task, post_task)
 
@@ -243,7 +246,8 @@ async def test_post_hmac_base64_endpoint_invalid_signature():
         "host": f'{args["host"]}:{args["port"]}',
     }
 
-    post_task = asyncio.create_task(assert_post(plugin_task, task_info, HTTPStatus.UNAUTHORIZED))
+    post_task = asyncio.create_task(assert_post(plugin_task, task_info,
+                                                HTTPStatus.UNAUTHORIZED))
 
     await asyncio.gather(plugin_task, post_task)
 
@@ -252,13 +256,14 @@ async def test_post_hmac_base64_endpoint_invalid_signature():
 async def test_post_token_and_hmac_hex_endpoint():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000, "token": "secret", "hmac_secret": "secret"}
+    args = {"host": "127.0.0.1", "port": 8000, "token": "secret",
+            "hmac_secret": "secret"}
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-hub-signature-256",
-        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",
+        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",  # noqa: E501
         "token": args["token"],
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
@@ -278,21 +283,24 @@ async def test_post_token_and_hmac_hex_endpoint():
 async def test_post_token_and_hmac_hex_endpoint_invalid_signature():
     queue = asyncio.Queue()
 
-    args = args = {"host": "127.0.0.1", "port": 8000, "token": "secret", "hmac_secret": "secret"}
+    args = args = {"host": "127.0.0.1", "port": 8000, "token": "secret",
+                   "hmac_secret": "secret"}
 
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-hub-signature-256",
-        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",
+        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",  # noqa: E501
         "token": args["token"],
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
 
-    post_task = asyncio.create_task(assert_post(plugin_task, task_info, HTTPStatus.UNAUTHORIZED,
-                                                expected_text="HMAC verification failed"))
+    expected_text = "HMAC verification failed"
+    post_task = asyncio.create_task(assert_post(plugin_task, task_info,
+                                                HTTPStatus.UNAUTHORIZED,
+                                                expected_text))
 
     await asyncio.gather(plugin_task, post_task)
 
@@ -301,20 +309,23 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_signature():
 async def test_post_token_and_hmac_hex_endpoint_invalid_token():
     queue = asyncio.Queue()
 
-    args = args = {"host": "127.0.0.1", "port": 8000, "token": "secret", "hmac_secret": "secret"}
+    args = args = {"host": "127.0.0.1", "port": 8000, "token": "secret",
+                   "hmac_secret": "secret"}
 
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-hub-signature-256",
-        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",
+        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",  # noqa: E501
         "token": "invalid_token",
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
 
-    post_task = asyncio.create_task(assert_post(plugin_task, task_info, HTTPStatus.UNAUTHORIZED,
-                                                expected_text="Invalid authorization token"))
+    expected_text = "Invalid authorization token"
+    post_task = asyncio.create_task(assert_post(plugin_task, task_info,
+                                                HTTPStatus.UNAUTHORIZED,
+                                                expected_text))
 
     await asyncio.gather(plugin_task, post_task)
