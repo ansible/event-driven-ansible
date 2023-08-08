@@ -94,10 +94,14 @@ def test_webhook_source_hmac_sanity(subprocess_teardown):
     of the webhook source plugin.
     """
     msgs = [
-        (json.dumps({"ping": "pong"}).encode("ascii"),
-         'sha256=23fff24c4b9835c6179de19103c6c640150d07d8a72c987b030b541a9d988736'),
-        (json.dumps({"shutdown": ""}).encode("ascii"),
-         '185e5a6124894d6fed1c69c8bea049da241adec83b468c867c4e83627e64d9b9')
+        (
+            json.dumps({"ping": "pong"}).encode("ascii"),
+            "sha256=23fff24c4b9835c6179de19103c6c640150d07d8a72c987b030b541a9d988736",
+        ),
+        (
+            json.dumps({"shutdown": ""}).encode("ascii"),
+            "185e5a6124894d6fed1c69c8bea049da241adec83b468c867c4e83627e64d9b9",
+        ),
     ]
 
     port = 5000
@@ -144,8 +148,9 @@ def test_webhook_source_with_unsupported_hmac_algo(subprocess_teardown):
     env["HMAC_ALGO"] = "invalid_hmac_algo"
 
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
-    proc = CLIRunner(rules=rules_file, envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO", env=env,
-                     debug=True).run_in_background()
+    proc = CLIRunner(
+        rules=rules_file, envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO", env=env, debug=True
+    ).run_in_background()
     proc.wait(timeout=15)
     stdout, _unused_stderr = proc.communicate()
     assert f"Unsupported HMAC algorithm: {env['HMAC_ALGO']}" in stdout.decode()

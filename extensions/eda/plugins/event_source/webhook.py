@@ -80,12 +80,16 @@ async def _hmac_verify(request: web.Request) -> bool:
     hmac_header_digest = request.headers[hmac_header].strip()
 
     if hmac_header_digest.startswith(f"{hmac_algo}="):
-        hmac_header_digest = hmac_header_digest[len(f"{hmac_algo}="):]
+        hmac_prefix_len = len(f"{hmac_algo}=")
+        hmac_header_digest = hmac_header_digest[hmac_prefix_len:]
 
     body = await request.text()
 
-    event_hmac = hmac.new(key=hmac_secret,
-                          msg=body.encode("utf-8"), digestmod=hmac_algo)
+    event_hmac = hmac.new(
+        key=hmac_secret,
+        msg=body.encode("utf-8"),
+        digestmod=hmac_algo,
+    )
     if hmac_format == "base64":
         event_digest = base64.b64encode(event_hmac.digest()).decode("utf-8")
     elif hmac_format == "hex":
@@ -145,7 +149,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
             raise ValueError(msg)
 
     app = web.Application(middlewares=middlewares)
-    for (key, value) in app_attrs.items():
+    for key, value in app_attrs.items():
         app[key] = value
     app["queue"] = queue
 
