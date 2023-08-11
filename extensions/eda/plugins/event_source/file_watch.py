@@ -34,6 +34,8 @@ def watch(
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
+        """A handler for file system events."""
+
         def __init__(self: "Handler", **kwargs: dict) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 

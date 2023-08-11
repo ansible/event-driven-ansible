@@ -33,8 +33,8 @@ async def webhook(request: web.Request) -> web.Response:
     """Return response to webhook request."""
     try:
         payload = await request.json()
-    except json.JSONDecodeError as e:
-        logger.warning("Wrong body request: failed to decode JSON payload: %s", e)
+    except json.JSONDecodeError as exc:
+        logger.warning("Wrong body request: failed to decode JSON payload: %s", exc)
         raise web.HTTPBadRequest(text="Invalid JSON payload") from None
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
@@ -60,7 +60,7 @@ def _parse_token(request: web.Request) -> (str, str):
 async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResponse:
     """Verify authorization is Bearer type."""
     try:
-        scheme, token = _parse_token(request)
+        _parse_token(request)
     except KeyError:
         raise web.HTTPUnauthorized(reason="Missing authorization token") from None
     except ValueError:
