@@ -33,7 +33,10 @@ from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def main(  # pylint: disable=R0914
+    queue: asyncio.Queue,
+    args: dict[str, Any],
+) -> None:
     """Receive events via a kafka topic."""
     logger = logging.getLogger()
 

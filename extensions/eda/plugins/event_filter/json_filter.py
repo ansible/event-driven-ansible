@@ -18,12 +18,12 @@ from __future__ import annotations
 import fnmatch
 
 
-def _matches_include_keys(include_keys: list, s: str) -> bool:
-    return any(fnmatch.fnmatch(s, pattern) for pattern in include_keys)
+def _matches_include_keys(include_keys: list, string: str) -> bool:
+    return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
 
 
-def _matches_exclude_keys(exclude_keys: list, s: str) -> bool:
-    return any(fnmatch.fnmatch(s, pattern) for pattern in exclude_keys)
+def _matches_exclude_keys(exclude_keys: list, string: str) -> bool:
+    return any(fnmatch.fnmatch(string, pattern) for pattern in exclude_keys)
 
 
 def main(
@@ -38,17 +38,20 @@ def main(
     if include_keys is None:
         include_keys = []
 
-    q = []
-    q.append(event)
-    while q:
-        o = q.pop()
-        if isinstance(o, dict):
-            for i in list(o.keys()):
-                if (i in include_keys) or _matches_include_keys(include_keys, i):
-                    q.append(o[i])
-                elif (i in exclude_keys) or _matches_exclude_keys(exclude_keys, i):
-                    del o[i]
+    queue = []
+    queue.append(event)
+    while queue:
+        obj = queue.pop()
+        if isinstance(obj, dict):
+            for item in list(obj.keys()):
+                if (item in include_keys) or _matches_include_keys(include_keys, item):
+                    queue.append(obj[item])
+                elif (item in exclude_keys) or _matches_exclude_keys(
+                    exclude_keys,
+                    item,
+                ):
+                    del obj[item]
                 else:
-                    q.append(o[i])
+                    queue.append(obj[item])
 
     return event

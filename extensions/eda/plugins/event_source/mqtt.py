@@ -25,7 +25,7 @@ Arguments:
 import asyncio
 import json
 import logging
-from typing import Any, dict
+from typing import Any
 
 import asyncio_mqtt as aiomqtt
 
