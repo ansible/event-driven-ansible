@@ -1,4 +1,11 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        language_version: python3
+
   - repo: local
     hooks:
       - id: ansible-test-sanity
@@ -8,10 +15,11 @@ repos:
         language: python
         additional_dependencies:
           - ansible
+        pass_filenames: false
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-        language_version: python3
+      - id: tox
+        name: Run tox
+        entry: tox
+        language: python
+        require_serial: true
+        pass_filenames: false

@@ -48,7 +48,10 @@ from datetime import datetime
 from typing import Any
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def main(  # pylint: disable=R0914
+    queue: asyncio.Queue,
+    args: dict[str, Any],
+) -> None:
     """Insert event data into the queue."""
     payload = args.get("payload")
     randomize = args.get("randomize", False)
