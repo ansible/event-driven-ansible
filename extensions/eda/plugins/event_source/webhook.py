@@ -23,6 +23,7 @@ Arguments:
                  Defaults to hex
 
 """
+from __future__ import annotations
 
 import asyncio
 import base64
@@ -31,10 +32,12 @@ import hmac
 import json
 import logging
 import ssl
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 routes = web.RouteTableDef()
@@ -191,7 +194,7 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: MockQueue, event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

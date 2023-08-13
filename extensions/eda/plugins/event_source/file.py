@@ -15,6 +15,8 @@ Example:
 
 """
 
+from __future__ import annotations
+
 import pathlib
 
 import yaml
@@ -60,21 +62,21 @@ def _observe_files(queue, files: list[str]) -> None:  # noqa: ANN001
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 
-        def __init__(self: "Handler", **kwargs) -> None:  # noqa: ANN003
+        def __init__(self: Handler, **kwargs) -> None:  # noqa: ANN003
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self: "Handler", event: dict) -> None:
+        def on_created(self: Handler, event: dict) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
-        def on_deleted(self: "Handler", event: dict) -> None:
+        def on_deleted(self: Handler, event: dict) -> None:
             pass
 
-        def on_modified(self: "Handler", event: dict) -> None:
+        def on_modified(self: Handler, event: dict) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
-        def on_moved(self: "Handler", event: dict) -> None:
+        def on_moved(self: Handler, event: dict) -> None:
             pass
 
     observer = Observer()
@@ -98,7 +100,7 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: MockQueue, event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 
