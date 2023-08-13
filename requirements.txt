@@ -5,3 +5,5 @@ aiokafka
 watchdog
 systemd-python
 dpath
+pyyaml
+dpath

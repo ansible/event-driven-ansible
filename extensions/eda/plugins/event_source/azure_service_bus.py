@@ -28,7 +28,7 @@ from azure.servicebus import ServiceBusClient
 def receive_events(
     loop: asyncio.events.AbstractEventLoop,
     queue: asyncio.Queue,
-    args: dict[str, Any],
+    args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
     """Receive events from service bus."""
     servicebus_client = ServiceBusClient.from_connection_string(
@@ -52,7 +52,10 @@ def receive_events(
                 receiver.complete_message(msg)
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def main(
+    queue: asyncio.Queue,
+    args: dict[str, Any],  # pylint: disable=W0621
+) -> None:
     """Receive events from service bus in a loop."""
     loop = asyncio.get_running_loop()
 

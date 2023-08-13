@@ -24,8 +24,8 @@ from watchdog.observers import Observer
 
 def send_facts(queue, filename: str) -> None:  # noqa: ANN001
     """Send facts to the queue."""
-    with pathlib.Path(filename).open() as f:
-        data = yaml.safe_load(f.read())
+    with pathlib.Path(filename).open(encoding="utf-8") as file:
+        data = yaml.safe_load(file.read())
         if data is None:
             return
         if isinstance(data, dict):
@@ -58,6 +58,8 @@ def main(queue, args: dict) -> None:  # noqa: ANN001
 
 def _observe_files(queue, files: list[str]) -> None:  # noqa: ANN001
     class Handler(RegexMatchingEventHandler):
+        """A handler for file events."""
+
         def __init__(self: "Handler", **kwargs) -> None:  # noqa: ANN003
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
