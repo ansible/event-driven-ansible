@@ -14,8 +14,6 @@ Example:
 
 """
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -35,7 +33,7 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self: MockQueue, event: dict) -> None:
+        async def put(self: "MockQueue", event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

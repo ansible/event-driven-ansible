@@ -16,8 +16,6 @@ Example:
 
 """
 
-from __future__ import annotations
-
 import asyncio
 import concurrent.futures
 import contextlib
@@ -71,7 +69,7 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put_nowait(self: MockQueue, event: dict) -> None:
+        async def put_nowait(self: "MockQueue", event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 
