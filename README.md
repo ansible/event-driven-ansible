@@ -9,6 +9,12 @@ This collection contains event source plugins, event filters and example ruleboo
     <a href="https://github.com/ansible/event-driven-ansible/actions?workflow=tox"><img height="20px" src="https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml/badge.svg?event=schedule"/> </a>
 </p>
 
+## Requirements
+
+* ansible-rulebook >= 1.0.0
+* python >= 3.9
+* ansible >= 2.13
+
 ## Install
 
 Install the ansible.eda collection with the Ansible Galaxy CLI:
