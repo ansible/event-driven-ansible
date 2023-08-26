@@ -37,7 +37,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     topic = args.get("topic")
 
     host = args.get("host")
-    port = args.get("port")
+    port = int(args.get("port"))
     username = args.get("username")
     password = args.get("password")
 
