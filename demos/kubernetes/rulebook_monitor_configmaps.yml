@@ -1,0 +1,23 @@
+---
+- name: Listen for changes in a custom resource
+  hosts: localhost
+  sources:
+    - name: Check for configmaps in the cluster
+      ansible.eda.kubernetes:
+        api: CoreV1Api
+        method: list_config_map_for_all_namespaces
+        params: {}
+  rules:
+    - name: A configmap was found
+      condition: >
+        event.type == "ADDED" and
+        event.resource.kind == 'ConfigMap' and
+        event.resource.metadata.name == 'configmap-demo'
+      action:
+        run_playbook:
+          name: example_playbook.yml
+          extra_vars:
+            type: "{{ event.type }}"
+            kind: "{{ event.resource.kind }}"
+            apiversion: "{{ event.resource.apiVersion }}"
+            name: "{{ event.resource.metadata.name }}"

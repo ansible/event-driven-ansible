@@ -1,0 +1,21 @@
+---
+- name: Listen for changes in pods on a Kubernetes cluster
+  hosts: localhost
+  sources:
+    - name: Check for deployments in the cluster
+      ansible.eda.kubernetes:
+        api: AppsV1Api
+        method: list_namespaced_deployment
+        params:
+          namespace: nginx-deployment-namespaced
+  rules:
+    - name: A deployment condition matched
+      condition: event.type == "ADDED" and event.resource.metadata.namespace == 'nginx-deployment-namespaced'
+      action:
+        run_playbook:
+          name: example_playbook.yml
+          extra_vars:
+            type: "{{ event.type }}"
+            kind: "{{ event.resource.kind }}"
+            apiversion: "{{ event.resource.apiVersion }}"
+            name: "{{ event.resource.metadata.name }}"

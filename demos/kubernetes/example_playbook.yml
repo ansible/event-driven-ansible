@@ -1,0 +1,12 @@
+---
+- name: Example triggered playbook
+  hosts: localhost
+  tasks:
+    - name: Print a message
+      ansible.builtin.debug:
+        msg: |
+          We received a resource with the attributes:
+          Type: {{ type }}
+          Kind: {{ kind }}
+          ApiVersion: {{ apiversion }}
+          Name: {{ name }}

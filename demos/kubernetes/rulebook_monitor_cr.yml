@@ -1,0 +1,23 @@
+---
+- name: Listen for changes in a custom resource
+  hosts: localhost
+  sources:
+    - name: Check for pods in the cluster
+      ansible.eda.kubernetes:
+        api: CustomObjectsApi
+        method: list_cluster_custom_object
+        params:
+          group: stable.example.com
+          version: v1
+          plural: crontabs
+  rules:
+    - name: A CustomResource was found
+      condition: event.type == "ADDED"
+      action:
+        run_playbook:
+          name: example_playbook.yml
+          extra_vars:
+            type: "{{ event.type }}"
+            kind: "{{ event.resource.kind }}"
+            apiversion: "{{ event.resource.apiVersion }}"
+            name: "{{ event.resource.metadata.name }}"

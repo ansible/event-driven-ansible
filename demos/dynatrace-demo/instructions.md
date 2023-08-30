@@ -1,7 +1,7 @@
 # Ansible Rulebook + Dynatrace DEMO
 
 ## Description
-In this demo we will register a host to Dynatrace and set up a webhook to send
+In this demo, we will register a host to Dynatrace and set up a webhook to send
 problem notifications to ansible-rulebook CLI. Dynatrace monitors the
 availability of a process. Upon receiving a problem notification the ansible-
 rulebook CLI runs a remedy playbook to restart the process.
@@ -30,7 +30,7 @@ crashing.
 3. Update `inventory.yml` with correct ip and user to access the client node
 4. Start the rulebook CLI:
 ```
-  ansible-rulebook -i demos/dynatrace-demo/inventory.yml --rules demos/dynatrace-demo/rulebook.yml
+  ansible-rulebook -i demos/dynatrace-demo/inventory.yml -r demos/dynatrace-demo/rulebook.yml
 ```
 This rulebook starts an alertmanager source that listens on port 5050
 
