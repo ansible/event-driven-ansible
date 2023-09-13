@@ -72,8 +72,6 @@ async def main(  # pylint: disable=R0914
         enable_auto_commit=True,
         max_poll_records=1,
         auto_offset_reset=offset,
-        security_protocol="SSL" if cafile else "PLAINTEXT",
-        ssl_context=context if cafile else None,
     )
 
     await kafka_consumer.start()
