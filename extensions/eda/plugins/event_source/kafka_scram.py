@@ -67,8 +67,6 @@ async def main(  # pylint: disable=R0914
         sasl_plain_password=password,
         security_protocol=security_protocol,
         sasl_mechanism=sasl_mechanism,
-        enable_auto_commit=True,
-        max_poll_records=1,
         auto_offset_reset=offset,      
     )
 
