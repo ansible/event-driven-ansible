@@ -17,7 +17,8 @@ Arguments:
     password (str): password for SASL ``PLAIN`` authentication.
         Default: None
     topic:     The kafka topic
-
+    offset:    Where to automatically reset the offset. [latest, earliest]
+               Default to latest
 
 """
 
@@ -44,6 +45,7 @@ async def main(  # pylint: disable=R0914
     password = args.get("password")
     security_protocol = args.get("security_protocol")
     sasl_mechanism = args.get("sasl_mechanism")
+    offset = args.get("offset", "latest")    
 
 # EXAMPLE
 #    topic = "reviews.sentiment"
@@ -65,6 +67,9 @@ async def main(  # pylint: disable=R0914
         sasl_plain_password=password,
         security_protocol=security_protocol,
         sasl_mechanism=sasl_mechanism,
+        enable_auto_commit=True,
+        max_poll_records=1,
+        auto_offset_reset=offset,      
     )
 
     await kafka_consumer.start()
