@@ -32,7 +32,9 @@ import asyncio
 import json
 import logging
 from typing import Any
-from kafka.consumer import KafkaConsumer
+
+from aiokafka import AIOKafkaConsumer
+from aiokafka.helpers import create_ssl_context
 
 
 async def main(  # pylint: disable=R0914
@@ -42,48 +44,44 @@ async def main(  # pylint: disable=R0914
     """Receive events via a kafka topic."""
     logger = logging.getLogger()
 
-    topic = "reviews.sentiment"
-    host = "kafka-kafka-bootstrap.globex-mw.svc.cluster.local"
-    port = "9092"
-    username  = "globex"
-    password = "globex"
-    security_protocol = "PLAINTEXT"
-    sasl_mechanism = "SCRAM-SHA-512"
-    sasl_oauth_token_provider = "None"
-    group_id = "None"
-    offset = "latest"
-    encoding = "utf-8"
+    topic = args.get("topic")
+    host = args.get("host")
+    port = args.get("port")
+    username  = args.get("username")
+    password = args.get("password")
+    security_protocol = args.get("security_protocol")
+    sasl_mechanism = args.get("sasl_mechanism")
 
-#    topic = args.get("topic")
-#    host = args.get("host")
-#    port = args.get("port")
-#    username  = args.get("username")
-#    password = args.get("password")
-#    security_protocol = args.get("security_protocol")
-#    sasl_mechanism = args.get("sasl_mechanism")
-#    offset = args.get("offset", "latest")
+# EXAMPLE
+#    topic = "reviews.sentiment"
+#    host = "kafka-kafka-bootstrap.globex-mw.svc.cluster.local"
+#    port = "9092"
+#    username  = "globex"
+#    password = "globex"
+#    security_protocol = "SASL_PLAINTEXT"
+#    sasl_mechanism = "SCRAM-SHA-512"
 
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
         raise ValueError(msg)
 
-    kafka_consumer = KafkaConsumer(
+    kafka_consumer = AIOKafkaConsumer(
         topic,
         bootstrap_servers=f"{host}:{port}",
         sasl_plain_username=username,
         sasl_plain_password=password,
         security_protocol=security_protocol,
         sasl_mechanism=sasl_mechanism,
-        enable_auto_commit=True,
-        auto_offset_reset=offset,
-        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
+
+    await kafka_consumer.start()
 
     try:
         async for msg in kafka_consumer:
             data = None
             try:
                 value = msg.value.decode(encoding)
+                print(value)
                 data = json.loads(value)
             except json.decoder.JSONDecodeError:
                 data = value
@@ -95,6 +93,7 @@ async def main(  # pylint: disable=R0914
             await asyncio.sleep(0)
     finally:
         logger.info("Stopping kafka consumer")
+        await kafka_consumer.stop()
 
 
 if __name__ == "__main__":
@@ -113,4 +112,3 @@ if __name__ == "__main__":
             {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"},
         ),
     )
-
