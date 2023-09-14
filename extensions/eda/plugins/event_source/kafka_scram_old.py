@@ -1,4 +1,4 @@
-"""kafka_scram.py.
+"""kafka.py.
 
 An ansible-rulebook event source plugin for receiving events via a kafka topic authentication using SCRAM-SHA-512..
 
@@ -32,7 +32,7 @@ import asyncio
 import json
 import logging
 from typing import Any
-from kafka.consumer import KafkaConsumer
+
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
@@ -51,22 +51,27 @@ async def main(  # pylint: disable=R0914
     password = args.get("password")
     security_protocol = args.get("security_protocol")
     sasl_mechanism = args.get("sasl_mechanism")
+    sasl_oauth_token_provider=args.get("sasl_oauth_token_provider")
+    group_id = args.get("group_id", None)
     offset = args.get("offset", "latest")
+    encoding = args.get("encoding", "utf-8")
 
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
         raise ValueError(msg)
 
-    kafka_consumer = KafkaConsumer(
+    kafka_consumer = AIOKafkaConsumer(
         topic,
         bootstrap_servers=f"{host}:{port}",
         sasl_plain_username=username,
         sasl_plain_password=password,
         security_protocol=security_protocol,
         sasl_mechanism=sasl_mechanism,
+        sasl_oauth_token_provider=sasl_oauth_token_provider,
+        group_id=group_id,
         enable_auto_commit=True,
+        max_poll_records=1,
         auto_offset_reset=offset,
-        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
 
     await kafka_consumer.start()
