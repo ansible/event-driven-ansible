@@ -6,6 +6,7 @@ Arguments:
 ---------
     host:      The host where the kafka topic is hosted
     port:      The port where the kafka server is listening
+    security_protocol: Set Security protocol. See details in next point below.
     sasl_mechanism (str): Authentication mechanism when security_protocol
         is configured for ``SASL_PLAINTEXT`` or ``SASL_SSL``. Valid values are:
         ``PLAIN``, ``GSSAPI``, ``SCRAM-SHA-256``, ``SCRAM-SHA-512``,
@@ -15,15 +16,7 @@ Arguments:
         Default: None
     password (str): password for SASL ``PLAIN`` authentication.
         Default: None
-    sasl_oauth_token_provider (~aiokafka.abc.AbstractTokenProvider):
-        OAuthBearer token provider instance. (See :mod:`kafka.oauth.abstract`).
-        Default: None
-    encoding:  Message encoding scheme. Default to utf-8
     topic:     The kafka topic
-    group_id:  A kafka group id
-    offset:    Where to automatically reset the offset. [latest, earliest]
-               Default to latest
-
 
 
 """
