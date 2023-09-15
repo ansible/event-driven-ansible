@@ -36,22 +36,22 @@ async def main(
     """Receive events via a Kafka topic."""
     logger = logging.getLogger()
 
-#    topic = args.get("topic")
-#    host = args.get("host")
-#    port = args.get("port")
-#    username = args.get("username")
-#    password = args.get("password")
-#    security_protocol = args.get("security_protocol")
-#    sasl_mechanism = args.get("sasl_mechanism")
+    topic = args.get("topic")
+    host = args.get("host")
+    port = args.get("port")
+    username = args.get("username")
+    password = args.get("password")
+    security_protocol = args.get("security_protocol")
+    sasl_mechanism = args.get("sasl_mechanism")
 
-    topic = "reviews.sentiment"
-    host = "kafka-kafka-bootstrap.globex-mw.svc.cluster.local"
-    port = "9092"
-    username = "globex"
-    password = "globex"
-    security_protocol = "SASL_PLAINTEXT"
-    sasl_mechanism = "SCRAM-SHA-512"
-    offset = "latest"
+#    topic = "reviews.sentiment"
+#    host = "kafka-kafka-bootstrap.globex-mw.svc.cluster.local"
+#    port = "9092"
+#    username = "globex"
+#    password = "globex"
+#    security_protocol = "SASL_PLAINTEXT"
+#    sasl_mechanism = "SCRAM-SHA-512"
+#    offset = "latest"
 
     if security_protocol not in ("SASL_PLAINTEXT", "SASL_SSL"):
         msg = f"Invalid security_protocol option: {security_protocol}"
