@@ -4,3 +4,5 @@ aiohttp
 aiokafka
 watchdog
 dpath
+pyyaml
+dpath
