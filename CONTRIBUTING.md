@@ -1,7 +1,11 @@
 # Contributing
+
 Contributions are welcome, and they are greatly appreciated! Every little bit helps, and credit will always be given.
+Every new feature should be tested and documented.
+New source plugins or source filters will be evaluated for inclusion in the collection and might be rejected. Please consider the option of creating a new collection for your plugins if it is not a good fit for this collection.
 
 ## Pre-commit
+
 We recommend running pre-commit prior to submitting pull requests. A [pre-commit config](.pre-commit-config.yaml) file is included in this repository and the following steps will get you up and running with pre-commit quickly:
 
 1. Install pre-commit:
@@ -37,16 +41,17 @@ We recommend setting up a Python virtual environment to install the test depende
 
         pip install -r test_requirements.txt
 
-
 ### Integration tests
 
 Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/).
 We recommend installing the Python implementation of `docker-compose` via pip:
+
 ```
 pip install docker-compose
 ```
 
 Then install the collection directly from your local repo and execute the tests:
+
 ```
 ansible-galaxy collection install .
 pytest tests/integration

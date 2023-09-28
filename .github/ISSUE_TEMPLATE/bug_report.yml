@@ -1,0 +1,71 @@
+---
+name: Bug Report
+description: "🐞 Create a bug report to help us improve"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bug Report issues are for **concrete, actionable bugs** only.
+        For debugging help or technical support, please see [our ways of contact](https://ansible-rulebook.readthedocs.io/en/latest/contributing.html)
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Please confirm the following
+      options:
+        - label: I agree to follow this project's [code of conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html).
+          required: true
+        - label: I have checked the [current issues](https://github.com/ansible/ansible-rulebook/issues) for duplicates.
+          required: true
+        - label: I understand that event-driven-ansible collection is open source software provided for free and that I might not receive a timely response.
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: Briefly describe the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: What is your OS, python, etc? Share the output of `ansible-rulebook --version` command.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        Describe exactly how a developer or quality engineer can reproduce the bug.
+        Usually the content of the rulebook and examples of the incoming events are useful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-results
+    attributes:
+      label: Actual results
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-results
+    attributes:
+      label: Expected results
+      description: What did you expect to happpen when running the steps above?
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information
+      description: Include any  other relevant information.
+    validations:
+      required: false
