@@ -23,12 +23,7 @@ The python module dependencies are not installed by ansible-galaxy. They must be
 pip install -r requirements.txt
 ```
 
-The binary module dependencies are not installed by ansible-galaxy. They must also  be installed manually using dnf:
-
-```
-dnf install python3-systemd
-```
-
+To use the `journald` source plugin, it is also necessary to have the system package named `python3-systemd` installed on Debian or Fedora operating systems. For other platforms, please refer to the [systemd-python documentation](https://github.com/systemd/python-systemd#installation). 
 ## Contributing
 
 Please refer to the [contributing guide](./CONTRIBUTING.md) for information about how you can contribute to the project.
