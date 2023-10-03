@@ -109,6 +109,7 @@ def main():
         email=dict(),
         password=dict(required=True, no_log=True),
         roles=dict(
+            required=True,
             type="list",
             elements="str",
             choices=[

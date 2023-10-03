@@ -21,13 +21,16 @@ author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete decision environment in EDA Controller.
 description:
   - This module allows you to create, update or delete decision environment in a EDA controller.
-version_added: "2.12"
 options:
   name:
     description:
       - Name of the decision environment.
     type: str
     required: true
+  new_name:
+    description:
+      - Updated Name of the decision environment.
+    type: str
   description:
     description:
       - Description of the decision environment (optional).
@@ -37,7 +40,7 @@ options:
     description:
       - Image URL of the decision environment.
     type: str
-    required: false
+    required: true
   credential:
     description:
       - Name of the credential to associate with the decision environment (optional).
