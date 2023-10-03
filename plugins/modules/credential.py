@@ -10,15 +10,14 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
     "status": ["preview"],
     "supported_by": "community",
 }
 
-DOCUMENTATION = """
+DOCUMENTATION = '''
 ---
 module: credential
-author: Nikhil Jain
+author: "Nikhil Jain"
 short_description: Create, update or delete credential in EDA Controller.
 description:
   - This module allows you to create, update or delete credential in a EDA controller.
@@ -47,7 +46,6 @@ options:
       - The password/token associated with the credential.
     type: str
     required: true
-    no_log: true
   credential_type:
     description:
       - The type of the credential.
@@ -56,7 +54,7 @@ options:
     choices:
       - "GitHub Personal Access Token"
       - "GitLab Personal Access Token"
-      - "Container registry"
+      - "Container Registry"
   state:
     description:
       - Desired state of the resource.
@@ -64,9 +62,9 @@ options:
     choices: ["present", "absent", "exists"]
     type: str
 extends_documentation_fragment: ansible.eda.auth
-"""
+'''
 
-EXAMPLE = """
+EXAMPLES = '''
 - name: Create EDA Credential
   ansible.eda.credential:
     name: "Example Credential"
@@ -83,7 +81,7 @@ EXAMPLE = """
     secret: "test"
     credential_type: "GitLab Personal Access Token"
     state: absent
-"""
+'''
 
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
@@ -100,9 +98,9 @@ def main():
             type="str",
             required=True,
             choices=[
-                "GitHub Personal Access Token",
-                "GitLab Personal Access Token",
-                "Container Registry",
+                "on-failure",
+                "always",
+                "never",
             ],
         ),
         state=dict(choices=["present", "absent", "exists"], default="present"),

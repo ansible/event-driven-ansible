@@ -11,15 +11,14 @@ __metaclass__ = type
 
 
 ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
     "status": ["preview"],
     "supported_by": "community",
 }
 
-DOCUMENTATION = """
+DOCUMENTATION = '''
 ---
 module: project
-author: Nikhil Jain
+author: "Nikhil Jain"
 short_description: Create, update or delete project in EDA Controller.
 description:
   - This module allows you to create, update or delete project in a EDA controller.
@@ -57,9 +56,9 @@ options:
 requirements:
   - The 'requests' Python module must be installed.
 extends_documentation_fragment: ansible.eda.auth
-"""
+'''
 
-EXAMPLES = """
+EXAMPLES = '''
 - name: Create EDA Projects
   ansible.eda.project:
     name: "Example Project"
@@ -81,7 +80,7 @@ EXAMPLES = """
     description: "Example project description"
     url: "http://example.com/project1"
     state: absent
-"""
+'''
 
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule

@@ -10,15 +10,14 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
     "status": ["preview"],
     "supported_by": "community",
 }
 
-DOCUMENTATION = """
+DOCUMENTATION = '''
 ---
 module: activation
-author: Nikhil Jain
+author: "Nikhil Jain"
 short_description: Create, restart or delete rulebook activations in EDA Controller.
 description:
   - This module allows you to create, restart or delete activations in a EDA controller.
@@ -68,12 +67,12 @@ options:
     description:
       - Desired state of the resource.
     default: "present"
-    choices: ["present", "absent", "exists", "restart"]
+    choices: ["present", "absent", "exists"]
     type: str
 extends_documentation_fragment: ansible.eda.auth
-"""
+'''
 
-EXAMPLES = """
+EXAMPLES = '''
 - name: Create EDA Activation
   ansible.eda.activation:
     name: "Example Activation"
@@ -92,7 +91,7 @@ EXAMPLES = """
     decision_environment: "Default Decision Environment"
     enabled: False
     state: absent
-"""
+'''
 
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
@@ -105,11 +104,19 @@ def main():
         project=dict(type="str", required=True),
         rulebook=dict(type="str", required=True),
         extra_vars=dict(type="str", default=""),
-        restart_policy=dict(type="str", default="always"),
+        restart_policy=dict(
+            type="str",
+            default="always",
+            choices=[
+                "GitHub Personal Access Token",
+                "GitLab Personal Access Token",
+                "Container Registry",
+            ],
+        ),
         enabled=dict(type="bool", default=True),
         decision_environment=dict(type="str", required=True),
         state=dict(
-            choices=["present", "absent", "exists", "restart"], default="present"
+            choices=["present", "absent", "exists"], default="present"
         ),
     )
 

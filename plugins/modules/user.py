@@ -11,68 +11,67 @@ __metaclass__ = type
 
 
 ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
     "status": ["preview"],
     "supported_by": "community",
 }
 
-DOCUMENTATION = """
+DOCUMENTATION = '''
 ---
 module: user
-author: Nikhil Jain
+author: "Nikhil Jain"
 short_description: Create, update or delete project in EDA Controller.
 description:
   - This module allows you to create, update or delete project in a EDA controller.
 options:
-    username:
-      description:
-        - Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
-      required: True
-      type: str
-    new_username:
-      description:
-        - Setting this option will change the existing username (looked up via the name field.
-      type: str
-    first_name:
-      description:
-        - First name of the user.
-      type: str
-    last_name:
-      description:
-        - Last name of the user.
-      type: str
-    email:
-      description:
-        - Email address of the user.
-      type: str
-    password:
-      description:
-        - Write-only field used to change the password.
-      required: True
-      type: str
-    roles:
-      description:
-        - Set of roles to be associated with the user
-      choices:["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
-      required: True
-      type: list
-      elements: str
-    update_secrets:
-      description:
-        - C(true) will always change password if user specifies password, even if API gives $encrypted$ for password.
-        - C(false) will only set the password if other values change too.
-      type: bool
-      default: true
-    state:
-      description:
-        - Desired state of the resource.
-      choices: ["present", "absent", "exists"]
-      default: "present"
-      type: str
+  username:
+    description:
+      - Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+    required: True
+    type: str
+  new_username:
+    description:
+      - Setting this option will change the existing username (looked up via the name field.
+    type: str
+  first_name:
+    description:
+      - First name of the user.
+    type: str
+  last_name:
+    description:
+      - Last name of the user.
+    type: str
+  email:
+    description:
+      - Email address of the user.
+    type: str
+  password:
+    description:
+      - Write-only field used to change the password.
+    required: True
+    type: str
+  roles:
+    description:
+      - Set of roles to be associated with the user
+    choices:["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
+    required: True
+    type: list
+    elements: str
+  update_secrets:
+    description:
+      - C(true) will always change password if user specifies password, even if API gives $encrypted$ for password.
+      - C(false) will only set the password if other values change too.
+    type: bool
+    default: true
+  state:
+    description:
+      - Desired state of the resource.
+    choices: ["present", "absent", "exists"]
+    default: "present"
+    type: str
 extends_documentation_fragment: ansible.eda.auth
-"""
+'''
 
-EXAMPLES = """
+EXAMPLES = '''
 - name: Create EDA User
   ansible.eda.user:
     username: "test_collection_user"
@@ -96,7 +95,7 @@ EXAMPLES = """
     email: "test@test.com"
     password: "test"
     roles: ["Admin"]
-"""
+'''
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
 
