@@ -14,10 +14,10 @@ ANSIBLE_METADATA = {
     "supported_by": "community",
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: activation
-author: "Nikhil Jain"
+author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, restart or delete rulebook activations in EDA Controller.
 description:
   - This module allows you to create, restart or delete activations in a EDA controller.
@@ -70,9 +70,9 @@ options:
     choices: ["present", "absent", "exists"]
     type: str
 extends_documentation_fragment: ansible.eda.auth
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Create EDA Activation
   ansible.eda.activation:
     name: "Example Activation"
@@ -91,7 +91,7 @@ EXAMPLES = '''
     decision_environment: "Default Decision Environment"
     enabled: False
     state: absent
-'''
+"""
 
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
@@ -108,16 +108,14 @@ def main():
             type="str",
             default="always",
             choices=[
-                "GitHub Personal Access Token",
-                "GitLab Personal Access Token",
-                "Container Registry",
+                "on-failure",
+                "always",
+                "never",
             ],
         ),
         enabled=dict(type="bool", default=True),
         decision_environment=dict(type="str", required=True),
-        state=dict(
-            choices=["present", "absent", "exists"], default="present"
-        ),
+        state=dict(choices=["present", "absent", "exists"], default="present"),
     )
 
     # Create the module

@@ -24,23 +24,19 @@ class EDAControllerModule(AnsibleModule):
     AUTH_ARGSPEC = dict(
         eda_controller_host=dict(
             required=False,
-            aliases=["eda_host"],
             fallback=(env_fallback, ["EDA_CONTROLLER_HOST"]),
         ),
         eda_controller_username=dict(
             required=False,
-            aliases=["eda_username"],
             fallback=(env_fallback, ["EDA_CONTROLLER_USERNAME"]),
         ),
         eda_controller_password=dict(
             no_log=True,
-            aliases=["eda_password"],
             required=False,
             fallback=(env_fallback, ["EDA_CONTROLLER_PASSWORD"]),
         ),
         validate_certs=dict(
             type="bool",
-            aliases=["eda_verify_ssl"],
             required=False,
             fallback=(env_fallback, ["EDA_CONTROLLER_VERIFY_SSL"]),
         ),

@@ -15,10 +15,10 @@ ANSIBLE_METADATA = {
     "supported_by": "community",
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: user
-author: "Nikhil Jain"
+author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete project in EDA Controller.
 description:
   - This module allows you to create, update or delete project in a EDA controller.
@@ -52,7 +52,7 @@ options:
   roles:
     description:
       - Set of roles to be associated with the user
-    choices:["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
+    choices: ["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
     required: True
     type: list
     elements: str
@@ -69,9 +69,9 @@ options:
     default: "present"
     type: str
 extends_documentation_fragment: ansible.eda.auth
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Create EDA User
   ansible.eda.user:
     username: "test_collection_user"
@@ -95,7 +95,7 @@ EXAMPLES = '''
     email: "test@test.com"
     password: "test"
     roles: ["Admin"]
-'''
+"""
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
 
@@ -108,7 +108,18 @@ def main():
         last_name=dict(),
         email=dict(),
         password=dict(required=True, no_log=True),
-        roles=dict(type="list", elements="str"),
+        roles=dict(
+            type="list",
+            elements="str",
+            choices=[
+                "Admin",
+                "Editor",
+                "Contributor",
+                "Operator",
+                "Auditor",
+                "Viewer",
+            ],
+        ),
         update_secrets=dict(type="bool", default=True, no_log=False),
         state=dict(choices=["present", "absent", "exists"], default="present"),
     )

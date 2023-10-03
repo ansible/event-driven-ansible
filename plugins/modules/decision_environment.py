@@ -14,10 +14,10 @@ ANSIBLE_METADATA = {
     "supported_by": "community",
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: decision_environment
-author: "Nikhil Jain"
+author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete decision environment in EDA Controller.
 description:
   - This module allows you to create, update or delete decision environment in a EDA controller.
@@ -50,9 +50,9 @@ options:
     choices: ["present", "absent", "exists"]
     type: str
 extends_documentation_fragment: ansible.eda.auth
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Create EDA Decision Env
   ansible.eda.decision_environment:
     name: "Example Decision Environment"
@@ -67,7 +67,7 @@ EXAMPLES = '''
     image_url: "quay.io/test"
     credential: "Example Credential"
     state: absent
-'''
+"""
 
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
 
