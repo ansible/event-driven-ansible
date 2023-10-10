@@ -174,9 +174,6 @@ def main():
     if restart_policy is not None:
         activation_fields["restart_policy"] = restart_policy
 
-    if restart_policy is not None:
-        activation_fields["restart_policy"] = restart_policy
-
     if enabled is not None:
         activation_fields["is_enabled"] = enabled
 
