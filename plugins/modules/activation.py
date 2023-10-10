@@ -47,7 +47,7 @@ options:
     default: ''
   restart_policy:
     description:
-      - The restart policy for the rulebook activation, default is 'always'.
+      - The restart policy for the rulebook activation, default is 'on-failure'.
     default: 'on-failure'
     choices: ["on-failure", "always", "never"]
     type: str
