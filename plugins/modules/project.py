@@ -41,7 +41,6 @@ options:
     description:
       - The Git URL of the project.
     type: str
-    required: true
   credential:
     description:
       - The name of the credential to associate with the project (optional).
@@ -77,8 +76,6 @@ EXAMPLES = """
 - name: Delete the project
   ansible.eda.project:
     name: "Example Project"
-    description: "Example project description"
-    url: "http://example.com/project1"
     state: absent
 """
 
@@ -91,7 +88,7 @@ def main():
         name=dict(required=True),
         new_name=dict(),
         description=dict(required=False),
-        url=dict(required=True),
+        url=dict(),
         credential=dict(required=False),
         state=dict(choices=["present", "absent", "exists"], default="present"),
     )

@@ -40,7 +40,6 @@ options:
     description:
       - Image URL of the decision environment.
     type: str
-    required: true
   credential:
     description:
       - Name of the credential to associate with the decision environment (optional).
@@ -66,9 +65,6 @@ EXAMPLES = """
 - name: Delete EDA Decision Env
   ansible.eda.decision_environment:
     name: "Example Decision Environment"
-    description: "Example Decision Environment description"
-    image_url: "quay.io/test"
-    credential: "Example Credential"
     state: absent
 """
 
@@ -80,7 +76,7 @@ def main():
         name=dict(type="str", required=True),
         new_name=dict(),
         description=dict(type="str", required=False),
-        image_url=dict(type="str", required=True),
+        image_url=dict(type="str"),
         credential=dict(required=False),
         state=dict(choices=["present", "absent", "exists"], default="present"),
     )

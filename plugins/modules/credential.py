@@ -40,17 +40,14 @@ options:
     description:
       - The username associated with the credential.
     type: str
-    required: true
   secret:
     description:
       - The password/token associated with the credential.
     type: str
-    required: true
   credential_type:
     description:
       - The type of the credential.
     type: str
-    required: true
     choices:
       - "GitHub Personal Access Token"
       - "GitLab Personal Access Token"
@@ -76,10 +73,6 @@ EXAMPLES = """
 - name: Delete EDA Credential
   ansible.eda.credential:
     name: "Example Credential"
-    description: "Example credential description"
-    username: "test"
-    secret: "test"
-    credential_type: "GitLab Personal Access Token"
     state: absent
 """
 
@@ -92,11 +85,10 @@ def main():
         name=dict(type="str", required=True),
         new_name=dict(),
         description=dict(type="str", required=False),
-        username=dict(type="str", required=True),
-        secret=dict(type="str", required=True, no_log=True),
+        username=dict(type="str"),
+        secret=dict(type="str", no_log=True),
         credential_type=dict(
             type="str",
-            required=True,
             choices=[
                 "GitHub Personal Access Token",
                 "GitLab Personal Access Token",

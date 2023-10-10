@@ -47,13 +47,11 @@ options:
   password:
     description:
       - Write-only field used to change the password.
-    required: True
     type: str
   roles:
     description:
       - Set of roles to be associated with the user
     choices: ["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
-    required: True
     type: list
     elements: str
   update_secrets:
@@ -107,9 +105,8 @@ def main():
         first_name=dict(),
         last_name=dict(),
         email=dict(),
-        password=dict(required=True, no_log=True),
+        password=dict(no_log=True),
         roles=dict(
-            required=True,
             type="list",
             elements="str",
             choices=[

@@ -18,7 +18,7 @@ DOCUMENTATION = """
 ---
 module: activation
 author: "Nikhil Jain (@jainnikhil30)"
-short_description: Create, restart or delete rulebook activations in EDA Controller.
+short_description: Create and delete rulebook activations in EDA Controller.
 description:
   - This module allows you to create, restart or delete activations in a EDA controller.
 options:
@@ -36,12 +36,10 @@ options:
     description:
       - The name of the project associated with the rulebook activation.
     type: str
-    required: true
   rulebook:
     description:
       - The name of the rulebook associated with the rulebook activation.
     type: str
-    required: true
   extra_vars:
     description:
       - The extra variables for the rulebook activation, default is ''.
@@ -50,7 +48,7 @@ options:
   restart_policy:
     description:
       - The restart policy for the rulebook activation, default is 'always'.
-    default: 'always'
+    default: 'on-failure'
     choices: ["on-failure", "always", "never"]
     type: str
   enabled:
@@ -62,7 +60,6 @@ options:
     description:
       - The name of the decision environment associated with the rulebook activation.
     type: str
-    required: true
   state:
     description:
       - Desired state of the resource.
@@ -85,11 +82,6 @@ EXAMPLES = """
 - name: Delete EDA Activation
   ansible.eda.activation:
     name: "Example Activation"
-    description: "Example Activation description"
-    project: "Example Project"
-    rulebook: "hello_controller.yml"
-    decision_environment: "Default Decision Environment"
-    enabled: False
     state: absent
 """
 
@@ -101,12 +93,12 @@ def main():
     argument_spec = dict(
         name=dict(type="str", required=True),
         description=dict(required=False),
-        project=dict(type="str", required=True),
-        rulebook=dict(type="str", required=True),
+        project=dict(type="str"),
+        rulebook=dict(type="str"),
         extra_vars=dict(type="str", default=""),
         restart_policy=dict(
             type="str",
-            default="always",
+            default="on-failure",
             choices=[
                 "on-failure",
                 "always",
@@ -114,7 +106,7 @@ def main():
             ],
         ),
         enabled=dict(type="bool", default=True),
-        decision_environment=dict(type="str", required=True),
+        decision_environment=dict(type="str"),
         state=dict(choices=["present", "absent", "exists"], default="present"),
     )
 
