@@ -32,7 +32,7 @@ options:
     - Whether to allow insecure connections to Ansible Automation Platform EDA
       Controller instance.
     - If C(no), SSL certificates will not be validated.
-    - This should only be used on personally controlled sites using self-signed 
+    - This should only be used on personally controlled sites using self-signed
       certificates.
     - If value not set, will try environment variable C(EDA_CONTROLLER_VERIFY_SSL)
     type: bool
