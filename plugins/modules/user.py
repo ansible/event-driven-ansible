@@ -22,8 +22,8 @@ module: user
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete project in EDA Controller.
 description:
-  - This module allows you to create, update or delete project in a EDA 
-  controller.
+  - This module allows you to create, update or delete project in a EDA
+    controller.
 options:
   username:
     description:
@@ -32,8 +32,8 @@ options:
     type: str
   new_username:
     description:
-      - Setting this option will change the existing username (looked up via 
-      the name field.
+      - Setting this option will change the existing username (looked up via
+        the name field.
     type: str
   first_name:
     description:
@@ -59,8 +59,8 @@ options:
     elements: str
   update_secrets:
     description:
-      - C(true) will always change password if user specifies password, 
-      even if API gives $encrypted$ for password.
+      - C(true) will always change password if user specifies password,
+        even if API gives $encrypted$ for password.
       - C(false) will only set the password if other values change too.
     type: bool
     default: true
@@ -136,9 +136,7 @@ def main():
     state = module.params.get("state")
 
     # Attempt to find user based on the provided name
-    user = module.get_one(
-        "users", name=username, check_exists=(state == "exists")
-    )
+    user = module.get_one("users", name=username, check_exists=(state == "exists"))
 
     if state == "absent":
         module.delete_if_needed(user, endpoint="users")

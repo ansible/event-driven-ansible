@@ -127,9 +127,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(
-        runner, args.get("host", "localhost"), args.get("port", 5000)
-    )
+    site = web.TCPSite(runner, args.get("host", "localhost"), args.get("port", 5000))
     await site.start()
 
     try:

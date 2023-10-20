@@ -63,9 +63,7 @@ def _get_events(events: list[dict], last_event_ids: list) -> list:
     return result, event_time, event_ids
 
 
-async def _get_cloudtrail_events(
-    client: BaseClient, params: dict
-) -> list[dict]:
+async def _get_cloudtrail_events(client: BaseClient, params: dict) -> list[dict]:
     paginator = client.get_paginator("lookup_events")
     results = await paginator.paginate(**params).build_full_result()
     return results.get("Events", [])
@@ -89,9 +87,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
     params["StartTime"] = datetime.utcnow()  # noqa: DTZ003
 
-    async with session.create_client(
-        "cloudtrail", **connection_args(args)
-    ) as client:
+    async with session.create_client("cloudtrail", **connection_args(args)) as client:
         event_time = None
         event_ids = []
         while True:

@@ -113,6 +113,4 @@ if __name__ == "__main__":
             """Print the event."""
             print(event)  # noqa: T201
 
-    asyncio.run(
-        main(MockQueue(), {"path": "/tmp", "recursive": True})
-    )  # noqa: S108
+    asyncio.run(main(MockQueue(), {"path": "/tmp", "recursive": True}))  # noqa: S108

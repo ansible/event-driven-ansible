@@ -19,11 +19,10 @@ DOCUMENTATION = """
 ---
 module: decision_environment
 author: "Nikhil Jain (@jainnikhil30)"
-short_description: Create, update or delete decision environment in EDA 
-Controller.
+short_description: Create, update or delete decision environment in EDA.
 description:
-  - This module allows you to create, update or delete decision environment 
-  in a EDA controller.
+  - This module allows you to create, update or delete decision environment
+    in a EDA controller.
 options:
   name:
     description:
@@ -46,7 +45,7 @@ options:
   credential:
     description:
       - Name of the credential to associate with the decision environment (
-      optional).
+        optional).
     type: str
     required: false
   state:
@@ -111,9 +110,7 @@ def main():
         "name": new_name
         if new_name
         else (
-            module.get_item_name(decision_environment)
-            if decision_environment
-            else name
+            module.get_item_name(decision_environment) if decision_environment else name
         ),
     }
     for field_name in ("description",):

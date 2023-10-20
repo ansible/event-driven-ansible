@@ -29,17 +29,17 @@ options:
     type: str
   validate_certs:
     description:
-    - Whether to allow insecure connections to Ansible Automation Platform EDA 
+    - Whether to allow insecure connections to Ansible Automation Platform EDA
     Controller instance.
     - If C(no), SSL certificates will not be validated.
-    - This should only be used on personally controlled sites using 
+    - This should only be used on personally controlled sites using
     self-signed certificates.
     - If value not set, will try environment variable C(
     EDA_CONTROLLER_VERIFY_SSL)
     type: bool
   request_timeout:
     description:
-    - Specify the timeout Ansible should use in requests to the eda 
+    - Specify the timeout Ansible should use in requests to the eda
     controller host.
     - Defaults to 10s, but this is handled by the shared module_utils code
     - If value not set, will try environment variable C(

@@ -35,9 +35,7 @@ def init_webserver():
     "endpoint, expected_resp_data",
     [
         pytest.param("", "Endpoint available", id="valid_endpoint"),
-        pytest.param(
-            "nonexistant", "Endpoint unavailable", id="invalid_endpoint"
-        ),
+        pytest.param("nonexistant", "Endpoint unavailable", id="invalid_endpoint"),
     ],
 )
 def test_url_check_source_sanity(
@@ -54,9 +52,7 @@ def test_url_check_source_sanity(
         TESTS_PATH, "event_source_url_check", "test_url_check_rules.yml"
     )
 
-    runner = CLIRunner(
-        rules=ruleset, envvars="URL_ENDPOINT"
-    ).run_in_background()
+    runner = CLIRunner(rules=ruleset, envvars="URL_ENDPOINT").run_in_background()
     subprocess_teardown(runner)
 
     while line := runner.stdout.readline().decode():

@@ -21,8 +21,7 @@ module: activation
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create and delete rulebook activations in EDA Controller.
 description:
-  - This module allows you to create, restart or delete activations in a EDA 
-  controller.
+  - This module allows you to create, restart or delete activations in a EDA.
 options:
   name:
     description:
@@ -60,8 +59,7 @@ options:
     default: true
   decision_environment:
     description:
-      - The name of the decision environment associated with the rulebook 
-      activation.
+      - The name of the decision environment associated with the activation.
     type: str
   state:
     description:

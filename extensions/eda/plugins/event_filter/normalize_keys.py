@@ -76,7 +76,5 @@ def _normalize_embedded_keys(
                 logger.warning("Replacing existing key %s", new_key)
         return new_dict
     if isinstance(obj, list):
-        return [
-            _normalize_embedded_keys(item, overwrite, logger) for item in obj
-        ]
+        return [_normalize_embedded_keys(item, overwrite, logger) for item in obj]
     return obj

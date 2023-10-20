@@ -112,9 +112,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown):
     env["HMAC_SECRET"] = "secret"
     env["HMAC_ALGO"] = "sha256"
 
-    rules_file = (
-        TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
-    )
+    rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
 
     proc = CLIRunner(
         rules=rules_file,
@@ -152,9 +150,7 @@ def test_webhook_source_with_unsupported_hmac_algo(subprocess_teardown):
     env["HMAC_SECRET"] = "secret"
     env["HMAC_ALGO"] = "invalid_hmac_algo"
 
-    rules_file = (
-        TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
-    )
+    rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
     proc = CLIRunner(
         rules=rules_file,
         envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO",

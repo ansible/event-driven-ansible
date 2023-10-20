@@ -21,8 +21,7 @@ module: credential
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete credential in EDA Controller.
 description:
-  - This module allows you to create, update or delete credential in a EDA 
-  controller.
+  - This module allows you to create, update or delete credential in a EDA.
 options:
   name:
     description:
@@ -31,8 +30,7 @@ options:
     required: true
   new_name:
     description:
-      - Setting this option will change the existing name (looked up via the 
-      name field).
+      - Setting this option will change the existing name (lookup via name).
     type: str
   description:
     description:

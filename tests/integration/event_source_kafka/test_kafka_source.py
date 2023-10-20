@@ -23,9 +23,7 @@ def kafka_producer(kafka_broker):
 
 
 def test_kafka_source_sanity(kafka_producer: KafkaProducer):
-    ruleset = os.path.join(
-        TESTS_PATH, "event_source_kafka", "test_kafka_rules.yml"
-    )
+    ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules.yml")
 
     msgs = [
         json.dumps({"name": "some kafka event"}).encode("ascii"),

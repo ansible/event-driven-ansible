@@ -20,8 +20,8 @@ module: project
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete project in EDA Controller.
 description:
-  - This module allows you to create, update or delete project in a EDA 
-  controller.
+  - This module allows you to create, update or delete project in a EDA
+    controller.
 options:
   name:
     description:
@@ -30,8 +30,8 @@ options:
     required: true
   new_name:
     description:
-      - Setting this option will change the existing name (looked up via the 
-      name field).
+      - Setting this option will change the existing name (looked up via the
+        name field).
     type: str
   description:
     description:
@@ -107,9 +107,7 @@ def main():
         crendential_id = module.resolve_name_to_id("credentials", credential)
 
     # Attempt to find project based on the provided name
-    project = module.get_one(
-        "projects", name=name, check_exists=(state == "exists")
-    )
+    project = module.get_one("projects", name=name, check_exists=(state == "exists"))
 
     if state == "absent":
         module.delete_if_needed(project, endpoint="projects")
