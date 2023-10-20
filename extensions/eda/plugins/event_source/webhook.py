@@ -46,7 +46,9 @@ async def webhook(request: web.Request) -> web.Response:
     try:
         payload = await request.json()
     except json.JSONDecodeError as exc:
-        logger.warning("Wrong body request: failed to decode JSON payload: %s", exc)
+        logger.warning(
+            "Wrong body request: failed to decode JSON payload: %s", exc
+        )
         raise web.HTTPBadRequest(text="Invalid JSON payload") from None
     endpoint = request.match_info["endpoint"]
     headers = dict(request.headers)
@@ -99,12 +101,16 @@ async def _hmac_verify(request: web.Request) -> bool:
 
 
 @web.middleware
-async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResponse:
+async def bearer_auth(
+    request: web.Request, handler: Callable
+) -> web.StreamResponse:
     """Verify authorization is Bearer type."""
     try:
         _parse_token(request)
     except KeyError:
-        raise web.HTTPUnauthorized(reason="Missing authorization token") from None
+        raise web.HTTPUnauthorized(
+            reason="Missing authorization token"
+        ) from None
     except ValueError:
         raise web.HTTPUnauthorized(text="Invalid authorization token") from None
 
@@ -112,7 +118,9 @@ async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResp
 
 
 @web.middleware
-async def hmac_verify(request: web.Request, handler: Callable) -> web.StreamResponse:
+async def hmac_verify(
+    request: web.Request, handler: Callable
+) -> web.StreamResponse:
     """Verify event's HMAC signature."""
     hmac_verified = await _hmac_verify(request)
     if not hmac_verified:
@@ -142,7 +150,9 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
         if app_attrs["hmac_algo"] not in hashlib.algorithms_available:
             msg = f"Unsupported HMAC algorithm: {app_attrs['hmac_algo']}"
             raise ValueError(msg)
-        app_attrs["hmac_header"] = args.get("hmac_header", "x-hub-signature-256")
+        app_attrs["hmac_header"] = args.get(
+            "hmac_header", "x-hub-signature-256"
+        )
         app_attrs["hmac_format"] = args.get("hmac_format", "hex")
         if app_attrs["hmac_format"] not in ["hex", "base64"]:
             msg = f"Unsupported HMAC header format {app_attrs['hmac_format']}"
@@ -164,7 +174,9 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
         try:
             context.load_cert_chain(certfile, keyfile, password)
         except Exception:
-            logger.exception("Failed to load certificates. Check they are valid")
+            logger.exception(
+                "Failed to load certificates. Check they are valid"
+            )
             raise
 
     runner = web.AppRunner(app)

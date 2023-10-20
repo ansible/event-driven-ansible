@@ -345,7 +345,9 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_signature():
 
     expected_text = "HMAC verification failed"
     post_task = asyncio.create_task(
-        assert_post(plugin_task, task_info, HTTPStatus.UNAUTHORIZED, expected_text)
+        assert_post(
+            plugin_task, task_info, HTTPStatus.UNAUTHORIZED, expected_text
+        )
     )
 
     await asyncio.gather(plugin_task, post_task)
@@ -375,7 +377,9 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_token():
 
     expected_text = "Invalid authorization token"
     post_task = asyncio.create_task(
-        assert_post(plugin_task, task_info, HTTPStatus.UNAUTHORIZED, expected_text)
+        assert_post(
+            plugin_task, task_info, HTTPStatus.UNAUTHORIZED, expected_text
+        )
     )
 
     await asyncio.gather(plugin_task, post_task)

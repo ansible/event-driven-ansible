@@ -37,7 +37,9 @@ def receive_events(
     )
 
     with servicebus_client:
-        receiver = servicebus_client.get_queue_receiver(queue_name=args["queue_name"])
+        receiver = servicebus_client.get_queue_receiver(
+            queue_name=args["queue_name"]
+        )
         with receiver:
             for msg in receiver:
                 meta = {"message_id": msg.message_id}

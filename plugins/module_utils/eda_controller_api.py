@@ -12,8 +12,7 @@ from ansible.module_utils.six import PY2
 from ansible.module_utils.six.moves.http_cookiejar import CookieJar
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six.moves.urllib.parse import urlencode, urlparse
-from ansible.module_utils.urls import ConnectionError, Request, \
-    SSLValidationError
+from ansible.module_utils.urls import ConnectionError, Request, SSLValidationError
 
 
 class ItemNotDefined(Exception):
@@ -218,7 +217,8 @@ class EDAControllerAPIModule(EDAControllerModule):
             )
         else:
             self.exit_json(
-                msg="Cannot determine identity field for Undefined object.")
+                msg="Cannot determine identity field for Undefined object."
+            )
 
     def head_endpoint(self, endpoint, *args, **kwargs):
         return self.make_request("HEAD", endpoint, **kwargs)
@@ -255,7 +255,8 @@ class EDAControllerAPIModule(EDAControllerModule):
         if "next" not in response["json"]:
             raise RuntimeError(
                 "Expected list from API at {0}, got: {1}".format(
-                    endpoint, response)
+                    endpoint, response
+                )
             )
         next_page = response["json"]["next"]
 
@@ -293,11 +294,14 @@ class EDAControllerAPIModule(EDAControllerModule):
                 )
                 if "detail" in response.get("json", {}):
                     fail_msg += ",detail: {0}".format(
-                        response["json"]["detail"])
+                        response["json"]["detail"]
+                    )
                 self.fail_json(msg=fail_msg)
 
-            if "count" not in response["json"] \
-                    or "results" not in response["json"]:
+            if (
+                "count" not in response["json"]
+                or "results" not in response["json"]
+            ):
                 self.fail_json(msg="The endpoint did not provide count,results")
 
         if response["json"]["count"] == 0:
@@ -493,8 +497,9 @@ class EDAControllerAPIModule(EDAControllerModule):
             status_code = response.status
         return {"status_code": status_code, "json": response_json}
 
-    def delete_if_needed(self, existing_item, endpoint, on_delete=None,
-                         auto_exit=True):
+    def delete_if_needed(
+        self, existing_item, endpoint, on_delete=None, auto_exit=True
+    ):
         # This will exit from the module on its own.
         # If the method successfully deletes an item and on_delete param is
         # defined,
@@ -510,13 +515,12 @@ class EDAControllerAPIModule(EDAControllerModule):
             # If we have an item, we can try to delete it
             try:
                 item_id = existing_item["id"]
-                item_name = self.get_item_name(existing_item,
-                                               allow_unknown=True)
+                item_name = self.get_item_name(
+                    existing_item, allow_unknown=True
+                )
             except KeyError as ke:
                 self.fail_json(
-                    msg="Unable to process delete, missing data {0}".format(
-                        ke
-                    )
+                    msg="Unable to process delete, missing data {0}".format(ke)
                 )
 
             response = self.delete_endpoint(endpoint, **{"id": item_id})
@@ -589,7 +593,8 @@ class EDAControllerAPIModule(EDAControllerModule):
         if not endpoint:
             self.fail_json(
                 msg="Unable to create new {0}, missing endpoint".format(
-                    item_type)
+                    item_type
+                )
             )
 
         item_url = None
@@ -598,9 +603,7 @@ class EDAControllerAPIModule(EDAControllerModule):
                 item_url = existing_item["url"]
             except KeyError as ke:
                 self.fail_json(
-                    msg="Unable to process create, missing data {0}".format(
-                        ke
-                    )
+                    msg="Unable to process create, missing data {0}".format(ke)
                 )
         else:
             # If we don't have an exisitng_item, we can try to create it
@@ -691,8 +694,9 @@ class EDAControllerAPIModule(EDAControllerModule):
                 return True
             return bool(new_field == old_field)
 
-    def objects_could_be_different(self, old, new, field_set=None,
-                                   warning=False):
+    def objects_could_be_different(
+        self, old, new, field_set=None, warning=False
+    ):
         if field_set is None:
             field_set = set(fd for fd in new.keys())
         for field in field_set:
@@ -744,14 +748,13 @@ class EDAControllerAPIModule(EDAControllerModule):
                 item_id = existing_item["id"]
             except KeyError as ke:
                 self.fail_json(
-                    msg="Unable to process update, missing data {0}".format(
-                        ke
-                    )
+                    msg="Unable to process update, missing data {0}".format(ke)
                 )
 
             # Check to see if anything within the item requires to be updated
-            needs_patch = self.objects_could_be_different(existing_item,
-                                                          new_item)
+            needs_patch = self.objects_could_be_different(
+                existing_item, new_item
+            )
 
             # If we decided the item needs to be updated, update it
             self.json_output["id"] = item_id
@@ -762,8 +765,9 @@ class EDAControllerAPIModule(EDAControllerModule):
                 if response["status_code"] == 200:
                     # compare apples-to-apples, old API data to new API data
                     # but do so considering the fields given in parameters
-                    self.json_output["changed"] |= \
-                        self.objects_could_be_different(
+                    self.json_output[
+                        "changed"
+                    ] |= self.objects_could_be_different(
                         existing_item,
                         response["json"],
                         field_set=new_item.keys(),

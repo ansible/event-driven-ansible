@@ -137,7 +137,8 @@ def main():
 
     # Attempt to find user based on the provided name
     user = module.get_one(
-        "users", name=username, check_exists=(state == "exists"))
+        "users", name=username, check_exists=(state == "exists")
+    )
 
     if state == "absent":
         module.delete_if_needed(user, endpoint="users")

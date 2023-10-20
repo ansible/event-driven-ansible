@@ -46,7 +46,9 @@ def send_facts(queue, filename: str) -> None:  # noqa: ANN001
 
 def main(queue, args: dict) -> None:  # noqa: ANN001
     """Load facts from YAML files initially and when the file changes."""
-    files = [pathlib.Path(f).resolve().as_posix() for f in args.get("files", [])]
+    files = [
+        pathlib.Path(f).resolve().as_posix() for f in args.get("files", [])
+    ]
 
     if not files:
         return

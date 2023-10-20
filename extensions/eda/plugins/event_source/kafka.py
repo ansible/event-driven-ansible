@@ -110,6 +110,11 @@ if __name__ == "__main__":
     asyncio.run(
         main(
             MockQueue(),
-            {"topic": "eda", "host": "localhost", "port": "9092", "group_id": "test"},
+            {
+                "topic": "eda",
+                "host": "localhost",
+                "port": "9092",
+                "group_id": "test",
+            },
         ),
     )

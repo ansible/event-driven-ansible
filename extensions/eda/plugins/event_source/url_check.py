@@ -45,7 +45,9 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                             {
                                 "url_check": {
                                     "url": url,
-                                    "status": "up" if resp.status == OK else "down",
+                                    "status": "up"
+                                    if resp.status == OK
+                                    else "down",
                                     "status_code": resp.status,
                                 },
                             },

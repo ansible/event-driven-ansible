@@ -112,7 +112,8 @@ def main():
         if new_name
         else (
             module.get_item_name(decision_environment)
-            if decision_environment else name
+            if decision_environment
+            else name
         ),
     }
     for field_name in ("description",):

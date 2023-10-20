@@ -89,7 +89,9 @@ async def main(  # pylint: disable=R0914
             if not event:
                 continue
             for _ignore in range(repeat_count):
-                data = _create_data(create_index, index, add_timestamp, time_format)
+                data = _create_data(
+                    create_index, index, add_timestamp, time_format
+                )
 
                 index += 1
                 data.update(event)
@@ -118,7 +120,9 @@ def _create_data(
         elif time_format == "epoch":
             data["timestamp"] = int(time.time())
         elif time_format == "iso8601":
-            data["timestamp"] = datetime.now(tz=None).isoformat()  # noqa: DTZ005
+            data["timestamp"] = datetime.now(
+                tz=None
+            ).isoformat()  # noqa: DTZ005
     return data
 
 

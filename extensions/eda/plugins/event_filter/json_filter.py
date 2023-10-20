@@ -44,7 +44,9 @@ def main(
         obj = queue.pop()
         if isinstance(obj, dict):
             for item in list(obj.keys()):
-                if (item in include_keys) or _matches_include_keys(include_keys, item):
+                if (item in include_keys) or _matches_include_keys(
+                    include_keys, item
+                ):
                     queue.append(obj[item])
                 elif (item in exclude_keys) or _matches_exclude_keys(
                     exclude_keys,

@@ -107,8 +107,9 @@ def main():
         crendential_id = module.resolve_name_to_id("credentials", credential)
 
     # Attempt to find project based on the provided name
-    project = module.get_one("projects", name=name,
-                             check_exists=(state == "exists"))
+    project = module.get_one(
+        "projects", name=name, check_exists=(state == "exists")
+    )
 
     if state == "absent":
         module.delete_if_needed(project, endpoint="projects")
@@ -120,8 +121,8 @@ def main():
         else (module.get_item_name(project) if project else name),
     }
     for field_name in (
-            "description",
-            "url",
+        "description",
+        "url",
     ):
         field_value = module.params.get(field_name)
         if field_name is not None:
