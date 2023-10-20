@@ -3,7 +3,8 @@
 
 
 # (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+ (see COPYING or
+# https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 
@@ -18,9 +19,11 @@ DOCUMENTATION = """
 ---
 module: decision_environment
 author: "Nikhil Jain (@jainnikhil30)"
-short_description: Create, update or delete decision environment in EDA Controller.
+short_description: Create, update or delete decision environment in EDA 
+Controller.
 description:
-  - This module allows you to create, update or delete decision environment in a EDA controller.
+  - This module allows you to create, update or delete decision environment 
+  in a EDA controller.
 options:
   name:
     description:
@@ -42,7 +45,8 @@ options:
     type: str
   credential:
     description:
-      - Name of the credential to associate with the decision environment (optional).
+      - Name of the credential to associate with the decision environment (
+      optional).
     type: str
     required: false
   state:
@@ -107,7 +111,8 @@ def main():
         "name": new_name
         if new_name
         else (
-            module.get_item_name(decision_environment) if decision_environment else name
+            module.get_item_name(decision_environment)
+            if decision_environment else name
         ),
     }
     for field_name in ("description",):
@@ -121,7 +126,8 @@ def main():
     if image_url is not None:
         decision_environment_fields["image_url"] = image_url
 
-    # If the state was present and we can let the module build or update the existing decision environment, this will return on its own
+    # If the state was present and we can let the module build or update the
+    # existing decision environment, this will return on its own
     module.create_or_update_if_needed(
         decision_environment,
         decision_environment_fields,

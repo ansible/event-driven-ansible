@@ -3,7 +3,8 @@
 
 
 # (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 
@@ -20,7 +21,8 @@ module: activation
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create and delete rulebook activations in EDA Controller.
 description:
-  - This module allows you to create, restart or delete activations in a EDA controller.
+  - This module allows you to create, restart or delete activations in a EDA 
+  controller.
 options:
   name:
     description:
@@ -58,7 +60,8 @@ options:
     default: true
   decision_environment:
     description:
-      - The name of the decision environment associated with the rulebook activation.
+      - The name of the decision environment associated with the rulebook 
+      activation.
     type: str
   state:
     description:
@@ -160,15 +163,18 @@ def main():
             activation_fields[field_name] = field_value
 
     if project_id is not None:
-        # this is resolved earlier, so save an API call and don't do it again in the loop above
+        # this is resolved earlier, so save an API call and don't do it again
+        # in the loop above
         activation_fields["project_id"] = project_id
 
     if rulebook_id is not None:
-        # this is resolved earlier, so save an API call and don't do it again in the loop above
+        # this is resolved earlier, so save an API call and don't do it again
+        # in the loop above
         activation_fields["rulebook_id"] = rulebook_id
 
     if decision_environment_id is not None:
-        # this is resolved earlier, so save an API call and don't do it again in the loop above
+        # this is resolved earlier, so save an API call and don't do it again
+        # in the loop above
         activation_fields["decision_environment_id"] = decision_environment_id
 
     if restart_policy is not None:
@@ -177,7 +183,8 @@ def main():
     if enabled is not None:
         activation_fields["is_enabled"] = enabled
 
-    # If the state was present and we can let the module build or update the existing activation, this will return on its own
+    # If the state was present and we can let the module build or update the
+    # existing activation, this will return on its own
     module.create_or_update_if_needed(
         activation,
         activation_fields,

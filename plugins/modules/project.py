@@ -2,13 +2,12 @@
 # coding: utf-8 -*-
 
 
-# (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# (c) 2023, Nikhil Jain <nikjain@redhat.com> GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-
 
 ANSIBLE_METADATA = {
     "status": ["preview"],
@@ -21,7 +20,8 @@ module: project
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete project in EDA Controller.
 description:
-  - This module allows you to create, update or delete project in a EDA controller.
+  - This module allows you to create, update or delete project in a EDA 
+  controller.
 options:
   name:
     description:
@@ -30,7 +30,8 @@ options:
     required: true
   new_name:
     description:
-      - Setting this option will change the existing name (looked up via the name field).
+      - Setting this option will change the existing name (looked up via the 
+      name field).
     type: str
   description:
     description:
@@ -79,7 +80,6 @@ EXAMPLES = """
     state: absent
 """
 
-
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
 
 
@@ -107,7 +107,8 @@ def main():
         crendential_id = module.resolve_name_to_id("credentials", credential)
 
     # Attempt to find project based on the provided name
-    project = module.get_one("projects", name=name, check_exists=(state == "exists"))
+    project = module.get_one("projects", name=name,
+                             check_exists=(state == "exists"))
 
     if state == "absent":
         module.delete_if_needed(project, endpoint="projects")
@@ -119,18 +120,20 @@ def main():
         else (module.get_item_name(project) if project else name),
     }
     for field_name in (
-        "description",
-        "url",
+            "description",
+            "url",
     ):
         field_value = module.params.get(field_name)
         if field_name is not None:
             project_fields[field_name] = field_value
 
     if crendential_id is not None:
-        # this is resolved earlier, so save an API call and don't do it again in the loop above
+        # this is resolved earlier, so save an API call and don't do it again
+        # in the loop above
         project_fields["credential"] = crendential_id
 
-    # If the state was present and we can let the module build or update the existing project, this will return on its own
+    # If the state was present and we can let the module build or update the
+    # existing project, this will return on its own
     module.create_or_update_if_needed(
         project,
         project_fields,

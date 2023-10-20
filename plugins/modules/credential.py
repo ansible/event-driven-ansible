@@ -3,7 +3,8 @@
 
 
 # (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 
@@ -20,7 +21,8 @@ module: credential
 author: "Nikhil Jain (@jainnikhil30)"
 short_description: Create, update or delete credential in EDA Controller.
 description:
-  - This module allows you to create, update or delete credential in a EDA controller.
+  - This module allows you to create, update or delete credential in a EDA 
+  controller.
 options:
   name:
     description:
@@ -29,7 +31,8 @@ options:
     required: true
   new_name:
     description:
-      - Setting this option will change the existing name (looked up via the name field).
+      - Setting this option will change the existing name (looked up via the 
+      name field).
     type: str
   description:
     description:
@@ -137,7 +140,8 @@ def main():
     if credential_type is not None:
         credential_fields["credential_type"] = credential_type
 
-    # If the state was present and we can let the module build or update the existing credential, this will return on its own
+    # If the state was present and we can let the module build or update the
+    # existing credential, this will return on its own
     module.create_or_update_if_needed(
         credential,
         credential_fields,

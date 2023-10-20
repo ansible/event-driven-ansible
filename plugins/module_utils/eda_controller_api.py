@@ -12,7 +12,8 @@ from ansible.module_utils.six import PY2
 from ansible.module_utils.six.moves.http_cookiejar import CookieJar
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six.moves.urllib.parse import urlencode, urlparse
-from ansible.module_utils.urls import ConnectionError, Request, SSLValidationError
+from ansible.module_utils.urls import ConnectionError, Request, \
+    SSLValidationError
 
 
 class ItemNotDefined(Exception):
@@ -102,7 +103,7 @@ class EDAControllerModule(AnsibleModule):
             self.url_prefix = self.url.path
         except Exception as e:
             self.fail_json(
-                msg="Unable to parse eda_controller_host as a URL ({1}): {0}".format(
+                msg="Unable to parse eda_controller_host ({1}): {0}".format(
                     self.host, e
                 )
             )
@@ -216,7 +217,8 @@ class EDAControllerAPIModule(EDAControllerModule):
                 )
             )
         else:
-            self.exit_json(msg="Cannot determine identity field for Undefined object.")
+            self.exit_json(
+                msg="Cannot determine identity field for Undefined object.")
 
     def head_endpoint(self, endpoint, *args, **kwargs):
         return self.make_request("HEAD", endpoint, **kwargs)
@@ -252,13 +254,14 @@ class EDAControllerAPIModule(EDAControllerModule):
         response = self.get_endpoint(endpoint, *args, **kwargs)
         if "next" not in response["json"]:
             raise RuntimeError(
-                "Expected list from API at {0}, got: {1}".format(endpoint, response)
+                "Expected list from API at {0}, got: {1}".format(
+                    endpoint, response)
             )
         next_page = response["json"]["next"]
 
         if response["json"]["count"] > 10000:
             self.fail_json(
-                msg="The number of items being queried for is higher than 10,000."
+                msg="The number of items being queried is higher than 10,000."
             )
 
         while next_page is not None:
@@ -285,15 +288,17 @@ class EDAControllerAPIModule(EDAControllerModule):
             response = self.get_endpoint(endpoint, **new_kwargs)
 
             if response["status_code"] != 200:
-                fail_msg = "Got a {0} response when trying to get one from {1}".format(
+                fail_msg = "Got a {0} when trying to get from {1}".format(
                     response["status_code"], endpoint
                 )
                 if "detail" in response.get("json", {}):
-                    fail_msg += ", detail: {0}".format(response["json"]["detail"])
+                    fail_msg += ",detail: {0}".format(
+                        response["json"]["detail"])
                 self.fail_json(msg=fail_msg)
 
-            if "count" not in response["json"] or "results" not in response["json"]:
-                self.fail_json(msg="The endpoint did not provide count and results")
+            if "count" not in response["json"] \
+                    or "results" not in response["json"]:
+                self.fail_json(msg="The endpoint did not provide count,results")
 
         if response["json"]["count"] == 0:
             if allow_none:
@@ -302,12 +307,15 @@ class EDAControllerAPIModule(EDAControllerModule):
                 self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
         elif response["json"]["count"] > 1:
             if name:
-                # Since we did a name or ID search and got > 1 return something if the id matches
+                # Since we did a name or ID search and got > 1 return
+                # something if the id matches
                 for asset in response["json"]["results"]:
                     if str(asset["id"]) == name:
                         return asset
-            # We got > 1 and either didn't find something by ID (which means multiple names)
-            # Or we weren't running with a or search and just got back too many to begin with.
+            # We got > 1 and either didn't find something by ID (which means
+            # multiple names)
+            # Or we weren't running with a or search and just got back too
+            # many to begin with.
             self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
 
         if check_exists:
@@ -343,7 +351,8 @@ class EDAControllerAPIModule(EDAControllerModule):
         return self.get_exactly_one(endpoint, name)["id"]
 
     def make_request(self, method, endpoint, *args, **kwargs):
-        # In case someone is calling us directly; make sure we were given a method, let's not just assume a GET
+        # In case someone is calling us directly; make sure we were given a
+        # method, let's not just assume a GET
         if not method:
             raise Exception("The HTTP method must be defined")
 
@@ -362,7 +371,8 @@ class EDAControllerAPIModule(EDAControllerModule):
             kwargs["headers"] = headers
 
         data = (
-            None  # Important, if content type is not JSON, this should not be dict type
+            None  # Important, if content type is not JSON, this should not
+            # be dict type
         )
         if headers.get("Content-Type", "") == "application/json":
             data = dumps(kwargs.get("data", {}))
@@ -382,59 +392,66 @@ class EDAControllerAPIModule(EDAControllerModule):
             )
         except SSLValidationError as ssl_err:
             self.fail_json(
-                msg="Could not establish a secure connection to your host ({1}): {0}.".format(
+                msg="Couldn't establish connection to host ({1}): {0}.".format(
                     url.netloc, ssl_err
                 )
             )
         except ConnectionError as con_err:
             self.fail_json(
-                msg="There was a network error of some kind trying to connect to your host ({1}): {0}.".format(
+                msg="Network error while connecting to host ({1}): {0}.".format(
                     url.netloc, con_err
                 )
             )
         except HTTPError as he:
-            # Sanity check: Did the server send back some kind of internal error?
+            # Sanity check: Did the server send back some kind of internal
+            # error?
             if he.code >= 500:
                 self.fail_json(
-                    msg="The host sent back a server error ({1}): {0}. Please check the logs and try again later".format(
+                    msg="The host sent back a server error ({1}): {0}.".format(
                         url.path, he
                     )
                 )
-            # Sanity check: Did we fail to authenticate properly?  If so, fail out now; this is always a failure.
+            # Sanity check: Did we fail to authenticate properly?  If so,
+            # fail out now; this is always a failure.
             elif he.code == 401:
                 self.fail_json(
-                    msg="Invalid authentication credentials for {0} (HTTP 401).".format(
+                    msg="Invalid authentication credentials for {0}.".format(
                         url.path
                     )
                 )
-            # Sanity check: Did we get a forbidden response, which means that the user isn't allowed to do this? Report that.
+            # Sanity check: Did we get a forbidden response, which means that
+            # the user isn't allowed to do this? Report that.
             elif he.code == 403:
                 self.fail_json(
-                    msg="You don't have permission to {1} to {0} (HTTP 403).".format(
+                    msg="You don't have permission to {1} to {0}.".format(
                         url.path, method
                     )
                 )
             # Sanity check: Did we get a 404 response?
-            # Requests with primary keys will return a 404 if there is no response, and we want to consistently trap these.
+            # Requests with primary keys will return a 404 if there is no
+            # response, and we want to consistently trap these.
             elif he.code == 404:
                 if kwargs.get("return_none_on_404", False):
                     return None
                 self.fail_json(
-                    msg="The requested object could not be found at {0}.".format(
+                    msg="The requested object could not be found {0}.".format(
                         url.path
                     )
                 )
             # Sanity check: Did we get a 405 response?
-            # A 405 means we used a method that isn't allowed. Usually this is a bad request.
+            # A 405 means we used a method that isn't allowed. Usually this
+            # is a bad request.
             elif he.code == 405:
                 self.fail_json(
-                    msg="Cannot make a request with the {0} method to this endpoint {1}".format(
+                    msg="Can't make a request with {0} to endpoint {1}".format(
                         method, url.path
                     )
                 )
-            # Sanity check: Did we get some other kind of error?  If so, write an appropriate error message.
+            # Sanity check: Did we get some other kind of error? If so,
+            # write an appropriate error message.
             elif he.code >= 400:
-                # We are going to return a 400 so the module can decide what to do with it
+                # We are going to return a 400 so the module can decide what
+                # to do with it
                 page_data = he.read()
                 try:
                     return {"status_code": he.code, "json": loads(page_data)}
@@ -452,7 +469,7 @@ class EDAControllerAPIModule(EDAControllerModule):
                 )
         except Exception as e:
             self.fail_json(
-                msg="There was an unknown error when trying to connect to {2}: {0} {1}".format(
+                msg="Unknown error trying to connect to {2}: {0} {1}".format(
                     type(e).__name__, e, url.geturl()
                 )
             )
@@ -468,7 +485,7 @@ class EDAControllerAPIModule(EDAControllerModule):
             try:
                 response_json = loads(response_body)
             except Exception as e:
-                self.fail_json(msg="Failed to parse the response json: {0}".format(e))
+                self.fail_json(msg="Failed to parse the response:{0}".format(e))
 
         if PY2:
             status_code = response.getcode()
@@ -476,22 +493,28 @@ class EDAControllerAPIModule(EDAControllerModule):
             status_code = response.status
         return {"status_code": status_code, "json": response_json}
 
-    def delete_if_needed(self, existing_item, endpoint, on_delete=None, auto_exit=True):
+    def delete_if_needed(self, existing_item, endpoint, on_delete=None,
+                         auto_exit=True):
         # This will exit from the module on its own.
-        # If the method successfully deletes an item and on_delete param is defined,
-        #   the on_delete parameter will be called as a method pasing in this object and the json from the response
+        # If the method successfully deletes an item and on_delete param is
+        # defined,
+        #   the on_delete parameter will be called as a method pasing in this
+        #   object and the json from the response
         # This will return one of two things:
-        #   1. None if the existing_item is not defined (so no delete needs to happen)
-        #   2. The response from EDA from calling the delete on the endpont. It's up to you to process the response and exit from the module
+        #   1. None if the existing_item is not defined (so no delete needs
+        #   to happen)
+        #   2. The response from EDA from calling the delete on the endpont.
+        #   It's up to you to process the response and exit from the module
         # Note: common error codes from the EDA API can cause the module to fail
         if existing_item:
             # If we have an item, we can try to delete it
             try:
                 item_id = existing_item["id"]
-                item_name = self.get_item_name(existing_item, allow_unknown=True)
+                item_name = self.get_item_name(existing_item,
+                                               allow_unknown=True)
             except KeyError as ke:
                 self.fail_json(
-                    msg="Unable to process delete of item due to missing data {0}".format(
+                    msg="Unable to process delete, missing data {0}".format(
                         ke
                     )
                 )
@@ -516,7 +539,8 @@ class EDAControllerAPIModule(EDAControllerModule):
                         )
                     )
                 elif "json" in response:
-                    # This is from a project delete (if there is an active job against it)
+                    # This is from a project delete (if there is an active
+                    # job against it)
                     if "error" in response["json"]:
                         self.fail_json(
                             msg="Unable to delete {0}: {1}".format(
@@ -551,16 +575,21 @@ class EDAControllerAPIModule(EDAControllerModule):
         item_type="unknown",
     ):
         # This will exit from the module on its own
-        # If the method successfully creates an item and on_create param is defined,
-        #    the on_create parameter will be called as a method pasing in this object and the json from the response
+        # If the method successfully creates an item and on_create param is
+        # defined,
+        #    the on_create parameter will be called as a method pasing in
+        #    this object and the json from the response
         # This will return one of two things:
-        #    1. None if the existing_item is already defined (so no create needs to happen)
-        #    2. The response from EDA from calling the post on the endpont. It's up to you to process the response and exit from the module
+        #    1. None if the existing_item is already defined (so no create
+        #    needs to happen)
+        #    2. The response from EDA from calling the post on the endpont.
+        #    It's up to you to process the response and exit from the module
         # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if not endpoint:
             self.fail_json(
-                msg="Unable to create new {0} due to missing endpoint".format(item_type)
+                msg="Unable to create new {0}, missing endpoint".format(
+                    item_type)
             )
 
         item_url = None
@@ -569,7 +598,7 @@ class EDAControllerAPIModule(EDAControllerModule):
                 item_url = existing_item["url"]
             except KeyError as ke:
                 self.fail_json(
-                    msg="Unable to process create of item due to missing data {0}".format(
+                    msg="Unable to process create, missing data {0}".format(
                         ke
                     )
                 )
@@ -601,7 +630,8 @@ class EDAControllerAPIModule(EDAControllerModule):
                         )
                     )
 
-        # If we have an on_create method and we actually changed something we can call on_create
+        # If we have an on_create method and we actually changed something we
+        # can call on_create
         if on_create is not None and self.json_output["changed"]:
             on_create(self, response["json"])
         elif auto_exit:
@@ -617,7 +647,8 @@ class EDAControllerAPIModule(EDAControllerModule):
         if not warning:
             return
         self.warn(
-            "The field {0} of {1} {2} has encrypted data and may inaccurately report task is changed.".format(
+            "The field {0} of {1} {2} has encrypted data "
+            "and may inaccurately report task is changed.".format(
                 field, old.get("type", "unknown"), old.get("id", "unknown")
             )
         )
@@ -643,7 +674,7 @@ class EDAControllerAPIModule(EDAControllerModule):
     def fields_could_be_same(old_field, new_field):
         """Treating $encrypted$ as a wild card,
         return False if the two values are KNOWN to be different
-        return True if the two values are the same, or could potentially be the same,
+        return True if the two values are the same, or could potentially be same
         depending on the unknown $encrypted$ value or sub-values
         """
         if isinstance(old_field, dict) and isinstance(new_field, dict):
@@ -660,7 +691,8 @@ class EDAControllerAPIModule(EDAControllerModule):
                 return True
             return bool(new_field == old_field)
 
-    def objects_could_be_different(self, old, new, field_set=None, warning=False):
+    def objects_could_be_different(self, old, new, field_set=None,
+                                   warning=False):
         if field_set is None:
             field_set = set(fd for fd in new.keys())
         for field in field_set:
@@ -670,12 +702,14 @@ class EDAControllerAPIModule(EDAControllerModule):
                 if self.update_secrets or (
                     not self.fields_could_be_same(old_field, new_field)
                 ):
-                    return True  # Something doesn't match, or something might not match
+                    return True  # Something doesn't match, or something
+                    # might not match
             elif self.has_encrypted_values(new_field) or field not in new:
                 if self.update_secrets or (
                     not self.fields_could_be_same(old_field, new_field)
                 ):
-                    # case of 'field not in new' - user password write-only field that API will not display
+                    # case of 'field not in new' - user password write-only
+                    # field that API will not display
                     self._encrypted_changed_warning(field, old, warning=warning)
                     return True
         return False
@@ -690,11 +724,14 @@ class EDAControllerAPIModule(EDAControllerModule):
         auto_exit=True,
     ):
         # This will exit from the module on its own
-        # If the method successfully updates an item and on_update param is defined,
-        #   the on_update parameter will be called as a method pasing in this object and the json from the response
+        # If the method successfully updates an item and on_update param is
+        # defined,
+        #   the on_update parameter will be called as a method pasing in this
+        #   object and the json from the response
         # This will return one of two things:
         #    1. None if the existing_item does not need to be updated
-        #    2. The response from EDA from patching to the endpoint. It's up to you to process the response and exit from the module.
+        #    2. The response from EDA from patching to the endpoint. It's up
+        #    to you to process the response and exit from the module.
         # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if existing_item:
@@ -707,13 +744,14 @@ class EDAControllerAPIModule(EDAControllerModule):
                 item_id = existing_item["id"]
             except KeyError as ke:
                 self.fail_json(
-                    msg="Unable to process update of item due to missing data {0}".format(
+                    msg="Unable to process update, missing data {0}".format(
                         ke
                     )
                 )
 
-            # Check to see if anything within the item requires the item to be updated
-            needs_patch = self.objects_could_be_different(existing_item, new_item)
+            # Check to see if anything within the item requires to be updated
+            needs_patch = self.objects_could_be_different(existing_item,
+                                                          new_item)
 
             # If we decided the item needs to be updated, update it
             self.json_output["id"] = item_id
@@ -724,7 +762,8 @@ class EDAControllerAPIModule(EDAControllerModule):
                 if response["status_code"] == 200:
                     # compare apples-to-apples, old API data to new API data
                     # but do so considering the fields given in parameters
-                    self.json_output["changed"] |= self.objects_could_be_different(
+                    self.json_output["changed"] |= \
+                        self.objects_could_be_different(
                         existing_item,
                         response["json"],
                         field_set=new_item.keys(),
@@ -735,7 +774,7 @@ class EDAControllerAPIModule(EDAControllerModule):
                 else:
                     self.fail_json(
                         **{
-                            "msg": "Unable to update {0} {1}, see response".format(
+                            "msg": "Unable to update {0} {1}".format(
                                 item_type, item_name
                             ),
                             "response": response,
