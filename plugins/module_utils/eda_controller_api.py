@@ -585,7 +585,8 @@ class EDAControllerAPIModule(EDAControllerModule):
             except KeyError as ke:
                 self.fail_json(
                     msg="Unable to process create for {0}, missing data {1}".format(
-                        item_url, ke)
+                        item_url, ke
+                    )
                 )
         else:
             # If we don't have an exisitng_item, we can try to create it
