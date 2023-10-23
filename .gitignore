@@ -9,6 +9,10 @@ tests/output
 .pytest_cache/
 .tox
 .ruff*
+tests/integration/event_source_kafka/*.crt
+tests/integration/event_source_kafka/*.key
+tests/integration/event_source_kafka/*.csr
+tests/integration/event_source_kafka/*.jks
 
 # Ide's
 .vscode
