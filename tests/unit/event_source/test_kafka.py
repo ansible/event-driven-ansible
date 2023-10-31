@@ -41,7 +41,8 @@ class MockConsumer(AsyncMock):
 
 def test_receive_from_kafka_place_in_queue(myqueue):
     with patch(
-        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer
+        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+        new=MockConsumer,
     ):
         asyncio.run(
             kafka_main(

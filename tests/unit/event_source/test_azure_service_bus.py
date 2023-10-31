@@ -46,7 +46,10 @@ def test_receive_from_azure_service_bus(myqueue):
                 },
             )
         )
-        assert myqueue.queue[0] == {"body": "Hello World", "meta": {"message_id": 1}}
+        assert myqueue.queue[0] == {
+            "body": "Hello World",
+            "meta": {"message_id": 1},
+        }
         assert myqueue.queue[1] == {
             "body": {"Say": "Hello World"},
             "meta": {"message_id": 2},

@@ -115,7 +115,10 @@ def test_webhook_source_hmac_sanity(subprocess_teardown):
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
 
     proc = CLIRunner(
-        rules=rules_file, envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO", env=env, debug=True
+        rules=rules_file,
+        envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO",
+        env=env,
+        debug=True,
     ).run_in_background()
     subprocess_teardown(proc)
 
@@ -149,7 +152,10 @@ def test_webhook_source_with_unsupported_hmac_algo(subprocess_teardown):
 
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_hmac_rules.yml"
     proc = CLIRunner(
-        rules=rules_file, envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO", env=env, debug=True
+        rules=rules_file,
+        envvars="WH_PORT,HMAC_SECRET,HMAC_ALGO",
+        env=env,
+        debug=True,
     ).run_in_background()
     proc.wait(timeout=15)
     stdout, _unused_stderr = proc.communicate()
