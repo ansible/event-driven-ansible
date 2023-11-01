@@ -6,3 +6,5 @@ asyncmock
 azure-servicebus
 dpath
 pytest-asyncio
+psycopg
+xxhash
