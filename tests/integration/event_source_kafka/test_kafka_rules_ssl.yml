@@ -1,0 +1,23 @@
+- name: test kafka source plugin with ssl security protocol
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: kafka-events-ssl
+        host: localhost
+        port: 9093
+        offset: earliest
+        encoding: ascii
+        security_protocol: SSL
+        check_hostname: false
+        verify_mode: CERT_NONE
+  rules:
+    - name: match kafka event
+      condition: event.body.name == "Produced for SSL consumers"
+      action:
+        debug:
+          msg: "Rule fired successfully for SSL consumers"
+
+    - name: stop
+      condition: event.body == "stop"
+      action:
+        shutdown:
