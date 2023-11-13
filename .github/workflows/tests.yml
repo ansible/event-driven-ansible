@@ -43,5 +43,5 @@ jobs:
         working-directory: ansible_collections/ansible/eda
 
       - name: Run unit tests
-        run: ansible-test units --venv
+        run: ansible-test units --venv -v --num-workers 1
         working-directory: ansible_collections/ansible/eda
