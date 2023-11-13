@@ -1,0 +1,24 @@
+- name: test kafka source plugin with sasl_plaintext security protocol
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: kafka-events-sasl-plaintext
+        host: localhost
+        port: 9094
+        offset: earliest
+        encoding: ascii
+        security_protocol: SASL_PLAINTEXT
+        sasl_mechanism: PLAIN
+        sasl_plain_username: test
+        sasl_plain_password: test
+  rules:
+    - name: match kafka event
+      condition: event.body.name == "Produced for SASL_PLAINTEXT consumers"
+      action:
+        debug:
+          msg: "Rule fired successfully for SASL_PLAINTEXT consumers"
+
+    - name: stop
+      condition: event.body == "stop"
+      action:
+        shutdown:

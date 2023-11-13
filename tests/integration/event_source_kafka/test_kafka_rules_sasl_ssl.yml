@@ -1,0 +1,26 @@
+- name: test kafka source plugin with sasl_ssl security protocol
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: kafka-events-sasl-ssl
+        host: localhost
+        port: 9095
+        offset: earliest
+        encoding: ascii
+        security_protocol: SASL_SSL
+        sasl_mechanism: PLAIN
+        sasl_plain_username: test
+        sasl_plain_password: test
+        check_hostname: false
+        verify_mode: CERT_NONE
+  rules:
+    - name: match kafka event
+      condition: event.body.name == "Produced for SASL_SSL consumers"
+      action:
+        debug:
+          msg: "Rule fired successfully for SASL_SSL consumers"
+
+    - name: stop
+      condition: event.body == "stop"
+      action:
+        shutdown:
