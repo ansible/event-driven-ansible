@@ -7,6 +7,8 @@ Arguments:
     host:      The host where rabbitmq is hosted
     port:      The port where the rabbitmq server is listening
     queue:     The queue name to listen for messages on
+    user:      The username to use
+    password:  The password to use
 
 """
 
@@ -23,9 +25,11 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
     host = args.get("host")
     port = args.get("port")
+    user = args.get("user")
+    password = args.get("password")
     queue_name = args.get("queue")
 
-    url = f"amqp://{host}:{port}"
+    url = f"amqp://{user}:{password}@{host}:{port}"
 
     async with aiorabbit.connect(url) as client:
         await client.queue_declare(queue_name)
@@ -56,6 +60,6 @@ if __name__ == "__main__":
     asyncio.run(
         main(
             MockQueue(),
-            {"host": "localhost", "port": "9092", "queue": "test"},
+            {"user": "guest", "password": "guest", "host": "localhost", "port": "5672", "queue": "test"},
         ),
     )
