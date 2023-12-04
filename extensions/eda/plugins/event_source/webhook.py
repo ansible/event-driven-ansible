@@ -5,8 +5,7 @@ The message must be a valid JSON object.
 
 Arguments:
 ---------
-    host:     The hostname to listen to. Set to 0.0.0.0 to listen on all
-              interfaces. Defaults to 127.0.0.1
+    host:     The hostname to listen to. Defaults to 0.0.0.0 (all interfaces)
     port:     The TCP port to listen to.  Defaults to 5000
     token:    The optional authentication token expected from client
     certfile: The optional path to a certificate file to enable TLS support
@@ -171,7 +170,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     await runner.setup()
     site = web.TCPSite(
         runner,
-        args.get("host") or "127.0.0.1",
+        args.get("host") or "0.0.0.0",  # noqa: S104
         args.get("port"),
         ssl_context=context,
     )
