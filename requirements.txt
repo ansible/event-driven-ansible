@@ -1,8 +1,9 @@
-azure-servicebus
 aiobotocore
 aiohttp
 aiokafka
-watchdog
-systemd-python
+azure-servicebus
 dpath
+kafka-python
 pyyaml
+systemd-python
+watchdog
