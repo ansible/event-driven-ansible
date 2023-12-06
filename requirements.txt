@@ -5,5 +5,5 @@ azure-servicebus
 dpath
 kafka-python
 pyyaml
-systemd-python
+systemd-python; sys_platform != 'darwin'
 watchdog
