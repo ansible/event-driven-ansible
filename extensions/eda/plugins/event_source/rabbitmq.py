@@ -52,6 +52,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
             if data:
                 await queue.put({"body": data})
+            await client.basic_ack(msg.delivery_tag)
             await asyncio.sleep(0)
 
 if __name__ == "__main__":
