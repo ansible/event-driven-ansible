@@ -4,11 +4,13 @@ An ansible-rulebook event source plugin for receiving events via a RabbitMQ queu
 
 Arguments:
 ---------
-    host:      The host where rabbitmq is hosted
-    port:      The port where the rabbitmq server is listening
-    queue:     The queue name to listen for messages on
-    user:      The username to use
-    password:  The password to use
+    host:        The host where rabbitmq is hosted
+    port:        The port where the rabbitmq server is listening
+    queue:       The queue name to listen for messages on
+    user:        The username to use
+    password:    The password to use
+    exchange:    The exchange to use (optional)
+    routing_key: The routing key to use (optional)
 
 """
 
@@ -28,12 +30,17 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     user = args.get("user")
     password = args.get("password")
     queue_name = args.get("queue")
+    exchange = args.get("exchange")
+    routing_key = args.get("routing_key")
 
     url = f"amqp://{user}:{password}@{host}:{port}"
 
     async with aiorabbit.connect(url) as client:
         await client.queue_declare(queue_name)
-        logger.info('Consuming from %s', queue)
+        if exchange and routing_key:
+            # Bind to the exchange
+            await client.queue_bind(queue_name, exchange, routing_key)
+        logger.info('Consuming from %s', queue_name)
         async for msg in client.consume(queue_name):
             data = None
             logger.debug('Received message published to %s: %r',
