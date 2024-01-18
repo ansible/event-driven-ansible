@@ -17,10 +17,11 @@ Arguments:
 
 Example:
 -------
-    - ansible.eda.insert_hosts_to_meta
-      host_path: app.target
-      path_separator: .
-      host_separator: ;
+    filters:
+      - ansible.eda.insert_hosts_to_meta:
+          host_path: "app.target"
+          path_separator: "."
+          host_separator: ";"
 
 """
 
