@@ -1,4 +1,5 @@
 """ Tests for generic source plugin """
+
 import asyncio
 
 import pytest

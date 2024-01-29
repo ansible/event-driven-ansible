@@ -13,6 +13,7 @@ Example:
         delay: 5
 
 """
+
 import asyncio
 import itertools
 from typing import Any
