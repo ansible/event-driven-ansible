@@ -15,16 +15,29 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: psf/black@stable
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run black
+        uses: psf/black@stable
   isort:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: isort/isort-action@v1.1.0
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run isort
+        uses: isort/isort-action@v1.1.0
   flake8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: pip install flake8
-      - run: flake8
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install flake8
+        run: |
+          python3 -m pip install -U pip
+          python3 -m pip install -U flake8
+
+      - name: Run flake8
+        run: flake8
