@@ -1,0 +1,81 @@
+---
+# This YAML file contains Ansible tasks for managing projects.
+# The tasks include generating a test ID, creating a project, updating the project, and deleting the project.
+- name: Define variables for credential and project
+  set_fact:
+    credential_name: "Test_Credential_{{ 1000000 | random }}"
+    project_name: "Test_Project_{{ 1000000 | random }}"
+    description: "Test Project Description"
+    scm_url: "https://github.com/your-repository/your-project.git"
+    token: "your_private_access_token"
+
+- name: Create a new credential
+  credential:
+    name: "{{ credential_name }}"
+    description: "Credential for accessing SCM"
+    credential_type: "GitLab Personal Access Token"
+    username: "admin"
+    secret: "{{ token }}"
+    state: present
+  register: credential_creation
+
+- name: Assert that the credential was created successfully
+  assert:
+    that:
+      - credential_creation is changed
+      - credential_creation is success
+
+- name: Create a new project
+  project:
+    name: "{{ project_name }}"
+    description: "{{ description }}"
+    url: "{{ scm_url }}"
+    credential: "{{ credential_name }}"
+    state: present
+  register: project_creation
+
+- name: Assert that the project was created successfully
+  assert:
+    that:
+      - project_creation is changed
+      - project_creation is success
+
+- name: Update project description
+  project:
+    name: "{{ project_name }}"
+    description: "Updated Project Description"
+    url: "{{ scm_url }}"
+    credential: "{{ credential_name }}"
+    state: present
+  register: project_update
+
+- name: Assert that the project was updated successfully
+  assert:
+    that:
+      - project_update is changed
+      - project_update is success
+
+- name: Delete the project
+  project:
+    name: "{{ project_name }}"
+    state: absent
+  register: project_deletion
+
+- name: Assert that the project was deleted successfully
+  assert:
+    that:
+      - project_deletion is changed
+      - project_deletion is success
+
+- name: Delete Credential
+  credential:
+    name: "{{ credential_name }}"
+    state: absent
+  register: credential_deletion
+
+- name: Assert that the credential was created successfully
+  assert:
+    that:
+      - credential_deletion is changed
+      - credential_deletion is success
+
