@@ -1,6 +1,9 @@
 # Collection for Event-Driven Ansible
 
-This collection contains event source plugins, event filters and example rulebooks to be used with [ansible-rulebook](https://ansible-rulebook.readthedocs.io/en/stable/).
+This collection contains event source plugins, event filters and example rulebooks to be used with [eda-server](https://github.com/ansible/eda-server).
+Eda-collection is intended to provide the initial resources for getting started with the [eda-server](https://github.com/ansible/eda-server), as well as the integrations required for its features, by delegating third-party integrations to the collections developed by the ansible community.
+Some of the existing plugins in this collection that do not fit as well in the scope of the collection are just keep them there for backward compatibility. 
+They will be eventually deprecated at some point.
 
 <p style="text-align: center" align="center">
     <a href="https://github.com/ansible/event-driven-ansible/actions?workflow=integration-tests"><img height="20px" src="https://github.com/ansible/event-driven-ansible/actions/workflows/integration-tests.yml/badge.svg?event=schedule"/> </a>
