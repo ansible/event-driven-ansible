@@ -14,6 +14,14 @@ Arguments:
                     string but contains multiple hosts, use this parameter to
                     delimits the hosts. Treat the vale as a single host if the
                     parameter is not present.
+    raise_error:    Whether raise PathNotExistError if host_path does not
+                    exist in the event. Default to false.
+                    It is recommended to turn it on during the rulebook
+                    development time. You can then turn it off for production.
+    log_error:      Whether log an error message if host_path does not
+                    exist in the event. Default to true.
+                    You can turn if off if it is expected to have events not
+                    having the host_path to avoid noises in the log.
 
 Example:
 -------
@@ -22,14 +30,23 @@ Example:
           host_path: "app.target"
           path_separator: "."
           host_separator: ";"
+          raise_error: true
+          log_error: true
 
 """
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import dpath
+
+LOGGER = logging.getLogger(__name__)
+
+
+class PathNotExistError(Exception):
+    """Cannot find the path in the event."""
 
 
 def main(
@@ -37,6 +54,9 @@ def main(
     host_path: str | None = None,
     host_separator: str | None = None,
     path_separator: str = ".",
+    *,
+    raise_error: bool = False,
+    log_error: bool = True,
 ) -> dict[str, Any]:
     """Extract hosts from event data and insert into meta dict."""
     if not host_path:
@@ -44,8 +64,13 @@ def main(
 
     try:
         hosts = dpath.get(event, host_path, path_separator)
-    except KeyError:
+    except KeyError as error:
         # does not contain host
+        msg = f"Event {event} does not contain {host_path}"
+        if log_error:
+            LOGGER.error(msg)  # noqa: TRY400
+        if raise_error:
+            raise PathNotExistError(msg) from error
         return event
 
     if isinstance(hosts, str):
