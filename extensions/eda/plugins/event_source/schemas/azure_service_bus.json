@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/azure_service_bus.json",
+    "title": "Azure Service Bus plugin for EDA",
+    "description": "An ansible-rulebook event source module for receiving events from an Azure service bus",
+    "type": "object",
+    "properties": {
+        "conn_str": {
+            "description": "The connection string",
+            "type": "string",
+            "title": "Connection String"
+        },
+        "queue_name": {
+            "description": "The queue name",
+            "type": "string",
+            "title": "Queue Name"
+        },
+        "logging_enable": {
+            "description": "Turn on logging",
+            "type": "boolean",
+            "default": true,
+            "title": "Enable Logging"
+        }
+    },
+    "required": [
+        "conn_str",
+        "queue_name"
+    ]
+}
