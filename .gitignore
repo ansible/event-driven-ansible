@@ -6,6 +6,7 @@ venv
 
 # tests
 tests/output
+tests/integration/test_user.yml
 .pytest_cache/
 .tox
 .ruff*
