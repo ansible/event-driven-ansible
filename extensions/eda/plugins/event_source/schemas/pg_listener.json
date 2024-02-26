@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/pg_listener.json",
+    "title": "Postgres Listener Source Plugin",
+    "description": "An event source plugin for reading events from Postgres Notify/Listen",
+    "type": "object",
+    "properties": {
+        "dsn": {
+            "description": "The connection string Data Source Name",
+            "type": "string",
+            "title": "Data Source Name"
+        },
+        "channels": {
+            "description": "The channels to listen on",
+            "title": "Channels",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "dsn",
+        "channels"
+    ]
+}

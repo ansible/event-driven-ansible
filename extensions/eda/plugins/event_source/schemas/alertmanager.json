@@ -1,0 +1,49 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/alertmanager.json",
+    "title": "Alert manager Source Plugin",
+    "description": "A plugin for Alert Manager",
+    "type": "object",
+    "properties": {
+        "host": {
+            "description": "The webserver hostname to listen to. Set to 0.0.0.0 to listen on all interfaces. Defaults to 127.0.0.1",
+            "title": "Host",
+            "type": "string",
+            "default": "127.0.0.1"
+        },
+        "port": {
+            "description": "The TCP port to listen to.  Defaults to 5000",
+            "title": "Port",
+            "type": "integer",
+            "default": 5000
+        },
+        "data_alerts_path": {
+            "description": "The json path to find alert data. Default to alerts Use empty string to treat the whole payload data as one alert.",
+            "title": "Alerts Path",
+            "type": "string",
+            "default": "alerts"
+        },
+        "data_host_path": {
+            "description": "The json path inside the alert data to find alerting host. Use empty string if there is no need to find host. Default to  labels.instance.",
+            "title": "Host Path",
+            "type": "string",
+            "default": "labels.instance"
+        },
+        "data_path_separator": {
+            "description": "The separator to interpret data_host_path and data_alerts_path.  Default is . (dot or period)",
+            "title": "Path Separator",
+            "type": "string",
+            "default": "."
+        },
+        "skip_original_data": {
+            "description": "If enabled only the alert data will be put in queue, else put sequentially both the received original data and each parsed alert item to the queue.",
+            "title": "Skip Original Data",
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "required": [
+        "host",
+        "port"
+    ]
+}
