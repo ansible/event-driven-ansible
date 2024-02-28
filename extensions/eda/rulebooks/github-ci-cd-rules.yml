@@ -41,7 +41,7 @@
             pr: "{{event.payload.number}}"
             sha: "{{event.payload.after}}"
     - name: run tests
-      condition: event.repository_name == "{{repo_name}}" and event.pr is defined
+      condition: event.repository_name == vars.repo_name and event.pr is defined
       action:
         run_playbook:
           name: ansible.eda.continuous_integration

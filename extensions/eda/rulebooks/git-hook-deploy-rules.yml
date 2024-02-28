@@ -6,7 +6,7 @@
         port: 5001
   rules:
     - name: run tests 1
-      condition: event.payload.repo == "{{repo}}"
+      condition: event.payload.repo == vars.repo
       action:
         run_playbook:
           name: ansible.eda.continuous_integration
