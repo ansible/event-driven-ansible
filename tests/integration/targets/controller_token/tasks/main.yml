@@ -1,0 +1,25 @@
+---
+- name: Generate a random_string for the test
+  set_fact:
+    random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=2') }}"
+  when: random_string is not defined
+
+- name: Generate a ID for the test
+  set_fact:
+    test_id: "{{ random_string | to_uuid }}"
+  when: test_id is not defined
+
+- name: Define variables for credential and project
+  set_fact:
+    user_name: "token_{{ random_string }}"
+
+- name: Create AWX token
+  controller_token:
+    name: "{{user_name}}"
+    description: "creating token for user"
+    token: "{{test_id}}"
+
+- name: Delete AWX token
+  controller_token:
+    name: "{{user_name}}"
+    state: absent

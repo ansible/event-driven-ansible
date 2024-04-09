@@ -1,0 +1,62 @@
+---
+# This YAML file contains Ansible tasks for managing projects.
+# The tasks include generating a test ID, creating a project, updating the project, and deleting the project.
+
+- name: Generate a random_string for the test
+  set_fact:
+    random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+  when: random_string is not defined
+
+- name: Generate a ID for the test
+  set_fact:
+    test_id: "{{ random_string | to_uuid }}"
+  when: test_id is not defined
+
+- name: Define variables for credential and project
+  set_fact:
+    credential_name: "Test_Credential_{{ test_id }}"
+    decision_env_name: "Test_Decision_Env_{{ test_id }}"
+    description: "Test Decision Environment Description"
+    token: "your_private_access_token"
+    image_url: "https://quay.io/repository/ansible/eda-server"
+
+- name: Create a new credential
+  credential:
+    name: "{{ credential_name }}"
+    description: "Credential for accessing SCM"
+    credential_type: "GitLab Personal Access Token"
+    username: "admin"
+    secret: "{{ token }}"
+    state: present
+  register: credential_creation
+
+- name: Assert that the credential was created successfully
+  assert:
+    that:
+      - credential_creation is changed
+      - credential_creation is success
+
+- name: create decision environment
+  decision_environment:
+    name: "{{ decision_env_name }}"
+    description: "{{ description }}"
+    credential: "{{credential_name}}"
+    image_url: "{{ image_url }}"
+  register: decision_environment_creation
+
+- name: Delete EDA Decision Env
+  decision_environment:
+    name: "{{ decision_env_name }}"
+    state: absent
+
+- name: Delete Credential
+  credential:
+    name: "{{ credential_name }}"
+    state: absent
+  register: credential_deletion
+
+- name: Assert that the credential was created successfully
+  assert:
+    that:
+      - credential_deletion is changed
+      - credential_deletion is success
