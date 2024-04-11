@@ -52,15 +52,13 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.10"
-          - "3.9"
+          - "3.11"
 
     env: 
       EDA_CONTROLLER_HOST: "https://localhost:8443"
       EDA_CONTROLLER_USERNAME: "admin"
       EDA_CONTROLLER_PASSWORD: "testpass"
       EDA_CONTROLLER_VERIFY_SSL: "False"
-      DOCKER_COMPOSE_TAG: "1.29.2"
 
     steps:
       - name: Checkout ansible/eda
