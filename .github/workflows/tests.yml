@@ -47,12 +47,6 @@ jobs:
         working-directory: ansible_collections/ansible/eda
 
   integration-tests:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.10"]
-
     env: 
       EDA_CONTROLLER_HOST: "https://localhost:8443"
       EDA_CONTROLLER_USERNAME: "admin"
@@ -63,9 +57,9 @@ jobs:
       - name: Checkout ansible/eda
         uses: actions/checkout@v3
         with:
-          repository: sarathbrp/event-driven-ansible
+          repository: ansible/event-driven-ansible
           path: ansible_collections/ansible/eda
-          ref: patch-1
+          ref: api-module
 
       - name: Checkout ansible/eda-server
         uses: actions/checkout@v3
