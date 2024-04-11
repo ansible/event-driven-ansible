@@ -47,6 +47,14 @@ jobs:
         working-directory: ansible_collections/ansible/eda
 
   integration-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.9"
+
     env: 
       EDA_CONTROLLER_HOST: "https://localhost:8443"
       EDA_CONTROLLER_USERNAME: "admin"
