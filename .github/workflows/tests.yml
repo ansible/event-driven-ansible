@@ -52,6 +52,7 @@ jobs:
       EDA_CONTROLLER_USERNAME: "admin"
       EDA_CONTROLLER_PASSWORD: "testpass"
       EDA_CONTROLLER_VERIFY_SSL: "False"
+      DOCKER_COMPOSE_TAG: "1.29.2"
 
     steps:
       - name: Checkout ansible/eda
@@ -67,20 +68,6 @@ jobs:
           repository: ansible/eda-server
           path: eda-server # Note: Specify a separate path for this repository
        
-      - name: Setup Docker Engine
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-      - name: Setup Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
       - name: Run API in background
         run: |
           docker compose -p eda -f docker-compose-stage.yaml pull
