@@ -9,7 +9,7 @@ on:
   # there is a CI failure related to a
   # change in any dependency.
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 */8 * * *'
 jobs:
   tests:
     runs-on: ubuntu-latest
