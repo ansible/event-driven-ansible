@@ -45,3 +45,54 @@ jobs:
       - name: Run unit tests
         run: ansible-test units --venv
         working-directory: ansible_collections/ansible/eda
+
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version:
+          - "3.11"
+
+    env: 
+      EDA_CONTROLLER_HOST: "https://localhost:8443"
+      EDA_CONTROLLER_USERNAME: "admin"
+      EDA_CONTROLLER_PASSWORD: "testpass"
+      EDA_CONTROLLER_VERIFY_SSL: "False"
+
+    steps:
+      - name: Checkout ansible/eda
+        uses: actions/checkout@v3
+        with:
+          repository: ansible/event-driven-ansible
+          path: ansible_collections/ansible/eda
+          ref: api-module
+
+      - name: Checkout ansible/eda-server
+        uses: actions/checkout@v3
+        with:
+          repository: ansible/eda-server
+          path: eda-server # Note: Specify a separate path for this repository
+       
+      - name: Run API in background
+        run: |
+          docker compose -p eda -f docker-compose-stage.yaml pull
+          docker compose -p eda -f docker-compose-stage.yaml up -d
+          until curl -s http://localhost:8000/_healthz | grep -q "OK"; do
+            echo "Waiting for API to be ready..."
+            sleep 1
+          done
+        working-directory: eda-server/tools/docker # Adjusted to the specific directory where docker-compose.yaml is located
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install ansible
+        run: python -m pip install ansible
+
+      - name: Run integration tests
+        run: ansible-test integration --start-at controller_token 
+        working-directory: ansible_collections/ansible/eda
+
