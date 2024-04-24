@@ -73,6 +73,7 @@
     rulebook: "basic_short.yml"
     decision_environment: "{{decision_env_name}}"
     enabled: False
+    awx_token_id: 1
 
 - name: Delete the project
   project:

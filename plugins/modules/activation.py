@@ -61,6 +61,10 @@ options:
     description:
       - The name of the decision environment associated with the activation.
     type: str
+  awx_token_id:
+    description:
+      - The controller token ID is required 
+    type: int 
   state:
     description:
       - Desired state of the resource.
@@ -79,6 +83,7 @@ EXAMPLES = """
     rulebook: "hello_controller.yml"
     decision_environment: "Default Decision Environment"
     enabled: False
+    awx_token_id: 1
 
 - name: Delete EDA Activation
   ansible.eda.activation:
@@ -108,6 +113,7 @@ def main():
         ),
         enabled=dict(type="bool", default=True),
         decision_environment=dict(type="str"),
+        awx_token_id=dict(type="int"),
         state=dict(choices=["present", "absent", "exists"], default="present"),
     )
 
@@ -122,6 +128,7 @@ def main():
     enabled = module.params.get("enabled")
     decision_environment = module.params.get("decision_environment")
     state = module.params.get("state")
+    awx_token_id = module.params.get("awx_token_id")
 
     # get the project id
     project_id = None
@@ -174,6 +181,9 @@ def main():
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
         activation_fields["decision_environment_id"] = decision_environment_id
+
+    if awx_token_id is not None:
+        activation_fields["awx_token_id"] = awx_token_id
 
     if restart_policy is not None:
         activation_fields["restart_policy"] = restart_policy
