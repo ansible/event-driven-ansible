@@ -40,7 +40,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
         json.dumps({"shutdown": ""}).encode("ascii"),
     ]
 
-    url = f"http://127.0.0.1:{port}/webhook"
+    url = f"http://localhost:{port}/webhook"
 
     env = os.environ.copy()
     env["WH_PORT"] = str(port)
@@ -66,7 +66,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
         stdout, _unused_stderr = proc.communicate()
 
     assert "Rule fired successfully" in stdout.decode()
-    assert f"'Host': '127.0.0.1:{port}'" in stdout.decode()
+    assert f"'Host': 'localhost:{port}'" in stdout.decode()
     assert proc.returncode == 0
 
 
@@ -105,7 +105,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown):
     ]
 
     port = 5000
-    url = f"http://127.0.0.1:{port}/webhook"
+    url = f"http://localhost:{port}/webhook"
 
     env = os.environ.copy()
     env["WH_PORT"] = str(port)
@@ -132,7 +132,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown):
         stdout, _unused_stderr = proc.communicate()
 
     assert "Rule fired successfully" in stdout.decode()
-    assert f"'Host': '127.0.0.1:{port}'" in stdout.decode()
+    assert f"'Host': 'localhost:{port}'" in stdout.decode()
     assert proc.returncode == 0
 
 
