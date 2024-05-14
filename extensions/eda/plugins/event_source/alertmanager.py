@@ -6,7 +6,7 @@ alertmanager or alike system.
 Arguments:
 ---------
     host: The webserver hostname to listen to. Set to 0.0.0.0 to listen on all
-          interfaces. Defaults to 127.0.0.1
+          interfaces. Defaults to localhost
     port: The TCP port to listen to.  Defaults to 5000
     data_alerts_path: The json path to find alert data. Default to "alerts"
                       Use empty string "" to treat the whole payload data as
