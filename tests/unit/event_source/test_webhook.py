@@ -52,7 +52,7 @@ async def cancel_code(server_task):
 async def test_cancel():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000, "token": "secret"}
+    args = {"host": "localhost", "port": 8000, "token": "secret"}
     plugin_task = asyncio.create_task(start_server(queue, args))
     cancel_task = asyncio.create_task(cancel_code(plugin_task))
 
@@ -64,7 +64,7 @@ async def test_cancel():
 async def test_post_endpoint():
     queue = asyncio.Queue()
 
-    args = {"host": "127.0.0.1", "port": 8000, "token": "secret"}
+    args = {"host": "localhost", "port": 8000, "token": "secret"}
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {
@@ -86,7 +86,7 @@ async def test_post_endpoint():
 @pytest.mark.asyncio
 async def test_post_unsupported_body():
     queue = asyncio.Queue()
-    args = {"host": "127.0.0.1", "port": 8000}
+    args = {"host": "localhost", "port": 8000}
 
     async def do_request():
         async with aiohttp.ClientSession() as session:
@@ -105,7 +105,7 @@ async def test_post_hmac_hex_endpoint():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "hmac_secret": "secret",
         "hmac_algo": "sha256",
@@ -138,7 +138,7 @@ async def test_post_hmac_hex_wo_digest_prefix_endpoint():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "hmac_secret": "secret",
         "hmac_algo": "sha256",
@@ -171,7 +171,7 @@ async def test_post_hmac_hex_endpoint_invalid_signature():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "hmac_secret": "secret",
         "hmac_algo": "sha256",
@@ -201,7 +201,7 @@ async def test_post_hmac_hex_endpoint_missing_signature():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "hmac_secret": "secret",
         "hmac_algo": "sha256",
@@ -231,7 +231,7 @@ async def test_post_hmac_base64_endpoint():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "hmac_secret": "secret",
         "hmac_algo": "sha256",
@@ -264,7 +264,7 @@ async def test_post_hmac_base64_endpoint_invalid_signature():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "hmac_secret": "secret",
         "hmac_algo": "sha256",
@@ -294,7 +294,7 @@ async def test_post_token_and_hmac_hex_endpoint():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "token": "secret",
         "hmac_secret": "secret",
@@ -326,7 +326,7 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_signature():
     queue = asyncio.Queue()
 
     args = args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "token": "secret",
         "hmac_secret": "secret",
@@ -356,7 +356,7 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_token():
     queue = asyncio.Queue()
 
     args = {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": 8000,
         "token": "secret",
         "hmac_secret": "secret",
