@@ -3,6 +3,13 @@
 An ansible-rulebook event source module for receiving events via a webhook.
 The message must be a valid JSON object.
 
+The body received from the webhook post is placed under the key payload in
+the data pushed to the event queue. Do not expect the host(s) in the path
+"payload.meta.limit" will be automatically used to limit an ansible action
+running on these hosts. Use insert_hosts_to_meta filter instead. See
+https://ansible.readthedocs.io/projects/rulebook/en/latest/host_limit.html
+for more details.
+
 Arguments:
 ---------
     host:     The hostname to listen to. Defaults to 0.0.0.0 (all interfaces)

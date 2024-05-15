@@ -1,5 +1,6 @@
 import pytest
 
+from extensions.eda.plugins.event_filter.insert_hosts_to_meta import PathNotExistError
 from extensions.eda.plugins.event_filter.insert_hosts_to_meta import main as hosts_main
 
 EVENT_DATA_1 = [
@@ -66,3 +67,16 @@ EVENT_DATA_2 = [
 def test_fail_find_hosts(data, args):
     with pytest.raises(TypeError):
         hosts_main(data, **args)
+
+
+def test_host_path_not_exist():
+    event = {"app": {"target": 5000}}
+    host_path = "app.bad"
+    assert hosts_main(event, host_path=host_path) == event
+
+
+def test_host_path_not_exist_exception():
+    event = {"app": {"target": 5000}}
+    host_path = "app.bad"
+    with pytest.raises(PathNotExistError):
+        hosts_main(event, host_path=host_path, raise_error=True)
