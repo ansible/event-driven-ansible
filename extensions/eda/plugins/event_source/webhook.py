@@ -18,6 +18,10 @@ Arguments:
     certfile: The optional path to a certificate file to enable TLS support
     keyfile:  The optional path to a key file to be used together with certfile
     password: The optional password to be used when loading the certificate chain
+    cafile:   The optional path to a file containing CA certificates used to validate
+              clients' certificates
+    capath:   The optional path to a directory containing CA certificates
+              Provide either cafile or capath to enable mTLS support
     hmac_secret: The optional HMAC secret used to verify the payload from the client
     hmac_algo: The optional HMAC algorithm used to calculate the payload hash.
                See your python's hashlib.algorithms_available set for available options.
@@ -30,6 +34,8 @@ Arguments:
 
 """
 
+from __future__ import annotations
+
 import asyncio
 import base64
 import hashlib
@@ -37,10 +43,13 @@ import hmac
 import json
 import logging
 import ssl
-from collections.abc import Callable
+import typing
 from typing import Any
 
 from aiohttp import web
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 routes = web.RouteTableDef()
@@ -127,6 +136,30 @@ async def hmac_verify(request: web.Request, handler: Callable) -> web.StreamResp
     return await handler(request)
 
 
+def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
+    context = None
+    if "certfile" in args:
+        certfile = args.get("certfile")
+        keyfile = args.get("keyfile", None)
+        password = args.get("password", None)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        try:
+            context.load_cert_chain(certfile, keyfile, password)
+        except Exception:
+            logger.exception("Failed to load certificates. Check they are valid")
+            raise
+        cafile = args.get("cafile", None)
+        capath = args.get("capath", None)
+        if cafile or capath:
+            try:
+                context.load_verify_locations(cafile, capath)
+            except Exception:
+                logger.exception("Failed to load CA certificates. Check they are valid")
+                raise
+            context.verify_mode = ssl.CERT_REQUIRED
+    return context
+
+
 async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     """Receive events via webhook."""
     if "port" not in args:
@@ -161,25 +194,13 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
     app.add_routes(routes)
 
-    context = None
-    if "certfile" in args:
-        certfile = args.get("certfile")
-        keyfile = args.get("keyfile", None)
-        password = args.get("password", None)
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        try:
-            context.load_cert_chain(certfile, keyfile, password)
-        except Exception:
-            logger.exception("Failed to load certificates. Check they are valid")
-            raise
-
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(
         runner,
         args.get("host") or "0.0.0.0",  # noqa: S104
         args.get("port"),
-        ssl_context=context,
+        ssl_context=_get_ssl_context(args),
     )
     await site.start()
 
@@ -197,7 +218,7 @@ if __name__ == "__main__":
     class MockQueue:
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: MockQueue, event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 
