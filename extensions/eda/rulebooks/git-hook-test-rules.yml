@@ -5,7 +5,7 @@
     - ansible.eda.webhook:
   rules:
     - name: run tests 1
-      condition: event.payload.src_path == "{{src_path}}"
+      condition: event.payload.src_path == vars.src_path
       action:
         run_playbook:
           name: ansible.eda.run_pytest

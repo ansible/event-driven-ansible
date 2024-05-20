@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 from http import HTTPStatus
 
 import aiohttp
@@ -15,7 +16,13 @@ async def post_code(server_task, info):
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
 
-    async with aiohttp.ClientSession() as session:
+    connector = None
+    if "client_certfile" in info:
+        url = f'https://{info["host"]}/{info["endpoint"]}'
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+        context.load_cert_chain(info["client_certfile"], info["client_keyfile"])
+        connector = aiohttp.TCPConnector(ssl=context)
+    async with aiohttp.ClientSession(connector=connector) as session:
         headers = {"Authorization": "Bearer secret"}
         async with session.post(url, json=payload, headers=headers) as resp:
             print(resp.status)
@@ -64,13 +71,22 @@ async def test_cancel():
 async def test_post_endpoint():
     queue = asyncio.Queue()
 
-    args = {"host": "localhost", "port": 8000, "token": "secret"}
+    args = {
+        "host": "localhost",
+        "port": 8000,
+        "token": "secret",
+        "certfile": "./tests/unit/event_source/certs/server.crt",
+        "keyfile": "./tests/unit/event_source/certs/server.key",
+        "cafile": "./tests/unit/event_source/certs/client.crt",
+    }
     plugin_task = asyncio.create_task(start_server(queue, args))
 
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
+        "client_certfile": "./tests/unit/event_source/certs/client.crt",
+        "client_keyfile": "./tests/unit/event_source/certs/client.key",
     }
 
     post_task = asyncio.create_task(post_code(plugin_task, task_info))
