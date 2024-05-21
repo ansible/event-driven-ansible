@@ -125,14 +125,16 @@ async def main(  # pylint: disable=R0914
             if with_headers:
                 headers = None
                 try:
-                    headers_dict = {header[0]: header[1].decode(encoding) for header in msg.headers}
+                    headers_dict = {
+                        header[0]: header[1].decode(encoding) for header in msg.headers
+                    }
                     headers_json = json.dumps(headers_dict)
                     headers = json.loads(headers_json)
                 except UnicodeError:
                     logger.exception("Unicode Error")
 
                 if headers:
-                   event["headers"] = headers
+                    event["headers"] = headers
 
             if data:
                 event["body"] = data

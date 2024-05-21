@@ -1,3 +1,4 @@
+import json
 import asyncio
 from unittest.mock import MagicMock, patch
 
@@ -28,6 +29,10 @@ class AsyncIterator:
         if self.count < 2:
             mock = MagicMock()
             mock.value = f'{{"i": {self.count}}}'.encode("utf-8")
+            mock.headers = [
+                (key, value.encode("utf-8"))
+                for key, value in json.loads('{"foo": "bar"}').items()
+            ]
             self.count += 1
             return mock
         else:
@@ -55,4 +60,24 @@ def test_receive_from_kafka_place_in_queue(myqueue):
             )
         )
         assert myqueue.queue[0] == {"body": {"i": 0}}
+        assert len(myqueue.queue) == 2
+
+
+def test_receive_from_kafka_with_headers_place_in_queue(myqueue):
+    with patch(
+        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                    "with_headers": "True",
+                },
+            )
+        )
+        assert myqueue.queue[0] == {"body": {"i": 0}, "headers": {"foo": "bar"}}
         assert len(myqueue.queue) == 2
