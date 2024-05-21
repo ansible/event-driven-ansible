@@ -1,0 +1,7 @@
+warn_list:
+  - experimental  # all rules tagged as experimental
+exclude_paths:
+  - continuous_integration.yml
+  - run_pytest.yml
+  - start_app.yml
+  - roles/test_role/
