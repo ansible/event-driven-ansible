@@ -7,7 +7,6 @@
         port: 9092
         offset: earliest
         encoding: ascii
-        with_headers: True
   rules:
     - name: match kafka event
       condition: event.headers.foo == "bar"

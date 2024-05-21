@@ -29,7 +29,6 @@ Arguments:
                Default to PLAIN.
     sasl_plain_username: Username for SASL PLAIN authentication
     sasl_plain_password: Password for SASL PLAIN authentication
-    with_headers: Include message headers. [True, False (default)]
 
 
 
@@ -65,7 +64,6 @@ async def main(  # pylint: disable=R0914
     offset = args.get("offset", "latest")
     encoding = args.get("encoding", "utf-8")
     security_protocol = args.get("security_protocol", "PLAINTEXT")
-    with_headers = args.get("with_headers", False)
 
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
@@ -113,6 +111,17 @@ async def main(  # pylint: disable=R0914
     try:
         async for msg in kafka_consumer:
             event = {}
+            headers = None
+            try:
+                headers = {
+                    header[0]: header[1].decode(encoding) for header in msg.headers
+                }
+            except UnicodeError:
+                logger.exception("Unicode Error")
+
+            if headers:
+                event["headers"] = headers
+
             data = None
             try:
                 value = msg.value.decode(encoding)
@@ -121,20 +130,6 @@ async def main(  # pylint: disable=R0914
                 data = value
             except UnicodeError:
                 logger.exception("Unicode Error")
-
-            if with_headers:
-                headers = None
-                try:
-                    headers_dict = {
-                        header[0]: header[1].decode(encoding) for header in msg.headers
-                    }
-                    headers_json = json.dumps(headers_dict)
-                    headers = json.loads(headers_json)
-                except UnicodeError:
-                    logger.exception("Unicode Error")
-
-                if headers:
-                    event["headers"] = headers
 
             if data:
                 event["body"] = data
