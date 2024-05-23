@@ -46,7 +46,6 @@ EXAMPLES = r"""
 - name: Test with a fail message
   ansible.eda.upcase:
     name: fail
-
 """
 
 RETURN = r"""
