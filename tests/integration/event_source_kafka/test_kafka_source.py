@@ -65,11 +65,11 @@ def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer):
     ]
 
     for msg in msgs:
-        kafka_producer.send(topic="kafka-events-header", value=msg, headers=headers)
+        kafka_producer.send(topic="kafka-events-plaintext", value=msg, headers=headers)
 
     result = CLIRunner(rules=ruleset).run()
 
-    assert "Rule fired successfully for foo=bar in headers" in result.stdout.decode()
+    assert "Rule fired successfully with headers" in result.stdout.decode()
 
 
 def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer):

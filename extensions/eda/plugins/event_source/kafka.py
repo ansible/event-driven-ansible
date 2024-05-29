@@ -109,36 +109,47 @@ async def main(  # pylint: disable=R0914
     await kafka_consumer.start()
 
     try:
-        async for msg in kafka_consumer:
-            event = {}
-            headers = None
-            try:
-                headers = {
-                    header[0]: header[1].decode(encoding) for header in msg.headers
-                }
-            except UnicodeError:
-                logger.exception("Unicode Error")
-
-            if headers:
-                event["headers"] = headers
-
-            data = None
-            try:
-                value = msg.value.decode(encoding)
-                data = json.loads(value)
-            except json.decoder.JSONDecodeError:
-                data = value
-            except UnicodeError:
-                logger.exception("Unicode Error")
-
-            if data:
-                event["body"] = data
-                await queue.put(event)
-
-            await asyncio.sleep(0)
+        await receive_msg(queue, kafka_consumer, encoding)
     finally:
         logger.info("Stopping kafka consumer")
         await kafka_consumer.stop()
+
+
+async def receive_msg(
+    queue: asyncio.Queue,
+    kafka_consumer: AIOKafkaConsumer,
+    encoding: str,
+) -> None:
+    """Receive messages from the Kafka topic and put them into the queue."""
+    logger = logging.getLogger()
+
+    async for msg in kafka_consumer:
+        event = {}
+
+        # Process headers
+        try:
+            headers = {header[0]: header[1].decode(encoding) for header in msg.headers}
+            event["headers"] = headers
+        except UnicodeError:
+            logger.exception("Unicode error while decoding headers")
+
+        # Process message body
+        try:
+            value = msg.value.decode(encoding)
+            data = json.loads(value)
+        except json.decoder.JSONDecodeError:
+            logger.exception("JSON decode error, storing raw value")
+            data = value
+        except UnicodeError:
+            logger.exception("Unicode error while decoding message body")
+            data = None
+
+        # Add data to the event and put it into the queue
+        if data:
+            event["body"] = data
+            await queue.put(event)
+
+        await asyncio.sleep(0)
 
 
 if __name__ == "__main__":

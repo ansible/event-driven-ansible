@@ -2,7 +2,7 @@
   hosts: localhost
   sources:
     - ansible.eda.kafka:
-        topic: kafka-events-header
+        topic: kafka-events-plaintext
         host: localhost
         port: 9092
         offset: earliest
@@ -12,7 +12,7 @@
       condition: event.headers.foo == "bar"
       action:
         debug:
-          msg: "Rule fired successfully for foo=bar in headers"
+          msg: "Rule fired successfully with headers"
 
     - name: stop
       condition: event.body == "stop"
