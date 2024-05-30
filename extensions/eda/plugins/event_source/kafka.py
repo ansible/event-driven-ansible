@@ -138,7 +138,7 @@ async def receive_msg(
             value = msg.value.decode(encoding)
             data = json.loads(value)
         except json.decoder.JSONDecodeError:
-            logger.exception("JSON decode error, storing raw value")
+            logger.info("JSON decode error, storing raw value")
             data = value
         except UnicodeError:
             logger.exception("Unicode error while decoding message body")
