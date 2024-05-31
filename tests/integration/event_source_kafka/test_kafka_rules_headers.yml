@@ -9,7 +9,7 @@
         encoding: ascii
   rules:
     - name: match kafka event
-      condition: event.headers.foo == "bar"
+      condition: event.meta.headers.foo == "bar"
       action:
         debug:
           msg: "Rule fired successfully with headers"

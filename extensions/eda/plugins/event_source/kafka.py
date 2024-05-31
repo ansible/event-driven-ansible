@@ -129,7 +129,8 @@ async def receive_msg(
         # Process headers
         try:
             headers = {header[0]: header[1].decode(encoding) for header in msg.headers}
-            event["headers"] = headers
+            event["meta"] = {}
+            event["meta"]["headers"] = headers
         except UnicodeError:
             logger.exception("Unicode error while decoding headers")
 

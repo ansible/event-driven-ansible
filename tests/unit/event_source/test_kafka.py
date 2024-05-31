@@ -59,5 +59,8 @@ def test_receive_from_kafka_place_in_queue(myqueue):
                 },
             )
         )
-        assert myqueue.queue[0] == {"body": {"i": 0}, "headers": {"foo": "bar"}}
+        assert myqueue.queue[0] == {
+            "body": {"i": 0},
+            "meta": {"headers": {"foo": "bar"}},
+        }
         assert len(myqueue.queue) == 2
