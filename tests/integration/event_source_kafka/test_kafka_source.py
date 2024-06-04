@@ -49,6 +49,29 @@ def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer):
     assert "Rule fired successfully for PLAINTEXT consumers" in result.stdout.decode()
 
 
+def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer):
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_kafka", "test_kafka_rules_headers.yml"
+    )
+
+    msgs = [
+        json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii"),
+        "stop".encode("ascii"),
+    ]
+
+    headers = [
+        (key, value.encode("ascii"))
+        for key, value in json.loads('{"foo": "bar"}').items()
+    ]
+
+    for msg in msgs:
+        kafka_producer.send(topic="kafka-events-plaintext", value=msg, headers=headers)
+
+    result = CLIRunner(rules=ruleset).run()
+
+    assert "Rule fired successfully with headers" in result.stdout.decode()
+
+
 def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer):
     ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules_ssl.yml")
 
