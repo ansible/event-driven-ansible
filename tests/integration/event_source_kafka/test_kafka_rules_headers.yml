@@ -1,0 +1,20 @@
+- name: test kafka source plugin with the specified header
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: kafka-events-plaintext
+        host: localhost
+        port: 9092
+        offset: earliest
+        encoding: ascii
+  rules:
+    - name: match kafka event
+      condition: event.meta.headers.foo == "bar"
+      action:
+        debug:
+          msg: "Rule fired successfully with headers"
+
+    - name: stop
+      condition: event.body == "stop"
+      action:
+        shutdown:
