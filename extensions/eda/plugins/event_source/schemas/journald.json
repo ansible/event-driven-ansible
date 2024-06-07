@@ -1,0 +1,22 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/journald.json",
+    "title": "A journald source plugin",
+    "description": "An ansible-events event source plugin that tails systemd journald logs.",
+    "type": "object",
+    "properties": {
+        "match": {
+            "description": "Events that matches, see see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html ALL matches all events",
+            "title": "Match",
+            "type": "string",
+            "examples": [
+                "PRIORITY=6",
+                "_EXE=/usr/bin/sudo",
+                "ALL"
+            ]
+        }
+    },
+    "required": [
+        "match"
+    ]
+}

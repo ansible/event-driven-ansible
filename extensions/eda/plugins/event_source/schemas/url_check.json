@@ -1,0 +1,32 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/url_check.json",
+    "title": "URL Checker source plugin",
+    "description": "An ansible-rulebook event source plugin that polls a set of URLs and sends events with their status.",
+    "type": "object",
+    "properties": {
+        "urls": {
+            "description": "A list of URL's to poll",
+            "title": "URLs",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "delay": {
+            "description": "Number of seconds to wait between polling",
+            "title": "Delay",
+            "type": "integer",
+            "default": 1
+        },
+        "verify_ssl": {
+            "description": "Verify SSL Certificate",
+            "title": "Verify Server Certificate",
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "required": [
+        "urls"
+    ]
+}
