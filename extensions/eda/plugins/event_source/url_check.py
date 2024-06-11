@@ -32,7 +32,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
     verify_ssl = args.get("verify_ssl", True)
-    
+
     # Added initialization for client_error to handle cases where an exception occurs
     client_error = ""
 
@@ -67,8 +67,18 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                         if status == "down" and client_error:
                             event["url_check"]["error_msg"] = client_error
                         await queue.put(event)
-        except Exception as exc:
-            print(f"An error occurred: {exc}")
+
+        except aiohttp.ClientError as exc:
+            client_error = str(exc)
+            await queue.put(
+                {
+                    "url_check": {
+                        "url": url,
+                        "status": "down",
+                        "error_msg": client_error,
+                    },
+                },
+            )
 
         await asyncio.sleep(delay)
 
@@ -82,4 +92,4 @@ if __name__ == "__main__":
             """Print the event."""
             print(event)  # noqa: T201
 
-    asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"], "delay": 10}))
+    asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"]}))
