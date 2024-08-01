@@ -1,27 +1,15 @@
-#!/usr/bin/python
-# coding: utf-8 -*-
+# Copyright: (c) 2023, Sarath Padakandla <spadakan@redhat.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-
-# (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    "status": ["preview"],
-    "supported_by": "community",
-}
+from __future__ import annotations
 
 DOCUMENTATION = """
 ---
 module: credential
 author: "Nikhil Jain (@jainnikhil30)"
-short_description: Create, update or delete credential in EDA Controller.
+short_description: Create, update or delete credential in EDA Controller
 description:
-  - This module allows you to create, update or delete credential in a EDA.
+  - This module allows you to create, update or delete credential in a EDA Controller.
 options:
   name:
     description:
@@ -119,11 +107,15 @@ def main():
         module.delete_if_needed(credential, endpoint="credentials")
 
     # Project Data that will be sent for create/update
-    credential_fields = {
-        "name": new_name
-        if new_name
-        else (module.get_item_name(credential) if credential else name),
-    }
+    credential_fields = {}
+    if new_name:
+        credential_fields["name"] = new_name
+    else:
+        if credential:
+            credential_fields["name"] = module.get_item_name(credential)
+        else:
+            credential_fields["name"] = name
+
     for field_name in "description":
         field_value = module.params.get(field_name)
         if field_name is not None:

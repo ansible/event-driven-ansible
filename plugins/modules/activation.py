@@ -1,27 +1,15 @@
-#!/usr/bin/python
-# coding: utf-8 -*-
+# Copyright: (c) 2023, Nikhil Jain <nikjain@redhat.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-
-# (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    "status": ["preview"],
-    "supported_by": "community",
-}
+from __future__ import annotations
 
 DOCUMENTATION = """
 ---
 module: activation
 author: "Nikhil Jain (@jainnikhil30)"
-short_description: Create and delete rulebook activations in EDA Controller.
+short_description: Create and delete rulebook activations in EDA Controller
 description:
-  - This module allows you to create, restart or delete activations in a EDA.
+  - This module allows user to create, restart or delete activations in EDA Controller.
 options:
   name:
     description:
@@ -43,18 +31,18 @@ options:
     type: str
   extra_vars:
     description:
-      - The extra variables for the rulebook activation, default is ''.
+      - The extra variables for the rulebook activation.
     type: str
     default: ''
   restart_policy:
     description:
-      - The restart policy for the rulebook activation, default is 'on-failure'.
+      - The restart policy for the rulebook activation.
     default: 'on-failure'
     choices: ["on-failure", "always", "never"]
     type: str
   enabled:
     description:
-      - Whether the rulebook activation is enabled or not, default 'True'.
+      - Whether the rulebook activation is enabled or not.
     type: bool
     default: true
   decision_environment:
@@ -63,8 +51,8 @@ options:
     type: str
   awx_token_id:
     description:
-      - The controller token ID is required 
-    type: int 
+      - The controller token ID is required.
+    type: int
   state:
     description:
       - Desired state of the resource.
@@ -98,7 +86,7 @@ from ..module_utils.eda_controller_api import EDAControllerAPIModule
 def main():
     argument_spec = dict(
         name=dict(type="str", required=True),
-        description=dict(required=False),
+        description=dict(type="str"),
         project=dict(type="str"),
         rulebook=dict(type="str"),
         extra_vars=dict(type="str", default=""),

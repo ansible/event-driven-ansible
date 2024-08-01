@@ -1,18 +1,7 @@
-#!/usr/bin/python
-# coding: utf-8 -*-
+# Copyright: (c) 2023, Nikhil Jain <nikjain@redhat.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-
-# (c) 2023, Nikhil Jain <nikjain@redhat.com> GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    "status": ["preview"],
-    "supported_by": "community",
-}
+from __future__ import annotations
 
 DOCUMENTATION = """
 ---
@@ -63,7 +52,7 @@ EXAMPLES = """
   ansible.eda.project:
     name: "Example Project"
     description: "Example project description"
-    url: "http://example.com/project1"
+    url: "https://example.com/project1"
     state: present
 
 - name: Update the name of the project
@@ -71,7 +60,7 @@ EXAMPLES = """
     name: "Example Project"
     new_name: "Latest Example Project"
     description: "Example project description"
-    url: "http://example.com/project1"
+    url: "https://example.com/project1"
     state: present
 
 - name: Delete the project
@@ -113,11 +102,15 @@ def main():
         module.delete_if_needed(project, endpoint="projects")
 
     # Project Data that will be sent for create/update
-    project_fields = {
-        "name": new_name
-        if new_name
-        else (module.get_item_name(project) if project else name),
-    }
+    project_fields = {}
+    if new_name:
+        project_fields["name"] = new_name
+    else:
+        if project:
+            project_fields["name"] = module.get_item_name(project)
+        else:
+            project_fields["name"] = name
+
     for field_name in (
         "description",
         "url",

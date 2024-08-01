@@ -1,26 +1,17 @@
-#!/usr/bin/python
-# coding: utf-8 -*-
+# Copyright: (c) 2023, Sarath Padakandla <spadakan@redhat.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+from __future__ import annotations
 
-# (c) 2023, Sarath Padakandla <spadakan@redhat.com> GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
 from ..module_utils.eda_controller_api import EDAControllerAPIModule
 
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    "status": ["preview"],
-    "supported_by": "community",
-}
 DOCUMENTATION = """
 ---
 module: controller_token
 short_description: Manage AWX tokens in EDA
 version_added: "1.0"
 description:
-    - "This module manages AWX tokens for a user in the EDA Controller."
+    - This module manages AWX tokens for a user in the EDA Controller.
 options:
     name:
         description:
@@ -28,12 +19,12 @@ options:
         required: true
     description:
         description:
-            - Description of the AWX token. Required when state is 'present'.
-        required: false
+            - Description of the AWX token.
+            - Required when O(state=present).
     token:
         description:
-            - The AWX token value. Required when state is 'present'.
-        required: false
+            - The AWX token value.
+            - Required when O(state=present).
     state:
         description:
             - Indicates the desired state of the AWX token.
@@ -75,8 +66,8 @@ def main():
     # Define the specific arguments for this module
     argument_spec = dict(
         name=dict(type="str", required=True),
-        description=dict(type="str", required=False, default=""),
-        token=dict(type="str", required=False),
+        description=dict(type="str", default=""),
+        token=dict(type="str",),
         state=dict(type="str", default="present", choices=["present", "absent"]),
     )
 
@@ -88,6 +79,7 @@ def main():
     description = module.params.get("description")
     token = module.params.get("token")
     state = module.params.get("state")
+    awx_token_endpoint_uri = "/users/me/awx-tokens/"
 
     if state == "present":
         # Prepare the payload for the new AWX token
@@ -98,34 +90,34 @@ def main():
         }
 
         # Check if a token with the same name already exists
-        existing_token = module.get_one("/users/me/awx-tokens/", name=name, allow_none=True)
+        existing_token = module.get_one(awx_token_endpoint_uri, name=name, allow_none=True)
 
         # If a token with the same name exists, delete it
         if existing_token:
             module.delete_if_needed(
                 existing_item=existing_token,
-                endpoint="/users/me/awx-tokens/"
+                endpoint=awx_token_endpoint_uri
             )
 
         # Attempt to create the new AWX token
         module.create_if_needed(
             existing_item=None,
             new_item=new_item,
-            endpoint="/users/me/awx-tokens/",
+            endpoint=awx_token_endpoint_uri,
             item_type="awx-tokens",
         )
     elif state == "absent":
         # Check if a token with the name exists
-        existing_token = module.get_one("/users/me/awx-tokens/", name=name, allow_none=True)
+        existing_token = module.get_one(awx_token_endpoint_uri, name=name, allow_none=True)
 
         # If it exists, delete it
         if existing_token:
             module.delete_if_needed(
                 existing_item=existing_token,
-                endpoint="/users/me/awx-tokens/"
+                endpoint=awx_token_endpoint_uri
             )
         else:
-            module.fail_json(msg="AWX token with name '{}' not found.".format(name))
+            module.fail_json(msg=f"AWX token with name '{name}' not found.")
 
     module.exit_json(**module.json_output)
 

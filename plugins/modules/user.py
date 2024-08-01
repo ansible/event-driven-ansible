@@ -1,20 +1,7 @@
-#!/usr/bin/python
-# coding: utf-8 -*-
+# Copyright: (c) 2023, Nikhil Jain <nikjain@redhat.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-
-# (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-
-ANSIBLE_METADATA = {
-    "status": ["preview"],
-    "supported_by": "community",
-}
+from __future__ import annotations
 
 DOCUMENTATION = """
 ---
@@ -53,7 +40,7 @@ options:
     type: str
   roles:
     description:
-      - Set of roles to be associated with the user
+      - Set of roles to be associated with the user.
     choices: ["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
     type: list
     elements: str
@@ -144,15 +131,19 @@ def main():
     role_id = []
     if roles:
         for role in roles:
-            id = module.resolve_name_to_id("roles", role)
-            role_id.append(id)
+            local_id = module.resolve_name_to_id("roles", role)
+            role_id.append(local_id)
 
     # User Data that will be sent for create/update
-    user_fields = {
-        "username": new_username
-        if new_username
-        else (module.get_item_name(user) if user else username),
-    }
+    user_fields = {}
+    if new_username:
+        user_fields["username"] = new_username
+    else:
+        if user:
+            user_fields["username"] = module.get_item_name(user)
+        else:
+            user_fields["username"] = username
+
     for field_name in (
         "first_name",
         "last_name",

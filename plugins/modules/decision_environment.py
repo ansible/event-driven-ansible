@@ -1,25 +1,13 @@
-#!/usr/bin/python
-# coding: utf-8 -*-
+# Copyright: (c) 2023, Nikhil Jain <nikjain@redhat.com>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-
-# (c) 2023, Nikhil Jain <nikjain@redhat.com>
-# GNU General Public License v3.0+ (see COPYING or
-# https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    "status": ["preview"],
-    "supported_by": "community",
-}
+from __future__ import annotations
 
 DOCUMENTATION = """
 ---
 module: decision_environment
 author: "Nikhil Jain (@jainnikhil30)"
-short_description: Create, update or delete decision environment in EDA.
+short_description: Create, update or delete decision environment in EDA
 description:
   - This module allows you to create, update or delete decision environment
     in a EDA controller.
@@ -37,7 +25,6 @@ options:
     description:
       - Description of the decision environment (optional).
     type: str
-    required: false
   image_url:
     description:
       - Image URL of the decision environment.
@@ -77,10 +64,10 @@ from ..module_utils.eda_controller_api import EDAControllerAPIModule
 def main():
     argument_spec = dict(
         name=dict(type="str", required=True),
-        new_name=dict(),
-        description=dict(type="str", required=False),
+        new_name=dict(type="str"),
+        description=dict(type="str"),
         image_url=dict(type="str"),
-        credential=dict(required=False),
+        credential=dict(type="str"),
         state=dict(choices=["present", "absent", "exists"], default="present"),
     )
 
@@ -106,13 +93,15 @@ def main():
     if state == "absent":
         module.delete_if_needed(decision_environment, "decision-environments")
 
-    decision_environment_fields = {
-        "name": new_name
-        if new_name
-        else (
-            module.get_item_name(decision_environment) if decision_environment else name
-        ),
-    }
+    decision_environment_fields = {}
+    if new_name:
+        decision_environment_fields["name"] = new_name
+    else:
+        if decision_environment:
+            decision_environment_fields["name"] = module.get_item_name(decision_environment)
+        else:
+            decision_environment_fields["name"] = name
+
     for field_name in ("description",):
         field_value = module.params.get(field_name)
         if field_name is not None:
