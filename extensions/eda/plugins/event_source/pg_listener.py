@@ -19,7 +19,7 @@ Example:
 Chunking:
 ---------
    This is just informational a user doesn't have to do anything
-   special to enablo chunking. The sender which is the pg_notify
+   special to enable chunking. The sender which is the pg_notify
    action from ansible rulebook will decide if chunking needs to
    happen based on the size of the payload.
    If the messages are over 7KB the sender will chunk the messages

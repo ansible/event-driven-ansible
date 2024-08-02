@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Generate self-signed certificate for Kafka broker
 # Greatly inspired by https://github.com/ansibleinc/cp-demo/blob/master/scripts/security/certs-create-per-user.sh
+# cspell: ignore keyout passin passout genkey keyalg trustore storetype pkcs certreq srand
 set -e
 
 CA_PATH=$(dirname "${BASH_SOURCE[0]}")

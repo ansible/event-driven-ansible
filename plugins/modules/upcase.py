@@ -24,7 +24,7 @@ short_description: Upper cases a passed in string
 
 version_added: "1.0.0"
 
-description: Upper cases a passed in string, if the passed in string is already uppercased changed is set to false.
+description: Upper cases a passed in string, if the passed in string is already uppercase, changed is set to false.
     To have the module generate an error send the string fail
 
 options:
