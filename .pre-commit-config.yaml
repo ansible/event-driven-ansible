@@ -1,3 +1,8 @@
+ci:
+  skip:
+    # These will not run on pre-commit.ci due to required network access:
+    - ansible-test-sanity
+    - tox
 exclude: "^.*\\.md$"
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -13,6 +18,7 @@ repos:
         name: Run ansible-test sanity
         entry: ansible-test sanity
         require_serial: true
+        stages: [manual]
         language: python
         additional_dependencies:
           - ansible
@@ -23,4 +29,5 @@ repos:
         entry: tox
         language: python
         require_serial: true
+        stages: [manual]
         pass_filenames: false
