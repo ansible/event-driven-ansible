@@ -25,7 +25,7 @@ loop_count int     Number of times the set of events in the playload
                    should be repeated. Default 0
 repeat_count int   Number of times each individual event in the playload
                    should be repeated. Default 1
-blob_size int      An arbitray blob of blob_size bytes to be inserted
+blob_size int      An arbitrary blob of blob_size bytes to be inserted
                    into every event payload. Default is 0 don't create
                    a blob
 final_payload dict After all the events have been sent we send the optional
