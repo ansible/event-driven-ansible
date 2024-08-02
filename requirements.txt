@@ -2,13 +2,10 @@ aiobotocore
 aiohttp
 aiokafka
 azure-servicebus
-digestmod
 dpath
 kafka-python
 psycopg
-pythonmain
 pyyaml
 systemd-python; sys_platform != 'darwin'
-trustore
 watchdog
 xxhash
