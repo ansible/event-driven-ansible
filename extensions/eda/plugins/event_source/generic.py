@@ -21,11 +21,11 @@ loop_delay float     Number of seconds to wait before inserting the
                    next set of events. Default 0
 shutdown_after float Number of seconds to wait before shutting down the
                    plugin. Default 0
-loop_count int     Number of times the set of events in the playload
+loop_count int     Number of times the set of events in the payload
                    should be repeated. Default 0
-repeat_count int   Number of times each individual event in the playload
+repeat_count int   Number of times each individual event in the payload
                    should be repeated. Default 1
-blob_size int      An arbitray blob of blob_size bytes to be inserted
+blob_size int      An arbitrary blob of blob_size bytes to be inserted
                    into every event payload. Default is 0 don't create
                    a blob
 final_payload dict After all the events have been sent we send the optional

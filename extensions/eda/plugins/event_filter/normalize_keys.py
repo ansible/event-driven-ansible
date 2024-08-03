@@ -1,7 +1,7 @@
 """normalize_keys.py.
 
     An event filter that changes keys that contain non alpha numeric or
-    underscore to undersocres.
+    underscore to underscores.
     For instance, the key server-name becomes the new key server_name
     If there are consecutive non alpa numeric or under score, they would
     be coalesced into a single underscore

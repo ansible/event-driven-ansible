@@ -4,8 +4,8 @@ aiokafka
 azure-servicebus
 dpath
 kafka-python
+psycopg
 pyyaml
 systemd-python; sys_platform != 'darwin'
 watchdog
-psycopg
 xxhash
