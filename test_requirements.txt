@@ -5,6 +5,7 @@ asyncmock
 pytest-asyncio
 pytest-timeout
 ansible
+podman-compose
 requests
 ansible-rulebook
 tox

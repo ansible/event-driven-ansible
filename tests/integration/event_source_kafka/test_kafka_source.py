@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 
 import pytest
 from kafka import KafkaProducer
@@ -21,9 +22,9 @@ def kafka_certs():
 def kafka_broker():
     cwd = os.path.join(TESTS_PATH, "event_source_kafka")
     print(cwd)
-    result = subprocess.run(["docker-compose", "up", "-d"], cwd=cwd, check=True)
+    result = subprocess.run([sys.executable, "-m", "podman_compose", "up", "-d"], cwd=cwd, check=True)
     yield result
-    subprocess.run(["docker-compose", "down", "-v"], cwd=cwd, check=True)
+    subprocess.run([sys.executable, "-m", "podman_compose", "down", "-v"], cwd=cwd, check=True)
 
 
 @pytest.fixture(scope="session")

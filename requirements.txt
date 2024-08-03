@@ -3,7 +3,8 @@ aiohttp
 aiokafka
 azure-servicebus
 dpath
-kafka-python
+# kafka-python
+kafka-python-ng
 psycopg
 pyyaml
 systemd-python; sys_platform != 'darwin'

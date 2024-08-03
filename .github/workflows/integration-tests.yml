@@ -12,7 +12,7 @@ on:
     - cron: '0 */8 * * *'
 jobs:
   integration:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
       - name: Install package dependencies
         run: |
           sudo apt-get update
-          sudo apt-get --assume-yes --no-install-recommends install libsystemd0 libsystemd-dev pkg-config
+          sudo apt-get --assume-yes --no-install-recommends install libsystemd0 libsystemd-dev pkg-config podman-compose
 
       - name: Install test requirements
         run: |

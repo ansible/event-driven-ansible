@@ -43,12 +43,7 @@ We recommend setting up a Python virtual environment to install the test depende
 
 ### Integration tests
 
-Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/).
-We recommend installing the Python implementation of `docker-compose` via pip:
-
-```
-pip install docker-compose
-```
+Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation).
 
 Then install the collection directly from your local repo and execute the tests:
 
