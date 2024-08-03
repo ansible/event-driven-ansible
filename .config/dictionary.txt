@@ -33,6 +33,7 @@ rulebook
 rulebooks
 ruleset
 servicebus
+skipsdist
 snakeoil
 storepass
 testenv

@@ -49,6 +49,7 @@ class PathNotExistError(Exception):
     """Cannot find the path in the event."""
 
 
+# pylint: disable=too-many-arguments
 def main(
     event: dict[str, Any],
     host_path: str | None = None,

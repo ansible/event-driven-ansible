@@ -109,6 +109,9 @@ async def _hmac_verify(request: web.Request) -> bool:
         event_digest = base64.b64encode(event_hmac.digest()).decode("utf-8")
     elif hmac_format == "hex":
         event_digest = event_hmac.hexdigest()
+    else:
+        msg = f"Unsupported HMAC header format {hmac_format}"
+        raise ValueError(msg)
 
     return hmac.compare_digest(hmac_header_digest, event_digest)
 
