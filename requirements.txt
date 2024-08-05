@@ -1,3 +1,4 @@
+pyyaml>=6.0.1
 aiobotocore
 aiohttp
 aiokafka
@@ -5,7 +6,6 @@ azure-servicebus
 dpath
 kafka-python
 psycopg
-pyyaml
 systemd-python; sys_platform != 'darwin'
 watchdog
 xxhash

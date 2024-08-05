@@ -7,3 +7,4 @@ ansible
 requests
 ansible-rulebook
 tox
+ansible-core

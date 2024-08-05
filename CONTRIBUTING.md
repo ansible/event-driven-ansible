@@ -4,6 +4,12 @@ Contributions are welcome, and they are greatly appreciated! Every little bit he
 Every new feature should be tested and documented.
 New source plugins or source filters will be evaluated for inclusion in the collection and might be rejected. Please consider the option of creating a new collection for your plugins if it is not a good fit for this collection.
 
+## Cloning
+
+Due to ansible-test own requirements, you must clone the repository into
+a directory structure such `ansible_collections/ansible/eda`. This will allow
+ansible-test to test your code without having to install the collection.
+
 ## Pre-commit
 
 We recommend running pre-commit prior to submitting pull requests. A [pre-commit config](.pre-commit-config.yaml) file is included in this repository and the following steps will get you up and running with pre-commit quickly:
@@ -18,7 +24,7 @@ We recommend running pre-commit prior to submitting pull requests. A [pre-commit
 
 Pre-commit is now set up to run each time you create a new commit. If you wish to run pre-commit against all tracked files in the repository without performing a commit, you can run:
 
-```
+```shell
 pre-commit run --all
 ```
 
@@ -41,30 +47,21 @@ We recommend setting up a Python virtual environment to install the test depende
 
         pip install -r test_requirements.txt
 
+### Sanity and Unit tests
+
+Sanity and unity tests can easily be run via tox:
+
+```shell
+tox -e py
+```
+
 ### Integration tests
 
 Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/).
-We recommend installing the Python implementation of `docker-compose` via pip:
 
-```
-pip install docker-compose
-```
 
 Then install the collection directly from your local repo and execute the tests:
 
-```
-ansible-galaxy collection install .
-pytest tests/integration
-```
-
-### Sanity tests
-
-```sh
-ansible-test sanity
-```
-
-### Units tests
-
-```sh
-ansible-test units
+```shell
+tox -e integration
 ```
