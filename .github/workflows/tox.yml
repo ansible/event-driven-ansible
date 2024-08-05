@@ -39,7 +39,7 @@ jobs:
           other_names: |
             lint
             integration
-          platforms: linux
+          platforms: linux,macos
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os || 'ubuntu-22.04' }}
@@ -67,7 +67,8 @@ jobs:
           path: ansible_collections/ansible/eda
           submodules: true
 
-      - name: Install package dependencies
+      - name: Install package dependencies (ubuntu)
+        if: ${{ contains(matrix.os, 'ubuntu') }}
         run: |
           sudo apt-get update
           sudo apt-get --assume-yes --no-install-recommends install libsystemd0 libsystemd-dev pkg-config
