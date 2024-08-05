@@ -26,7 +26,11 @@ Examples:
 import asyncio
 from typing import Any
 
-from systemd import journal
+# https://github.com/pylint-dev/pylint/issues/7240
+# Also systemd-python fails to install on pre-commit.ci due to:
+# No such file or directory: 'pkg-config'
+# pylint: disable=import-error
+from systemd import journal  # type: ignore
 
 
 async def main(queue: asyncio.Queue, args: dict[str, Any]) -> str:  # noqa: D417

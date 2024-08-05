@@ -1,5 +1,4 @@
 -r requirements.txt
--r lint_requirements.txt
 pytest
 asyncmock
 pytest-asyncio
