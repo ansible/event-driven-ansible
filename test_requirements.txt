@@ -8,3 +8,4 @@ requests
 ansible-rulebook
 tox
 ansible-core
+podman-compose
