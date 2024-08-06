@@ -5,7 +5,7 @@ aiokafka
 azure-servicebus
 dpath
 kafka-python
-psycopg
+psycopg[binary,pool]  # extras needed to avoid install failure on macos-aarch64
 systemd-python; sys_platform != 'darwin'
 watchdog
 xxhash
