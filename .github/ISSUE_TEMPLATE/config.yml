@@ -6,7 +6,7 @@ contact_links:
 
   - name: 📝 Ansible Code of Conduct
     url: https://docs.ansible.com/ansible/latest/community/code_of_conduct.html?utm_medium=github&utm_source=issue_template_chooser
-    about: EDA-Controlles uses the Ansible Code of Conduct; ❤ Be nice to other members of the community. ☮ Behave.
+    about: EDA-Controller uses the Ansible Code of Conduct; ❤ Be nice to other members of the community. ☮ Behave.
 
   - name: 💼 For Enterprise
     url: https://www.ansible.com/use-cases/event-driven-automation

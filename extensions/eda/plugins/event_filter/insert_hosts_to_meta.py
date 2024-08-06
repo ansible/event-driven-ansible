@@ -9,7 +9,7 @@ Arguments:
     host_path:      The json path inside the event data to find hosts.
                     Do nothing if the key is not present or does exist in event
     path_separator: The separator to interpret host_path. Default to "."
-    host_separator: The separator to interpet host string.
+    host_separator: The separator to interpret host string.
                     host_path can point to a string or a list. If it is a single
                     string but contains multiple hosts, use this parameter to
                     delimits the hosts. Treat the vale as a single host if the
@@ -49,6 +49,7 @@ class PathNotExistError(Exception):
     """Cannot find the path in the event."""
 
 
+# pylint: disable=too-many-arguments
 def main(
     event: dict[str, Any],
     host_path: str | None = None,

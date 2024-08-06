@@ -1,6 +1,6 @@
 ---
 # This rulebook is for demo purposes only
-# Typically the events come from an external source 
+# Typically the events come from an external source
 # and you might have to configure the external source
 # and have it generate events on demand.
 # In this simple rulebook the events to be generated

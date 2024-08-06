@@ -1,8 +1,11 @@
 """ Tests for generic source plugin """
 
 import asyncio
+import os
+import tempfile
 
 import pytest
+import yaml
 
 from extensions.eda.plugins.event_source.generic import main as generic_main
 
@@ -176,3 +179,66 @@ def test_generic_bad_time_format():
                 },
             )
         )
+
+
+def test_generic_payload_file():
+    """Test reading events from file."""
+    myqueue = _MockQueue()
+    event = {"name": "fred"}
+    loop_count = 2
+
+    with tempfile.NamedTemporaryFile() as tmpfile:
+        with open(tmpfile.name, "w") as f:
+            yaml.dump(event, f)
+        asyncio.run(
+            generic_main(
+                myqueue,
+                {
+                    "payload_file": tmpfile.name,
+                    "loop_count": loop_count,
+                    "create_index": "sequence",
+                },
+            )
+        )
+
+    assert len(myqueue.queue) == loop_count
+    index = 0
+    for i in range(loop_count):
+        expected_event = {"name": "fred", "sequence": i}
+        assert myqueue.queue[index] == expected_event
+        index += 1
+
+
+def test_generic_missing_payload_file():
+    """Test reading events from missing file."""
+    myqueue = _MockQueue()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        fname = os.path.join(tmpdir, "missing.yaml")
+        with pytest.raises(ValueError):
+            asyncio.run(
+                generic_main(
+                    myqueue,
+                    {
+                        "payload_file": fname,
+                    },
+                )
+            )
+
+
+def test_generic_parsing_payload_file():
+    """Test parsing failure events from file."""
+    myqueue = _MockQueue()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        fname = os.path.join(tmpdir, "bogus.yaml")
+        with open(fname, "w") as f:
+            f.write("fail_text: 'Hello, I'm testing!'")
+
+        with pytest.raises(ValueError):
+            asyncio.run(
+                generic_main(
+                    myqueue,
+                    {
+                        "payload_file": fname,
+                    },
+                )
+            )

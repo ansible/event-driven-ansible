@@ -1,11 +1,11 @@
+pyyaml>=6.0.1
 aiobotocore
 aiohttp
 aiokafka
 azure-servicebus
 dpath
 kafka-python
-pyyaml
+psycopg[binary,pool]  # extras needed to avoid install failure on macos-aarch64
 systemd-python; sys_platform != 'darwin'
 watchdog
-psycopg
 xxhash

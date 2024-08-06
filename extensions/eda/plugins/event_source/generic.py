@@ -4,6 +4,7 @@ The event data to insert into the queue is specified in the required
 parameter payload and is an array of events.
 
 Optional Parameters:
+payload_file A yaml with an array of events can be used instead of payload
 randomize    True|False Randomize the events in the payload, default False
 display      True|False Display the event data in stdout, default False
 timestamp    True|False Add an event timestamp, default False
@@ -20,11 +21,11 @@ loop_delay float     Number of seconds to wait before inserting the
                    next set of events. Default 0
 shutdown_after float Number of seconds to wait before shutting down the
                    plugin. Default 0
-loop_count int     Number of times the set of events in the playload
+loop_count int     Number of times the set of events in the payload
                    should be repeated. Default 0
-repeat_count int   Number of times each individual event in the playload
+repeat_count int   Number of times each individual event in the payload
                    should be repeated. Default 1
-blob_size int      An arbitray blob of blob_size bytes to be inserted
+blob_size int      An arbitrary blob of blob_size bytes to be inserted
                    into every event payload. Default is 0 don't create
                    a blob
 final_payload dict After all the events have been sent we send the optional
@@ -56,7 +57,10 @@ import random
 import time
 from dataclasses import dataclass, fields
 from datetime import datetime
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 @dataclass
@@ -67,6 +71,7 @@ class Args:
     final_payload: Any = None
     display: bool = False
     create_index: str = ""
+    payload_file: str = ""
 
 
 @dataclass
@@ -99,6 +104,10 @@ class Generic:
         """Insert event data into the queue."""
         self.queue = queue
         field_names = [f.name for f in fields(Args)]
+
+        if "payload_file" in args:
+            args["payload"] = ""
+
         self.my_args = Args(**{k: v for k, v in args.items() if k in field_names})
         field_names = [f.name for f in fields(ControlArgs)]
         self.control_args = ControlArgs(
@@ -123,6 +132,8 @@ class Generic:
         ]:
             msg = "time_format must be one of local, iso8601, epoch"
             raise ValueError(msg)
+
+        await self._load_payload_from_file()
 
         if not isinstance(self.my_args.payload, list):
             self.my_args.payload = [self.my_args.payload]
@@ -160,6 +171,20 @@ class Generic:
         if self.my_args.display:
             print(data)  # noqa: T201
         await self.queue.put(data)
+
+    async def _load_payload_from_file(self: Generic) -> None:
+        if not self.my_args.payload_file:
+            return
+        path = Path(self.my_args.payload_file)
+        if not path.is_file():
+            msg = f"File {self.my_args.payload_file} not found"
+            raise ValueError(msg)
+        with path.open(mode="r", encoding="utf-8") as file:
+            try:
+                self.my_args.payload = yaml.safe_load(file)
+            except yaml.YAMLError as exc:
+                msg = f"File {self.my_args.payload_file} parsing error {exc}"
+                raise ValueError(msg) from exc
 
     def _create_data(
         self: Generic,
