@@ -5,11 +5,13 @@ OAUTHBEARER
 alertmanager
 basepython
 benthomasosn
+buildx
 cafile
 capath
 caroot
 confluentinc
 conninfo
+containerd
 darglint
 digestmod
 dynatrace
