@@ -21,9 +21,9 @@ def kafka_certs():
 def kafka_broker():
     cwd = os.path.join(TESTS_PATH, "event_source_kafka")
     print(cwd)
-    result = subprocess.run(["docker-compose", "up", "-d"], cwd=cwd, check=True)
+    result = subprocess.run(["podman-compose", "up", "-d"], cwd=cwd, check=True)
     yield result
-    subprocess.run(["docker-compose", "down", "-v"], cwd=cwd, check=True)
+    subprocess.run(["podman-compose", "down", "-v"], cwd=cwd, check=True)
 
 
 @pytest.fixture(scope="session")

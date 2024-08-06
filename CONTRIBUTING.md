@@ -57,7 +57,7 @@ tox -e py
 
 ### Integration tests
 
-Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation) and [docker-compose](https://docs.docker.com/compose/install/).
+Integration tests require the addition of [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/getting-started/installation).
 
 
 Then install the collection directly from your local repo and execute the tests:
