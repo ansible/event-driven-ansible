@@ -25,7 +25,7 @@ env:
 jobs:
   prepare:
     name: prepare
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.generate_matrix.outputs.matrix }}
     steps:
@@ -42,7 +42,7 @@ jobs:
           platforms: linux,macos
   build:
     name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os || 'ubuntu-22.04' }}
+    runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
     continue-on-error: ${{ contains(matrix.name, 'integration') && true || false }}
     needs:
       - prepare
@@ -135,7 +135,7 @@ jobs:
     needs:
       - build
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       # checkout needed for codecov action which needs codecov.yml file
