@@ -1,3 +1,4 @@
+ansible-core>=2.15
 pyyaml>=6.0.1
 aiobotocore
 aiohttp

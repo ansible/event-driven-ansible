@@ -1,2 +1,4 @@
 ---
-requires_ansible: ">=2.14.0"
+# https://access.redhat.com/support/policy/updates/ansible-automation-platform
+# https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
+requires_ansible: ">=2.15.0" # AAP 2.4 or newer
