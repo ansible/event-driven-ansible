@@ -1,10 +1,8 @@
 -r requirements.txt
-pytest
-asyncmock
-pytest-asyncio
-pytest-timeout
-ansible
-requests
-ansible-rulebook
-tox
-ansible-core
+pytest>=7.0.0
+asyncmock>=0.4.2
+pytest-asyncio>=0.20.0
+pytest-timeout>=2.0.1
+requests>=2.31.0
+ansible-rulebook>=1.0.0
+tox>=4.15.1
