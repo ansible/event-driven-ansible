@@ -4,12 +4,16 @@
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
 from __future__ import annotations
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 from ansible.module_utils.basic import env_fallback
 
 AUTH_ARGSPEC = dict(
     controller_host=dict(
         fallback=(env_fallback, ["CONTROLLER_HOST"]),
+        required=True,
     ),
     controller_username=dict(
         fallback=(env_fallback, ["CONTROLLER_USERNAME"]),
@@ -20,6 +24,7 @@ AUTH_ARGSPEC = dict(
     ),
     validate_certs=dict(
         type="bool",
+        default=True,
         fallback=(env_fallback, ["CONTROLLER_VERIFY_SSL"]),
     ),
     request_timeout=dict(

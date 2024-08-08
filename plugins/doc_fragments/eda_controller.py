@@ -10,7 +10,7 @@ class ModuleDocFragment:
 
     AUTHS = """
 options:
-    controller_url:
+    controller_host:
         description:
           - The URL of the EDA controller.
           - If not set, the value of the C(CONTROLLER_URL) environment variable will be used.
@@ -28,9 +28,8 @@ options:
           - Password used for authentication.
           - If not set, the value of the C(CONTROLLER_PASSWORD) environment variable will be used.
         type: str
-        no_log: true
         version_added: '2.0.0'
-    timeout:
+    request_timeout:
         description:
           - Timeout in seconds for the connection with the EDA controller.
           - If not set, the value of the C(CONTROLLER_TIMEOUT) environment variable will be used.
