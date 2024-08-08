@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from ansible.module_utils.basic import env_fallback
 
-
 AUTH_ARGSPEC = dict(
     controller_host=dict(
         fallback=(env_fallback, ["CONTROLLER_HOST"]),
