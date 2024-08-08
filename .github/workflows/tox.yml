@@ -38,8 +38,9 @@ jobs:
           default_python: "3.9"
           other_names: |
             lint
-            integration
-            sanity
+            py39-integration
+            py39-sanity
+            py312-sanity
           platforms: linux,macos
   build:
     name: ${{ matrix.name }}
@@ -78,8 +79,10 @@ jobs:
           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt update -y
-          sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin python3.11-dev python3.11-venv python3.11-full
+          sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin python3.9-dev python3.9-venv python3.10-dev python3.10-venv python3.10-dev python3.10-venv python3.11-dev python3.11-venv shellcheck
           # installs pip for alternative python versions that do not ship it
+          python3.9 -m ensurepip
+          python3.10 -m ensurepip
           python3.11 -m ensurepip
           # Do not install docker-compose-plugin because it would v1 (broken due to not working with newer requests library)
           sudo systemctl enable --now docker
