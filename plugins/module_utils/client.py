@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import json
-
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 

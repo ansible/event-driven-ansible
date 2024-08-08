@@ -82,6 +82,7 @@ EXAMPLES = """
 """
 
 from ansible.module_utils.basic import AnsibleModule
+
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
 
