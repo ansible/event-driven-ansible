@@ -2,9 +2,11 @@
 -Djava
 GSSAPI
 OAUTHBEARER
+PYTHONUNBUFFERED
 alertmanager
 basepython
 benthomasosn
+bindep
 buildx
 cafile
 capath
@@ -13,6 +15,7 @@ confluentinc
 conninfo
 containerd
 darglint
+deadsnakes
 digestmod
 dynatrace
 envlist
