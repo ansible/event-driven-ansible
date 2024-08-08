@@ -10,11 +10,19 @@ __metaclass__ = type
 import json
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
+from ansible.module_utils.six.moves.http_cookiejar import CookieJar
 
 from ansible.module_utils.urls import Request
 
-from .errors import AuthError, EDAHTTPError
+from ansible_collections.ansible.eda.plugins.module_utils.errors import (
+    AuthError,
+    EDAHTTPError
+)
 
+import logging
+logging.basicConfig(filename = '/tmp/file.log',
+                    level = logging.DEBUG,
+                    format = '%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
 class Response:
     def __init__(self, status, data, headers=None):
@@ -60,11 +68,15 @@ class Client:
         self.timeout = timeout
         self.validate_certs = validate_certs
 
-        self._client = Request()
+        self.session = Request(
+            cookies=CookieJar(),
+            timeout=self.timeout,
+            validate_certs=validate_certs,
+        )
 
     def _request(self, method, path, data=None, headers=None):
         try:
-            raw_resp = self._client.open(
+            raw_resp = self.session.open(
                 method,
                 path,
                 data=data,
@@ -75,6 +87,7 @@ class Client:
                 validate_certs=self.validate_certs,
                 force_basic_auth=True,
             )
+
         except HTTPError as http_exp:
             # Wrong username/password, or expired access token
             if http_exp.code == 401:
@@ -98,8 +111,8 @@ class Client:
             url = f"{url}?{urlencode(query)}"
         return self._request(method, url, data=data, headers=headers)
 
-    def get(self, path, query=None):
-        resp = self.request("GET", path, query=query)
+    def get(self, path, query=None, data=None, headers=None):
+        resp = self._request("GET", path, data=data, headers=headers)
         if resp.status in (200, 404):
             return resp
         raise EDAHTTPError("HTTP ERROR")
