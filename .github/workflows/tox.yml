@@ -39,6 +39,7 @@ jobs:
           other_names: |
             lint
             py39-integration
+            py312-integration
             py39-sanity
             py312-sanity
           platforms: linux,macos
