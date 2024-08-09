@@ -71,6 +71,25 @@ class Controller:
         else:
             self.module.exit_json(msg="Cant determine identity field for Undefined object.")
 
+    def fail_wanted_one(self, response, endpoint, query_params):
+        sample = response.copy()
+        if len(sample.json["results"]) > 1:
+            sample.json["results"] = sample.json["results"][:2] + [
+                "...more results snipped..."
+            ]
+        url = self.client.build_url(endpoint, query_params)
+        host_length = len(self.client.host)
+        display_endpoint = url.geturl()[
+            host_length:
+        ]  # truncate to not include the base URL
+        self.module.fail_json(
+            msg="Request to {0} returned {1} items, expected 1".format(
+                display_endpoint, response.json["count"]
+            ),
+            query=query_params,
+            response=sample,
+            total_results=response.json["count"],
+        )
 
     def get_one(
         self, endpoint, name=None, allow_none=True, check_exists=False, **kwargs
