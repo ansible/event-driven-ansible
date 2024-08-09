@@ -124,7 +124,7 @@ def main():
     controller = Controller(client, module)
 
     # Attempt to look up credential_type based on the provided name
-    credential_type = controller.get_one('credential-types', name=name, check_exists=(state == 'exists'))
+    credential_type = controller.get_one_or_many('credential-types', name=name, check_exists=(state == 'exists'))
 
     if state == 'absent':
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -134,9 +134,6 @@ def main():
 
     # If the state was present and we can let the module build or update the existing credential type, this will return on its own
     controller.create_or_update_if_needed(credential_type, credential_type_params, endpoint='credential-types', item_type='credential type')
-
-
-    module.exit_json(**credential_type)
 
 
 if __name__ == "__main__":
