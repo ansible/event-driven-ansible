@@ -75,11 +75,10 @@ RETURN = """ # """
 
 
 from ansible.module_utils.basic import AnsibleModule
-
-from ..module_utils.arguments import AUTH_ARGSPEC
-
 from ansible_collections.ansible.eda.plugins.module_utils.client import Client
 from ansible_collections.ansible.eda.plugins.module_utils.controller import Controller
+
+from ..module_utils.arguments import AUTH_ARGSPEC
 
 
 def main():
@@ -94,9 +93,11 @@ def main():
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    required_if = [('state', 'present', ('inputs', 'injectors'))]
+    required_if = [("state", "present", ("inputs", "injectors"))]
 
-    module = AnsibleModule(argument_spec=argument_spec, required_if=required_if, supports_check_mode=True)
+    module = AnsibleModule(
+        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
+    )
 
     client = Client(
         host=module.params.get("controller_host"),
@@ -106,12 +107,12 @@ def main():
         validate_certs=module.params.get("validate_certs"),
     )
 
-    name = module.params.get('name')
+    name = module.params.get("name")
     new_name = module.params.get("new_name")
-    description = module.params.get('description')
-    inputs = module.params.get('inputs')
-    injectors = module.params.get('injectors')
-    state = module.params.get('state')
+    description = module.params.get("description")
+    inputs = module.params.get("inputs")
+    injectors = module.params.get("injectors")
+    state = module.params.get("state")
 
     credential_type_params = {}
     if description:
@@ -124,16 +125,27 @@ def main():
     controller = Controller(client, module)
 
     # Attempt to look up credential_type based on the provided name
-    credential_type = controller.get_one_or_many('credential-types', name=name, check_exists=(state == 'exists'))
+    credential_type = controller.get_one_or_many(
+        "credential-types", name=name, check_exists=(state == "exists")
+    )
 
-    if state == 'absent':
+    if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
-        controller.delete_if_needed(credential_type, endpoint='credential-types')
+        controller.delete_if_needed(credential_type, endpoint="credential-types")
 
-    credential_type_params['name'] = new_name if new_name else (controller.get_item_name(credential_type) if credential_type else name)
+    credential_type_params["name"] = (
+        new_name
+        if new_name
+        else (controller.get_item_name(credential_type) if credential_type else name)
+    )
 
     # If the state was present and we can let the module build or update the existing credential type, this will return on its own
-    controller.create_or_update_if_needed(credential_type, credential_type_params, endpoint='credential-types', item_type='credential type')
+    controller.create_or_update_if_needed(
+        credential_type,
+        credential_type_params,
+        endpoint="credential-types",
+        item_type="credential type",
+    )
 
 
 if __name__ == "__main__":

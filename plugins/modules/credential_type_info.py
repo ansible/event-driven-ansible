@@ -34,11 +34,10 @@ RETURN = """ # """
 
 
 from ansible.module_utils.basic import AnsibleModule
-
-from ..module_utils.arguments import AUTH_ARGSPEC
-
 from ansible_collections.ansible.eda.plugins.module_utils.client import Client
 from ansible_collections.ansible.eda.plugins.module_utils.controller import Controller
+
+from ..module_utils.arguments import AUTH_ARGSPEC
 
 
 def main():
@@ -58,11 +57,11 @@ def main():
         validate_certs=module.params.get("validate_certs"),
     )
 
-    name = module.params.get('name')
+    name = module.params.get("name")
     controller = Controller(client, module)
 
     # Attempt to look up credential_type based on the provided name
-    result = controller.get_one_or_many('credential-types', name=name, want_one=False)
+    result = controller.get_one_or_many("credential-types", name=name, want_one=False)
 
     module.exit_json(result=result)
 
