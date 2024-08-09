@@ -10,6 +10,7 @@ dictionaries:
   - words
   - python
 ignorePaths:
+  - changelogs/config.yaml
   - cspell.config.yaml
   # The requirements file
   - requirements.txt
