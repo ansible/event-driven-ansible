@@ -75,7 +75,9 @@ def main():
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    module = AnsibleModule(argument_spec=argument_spec)
+    required_if = [('state', 'present', ('inputs', 'injectors'))]
+
+    module = AnsibleModule(argument_spec=argument_spec, required_if=required_if, supports_check_mode=True)
 
     client = Client(
         host=module.params.get("controller_host"),

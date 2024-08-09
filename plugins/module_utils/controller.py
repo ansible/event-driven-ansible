@@ -63,13 +63,13 @@ class Controller:
                     return item[field_name]
 
         if item:
-            self.exit_json(
+            self.module.exit_json(
                 msg="Cannot determine identity field for {0} object.".format(
                     item.get("type", "unknown")
                 )
             )
         else:
-            self.exit_json(msg="Cant determine identity field for Undefined object.")
+            self.module.exit_json(msg="Cant determine identity field for Undefined object.")
 
 
     def get_one(
@@ -202,7 +202,7 @@ class Controller:
     def _encrypted_changed_warning(self, field, old, warning=False):
         if not warning:
             return
-        self.warn(
+        self.module.warn(
             "The field {0} of {1} {2} has encrypted data "
             "and may inaccurately report task is changed.".format(
                 field, old.get("type", "unknown"), old.get("id", "unknown")
@@ -321,9 +321,9 @@ class Controller:
                         warning=True,
                     )
                 elif response.json and "__all__" in response.json:
-                    self.fail_json(msg=response.json["__all__"])
+                    self.module.fail_json(msg=response.json["__all__"])
                 else:
-                    self.fail_json(
+                    self.module.fail_json(
                         **{
                             "msg": "Unable to update {0} {1}".format(
                                 item_type, item_name
