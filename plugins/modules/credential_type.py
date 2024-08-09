@@ -40,7 +40,7 @@ options:
       description:
         - Desired state of the resource.
       default: "present"
-      choices: ["present", "absent"]
+      choices: ["present", "absent", "exists"]
       type: str
 requirements:
   - The 'requests' Python module must be installed.
