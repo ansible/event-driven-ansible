@@ -1,4 +1,5 @@
-"""url_check.py.
+"""
+url_check.py.
 
 An ansible-rulebook event source plugin that polls a set of URLs and sends
 events with their status.
@@ -26,30 +27,46 @@ import aiohttp
 
 OK = 200
 
-
 async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     """Poll a set of URLs and send events with status."""
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
     verify_ssl = args.get("verify_ssl", True)
 
+    # Added initialization for client_error to handle cases where an exception occurs
+    client_error = ""
+
     if not urls:
         return
+
+    # Added url_states dictionary to track the last known status of each URL
+    url_states = {url: None for url in urls}
 
     while True:
         try:
             async with aiohttp.ClientSession() as session:
                 for url in urls:
-                    async with session.get(url, verify_ssl=verify_ssl) as resp:
-                        await queue.put(
-                            {
-                                "url_check": {
-                                    "url": url,
-                                    "status": "up" if resp.status == OK else "down",
-                                    "status_code": resp.status,
-                                },
+                    try:
+                        async with session.get(url, ssl=verify_ssl) as resp:
+                            status = "up" if resp.status == OK else "down"
+                            status_code = resp.status
+                    except aiohttp.ClientError as exc:
+                        status = "down"
+                        status_code = None
+                        client_error = str(exc)
+                    # Only trigger event if the status has changed
+                    if url_states[url] != status:
+                        url_states[url] = status
+                        event = {
+                            "url_check": {
+                                "url": url,
+                                "status": status,
+                                "status_code": status_code,
                             },
-                        )
+                        }
+                        if status == "down" and client_error:
+                            event["url_check"]["error_msg"] = client_error
+                        await queue.put(event)
 
         except aiohttp.ClientError as exc:
             client_error = str(exc)
@@ -64,7 +81,6 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
             )
 
         await asyncio.sleep(delay)
-
 
 if __name__ == "__main__":
     """MockQueue if running directly."""
