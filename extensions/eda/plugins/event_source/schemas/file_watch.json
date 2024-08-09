@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/file_watch.json",
+    "title": "File Watcher Source plugin",
+    "description": "An ansible-rulebook event source plugin for watching file system changes.",
+    "type": "object",
+    "properties": {
+        "path": {
+            "description": "The directory to watch for changes.",
+            "type": "string",
+            "title": "Path"
+        },
+        "recursive": {
+            "description": "Recursively watch the path if true",
+            "type": "boolean",
+            "title": "Recursive"
+        },
+        "ignore_regexes": {
+            "description": "A list of regular expressions to ignore changes",
+            "title": "Ignore Regexes",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "path",
+        "recursive"
+    ]
+}

@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/webhook.json",
+    "title": "Webhook Source Plugin",
+    "description": "Webhook plugins can receive events from external servers",
+    "type": "object",
+    "properties": {
+        "port": {
+            "description": "The port number to listen for incoming events",
+            "type": "integer",
+            "title": "Port"
+        },
+        "host": {
+            "description": "The host address to listen on, default is 0.0.0.0",
+            "type": "string",
+            "title": "Host",
+            "default": "0.0.0.0"
+        },
+        "token": {
+            "description": "Authentication token in header",
+            "type": "string",
+            "title": "Authentication Token",
+            "default": ""
+        },
+        "certfile": {
+            "description": "The certfile to use",
+            "type": "string",
+            "title": "Certificate File",
+            "default": ""
+        },
+        "keyfile": {
+            "description": "The keyfile to use",
+            "type": "string",
+            "title": "Key File",
+            "default": ""
+        },
+        "password": {
+            "description": "The password to use",
+            "type": "string",
+            "title": "Password",
+            "default": ""
+        },
+        "hmac_secret": {
+            "description": "The HMAC Secret to use",
+            "type": "string",
+            "title": "HMAC Secret",
+            "default": ""
+        },
+        "hmac_algo": {
+            "description": "The HMAC Algorithm to use",
+            "type": "string",
+            "title": "HMAC Algorithm",
+            "default": "sha256"
+        },
+        "hmac_header": {
+            "description": "The HTTP header which will contain the payload signature",
+            "type": "string",
+            "title": "HMAC Header",
+            "default": "x-hub-signature-256"
+        },
+        "hmac_format": {
+            "description": "The format of the payload signature, hex or base64",
+            "type": "string",
+            "enum": [
+                "hex",
+                "base64"
+            ],
+            "title": "HMAC Format",
+            "default": "hex"
+        }
+    },
+    "required": [
+        "port"
+    ]
+}
