@@ -38,7 +38,7 @@ options:
       type: dict
     state:
       description:
-        - Desired state of the resource.
+        - Desired state of the resource. V(exists) will not modify the resource if it is present.
       default: "present"
       choices: ["present", "absent", "exists"]
       type: str
@@ -49,7 +49,26 @@ extends_documentation_fragment:
 """
 
 
-EXAMPLES = """"""
+EXAMPLES = """
+    - name: Create a credential type
+      ansible.eda.credential_type:
+        name: "Test"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "Field1"
+              type: "string"
+              label: "Label1"
+        injectors:
+          extra_vars:
+            field1: "field1"
+
+    - name: Delete a credential type
+      ansible.eda.credential_type:
+        name: "Test"
+        state: absent
+"""
 
 
 RETURN = """ # """
