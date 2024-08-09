@@ -70,7 +70,7 @@ def main():
         description=dict(type="str"),
         inputs=dict(type="dict"),
         injectors=dict(type="dict"),
-        state=dict(choices=["present", "absent"], default="present"),
+        state=dict(choices=["present", "absent", "exists"], default="present"),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -93,6 +93,12 @@ def main():
     state = module.params.get('state')
 
     credential_type_params = {}
+    if description:
+        credential_type_params["description"] = description
+    if inputs:
+        credential_type_params["inputs"] = inputs
+    if injectors:
+        credential_type_params["injectors"] = injectors
 
     controller = Controller(client, module)
 
@@ -101,14 +107,13 @@ def main():
 
     if state == 'absent':
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
-        controller.delete_if_needed(credential_type)
+        controller.delete_if_needed(credential_type, endpoint='credential-types')
 
-    # credential_type_params['name'] = new_name if new_name else (controller.get_item_name(credential_type) if credential_type else name)
+    credential_type_params['name'] = new_name if new_name else (controller.get_item_name(credential_type) if credential_type else name)
 
-    # # If the state was present and we can let the module build or update the existing credential type, this will return on its own
-    # controller.create_or_update_if_needed(credential_type, credential_type_params, endpoint='credential-types', item_type='credential type')
+    # If the state was present and we can let the module build or update the existing credential type, this will return on its own
+    controller.create_or_update_if_needed(credential_type, credential_type_params, endpoint='credential-types', item_type='credential type')
 
-    # get_query = {"name": module.params.get("name")}
 
     module.exit_json(**credential_type)
 
