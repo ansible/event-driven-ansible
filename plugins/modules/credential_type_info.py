@@ -64,7 +64,7 @@ def main():
     # Attempt to look up credential_type based on the provided name
     result = controller.get_one_or_many('credential-types', name=name, want_one=False)
 
-    module.exit_json(**result)
+    module.exit_json(result=result)
 
 
 if __name__ == "__main__":
