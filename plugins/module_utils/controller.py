@@ -91,8 +91,8 @@ class Controller:
             total_results=response.json["count"],
         )
 
-    def get_one(
-        self, endpoint, name=None, allow_none=True, check_exists=False, **kwargs
+    def get_one_or_many(
+        self, endpoint, name=None, allow_none=True, check_exists=False, want_one=True, **kwargs
     ):
         new_kwargs = kwargs.copy()
         response = None
@@ -103,43 +103,47 @@ class Controller:
             new_data["{0}".format(name_field)] = name
             new_kwargs["data"] = new_data
 
-            response = self.get_endpoint(endpoint, **new_kwargs)
+        response = self.get_endpoint(endpoint, **new_kwargs)
 
-            if response.status != 200:
-                fail_msg = "Got a {0} when trying to get from {1}".format(
-                    response.status, endpoint
-                )
-                if "detail" in response.json:
-                    fail_msg += ",detail: {0}".format(response.json["detail"])
-                self.module.fail_json(msg=fail_msg)
+        if response.status != 200:
+            fail_msg = "Got a {0} when trying to get from {1}".format(
+                response.status, endpoint
+            )
+            if "detail" in response.json:
+                fail_msg += ",detail: {0}".format(response.json["detail"])
+            self.module.fail_json(msg=fail_msg)
 
-            if "count" not in response.json or "results" not in response.json:
-                self.module.fail_json(msg="The endpoint did not provide count, results")
+        logging.debug(response.json)
+
+        if "count" not in response.json or "results" not in response.json:
+            self.module.fail_json(msg="The endpoint did not provide count, results")
 
         if response.json["count"] == 0:
             if allow_none:
                 return None
             else:
                 self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
+        if response.json["count"] == 1:
+            return response.json["results"][0]
         elif response.json["count"] > 1:
-            if name:
-                # Since we did a name or ID search and got > 1 return
-                # something if the id matches
-                for asset in response.json["results"]:
-                    if str(asset["id"]) == name:
-                        return asset
-            # We got > 1 and either didn't find something by ID (which means
-            # multiple names)
-            # Or we weren't running with a or search and just got back too
-            # many to begin with.
-            self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
+            if want_one:
+                if name:
+                    # Since we did a name or ID search and got > 1 return
+                    # something if the id matches
+                    for asset in response.json["results"]:
+                        if str(asset["id"]) == name:
+                            return asset
+                # We got > 1 and either didn't find something by ID (which means
+                # multiple names)
+                # Or we weren't running with a or search and just got back too
+                # many to begin with.
+                self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
+            else:
+                return response.json["results"]
 
         if check_exists:
             self.json_output["id"] = response.json["results"][0]["id"]
             self.module.exit_json(**self.json_output)
-
-        return response.json["results"][0]
-
 
     def create_if_needed(
         self,
