@@ -8,21 +8,23 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
+import logging
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
+
 from ansible.module_utils.six.moves.http_cookiejar import CookieJar
-
 from ansible.module_utils.urls import Request
-
 from ansible_collections.ansible.eda.plugins.module_utils.errors import (
     AuthError,
-    EDAHTTPError
+    EDAHTTPError,
 )
 
-import logging
-logging.basicConfig(filename = '/tmp/file.log',
-                    level = logging.DEBUG,
-                    format = '%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+logging.basicConfig(
+    filename="/tmp/file.log",
+    level=logging.DEBUG,
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+)
+
 
 class Response:
     def __init__(self, status, data, headers=None):
@@ -165,7 +167,6 @@ class Client:
         )
         if headers.get("Content-Type", "") == "application/json":
             data = json.dumps(kwargs.get("data", {}))
-
 
         return self._request(method, url.geturl(), data=data, headers=headers)
 

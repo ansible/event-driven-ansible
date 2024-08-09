@@ -1,18 +1,17 @@
 import logging
 
-logging.basicConfig(filename = '/tmp/file.log',
-                    level = logging.DEBUG,
-                    format = '%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+logging.basicConfig(
+    filename="/tmp/file.log",
+    level=logging.DEBUG,
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+)
+
 
 class Controller:
     IDENTITY_FIELDS = {"users": "username"}
     ENCRYPTED_STRING = "$encrypted$"
 
-    def __init__(
-        self,
-        client,
-        module
-    ):
+    def __init__(self, client, module):
         self.client = client
         self.module = module
         self.json_output = {"changed": False}
@@ -69,7 +68,9 @@ class Controller:
                 )
             )
         else:
-            self.module.exit_json(msg="Cant determine identity field for Undefined object.")
+            self.module.exit_json(
+                msg="Cant determine identity field for Undefined object."
+            )
 
     def fail_wanted_one(self, response, endpoint, query_params):
         sample = response.copy()
@@ -92,7 +93,13 @@ class Controller:
         )
 
     def get_one_or_many(
-        self, endpoint, name=None, allow_none=True, check_exists=False, want_one=True, **kwargs
+        self,
+        endpoint,
+        name=None,
+        allow_none=True,
+        check_exists=False,
+        want_one=True,
+        **kwargs,
     ):
         new_kwargs = kwargs.copy()
         response = None
@@ -260,9 +267,7 @@ class Controller:
             if set(old_field.keys()) != set(new_field.keys()):
                 return False
             for key in new_field.keys():
-                if not Controller.fields_could_be_same(
-                    old_field[key], new_field[key]
-                ):
+                if not Controller.fields_could_be_same(old_field[key], new_field[key]):
                     return False
             return True  # all sub-fields are either equal or could be equal
         else:
