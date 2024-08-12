@@ -5,7 +5,9 @@ aiohttp
 aiokafka
 azure-servicebus
 dpath
-kafka-python
+# https://github.com/dpkp/kafka-python/issues/2412#issuecomment-2030459360
+kafka-python; python_version < "3.12"
+kafka-python-ng;  python_version >= "3.12"
 psycopg[binary,pool]  # extras needed to avoid install failure on macos-aarch64
 systemd-python; sys_platform != 'darwin'
 watchdog

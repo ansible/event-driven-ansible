@@ -31,16 +31,21 @@ jobs:
     steps:
       - name: Determine matrix
         id: generate_matrix
-        uses: coactions/dynamic-matrix@v2
+        uses: coactions/dynamic-matrix@main # v3
         with:
           min_python: "3.9"
           max_python: "3.12"
           default_python: "3.9"
           other_names: |
             lint
-            integration
-            sanity
+            py39:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration
+            py310:tox -e py310-sanity;tox -e py310-unit; tox -e py310-integration
+            py311:tox -e py311-sanity;tox -e py311-unit; tox -e py311-integration
+            py312:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
+            py39-macos:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration
+            py312-macos:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
           platforms: linux,macos
+          skip_explode: "1"
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
@@ -78,8 +83,10 @@ jobs:
           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt update -y
-          sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin python3.11-dev python3.11-venv python3.11-full
+          sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin python3.9-dev python3.9-venv python3.10-dev python3.10-venv python3.10-dev python3.10-venv python3.11-dev python3.11-venv shellcheck
           # installs pip for alternative python versions that do not ship it
+          python3.9 -m ensurepip
+          python3.10 -m ensurepip
           python3.11 -m ensurepip
           # Do not install docker-compose-plugin because it would v1 (broken due to not working with newer requests library)
           sudo systemctl enable --now docker
@@ -87,7 +94,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Install Java
-        if: ${{ matrix.passed_name == 'integration' }}
+        if: "${{ startsWith(matrix.name, 'py') }}"
         uses: actions/setup-java@v4
         with:
           distribution: "zulu"
@@ -95,11 +102,11 @@ jobs:
 
       - name: Set pre-commit cache
         uses: actions/cache@v4
-        if: ${{ matrix.passed_name == 'lint' }}
+        if: ${{ matrix.name == 'lint' }}
         with:
           path: |
             ~/.cache/pre-commit
-          key: pre-commit-${{ matrix.name || matrix.passed_name }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit-${{ matrix.name }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Set up Python ${{ matrix.python_version || '3.10' }}
         uses: actions/setup-python@v5
@@ -112,13 +119,13 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip wheel tox
 
-      - name: Initialize tox envs ${{ matrix.passed_name }}
-        run: python3 -m tox -n --skip-missing-interpreters false -vv -e ${{ matrix.passed_name }}
-        timeout-minutes: 5 # average is under 1, but macos can be over 3
+      - run: ${{ matrix.command }}
 
-      # sequential run improves browsing experience (almost no speed impact)
-      - name: tox -e ${{ matrix.passed_name }}
-        run: python3 -m tox -e ${{ matrix.passed_name }}
+      - run: ${{ matrix.command2 }}
+        if: ${{ matrix.command2 }}
+
+      - run: ${{ matrix.command3 }}
+        if: ${{ matrix.command3 }}
 
       - name: Archive logs
         uses: actions/upload-artifact@v4
@@ -186,7 +193,7 @@ jobs:
       # - name: Upload coverage data
       #   uses: codecov/codecov-action@v4
       #   with:
-      #     name: ${{ matrix.passed_name }}
+      #     name: ${{ matrix.name }}
       #     # verbose: true # optional (default = false)
       #     fail_ci_if_error: true
       #     use_oidc: true # cspell:ignore oidc
