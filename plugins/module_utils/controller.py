@@ -160,7 +160,7 @@ class Controller:
             if self.module.check_mode:
                 return {"changed": True}
 
-            # If we don't have an exisitng_item, we can try to create it
+            # If we don't have an existing_item, we can try to create it
             # We will pull the item_name out from the new_item, if it exists
             item_name = self.get_item_name(new_item, allow_unknown=True)
             response = self.post_endpoint(endpoint, **{"data": new_item})

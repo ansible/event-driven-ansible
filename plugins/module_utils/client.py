@@ -7,12 +7,9 @@ import json
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
 
-from ansible.module_utils.six.moves.http_cookiejar import CookieJar
 from ansible.module_utils.urls import Request
-from ansible_collections.ansible.eda.plugins.module_utils.errors import (
-    AuthError,
-    EDAHTTPError,
-)
+
+from .errors import AuthError, EDAHTTPError
 
 
 class Response:
@@ -67,14 +64,10 @@ class Client:
             self.url_prefix = self.url.path
         except Exception as e:
             raise EDAHTTPError(
-                f"Unable to parse eda_controller_host ({self.client.host}): {e}"
-            )
+                f"Unable to parse eda_controller_host ({self.host}): {e}"
+            ) from e
 
-        self.session = Request(
-            cookies=CookieJar(),
-            timeout=self.timeout,
-            validate_certs=validate_certs,
-        )
+        self.session = Request()
 
     def _request(self, method, path, data=None, headers=None):
         try:
@@ -104,28 +97,28 @@ class Client:
 
         return Response(raw_resp.status, raw_resp.read(), raw_resp.headers)
 
-    def build_url(self, endpoint, query_params=None, id=None):
+    def build_url(self, endpoint, query_params=None, identifier=None):
         # Make sure we start with /api/vX
         if not endpoint.startswith("/"):
-            endpoint = "/{0}".format(endpoint)
+            endpoint = f"/{endpoint}"
         prefix = self.url_prefix.rstrip("/")
 
         if not endpoint.startswith(prefix + "/api/"):
-            endpoint = prefix + "/api/eda/v1{0}".format(endpoint)
+            endpoint = prefix + f"/api/eda/v1{endpoint}"
         if not endpoint.endswith("/") and "?" not in endpoint:
-            endpoint = "{0}/".format(endpoint)
+            endpoint = f"{endpoint}/"
 
         # Update the URL path with the endpoint
         url = self.url._replace(path=endpoint)
 
         if query_params:
             url = url._replace(query=urlencode(query_params))
-        if id:
-            url = url._replace(path=(url.path + str(id) + "/"))
+        if identifier:
+            url = url._replace(path=url.path + str(identifier) + "/")
 
         return url
 
-    def request(self, method, endpoint, *args, **kwargs):
+    def request(self, method, endpoint, **kwargs):
         # In case someone is calling us directly; make sure we were given a
         # method, let's not just assume a GET
         if not method:
@@ -134,7 +127,7 @@ class Client:
         if method in ["POST"]:
             url = self.build_url(endpoint)
         elif method in ["DELETE", "PATCH", "PUT"]:
-            url = self.build_url(endpoint, id=kwargs.get("id"))
+            url = self.build_url(endpoint, identifier=kwargs.get("id"))
         else:
             url = self.build_url(endpoint, query_params=kwargs.get("data"))
 
