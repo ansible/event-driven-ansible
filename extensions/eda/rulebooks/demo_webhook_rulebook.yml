@@ -1,0 +1,24 @@
+---
+# This rulebook is for demo purposes only
+# This webhook listens on port 5555 by default,
+# you can override it by passing in an variable
+# called port. If you have other webhook sources
+# running on the default port 5555 you might see
+# port conflicts.
+# It logs every event received so it should work
+# with any vendors payload.
+# It doesn't use authentication to keep things simple
+#
+- name: Webhook demo prints all incoming events
+  hosts: all
+  sources:
+    - ansible.eda.webhook:
+        port: "{{ port | default(5555) }}"
+        host: 0.0.0.0
+  rules:
+    - name: Webhook rule
+      condition: true
+      action:
+        print_event:
+          pretty: true
+...
