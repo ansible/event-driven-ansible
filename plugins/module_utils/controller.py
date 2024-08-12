@@ -4,6 +4,9 @@
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
 
+from ansible_collections.ansible.eda.plugins.module_utils.errors import EDAError
+
+
 class Controller:
     IDENTITY_FIELDS = {"users": "username"}
     ENCRYPTED_STRING = "$encrypted$"
@@ -11,7 +14,7 @@ class Controller:
     def __init__(self, client, module):
         self.client = client
         self.module = module
-        self.json_output = {"changed": False}
+        self.result = {"changed": False}
 
         if "update_secrets" in self.module.params:
             self.update_secrets = self.module.params.pop("update_secrets")
@@ -28,24 +31,24 @@ class Controller:
     def post_endpoint(self, endpoint, *args, **kwargs):
         # Handle check mode
         if self.module.check_mode:
-            self.json_output["changed"] = True
-            return self.json_output
+            self.result["changed"] = True
+            return self.result
 
         return self.client.post(endpoint, **kwargs)
 
     def patch_endpoint(self, endpoint, *args, **kwargs):
         # Handle check mode
         if self.module.check_mode:
-            self.json_output["changed"] = True
-            return self.json_output
+            self.result["changed"] = True
+            return self.result
 
         return self.client.patch(endpoint, **kwargs)
 
     def delete_endpoint(self, endpoint, *args, **kwargs):
         # Handle check mode
         if self.module.check_mode:
-            self.json_output["changed"] = True
-            return self.json_output
+            self.result["changed"] = True
+            return self.result
 
         return self.client.delete(endpoint, **kwargs)
 
@@ -131,9 +134,8 @@ class Controller:
                 return response.json["results"]
 
         if check_exists:
-            self.json_output["id"] = response.json["results"][0]["id"]
-            # self.module.exit_json(**self.json_output)
-            return self.json_output
+            self.result["id"] = response.json["results"][0]["id"]
+            return self.result
 
     def create_if_needed(
         self,
@@ -163,9 +165,9 @@ class Controller:
             item_name = self.get_item_name(new_item, allow_unknown=True)
             response = self.post_endpoint(endpoint, **{"data": new_item})
             if response.status in [200, 201]:
-                self.json_output["id"] = response.json["id"]
-                self.json_output["changed"] = True
-                return self.json_output
+                self.result["id"] = response.json["id"]
+                self.result["changed"] = True
+                return self.result
             else:
                 if response.json and "__all__" in response.json:
                     msg = f"Unable to create {item_type} {item_name}: {response.json['__all__'][0]}"
@@ -268,7 +270,7 @@ class Controller:
             needs_patch = self.objects_could_be_different(existing_item, new_item)
 
             # If we decided the item needs to be updated, update it
-            self.json_output["id"] = item_id
+            self.result["id"] = item_id
             if needs_patch:
                 if self.module.check_mode:
                     return {"changed": True}
@@ -279,20 +281,20 @@ class Controller:
                 if response.status == 200:
                     # compare apples-to-apples, old API data to new API data
                     # but do so considering the fields given in parameters
-                    self.json_output["changed"] |= self.objects_could_be_different(
+                    self.result["changed"] |= self.objects_could_be_different(
                         existing_item,
                         response.json,
                         field_set=new_item.keys(),
                         warning=True,
                     )
-                    return self.json_output
+                    return self.result
                 elif response.json and "__all__" in response.json:
                     raise EDAError(response.json["__all__"])
                 else:
                     msg = f"Unable to update {item_type} {item_name}"
                     raise EDAError(msg)
             else:
-                return self.json_output
+                return self.result
 
         else:
             raise RuntimeError(
@@ -341,9 +343,9 @@ class Controller:
             if response.status in [202, 204]:
                 if on_delete:
                     on_delete(self, response.json)
-                self.json_output["changed"] = True
-                self.json_output["id"] = item_id
-                return self.json_output
+                self.result["changed"] = True
+                self.result["id"] = item_id
+                return self.result
             else:
                 if response.json and "__all__" in response.json:
                     msg = f"Unable to delete {item_name}: {response['json']['__all__'][0]}"
@@ -363,4 +365,4 @@ class Controller:
                     msg = f"Unable to delete {item_name}: {response['status_code']}"
                     raise EDAError(msg)
         else:
-            return self.json_output
+            return self.result
