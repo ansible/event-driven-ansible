@@ -4,7 +4,7 @@
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
 
-from ansible_collections.ansible.eda.plugins.module_utils.errors import EDAError
+from .errors import EDAError
 
 
 class Controller:
@@ -25,10 +25,10 @@ class Controller:
     def get_name_field_from_endpoint(endpoint):
         return Controller.IDENTITY_FIELDS.get(endpoint, "name")
 
-    def get_endpoint(self, endpoint, *args, **kwargs):
+    def get_endpoint(self, endpoint, **kwargs):
         return self.client.get(endpoint, **kwargs)
 
-    def post_endpoint(self, endpoint, *args, **kwargs):
+    def post_endpoint(self, endpoint, **kwargs):
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
@@ -36,7 +36,7 @@ class Controller:
 
         return self.client.post(endpoint, **kwargs)
 
-    def patch_endpoint(self, endpoint, *args, **kwargs):
+    def patch_endpoint(self, endpoint, **kwargs):
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
@@ -44,7 +44,7 @@ class Controller:
 
         return self.client.patch(endpoint, **kwargs)
 
-    def delete_endpoint(self, endpoint, *args, **kwargs):
+    def delete_endpoint(self, endpoint, **kwargs):
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
@@ -52,7 +52,7 @@ class Controller:
 
         return self.client.delete(endpoint, **kwargs)
 
-    def get_item_name(self, item, allow_unknown=False):
+    def get_item_name(self, item):
         if item:
             if "name" in item:
                 return item["name"]
@@ -64,9 +64,8 @@ class Controller:
         if item:
             msg = f"Cannot determine identity field for {item.get('type', 'unknown')} object."
             raise EDAError(msg)
-        else:
-            msg = "Cant determine identity field for Undefined object."
-            raise EDAError(msg)
+        msg = "Cant determine identity field for Undefined object."
+        raise EDAError(msg)
 
     def fail_wanted_one(self, response, endpoint, query_params):
         sample = response.json.copy()
@@ -95,7 +94,7 @@ class Controller:
         if name:
             name_field = self.get_name_field_from_endpoint(endpoint)
             new_data = kwargs.get("data", {}).copy()
-            new_data["{0}".format(name_field)] = name
+            new_data[name_field] = name
             new_kwargs["data"] = new_data
 
         response = self.get_endpoint(endpoint, **new_kwargs)
@@ -113,11 +112,10 @@ class Controller:
         if response.json["count"] == 0:
             if allow_none:
                 return None
-            else:
-                self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
+            self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
         if response.json["count"] == 1:
             return response.json["results"][0]
-        elif response.json["count"] > 1:
+        if response.json["count"] > 1:
             if want_one:
                 if name:
                     # Since we did a name or ID search and got > 1 return
@@ -162,29 +160,27 @@ class Controller:
 
             # If we don't have an existing_item, we can try to create it
             # We will pull the item_name out from the new_item, if it exists
-            item_name = self.get_item_name(new_item, allow_unknown=True)
+            item_name = self.get_item_name(new_item)
             response = self.post_endpoint(endpoint, **{"data": new_item})
             if response.status in [200, 201]:
                 self.result["id"] = response.json["id"]
                 self.result["changed"] = True
                 return self.result
-            else:
-                if response.json and "__all__" in response.json:
-                    msg = f"Unable to create {item_type} {item_name}: {response.json['__all__'][0]}"
-                    raise EDAError(msg)
-                elif response.json:
-                    msg = f"Unable to create {item_type} {item_name}: {response.json}"
-                    raise EDAError(msg)
-                else:
-                    msg = f"Unable to create {item_type} {item_name}: {response.status}"
-                    raise EDAError(msg)
+            if response.json and "__all__" in response.json:
+                msg = f"Unable to create {item_type} {item_name}: {response.json['__all__'][0]}"
+                raise EDAError(msg)
+            if response.json:
+                msg = f"Unable to create {item_type} {item_name}: {response.json}"
+                raise EDAError(msg)
+            msg = f"Unable to create {item_type} {item_name}: {response.status}"
+            raise EDAError(msg)
 
     def _encrypted_changed_warning(self, field, old, warning=False):
         if not warning:
             return
         self.module.warn(
-            f"The field {field} of {old.get('type', 'unknown')} {old.get('id', 'unknown')} has encrypted data "
-            "and may inaccurately report task is changed."
+            f"The field {field} of {old.get('type', 'unknown')} {old.get('id', 'unknown')} "
+            "has encrypted data and may inaccurately report task is changed."
         )
 
     @staticmethod
@@ -218,10 +214,9 @@ class Controller:
                 if not Controller.fields_could_be_same(old_field[key], new_field[key]):
                     return False
             return True  # all sub-fields are either equal or could be equal
-        else:
-            if old_field == Controller.ENCRYPTED_STRING:
-                return True
-            return bool(new_field == old_field)
+        if old_field == Controller.ENCRYPTED_STRING:
+            return True
+        return bool(new_field == old_field)
 
     def objects_could_be_different(self, old, new, field_set=None, warning=False):
         if field_set is None:
@@ -251,55 +246,51 @@ class Controller:
         new_item,
         endpoint,
         item_type,
-        on_update=None,
     ):
         response = None
-        if existing_item:
-            # If we have an item, we can see if it needs an update
-            try:
-                if item_type == "user":
-                    item_name = existing_item["username"]
-                else:
-                    item_name = existing_item["name"]
-                item_id = existing_item["id"]
-            except KeyError as e:
-                msg = f"Unable to process update, missing data {e}"
-                raise EDAError(msg) from e
-
-            # Check to see if anything within the item requires to be updated
-            needs_patch = self.objects_could_be_different(existing_item, new_item)
-
-            # If we decided the item needs to be updated, update it
-            self.result["id"] = item_id
-            if needs_patch:
-                if self.module.check_mode:
-                    return {"changed": True}
-
-                response = self.patch_endpoint(
-                    endpoint, **{"data": new_item, "id": item_id}
-                )
-                if response.status == 200:
-                    # compare apples-to-apples, old API data to new API data
-                    # but do so considering the fields given in parameters
-                    self.result["changed"] |= self.objects_could_be_different(
-                        existing_item,
-                        response.json,
-                        field_set=new_item.keys(),
-                        warning=True,
-                    )
-                    return self.result
-                elif response.json and "__all__" in response.json:
-                    raise EDAError(response.json["__all__"])
-                else:
-                    msg = f"Unable to update {item_type} {item_name}"
-                    raise EDAError(msg)
-            else:
-                return self.result
-
-        else:
+        if existing_item is None:
             raise RuntimeError(
                 "update_if_needed called incorrectly without existing_item"
             )
+
+        # If we have an item, we can see if it needs an update
+        try:
+            if item_type == "user":
+                item_name = existing_item["username"]
+            else:
+                item_name = existing_item["name"]
+            item_id = existing_item["id"]
+        except KeyError as e:
+            msg = f"Unable to process update, missing data {e}"
+            raise EDAError(msg) from e
+
+        # Check to see if anything within the item requires to be updated
+        needs_patch = self.objects_could_be_different(existing_item, new_item)
+
+        # If we decided the item needs to be updated, update it
+        self.result["id"] = item_id
+        if needs_patch:
+            if self.module.check_mode:
+                return {"changed": True}
+
+            response = self.patch_endpoint(
+                endpoint, **{"data": new_item, "id": item_id}
+            )
+            if response.status == 200:
+                # compare apples-to-apples, old API data to new API data
+                # but do so considering the fields given in parameters
+                self.result["changed"] |= self.objects_could_be_different(
+                    existing_item,
+                    response.json,
+                    field_set=new_item.keys(),
+                    warning=True,
+                )
+                return self.result
+            if response.json and "__all__" in response.json:
+                raise EDAError(response.json["__all__"])
+            msg = f"Unable to update {item_type} {item_name}"
+            raise EDAError(msg)
+        return self.result
 
     def create_or_update_if_needed(
         self,
@@ -307,7 +298,6 @@ class Controller:
         new_item,
         endpoint=None,
         item_type="unknown",
-        on_update=None,
     ):
         if existing_item:
             return self.update_if_needed(
@@ -315,54 +305,47 @@ class Controller:
                 new_item,
                 endpoint,
                 item_type=item_type,
-                on_update=on_update,
             )
-        else:
-            return self.create_if_needed(
-                existing_item,
-                new_item,
-                endpoint,
-                item_type=item_type,
-            )
+        return self.create_if_needed(
+            existing_item,
+            new_item,
+            endpoint,
+            item_type=item_type,
+        )
 
     def delete_if_needed(self, existing_item, endpoint, on_delete=None):
-        if existing_item:
-            # If we have an item, we can try to delete it
-            try:
-                item_id = existing_item["id"]
-                item_name = self.get_item_name(existing_item, allow_unknown=True)
-            except KeyError as e:
-                msg = f"Unable to process delete, missing data {e}"
-                raise EDAError(msg) from e
-
-            if self.module.check_mode:
-                return {"changed": True}
-
-            response = self.delete_endpoint(endpoint, **{"id": item_id})
-
-            if response.status in [202, 204]:
-                if on_delete:
-                    on_delete(self, response.json)
-                self.result["changed"] = True
-                self.result["id"] = item_id
-                return self.result
-            else:
-                if response.json and "__all__" in response.json:
-                    msg = f"Unable to delete {item_name}: {response['json']['__all__'][0]}"
-                    raise EDAError(msg)
-                elif response.json:
-                    # This is from a project delete (if there is an active
-                    # job against it)
-                    if "error" in response.json:
-                        msg = (
-                            f"Unable to delete {item_name}: {response['json']['error']}"
-                        )
-                        raise EDAError(msg)
-                    else:
-                        msg = f"Unable to delete {item_name}: {response['json']}"
-                        raise EDAError(msg)
-                else:
-                    msg = f"Unable to delete {item_name}: {response['status_code']}"
-                    raise EDAError(msg)
-        else:
+        if existing_item is None:
             return self.result
+
+        # If we have an item, we can try to delete it
+        try:
+            item_id = existing_item["id"]
+            item_name = self.get_item_name(existing_item)
+        except KeyError as e:
+            msg = f"Unable to process delete, missing data {e}"
+            raise EDAError(msg) from e
+
+        if self.module.check_mode:
+            return {"changed": True}
+
+        response = self.delete_endpoint(endpoint, **{"id": item_id})
+
+        if response.status in [202, 204]:
+            if on_delete:
+                on_delete(self, response.json)
+            self.result["changed"] = True
+            self.result["id"] = item_id
+            return self.result
+        if response.json and "__all__" in response.json:
+            msg = f"Unable to delete {item_name}: {response['json']['__all__'][0]}"
+            raise EDAError(msg)
+        if response.json:
+            # This is from a project delete (if there is an active
+            # job against it)
+            if "error" in response.json:
+                msg = f"Unable to delete {item_name}: {response['json']['error']}"
+                raise EDAError(msg)
+            msg = f"Unable to delete {item_name}: {response['json']}"
+            raise EDAError(msg)
+        msg = f"Unable to delete {item_name}: {response['status_code']}"
+        raise EDAError(msg)

@@ -5,30 +5,30 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 from ansible.module_utils.basic import env_fallback
 
-AUTH_ARGSPEC = dict(
-    controller_host=dict(
-        fallback=(env_fallback, ["CONTROLLER_HOST"]),
-        required=True,
-    ),
-    controller_username=dict(
-        fallback=(env_fallback, ["CONTROLLER_USERNAME"]),
-    ),
-    controller_password=dict(
-        no_log=True,
-        fallback=(env_fallback, ["CONTROLLER_PASSWORD"]),
-    ),
-    validate_certs=dict(
-        type="bool",
-        default=True,
-        fallback=(env_fallback, ["CONTROLLER_VERIFY_SSL"]),
-    ),
-    request_timeout=dict(
-        type="float",
-        fallback=(env_fallback, ["CONTROLLER_REQUEST_TIMEOUT"]),
-        default=10.0,
-    ),
-)
+AUTH_ARGSPEC = {
+    "controller_host": {
+        "fallback": (env_fallback, ["CONTROLLER_HOST"]),
+        "required": True,
+    },
+    "controller_username": {
+        "fallback": (env_fallback, ["CONTROLLER_USERNAME"]),
+    },
+    "controller_password": {
+        "fallback": (env_fallback, ["CONTROLLER_PASSWORD"]),
+        "no_log": True,
+    },
+    "validate_certs": {
+        "type": "bool",
+        "default": True,
+        "fallback": (env_fallback, ["CONTROLLER_VERIFY_SSL"]),
+    },
+    "request_timeout": {
+        "type": "float",
+        "default": 10.0,
+        "fallback": (env_fallback, ["CONTROLLER_REQUEST_TIMEOUT"]),
+    },
+}
