@@ -44,7 +44,9 @@ jobs:
             py312:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
             py39-macos:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration
             py312-macos:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
-          platforms: linux,macos
+            py311-linux-arm64:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
+          # ^ arm64 runner is using py311 for matching python version used in AAP 2.5
+          platforms: linux,macos,linux-arm64:ubuntu-24.04-arm64-2core
           skip_explode: "1"
   build:
     name: ${{ matrix.name }}
@@ -59,12 +61,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
-      # max-parallel: 5
-      # The matrix testing goal is to cover the *most likely* environments
-      # which are expected to be used by users in production. Avoid adding a
-      # combination unless there are good reasons to test it, like having
-      # proof that we failed to catch a bug by not running it. Using
-      # distribution should be preferred instead of custom builds.
     steps:
 
       - uses: actions/checkout@v4
