@@ -1,0 +1,70 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- block:
+    - include_tasks: create.yml
+    - name: List all projects in the given EDA Controller in check mode
+      ansible.eda.project_info:
+        controller_host: "{{ controller_host }}"
+        controller_username: "{{ controller_user }}"
+        validate_certs: "{{ validate_certs }}"
+      check_mode: true
+      register: r
+
+    - name: Check if all the projects are returned in check mode
+      assert:
+        that:
+          - "'projects' in r"
+
+    - name: List all projects in the given EDA Controller
+      ansible.eda.project_info:
+        controller_host: "{{ controller_host }}"
+        controller_username: "{{ controller_user }}"
+        validate_certs: "{{ validate_certs }}"
+      register: r
+
+    - name: Check if all the projects are returned
+      assert:
+        that:
+          - "'projects' in r"
+
+    - name: List a particular project in the given EDA Controller
+      ansible.eda.project_info:
+        controller_host: "{{ controller_host }}"
+        controller_username: "{{ controller_user }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "Example"
+      register: r
+
+    - name: Check if the project is returned
+      assert:
+        that:
+          - "'projects' in r"
+          - "'Example' in r['projects'][0]['name']"
+
+    - name: List a non-existing particular project in the given EDA Controller
+      ansible.eda.project_info:
+        controller_host: "{{ controller_host }}"
+        controller_username: "{{ controller_user }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "Example2"
+      register: r
+
+    - name: Check if all the projects are returned
+      assert:
+        that:
+          - "'projects' in r"
+          - "r['projects'] == []"
+
+  always:
+    - name: Clean up - project
+      ansible.eda.project:
+        controller_host: "{{ controller_host }}"
+        controller_username: "{{ controller_user }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - Example
+      ignore_errors: true

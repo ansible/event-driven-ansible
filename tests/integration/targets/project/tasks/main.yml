@@ -1,0 +1,20 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- block:
+    - include_tasks: create.yml
+    - include_tasks: delete.yml
+    - include_tasks: update.yml
+  always:
+    - name: Clean up - project
+      ansible.eda.project:
+        controller_host: "{{ controller_host }}"
+        controller_username: "{{ controller_user }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - Example
+        - Example_New
+      ignore_errors: true
