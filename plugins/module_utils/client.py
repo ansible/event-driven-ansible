@@ -3,26 +3,17 @@
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
 import json
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
+
 from ansible.module_utils.six.moves.http_cookiejar import CookieJar
-
 from ansible.module_utils.urls import Request
-
 from ansible_collections.ansible.eda.plugins.module_utils.errors import (
     AuthError,
-    EDAHTTPError
+    EDAHTTPError,
 )
 
-import logging
-logging.basicConfig(filename = '/tmp/file.log',
-                    level = logging.DEBUG,
-                    format = '%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
 class Response:
     def __init__(self, status, data, headers=None):
@@ -75,12 +66,9 @@ class Client:
             # Store URL prefix for later use in build_url
             self.url_prefix = self.url.path
         except Exception as e:
-            raise e
-            # self.module.fail_json(
-            #     msg="Unable to parse eda_controller_host ({1}): {0}".format(
-            #         self.client.host, e
-            #     )
-            # )
+            raise EDAHTTPError(
+                f"Unable to parse eda_controller_host ({self.client.host}): {e}"
+            )
 
         self.session = Request(
             cookies=CookieJar(),
@@ -112,8 +100,6 @@ class Client:
             # This is for the caller to decide.
             return Response(http_exp.code, http_exp.read(), http_exp.headers)
         except URLError as url_exp:
-            logging.debug("REASON")
-            logging.debug(url_exp.reason)
             raise EDAHTTPError(url_exp.reason) from url_exp
 
         return Response(raw_resp.status, raw_resp.read(), raw_resp.headers)
@@ -143,7 +129,7 @@ class Client:
         # In case someone is calling us directly; make sure we were given a
         # method, let's not just assume a GET
         if not method:
-            raise Exception("The HTTP method must be defined")
+            raise EDAHTTPError("The HTTP method must be defined")
 
         if method in ["POST"]:
             url = self.build_url(endpoint)
@@ -166,32 +152,28 @@ class Client:
         if headers.get("Content-Type", "") == "application/json":
             data = json.dumps(kwargs.get("data", {}))
 
-
         return self._request(method, url.geturl(), data=data, headers=headers)
 
     def get(self, path, **kwargs):
         resp = self.request("GET", path, **kwargs)
         if resp.status in (200, 404):
             return resp
-        raise EDAHTTPError("HTTP ERROR")
+        raise EDAHTTPError(f"HTTP error {resp.json}")
 
     def post(self, path, **kwargs):
         resp = self.request("POST", path, **kwargs)
         if resp.status == 201:
             return resp
-        raise EDAHTTPError(f"HTTP ERROR {resp.json}")
+        raise EDAHTTPError(f"HTTP error {resp.json}")
 
     def patch(self, path, **kwargs):
         resp = self.request("PATCH", path, **kwargs)
         if resp.status == 200:
             return resp
-        raise EDAHTTPError(f"HTTP ERROR {resp.json}")
-
-    def put(self, path, data, query=None):
-        raise NotImplementedError()
+        raise EDAHTTPError(f"HTTP error {resp.json}")
 
     def delete(self, path, **kwargs):
         resp = self.request("DELETE", path, **kwargs)
         if resp.status == 204:
             return resp
-        raise EDAHTTPError(f"HTTP ERROR {resp.json}")
+        raise EDAHTTPError(f"HTTP error {resp.json}")
