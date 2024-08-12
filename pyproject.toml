@@ -26,6 +26,7 @@ disable = [
   "too-many-arguments",
   "too-many-branches",
   "inconsistent-return-statements",
+  "invalid-name",
 ]
 max-line-length=120
 
