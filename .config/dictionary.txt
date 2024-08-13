@@ -60,3 +60,5 @@ Alina
 Buzachis
 alinabuzachis
 hdrs
+testuser
+testsecret

@@ -4,5 +4,7 @@
 requires_ansible: ">=2.15.0" # AAP 2.4 or newer
 action_groups:
   eda:
+    - credential
+    - credential_info
     - credential_type
     - credential_type_info
