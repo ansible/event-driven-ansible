@@ -38,7 +38,6 @@ repos:
         args: [
           --fix,
           --exit-non-zero-on-fix,
-          --ignore, E402,
         ]
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
@@ -55,8 +54,6 @@ repos:
       - id: pylint
         args:
           - --output-format=colorized
-          - --disable=C0103,C0114,C0115,C0116,R0913,R1735,
-          - --max-line-length=120
         additional_dependencies:
           - aiobotocore
           - aiohttp
