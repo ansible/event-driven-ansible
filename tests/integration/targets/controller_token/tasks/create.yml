@@ -1,0 +1,57 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create controller token in check mode
+  ansible.eda.controller_token:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ controller_token_name }}"
+    description: "Example controller token description"
+    token: "TOKEN_VALUE"
+    state: present
+  check_mode: true
+  no_log: true
+  register: r
+
+- name: Check controller token creation in check mode
+  assert:
+    that:
+      - r.changed
+
+- name: Create controller token
+  ansible.eda.controller_token:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ controller_token_name }}"
+    description: "Example controller token description"
+    token: "TOKEN_VALUE"
+    state: present
+  no_log: true
+  register: r
+
+- name: Check controller token creation
+  assert:
+    that:
+      - r.changed
+      - "'id' in r"
+
+- name: Create controller token again
+  ansible.eda.controller_token:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ controller_token_name }}"
+    description: "Example controller token description"
+    token: "TOKEN_VALUE"
+    state: present
+  no_log: true
+  register: r
+
+- name: Check controller token creation again
+  assert:
+    that:
+      - r.changed
+      - "'id' in r"
