@@ -143,7 +143,9 @@ def main():
     credential_id = None
     if credential:
         try:
-            credential_id = controller.get_one_or_many("eda-credentials", name=credential)
+            credential_id = controller.get_one_or_many(
+                "eda-credentials", name=credential
+            )
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
 
