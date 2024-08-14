@@ -38,13 +38,14 @@ jobs:
           default_python: "3.9"
           other_names: |
             lint
-            py39:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration
-            py310:tox -e py310-sanity;tox -e py310-unit; tox -e py310-integration
-            py311:tox -e py311-sanity;tox -e py311-unit; tox -e py311-integration
-            py312:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
-            py39-macos:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration
-            py312-macos:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
-            py311-linux-arm64:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration
+            py39:tox -e py39-sanity;tox -e py39-unit;tox -e py39-integration;tox -e coverage
+            py312:tox -e py312-sanity;tox -e py312-unit;tox -e py312-integration;tox -e coverage
+          # py310:tox -e py310-sanity;tox -e py310-unit; tox -e py310-integration; tox -e coverage
+          # py311:tox -e py311-sanity;tox -e py311-unit; tox -e py311-integration; tox -e coverage
+          # py312:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration; tox -e coverage
+          # py39-macos:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration; tox -e coverage
+          # py312-macos:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration; tox -e coverage
+          # py311-linux-arm64:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration; tox -e coverage
           # ^ arm64 runner is using py311 for matching python version used in AAP 2.5
           platforms: linux,macos,linux-arm64:ubuntu-24.04-arm64-2core
           skip_explode: "1"
@@ -123,6 +124,9 @@ jobs:
       - run: ${{ matrix.command3 }}
         if: ${{ matrix.command3 }}
 
+      - run: ${{ matrix.command4 }}
+        if: ${{ matrix.command4 }}
+
       - name: Archive logs
         uses: actions/upload-artifact@v4
         with:
@@ -130,8 +134,8 @@ jobs:
           if-no-files-found: error
           path: |
             ansible_collections/ansible/eda/.tox/**/log/
-            ansible_collections/ansible/eda/.tox/**/.coverage*
             ansible_collections/ansible/eda/.tox/**/coverage.xml
+            ansible_collections/ansible/eda/tests/output/reports/coverage.xml
 
       - name: Report failure if git reports dirty status
         run: |
@@ -178,25 +182,27 @@ jobs:
           name: logs.zip
           path: .
 
-      # - name: Check for expected number of coverage.xml reports
-      #   run: |
-      #     JOBS_PRODUCING_COVERAGE=8
-      #     if [ "$(find . -name coverage.xml | wc -l | bc)" -ne "${JOBS_PRODUCING_COVERAGE}" ]; then
-      #       echo "::error::Number of coverage.xml files was not the expected one (${JOBS_PRODUCING_COVERAGE}): $(find . -name coverage.xml |xargs echo)"
-      #       exit 1
-      #     fi
+      - name: Check for expected number of coverage reports
+        run: |
+          JOBS_PRODUCING_COVERAGE=2
+          FIND_FILES="find */tests/output/reports -name 'coverage.xml'"
+          if [ "$($FIND_FILES | wc -l | bc)" -ne "${JOBS_PRODUCING_COVERAGE}" ]; then
+            echo "::error::Number of coverage.xml files was not the expected one (${JOBS_PRODUCING_COVERAGE}): $($FIND_FILES | xargs echo)"
+            exit 0
+          fi
 
-      # - name: Upload coverage data
-      #   uses: codecov/codecov-action@v4
-      #   with:
-      #     name: ${{ matrix.name }}
-      #     # verbose: true # optional (default = false)
-      #     fail_ci_if_error: true
-      #     use_oidc: true # cspell:ignore oidc
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v4
+        with:
+          name: ${{ matrix.name }}
+          # verbose: true # optional (default = false)
+          fail_ci_if_error: true
+          use_oidc: true # cspell:ignore oidc
+          files: "*/tests/output/reports/coverage.xml"
 
-      # - name: Check codecov.io status
-      #   if: github.event_name == 'pull_request'
-      #   uses: coactions/codecov-status@main
+      - name: Check codecov.io status
+        if: github.event_name == 'pull_request'
+        uses: coactions/codecov-status@main
 
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
