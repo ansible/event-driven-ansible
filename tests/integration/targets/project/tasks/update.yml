@@ -7,9 +7,9 @@
     controller_host: "{{ controller_host }}"
     controller_username: "{{ controller_user }}"
     validate_certs: "{{ validate_certs }}"
-    name: Example
+    name: "{{ project_name }}"
+    url: "{{ url }}"
     description: "Example project description"
-    url: "https://example.com/project1"
     state: present
   register: r
 
@@ -23,10 +23,10 @@
     controller_host: "{{ controller_host }}"
     controller_username: "{{ controller_user }}"
     validate_certs: "{{ validate_certs }}"
-    name: Example
-    new_name: Example_New
+    name: "{{ project_name }}"
+    url: "{{ url }}"
+    new_name: "{{ project_name }}_new"
     description: "Example project description"
-    url: "https://example.com/project1"
     state: present
   register: r
 
@@ -40,8 +40,8 @@
     controller_host: "{{ controller_host }}"
     controller_username: "{{ controller_user }}"
     validate_certs: "{{ validate_certs }}"
-    name: Example_New
-    new_name: Example_New
+    name: "{{ project_name }}_new"
+    new_name: "{{ project_name }}_new"
     description: "Example project description"
     url: "https://example.com/project1"
     state: present
@@ -57,7 +57,7 @@
     controller_host: "{{ controller_host }}"
     controller_username: "{{ controller_user }}"
     validate_certs: "{{ validate_certs }}"
-    name: Example_New
+    name: "{{ project_name }}_new"
     state: absent
   register: r
 

@@ -108,7 +108,7 @@ def main():
             project_endpoint, name=project_name, want_one=False
         )
     except EDAError as eda_err:
-        module.fail_json(msg=eda_err)
+        module.fail_json(msg=str(eda_err))
 
     if ret is None:
         ret = []

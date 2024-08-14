@@ -3,6 +3,21 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 - block:
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
+
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
+
+    - name: Define variables for credential and decision environment
+      set_fact:
+        project_name: "test_project_{{ test_id }}"
+        url: "https://example.com/ansible/eda-server"
+
     - include_tasks: create.yml
     - include_tasks: delete.yml
     - include_tasks: update.yml
@@ -15,6 +30,6 @@
         name: "{{ item }}"
         state: absent
       loop:
-        - Example
-        - Example_New
+        - "{{ project_name }}"
+        - "{{ project_name }}_new"
       ignore_errors: true

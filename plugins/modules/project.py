@@ -124,14 +124,14 @@ def main():
     try:
         project_type = controller.get_one_or_many(project_endpoint, name=project_name)
     except EDAError as eda_err:
-        module.fail_json(msg=eda_err)
+        module.fail_json(msg=str(eda_err))
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
             ret = controller.delete_if_needed(project_type, endpoint=project_endpoint)
         except EDAError as eda_err:
-            module.fail_json(msg=eda_err)
+            module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
     project_type_params = {}
@@ -143,14 +143,14 @@ def main():
     credential_id = None
     if credential:
         try:
-            credential_id = controller.get_one_or_many("credentials", credential)
+            credential_id = controller.get_one_or_many("eda-credentials", name=credential)
         except EDAError as eda_err:
-            module.fail_json(msg=eda_err)
+            module.fail_json(msg=str(eda_err))
 
     if credential_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
-        project_type_params["credential"] = credential_id
+        project_type_params["eda_credential_id"] = credential_id["id"]
 
     if new_name:
         project_type_params["name"] = new_name
@@ -169,7 +169,7 @@ def main():
             item_type="project type",
         )
     except EDAError as eda_err:
-        module.fail_json(msg=eda_err)
+        module.fail_json(msg=str(eda_err))
 
     module.exit_json(**ret)
 
