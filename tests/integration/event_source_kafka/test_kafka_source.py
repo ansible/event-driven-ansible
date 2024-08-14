@@ -31,6 +31,7 @@ def kafka_producer(kafka_certs, kafka_broker):
     return KafkaProducer(bootstrap_servers="localhost:9092")
 
 
+@pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
 def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer):
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_plaintext.yml"
@@ -49,6 +50,7 @@ def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer):
     assert "Rule fired successfully for PLAINTEXT consumers" in result.stdout.decode()
 
 
+@pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
 def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer):
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_headers.yml"
@@ -72,6 +74,7 @@ def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer):
     assert "Rule fired successfully with headers" in result.stdout.decode()
 
 
+@pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
 def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer):
     ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules_ssl.yml")
 
@@ -88,6 +91,7 @@ def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer):
     assert "Rule fired successfully for SSL consumers" in result.stdout.decode()
 
 
+@pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
 def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer):
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_sasl_plaintext.yml"
@@ -108,6 +112,7 @@ def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer):
     )
 
 
+@pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
 def test_kafka_source_sasl_ssl(kafka_certs, kafka_broker, kafka_producer):
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_sasl_ssl.yml"

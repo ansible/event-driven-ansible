@@ -1,0 +1,13 @@
+# ubuntu: 22.04 (default py312, others from deadsnakes)
+libsystemd0 [test platform:debian]
+libsystemd-dev [test platform:debian]
+pkg-config  [test platform:debian]
+
+# For sanity testing to pass we need all supported Python versions installed:
+python3.9-dev [test platform:ubuntu-noble]
+python3.9-venv [test platform:ubuntu-noble]
+python3.10-dev [test platform:ubuntu-noble]
+python3.10-venv [test platform:ubuntu-noble]
+python3.11-dev [test platform:ubuntu-noble]
+python3.11-venv [test platform:ubuntu-noble]
+shellcheck [test platform:ubuntu-noble]

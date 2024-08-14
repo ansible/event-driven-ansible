@@ -29,7 +29,7 @@ crashing.
 2. Have ansible.eda collection installed by ansible-galaxy
 3. Update `inventory.yml` with correct ip and user to access the client node
 4. Start the rulebook CLI:
-```
+```shell
   ansible-rulebook -i demos/dynatrace-demo/inventory.yml --rules demos/dynatrace-demo/rulebook.yml
 ```
 This rulebook starts an alertmanager source that listens on port 5050
