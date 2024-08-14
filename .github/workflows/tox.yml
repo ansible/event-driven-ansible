@@ -19,6 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  ANSIBLE_FORCE_COLOR: 1
   FORCE_COLOR: 1 # tox, pytest
   PY_COLORS: 1
 
@@ -39,13 +40,12 @@ jobs:
           other_names: |
             lint
             py39:tox -e py39-sanity;tox -e py39-unit;tox -e py39-integration;tox -e coverage
-            py312:tox -e py312-sanity;tox -e py312-unit;tox -e py312-integration;tox -e coverage
-          # py310:tox -e py310-sanity;tox -e py310-unit; tox -e py310-integration; tox -e coverage
-          # py311:tox -e py311-sanity;tox -e py311-unit; tox -e py311-integration; tox -e coverage
-          # py312:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration; tox -e coverage
-          # py39-macos:tox -e py39-sanity;tox -e py39-unit; tox -e py39-integration; tox -e coverage
-          # py312-macos:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration; tox -e coverage
-          # py311-linux-arm64:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration; tox -e coverage
+            py310:tox -e py310-sanity;tox -e py310-unit; tox -e py310-integration;tox -e coverage
+            py311:tox -e py311-sanity;tox -e py311-unit; tox -e py311-integration;tox -e coverage
+            py312:tox -e py312-sanity;tox -e py312-unit; tox -e py312-integration;tox -e coverage
+            py39-macos:tox -e py39-sanity;tox -e py39-unit;tox -e py39-integration;tox -e coverage
+            py312-macos:tox -e py312-sanity;tox -e py312-unit;tox -e py312-integration;tox -e coverage
+            py311-linux-arm64:tox -e py312-sanity;tox -e py312-unit;tox -e py312-integration;tox -e coverage
           # ^ arm64 runner is using py311 for matching python version used in AAP 2.5
           platforms: linux,macos,linux-arm64:ubuntu-24.04-arm64-2core
           skip_explode: "1"
@@ -183,13 +183,7 @@ jobs:
           path: .
 
       - name: Check for expected number of coverage reports
-        run: |
-          JOBS_PRODUCING_COVERAGE=2
-          FIND_FILES="find */tests/output/reports -name 'coverage.xml'"
-          if [ "$($FIND_FILES | wc -l | bc)" -ne "${JOBS_PRODUCING_COVERAGE}" ]; then
-            echo "::error::Number of coverage.xml files was not the expected one (${JOBS_PRODUCING_COVERAGE}): $($FIND_FILES | xargs echo)"
-            exit 0
-          fi
+        run: .github/check-coverage.sh
 
       - name: Upload coverage data
         uses: codecov/codecov-action@v4
