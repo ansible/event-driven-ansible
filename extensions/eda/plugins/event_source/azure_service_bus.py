@@ -69,7 +69,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put_nowait(self: "MockQueue", event: dict) -> None:
+        def put_nowait(self: "MockQueue", event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 
