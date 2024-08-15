@@ -99,7 +99,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
             conninfo=args["dsn"],
             autocommit=True,
         ) as conn:
-            chunked_cache = {}
+            chunked_cache: dict[str, Any] = {}
             cursor = conn.cursor()
             for channel in args["channels"]:
                 await cursor.execute(f"LISTEN {channel};")
@@ -118,7 +118,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
 
 async def _handle_chunked_message(
-    data: dict,
+    data: dict[str, Any],
     chunked_cache: dict,
     queue: asyncio.Queue,
 ) -> None:

@@ -41,10 +41,8 @@ error_summary = true
 
 # TODO: Remove temporary skips and close https://github.com/ansible/event-driven-ansible/issues/258
 disable_error_code = [
-  "assignment",
   "attr-defined",
   "override",
-  "var-annotated",
 ]
 # strict = true
 # disallow_untyped_calls = true
