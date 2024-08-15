@@ -43,10 +43,7 @@ error_summary = true
 disable_error_code = [
   "assignment",
   "attr-defined",
-  "index",
-  "misc",
   "override",
-  "union-attr",
   "var-annotated",
 ]
 # strict = true
