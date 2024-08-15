@@ -41,14 +41,11 @@ error_summary = true
 
 # TODO: Remove temporary skips and close https://github.com/ansible/event-driven-ansible/issues/258
 disable_error_code = [
-  "arg-type",
   "assignment",
   "attr-defined",
   "index",
   "misc",
   "override",
-  "return",
-  "return-value",
   "union-attr",
   "var-annotated",
 ]

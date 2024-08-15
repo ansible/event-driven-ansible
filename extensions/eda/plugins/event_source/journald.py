@@ -33,7 +33,7 @@ from typing import Any
 from systemd import journal  # type: ignore
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> str:  # noqa: D417
+async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:  # noqa: D417
     """Read journal entries and add them to the provided queue.
 
     Args:
@@ -76,11 +76,12 @@ if __name__ == "__main__":
     Entry point of the program.
     """
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A mock implementation of a queue that prints the event."""
 
         async def put(self: str, event: str) -> str:
             """Add the event to the queue and print it."""
             print(event)  # noqa: T201
+            return ""
 
     asyncio.run(main(MockQueue(), {"match": "ALL"}))
