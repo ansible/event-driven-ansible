@@ -147,7 +147,7 @@ def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
         password = args.get("password", None)
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         try:
-            if not isinstance(certfile, str): # pragma: no-cover
+            if not isinstance(certfile, str):  # pragma: no-cover
                 msg = f"certfile is not a string, got a {type(certfile)} instead."
                 raise ValueError(msg)
             context.load_cert_chain(certfile, keyfile, password)
