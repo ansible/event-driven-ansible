@@ -22,7 +22,6 @@ This collection requires Python 3.9 or greater.
 
 This collection requires ansible-rulebook 1.0.0 or greater.
 
-
 ## Installation
 
 The ansible.eda collection can be installed with Ansible Galaxy command-line tool:
@@ -72,11 +71,29 @@ Refer the following for more details.
 
 ## Use Cases
 
-TBA
+You can either call modules, rulebooks and playbook by their Fully Qualified Collection Name (FQCN), such as ansible.eda.activation, or you can call modules by their short name if you list the ansible.eda collection in the playbook's collections keyword:
 
-## Testing
+```
+---
+  - name: Create a rulebook activation
+    ansible.eda.activation:
+      name: "Example Activation"
+      description: "Example Activation description"
+      project: "Example Project"
+      rulebook_name: "basic_short.yml"
+      decision_environment_name: "Example Decision Environment"
+      enabled: False
+      awx_token_id: 1
 
-TBA
+  - name: Get information about the rulebook activation
+    ansible.eda.activation_info:
+      name: "Example Activation"
+
+  - name: Delete rulebook activation
+    ansible.eda.activation:
+      name: "Example Activation"
+      state: absent
+```
 
 ## Contributing
 
@@ -87,10 +104,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
 - [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) - Details on contributing to Ansible
 - [Contributing to Collections](https://docs.ansible.com/ansible/devel/dev_guide/developing_collections.html#contributing-to-collections) - How to check out collection git repositories correctly
-
-## Support
-
-TBA
 
 ## Release notes
 
