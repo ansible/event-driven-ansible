@@ -82,10 +82,11 @@ EXAMPLES = """
 """
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.ansible.eda.plugins.module_utils.arguments import AUTH_ARGSPEC
-from ansible_collections.ansible.eda.plugins.module_utils.client import Client
-from ansible_collections.ansible.eda.plugins.module_utils.controller import Controller
-from ansible_collections.ansible.eda.plugins.module_utils.errors import EDAError
+
+from ..module_utils.arguments import AUTH_ARGSPEC
+from ..module_utils.client import Client
+from ..module_utils.controller import Controller
+from ..module_utils.errors import EDAError
 
 
 def main():
