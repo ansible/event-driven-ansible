@@ -1,0 +1,67 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create decision environment
+  ansible.eda.decision_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}"
+    description: "Example decision environment description"
+    image_url: "{{ image_url }}"
+    state: present
+  register: r
+
+- name: Check decision environment creation
+  assert:
+    that:
+      - r.changed
+
+- name: Update decision environment name
+  ansible.eda.decision_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}"
+    new_name: "{{ decision_env_name }}_new"
+    description: "Example decision environment description"
+    image_url: "{{ image_url }}"
+    state: present
+  register: r
+
+- name: Check decision environment update
+  assert:
+    that:
+      - r.changed
+
+- name: Update decision environment again
+  ansible.eda.decision_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}_new"
+    new_name: "{{ decision_env_name }}_new"
+    description: "Example decision environment description"
+    image_url: "{{ image_url }}"
+    state: present
+  register: r
+
+- name: Check decision environment is not updated again
+  assert:
+    that:
+      - not r.changed
+
+- name: Delete updated decision environment
+  ansible.eda.decision_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}_new"
+    state: absent
+  register: r
+
+- name: Check if delete decision environment
+  assert:
+    that:
+      - r.changed
