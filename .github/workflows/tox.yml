@@ -190,6 +190,10 @@ jobs:
       # Single uploads inside check job for codecov to allow use to retry
       # it when it fails without running tests again. Fails often enough!
       - name: Upload junit xml reports
+        # PRs from forks might not have access to the secret
+        if: env.CODECOV_TOKEN
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN || env.CODECOV_TOKEN }}
         uses: codecov/test-results-action@v1
         with:
           name: ${{ matrix.name }}
