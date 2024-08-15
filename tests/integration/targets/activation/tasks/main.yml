@@ -1,0 +1,268 @@
+---
+- block:
+    - set_fact:
+        credential_defaults: &credential_defaults
+          controller_username: "{{ controller_username }}"
+          controller_password: "{{ controller_password }}"
+          controller_host: "{{ controller_host }}"
+          validate_certs: false
+
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
+
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
+
+    - name: Define variables for credential and project
+      set_fact:
+        credential_type_name: "Test_CredentialType_{{ test_id }}"
+        credential_name: "Test_Credential_{{ test_id }}"
+        decision_env_name: "Test_Decision_Env_{{ test_id }}"
+        activation_name: "Test_Activation_{{ test_id }}"
+        project_name: "Test_Project_{{ test_id }}"
+        awx_token_name: "Test_AWXToken_{{ test_id }}"
+        token_value: "your_private_access_token_name"
+        image_url: "quay.io/ansible/awx:latest"
+        scm_url: https://github.com/ansible/event-driven-ansible.git
+        rulebook_name: "demo_controller_rulebook.yml"
+
+    - name: Create an AWX controller token
+      ansible.eda.controller_token:
+        <<: *credential_defaults
+        name: "{{ awx_token_name }}"
+        description: "A test AWX controller token description"
+        token: "{{ token_value }}"
+        state: present
+
+    - name: Create a new credential type
+      ansible.eda.credential_type:
+        <<: *credential_defaults
+        name: "{{ credential_type_name }}"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "username"
+              label: "Username"
+              type: "string"
+            - id: "password"
+              label: "Password"
+              type: "string"
+              secret: true
+            - id: "ssh_key_data"
+              label: "SSH Private Key"
+              type: "string"
+              multiline: true
+              secret: true
+            - id: "ssh_key_unlock"
+              label: "SSH Key Passphrase"
+              type: "string"
+              secret: true
+            - id: "authorize"
+              label: "Authorize with SSL Certificate"
+              type: "boolean"
+            - id: "authorize_password"
+              label: "SSL Certificate Passphrase"
+              type: "string"
+              secret": true
+        injectors:
+          extra_vars:
+            username: joe
+            password: secret
+      register: credential_type_creation
+
+    - name: Create a tempdir for an SSH key
+      local_action: shell mktemp -d
+      register: tempdir
+
+    - name: Generate a local SSH key
+      local_action: "shell ssh-keygen -b 2048 -t rsa -f {{ tempdir.stdout }}/id_rsa -q -N 'passphrase'"
+
+    - name: Read the generated key
+      set_fact:
+        ssh_key_data: "{{ lookup('file', tempdir.stdout + '/id_rsa') }}"
+
+    - name: Create a new SCM credential
+      ansible.eda.credential:
+        <<: *credential_defaults
+        name: "{{ credential_name }}"
+        state: present
+        credential_type_name: Source Control
+        inputs:
+          username: joe
+          password: secret
+          ssh_key_data: "{{ ssh_key_data }}"
+          ssh_key_unlock: "passphrase"
+      register: credential_creation
+
+    - name: Assert that the credential was created successfully
+      assert:
+        that:
+          - credential_creation is changed
+          - credential_creation is success
+
+    - name: Create a new project
+      ansible.eda.project:
+        <<: *credential_defaults
+        name: "{{ project_name }}"
+        description: "Test Project Description"
+        url: "{{ scm_url }}"
+        credential: "{{ credential_name }}"
+        state: present
+      register: project_creation
+
+    - name: Assert that the project was created successfully
+      assert:
+        that:
+          - project_creation is changed
+          - project_creation is success
+
+    - name: Create a new decision environment
+      ansible.eda.decision_environment:
+        <<: *credential_defaults
+        name: "{{ decision_env_name }}"
+        description: "Test Decision Environment Description"
+        credential: "{{ credential_name }}"
+        image_url: "{{ image_url }}"
+      register: decision_environment_creation
+
+    - name: Create a new rulebook activation in check mode
+      ansible.eda.activation:
+        <<: *credential_defaults
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+      check_mode: true
+      register: _result
+
+    - name: Check rulebook activation creation in check mode
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create a new rulebook activation
+      ansible.eda.activation:
+        <<: *credential_defaults
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+      register: _result
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create a new rulebook activation again
+      ansible.eda.activation:
+        <<: *credential_defaults
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+      register: _result
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - not _result.changed
+          - "'A rulebook activation with name: ' + activation_name + ' already exists. The module does not support modifying a rulebook activation.' in _result.msg"
+
+    - name: Get information about the rulebook activation
+      ansible.eda.activation_info:
+        <<: *credential_defaults
+        name: "{{ activation_name }}"
+
+    - name: List all the rulebook activations
+      ansible.eda.activation_info:
+        <<: *credential_defaults
+
+    - name: Delete project
+      ansible.eda.project:
+        <<: *credential_defaults
+        name: "{{ project_name }}"
+        state: absent
+      register: project_deletion
+
+    - name: Assert that the project was deleted successfully
+      assert:
+        that:
+          - project_deletion is changed
+          - project_deletion is success
+
+    - name: Delete credential
+      ansible.eda.credential:
+        <<: *credential_defaults
+        name: "{{ credential_name }}"
+        state: absent
+      register: credential_deletion
+
+    - name: Assert that the credential was created successfully
+      assert:
+        that:
+          - credential_deletion is changed
+          - credential_deletion is success
+
+    - name: Delete rulebook activation
+      ansible.eda.activation:
+        <<: *credential_defaults
+        name: "{{ activation_name }}"
+        state: absent
+
+  always:
+    - name: Delete AWX token
+      ansible.eda.controller_token:
+        <<: *credential_defaults
+        name: "{{ awx_token_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete project
+      ansible.eda.project:
+        <<: *credential_defaults
+        name: "{{ project_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete decision environment
+      ansible.eda.decision_environment:
+        <<: *credential_defaults
+        name: "{{ decision_env_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete credential
+      ansible.eda.credential:
+        <<: *credential_defaults
+        name: "{{ credential_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete credential type
+      ansible.eda.credential_type:
+        <<: *credential_defaults
+        name: "{{ credential_type_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete rulebook activation
+      ansible.eda.activation:
+        <<: *credential_defaults
+        name: "{{ activation_name }}"
+        state: absent
+      ignore_errors: true
