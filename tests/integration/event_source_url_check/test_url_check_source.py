@@ -1,6 +1,7 @@
 import http.server
 import os
 import threading
+from typing import Any, Generator
 
 import pytest
 
@@ -20,7 +21,7 @@ class HttpHandler(http.server.SimpleHTTPRequestHandler):
 
 
 @pytest.fixture(scope="function")
-def init_webserver():
+def init_webserver() -> Generator[Any, Any, Any]:
     handler = HttpHandler
     port: int = 8000
     httpd = http.server.HTTPServer(("", port), handler)

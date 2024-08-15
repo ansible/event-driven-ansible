@@ -190,7 +190,7 @@ class Generic:
         self: Generic,
         index: int,
     ) -> dict:
-        data = {}
+        data: dict[str, str | int] = {}
         if self.my_args.create_index:
             data[self.my_args.create_index] = index
         if self.blob:
