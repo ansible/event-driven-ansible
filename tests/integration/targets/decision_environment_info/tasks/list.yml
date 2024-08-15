@@ -1,0 +1,75 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create decision environment
+  ansible.eda.decision_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}"
+    description: "Example decision environment description"
+    image_url: "{{ image_url }}"
+    state: present
+  register: r
+
+- name: Check decision environment creation
+  assert:
+    that:
+      - r.changed
+
+- name: List all decision environments in check mode
+  ansible.eda.decision_environment_info:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+  check_mode: true
+  register: r
+
+- name: Check if list decision environments in check mode
+  assert:
+    that:
+      - not r.changed
+      - "'decision_environments' in r"
+
+- name: List all decision environments
+  ansible.eda.decision_environment_info:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+  register: r
+
+- name: Check if list decision environments
+  assert:
+    that:
+      - not r.changed
+      - "'decision_environments' in r"
+
+- name: List a particular decision environment
+  ansible.eda.decision_environment_info:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}"
+  register: r
+
+- name: Check if list decision environments
+  assert:
+    that:
+      - not r.changed
+      - "'decision_environments' in r"
+      - "r['decision_environments'][0]['name'] == decision_env_name"
+
+- name: Delete decision environment
+  ansible.eda.decision_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ decision_env_name }}"
+    state: absent
+  register: r
+
+- name: Check if delete decision environment
+  assert:
+    that:
+      - r.changed
