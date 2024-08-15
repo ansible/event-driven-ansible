@@ -215,7 +215,7 @@ async def main(  # pylint: disable=R0914
 
 if __name__ == "__main__":
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: MockQueue, event: dict) -> None:

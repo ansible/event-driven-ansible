@@ -169,7 +169,7 @@ async def _handle_chunked_message(
 if __name__ == "__main__":
     # MockQueue if running directly
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: "MockQueue", event: dict) -> None:

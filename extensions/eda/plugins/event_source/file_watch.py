@@ -20,6 +20,7 @@ Example:
 
 import asyncio
 import concurrent.futures
+from typing import Any
 
 from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
@@ -106,7 +107,7 @@ async def main(queue: asyncio.Queue, args: dict) -> None:
 if __name__ == "__main__":
     """MockQueue if running directly."""
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put_nowait(self: "MockQueue", event: dict) -> None:
