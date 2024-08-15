@@ -1,0 +1,19 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create a project
+  ansible.eda.project:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: Example
+    description: "Example project description"
+    url: "https://example.com/project1"
+    state: present
+  register: r
+
+- name: Check project creation
+  assert:
+    that:
+      - r.changed
