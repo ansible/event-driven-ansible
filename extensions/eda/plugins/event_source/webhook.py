@@ -74,7 +74,7 @@ async def webhook(request: web.Request) -> web.Response:
     return web.Response(text=endpoint)
 
 
-def _parse_token(request: web.Request) -> (str, str):
+def _parse_token(request: web.Request) -> tuple[str, str]:
     scheme, token = request.headers["Authorization"].strip().split(" ")
     if scheme != "Bearer":
         raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
