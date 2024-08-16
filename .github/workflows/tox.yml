@@ -136,6 +136,7 @@ jobs:
             ansible_collections/ansible/eda/.tox/**/log/
             ansible_collections/ansible/eda/.tox/**/coverage.xml
             ansible_collections/ansible/eda/tests/output/reports/coverage.xml
+            ansible_collections/ansible/eda/tests/output/junit/*.xml
 
       - name: Report failure if git reports dirty status
         run: |
@@ -148,6 +149,7 @@ jobs:
         # https://github.com/actions/toolkit/issues/193
   check:
     if: always()
+    environment: check
     permissions:
       id-token: write
       checks: read
@@ -184,6 +186,20 @@ jobs:
 
       - name: Check for expected number of coverage reports
         run: .github/check-coverage.sh
+
+      # Single uploads inside check job for codecov to allow use to retry
+      # it when it fails without running tests again. Fails often enough!
+      - name: Upload junit xml reports
+        # PRs from forks might not have access to the secret
+        if: env.CODECOV_TOKEN
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN || env.CODECOV_TOKEN }}
+        uses: codecov/test-results-action@v1
+        with:
+          name: ${{ matrix.name }}
+          files: "*/tests/output/junit/*.xml"
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage data
         uses: codecov/codecov-action@v4

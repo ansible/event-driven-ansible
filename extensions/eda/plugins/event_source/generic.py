@@ -190,7 +190,7 @@ class Generic:
         self: Generic,
         index: int,
     ) -> dict:
-        data = {}
+        data: dict[str, str | int] = {}
         if self.my_args.create_index:
             data[self.my_args.create_index] = index
         if self.blob:
@@ -215,7 +215,7 @@ async def main(  # pylint: disable=R0914
 
 if __name__ == "__main__":
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: MockQueue, event: dict) -> None:

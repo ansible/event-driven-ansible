@@ -55,3 +55,10 @@ auths
 Passw
 AUTHS
 EDAHTTP
+refspec
+Alina
+Buzachis
+alinabuzachis
+hdrs
+testuser
+testsecret

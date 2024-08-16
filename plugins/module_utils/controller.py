@@ -81,6 +81,12 @@ class Controller:
         msg = f"Request to {display_endpoint} returned {response.json['count']} items, expected 1"
         raise EDAError(msg)
 
+    def get_exactly_one(self, endpoint, name=None, **kwargs):
+        return self.get_one_or_many(endpoint, name=name, allow_none=False, **kwargs)
+
+    def resolve_name_to_id(self, endpoint, name):
+        return self.get_exactly_one(endpoint, name)["id"]
+
     def get_one_or_many(
         self,
         endpoint,
@@ -142,8 +148,20 @@ class Controller:
         existing_item,
         new_item,
         endpoint,
+        on_create=None,
         item_type="unknown",
     ):
+        # This will exit from the module on its own
+        # If the method successfully creates an item and on_create param is
+        # defined,
+        #    the on_create parameter will be called as a method passing in
+        #    this object and the json from the response
+        # This will return one of two things:
+        #    1. None if the existing_item is already defined (so no create
+        #    needs to happen)
+        #    2. The response from EDA from calling the post on the endpoint.
+        #    It's up to you to process the response and exit from the module
+        # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if not endpoint:
             msg = f"Unable to create new {item_type}, missing endpoint"
@@ -176,6 +194,15 @@ class Controller:
                 raise EDAError(msg)
             msg = f"Unable to create {item_type} {item_name}: {response.status}"
             raise EDAError(msg)
+
+        # If we have an on_create method and we actually changed something we can call on_create
+        if on_create is not None and self.result["changed"]:
+            on_create(self, response["json"])
+        else:
+            if response is not None:
+                last_data = response["json"]
+                return last_data
+            return
 
     def _encrypted_changed_warning(self, field, old, warning=False):
         if not warning:
@@ -248,7 +275,18 @@ class Controller:
         new_item,
         endpoint,
         item_type,
+        on_update=None,
     ):
+        # This will exit from the module on its own
+        # If the method successfully updates an item and on_update param is
+        # defined,
+        #   the on_update parameter will be called as a method passing in this
+        #   object and the json from the response
+        # This will return one of two things:
+        #    1. None if the existing_item does not need to be updated
+        #    2. The response from EDA from patching to the endpoint. It's up
+        #    to you to process the response and exit from the module.
+        # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if existing_item is None:
             raise RuntimeError(
@@ -292,7 +330,20 @@ class Controller:
                 raise EDAError(response.json["__all__"])
             msg = f"Unable to update {item_type} {item_name}"
             raise EDAError(msg)
-        return self.result
+
+        # If we change something and have an on_change call it
+        if on_update is not None and self.result["changed"]:
+            if response is None:
+                last_data = existing_item
+            else:
+                last_data = response["json"]
+            on_update(self, last_data)
+        else:
+            if response is None:
+                last_data = existing_item
+            else:
+                last_data = response["json"]
+            return last_data
 
     def create_or_update_if_needed(
         self,
@@ -300,6 +351,8 @@ class Controller:
         new_item,
         endpoint=None,
         item_type="unknown",
+        on_create=None,
+        on_update=None,
     ):
         if existing_item:
             return self.update_if_needed(
@@ -307,12 +360,14 @@ class Controller:
                 new_item,
                 endpoint,
                 item_type=item_type,
+                on_update=on_update,
             )
         return self.create_if_needed(
             existing_item,
             new_item,
             endpoint,
             item_type=item_type,
+            on_create=on_create,
         )
 
     def delete_if_needed(self, existing_item, endpoint, on_delete=None):

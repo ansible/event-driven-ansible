@@ -124,11 +124,13 @@ async def receive_msg(
     logger = logging.getLogger()
 
     async for msg in kafka_consumer:
-        event = {}
+        event: dict[str, Any] = {}
 
         # Process headers
         try:
-            headers = {header[0]: header[1].decode(encoding) for header in msg.headers}
+            headers: dict[str, str] = {
+                header[0]: header[1].decode(encoding) for header in msg.headers
+            }
             event["meta"] = {}
             event["meta"]["headers"] = headers
         except UnicodeError:
@@ -156,7 +158,7 @@ async def receive_msg(
 if __name__ == "__main__":
     """MockQueue if running directly."""
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: "MockQueue", event: dict) -> None:

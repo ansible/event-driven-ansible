@@ -36,8 +36,8 @@ import json
 from datetime import datetime
 from typing import Any
 
-from aiobotocore.client import BaseClient
 from aiobotocore.session import get_session
+from botocore.client import BaseClient
 
 
 def _cloudtrail_event_to_dict(event: dict) -> dict:
@@ -46,7 +46,7 @@ def _cloudtrail_event_to_dict(event: dict) -> dict:
     return event
 
 
-def _get_events(events: list[dict], last_event_ids: list) -> list:
+def _get_events(events: list[dict], last_event_ids: list[str]) -> list:
     event_time = None
     event_ids = []
     result = []
@@ -60,7 +60,7 @@ def _get_events(events: list[dict], last_event_ids: list) -> list:
         elif event_time == event["EventTime"]:
             event_ids.append(event["EventId"])
         result.append(event)
-    return result, event_time, event_ids
+    return [result, event_time, event_ids]
 
 
 async def _get_cloudtrail_events(client: BaseClient, params: dict) -> list[dict]:
@@ -89,7 +89,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
     async with session.create_client("cloudtrail", **connection_args(args)) as client:
         event_time = None
-        event_ids = []
+        event_ids: list[str] = []
         while True:
             if event_time is not None:
                 params["StartTime"] = event_time
@@ -128,7 +128,7 @@ def connection_args(args: dict[str, Any]) -> dict[str, Any]:
 if __name__ == "__main__":
     """MockQueue if running directly."""
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: "MockQueue", event: dict) -> None:

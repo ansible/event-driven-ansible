@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: shellcheck
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.13.1
+    rev: v8.13.3
     hooks:
       - id: cspell
   - repo: https://github.com/pycqa/isort
@@ -36,8 +36,33 @@ repos:
     hooks:
       - id: black
         language_version: python3
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        # empty args needed in order to match mypy cli behavior
+        args: []
+        additional_dependencies:
+          - aiohttp
+          - aiokafka
+          - ansible-core>=2.15
+          - asyncmock
+          - azure-servicebus
+          - dpath
+          - kafka-python-ng;  python_version >= "3.12"
+          - kafka-python; python_version < "3.12"
+          - psycopg[binary,pool]  # extras needed to avoid install failure on macos-aarch64
+          - pytest
+          - types-PyYAML
+          - types-aiobotocore[cloudtrail,sqs]
+          - types-botocore
+          - types-mock
+          - types-requests
+          - watchdog
+          - xxhash
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.5.6"
+    rev: "v0.6.0"
     hooks:
       - id: ruff
         args: [
@@ -63,17 +88,19 @@ repos:
           - aiobotocore
           - aiohttp
           - aiokafka
+          - ansible-core
           - asyncmock
           - azure-servicebus
+          - botocore
           - dpath
           - kafka-python
           - psycopg
           - pytest
           - pyyaml
           - requests
+          - types-aiobotocore
           - watchdog
           - xxhash
-          - ansible-core
   - repo: local
     hooks:
       - id: ansible-test-sanity

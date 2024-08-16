@@ -15,6 +15,8 @@ def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0):
     Requires the process to be running in debug mode.
     """
     start = time.time()
+    if not proc.stdout:  # pragma: no cover
+        return
     while stdout := proc.stdout.readline().decode():
         if "Waiting for events" in stdout:
             break

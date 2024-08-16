@@ -32,7 +32,38 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
-line_length = 120
+
+[tool.mypy]
+python_version = "3.9"
+color_output = true
+error_summary = true
+
+# TODO: Remove temporary skips and close https://github.com/ansible/event-driven-ansible/issues/258
+# strict = true
+# disallow_untyped_calls = true
+# disallow_untyped_defs = true
+# disallow_any_generics = true
+# disallow_any_unimported = True
+# warn_redundant_casts = True
+# warn_return_any = True
+# warn_unused_configs = True
+
+# site-packages is here to help vscode mypy integration getting confused
+exclude = "(build|dist|test/local-content|site-packages|~/.pyenv|examples/playbooks/collections|plugins/modules)"
+# https://github.com/python/mypy/issues/12664
+incremental = false
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = [
+  # Dependencies not following pep-561 yet:
+  "aiokafka.*", # https://github.com/aio-libs/aiokafka/issues/980
+  "ansible.*", # https://github.com/ansible/ansible/issues/83801
+  "asyncmock", # https://github.com/timsavage/asyncmock/issues/8
+  "kafka.*", # https://github.com/dpkp/kafka-python/issues/2446
+]
+ignore_missing_imports = true
 
 [tool.pylint.MASTER]
 # Temporary ignore until we are able to address issues on these:

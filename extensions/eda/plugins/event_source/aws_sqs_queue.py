@@ -30,6 +30,7 @@ import botocore.exceptions
 from aiobotocore.session import get_session
 
 
+# pylint: disable=too-many-locals
 async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     """Receive events via an AWS SQS queue."""
     logger = logging.getLogger()
@@ -58,18 +59,25 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
         while True:
             # This loop won't spin really fast as there is
             # essentially a sleep in the receive_message call
-            response = await client.receive_message(
+            response_msg = await client.receive_message(
                 QueueUrl=queue_url,
                 WaitTimeSeconds=wait_seconds,
             )
 
-            if "Messages" in response:
-                for msg in response["Messages"]:
-                    meta = {"MessageId": msg["MessageId"]}
+            if "Messages" in response_msg:
+                for entry in response_msg["Messages"]:
+                    if (
+                        not isinstance(entry, dict) or "MessageId" not in entry
+                    ):  # pragma: no cover
+                        err_msg = (
+                            f"Unexpected response {response_msg}, missing MessageId."
+                        )
+                        raise ValueError(err_msg)
+                    meta = {"MessageId": entry["MessageId"]}
                     try:
-                        msg_body = json.loads(msg["Body"])
+                        msg_body = json.loads(entry["Body"])
                     except json.JSONDecodeError:
-                        msg_body = msg["Body"]
+                        msg_body = entry["Body"]
 
                     await queue.put({"body": msg_body, "meta": meta})
                     await asyncio.sleep(0)
@@ -77,7 +85,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
                     # Need to remove msg from queue or else it'll reappear
                     await client.delete_message(
                         QueueUrl=queue_url,
-                        ReceiptHandle=msg["ReceiptHandle"],
+                        ReceiptHandle=entry["ReceiptHandle"],
                     )
             else:
                 logger.debug("No messages in queue")
@@ -106,7 +114,7 @@ def connection_args(args: dict[str, Any]) -> dict[str, Any]:
 if __name__ == "__main__":
     # MockQueue if running directly
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: "MockQueue", event: dict) -> None:

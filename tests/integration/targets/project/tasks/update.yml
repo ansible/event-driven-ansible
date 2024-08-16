@@ -1,0 +1,67 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create project
+  ansible.eda.project:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ project_name }}"
+    url: "{{ url }}"
+    description: "Example project description"
+    state: present
+  register: r
+
+- name: Check project creation
+  assert:
+    that:
+      - r.changed
+
+- name: Update project name
+  ansible.eda.project:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ project_name }}"
+    url: "{{ url }}"
+    new_name: "{{ project_name }}_new"
+    description: "Example project description"
+    state: present
+  register: r
+
+- name: Check project update
+  assert:
+    that:
+      - r.changed
+
+- name: Update project again
+  ansible.eda.project:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ project_name }}_new"
+    new_name: "{{ project_name }}_new"
+    description: "Example project description"
+    url: "https://example.com/project1"
+    state: present
+  register: r
+
+- name: Check project is not updated again
+  assert:
+    that:
+      - not r.changed
+
+- name: Delete updated project
+  ansible.eda.project:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ project_name }}_new"
+    state: absent
+  register: r
+
+- name: Check if delete project
+  assert:
+    that:
+      - r.changed

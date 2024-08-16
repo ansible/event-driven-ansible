@@ -31,7 +31,7 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 if __name__ == "__main__":
     """MockQueue if running directly."""
 
-    class MockQueue:
+    class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
         async def put(self: "MockQueue", event: dict) -> None:
