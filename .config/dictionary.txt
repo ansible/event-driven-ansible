@@ -63,3 +63,9 @@ hdrs
 testuser
 testsecret
 keygen
+antsibull
+thead
+tbody
+darkgreen
+notranslate
+fqcn

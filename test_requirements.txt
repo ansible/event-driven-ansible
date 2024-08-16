@@ -10,3 +10,4 @@ requests>=2.31.0
 ansible-rulebook>=1.0.0
 tox>=4.15.1
 podman-compose
+antsibull-docs==2.12.0
