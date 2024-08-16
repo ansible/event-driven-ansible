@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/file.json",
+    "title": "YAML File monitor plugin for EDA",
+    "description": "An ansible-rulebook event source plugin for loading facts from YAML files initially and when the file changes.",
+    "type": "object",
+    "properties": {
+        "files": {
+            "description": "An array of YAML files to monitor",
+            "title": "YAML Files",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "files"
+    ]
+}

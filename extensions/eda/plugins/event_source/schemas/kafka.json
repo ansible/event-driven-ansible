@@ -1,0 +1,127 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/kafka.json",
+    "title": "Kafka Source Plugin",
+    "description": "An ansible-rulebook event source plugin for receiving events via a kafka topic.",
+    "type": "object",
+    "properties": {
+        "port": {
+            "description": "The port where the kafka server is listening",
+            "type": "integer",
+            "title": "Port"
+        },
+        "host": {
+            "description": "The host where the kafka topic is hosted",
+            "type": "string",
+            "title": "Host"
+        },
+        "cafile": {
+            "description": "Certificate authority file path containing certificates used to sign kafka broker certificates",
+            "type": "string",
+            "title": "Certificate Authority File",
+            "default": ""
+        },
+        "certfile": {
+            "description": "The optional client certificate file path containing the client certificate, as well as CA certificates needed to establish the certificate's authenticity",
+            "type": "string",
+            "title": "Certificate File",
+            "default": ""
+        },
+        "keyfile": {
+            "description": "The optional client key file path containing the client private key",
+            "type": "string",
+            "title": "Key File",
+            "default": ""
+        },
+        "password": {
+            "description": "The optional password to be used when loading the certificate chain",
+            "type": "string",
+            "title": "Password",
+            "format": "password"
+        },
+        "check_hostname": {
+            "description": "Enable SSL hostname verification",
+            "type": "boolean",
+            "title": "Check Hostname",
+            "default": true
+        },
+        "verify_mode": {
+            "description": "Whether to try to verify other peers' certificates and how to behave if verification fails.",
+            "enum": [
+                "CERT_NONE",
+                "CERT_OPTIONAL",
+                "CERT_REQUIRED"
+            ],
+            "title": "Verify Mode",
+            "default": "CERT_REQUIRED",
+            "type": "string"
+        },
+        "encoding": {
+            "description": "Message encoding scheme",
+            "title": "Encoding",
+            "default": "utf-8",
+            "type": "string"
+        },
+        "topic": {
+            "description": "The Kafka topic",
+            "type": "string",
+            "title": "Kafka Topic"
+        },
+        "group_id": {
+            "description": "A Kafka group id",
+            "type": "string",
+            "title": "Kafka Group ID"
+        },
+        "offset": {
+            "description": "Where to start reading messages from",
+            "type": "string",
+            "title": "Offset",
+            "enum": [
+                "latest",
+                "earliest"
+            ],
+            "default": "latest"
+        },
+        "security_protocol": {
+            "description": "Protocol used to communicate with brokers.",
+            "type": "string",
+            "enum": [
+                "PLAINTEXT",
+                "SSL",
+                "SASL_PLAINTEXT",
+                "SASL_SSL"
+            ],
+            "title": "Security Protocol",
+            "default": "PLAINTEXT"
+        },
+        "sasl_mechanism": {
+            "description": "Authentication mechanism when security_protocol is configured.",
+            "type": "string",
+            "enum": [
+                "PLAIN",
+                "GSSAPI",
+                "SCRAM-SHA-256",
+                "SCRAM-SHA-512",
+                "OAUTHBEARER"
+            ],
+            "title": "SASL Mechanism",
+            "default": "PLAIN"
+        },
+        "sasl_plain_username": {
+            "title": "SASL Plain Username",
+            "description": "Username for SASL PLAIN authentication",
+            "type": "string"
+        },
+        "sasl_plain_password": {
+            "title": "SASL Plain Password",
+            "description": "Password for SASL PLAIN authentication",
+            "type": "string",
+            "format": "password"
+        }
+    },
+    "required": [
+        "host",
+        "port",
+        "topic"
+    ]
+}
