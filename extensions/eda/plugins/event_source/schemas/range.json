@@ -1,0 +1,22 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/range.json",
+    "title": "Event Source Range Plugin",
+    "description": "A simple plugin to generate integer values given a limit",
+    "type": "object",
+    "properties": {
+        "limit": {
+            "description": "The max integer value",
+            "title": "Limit",
+            "type": "integer"
+        },
+        "delay": {
+            "description": "The number of seconds to wait between events",
+            "title": "Delay",
+            "type": "integer"
+        }
+    },
+    "required": [
+        "limit"
+    ]
+}

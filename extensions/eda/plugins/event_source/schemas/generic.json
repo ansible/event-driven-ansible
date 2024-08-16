@@ -1,0 +1,112 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/generic.json",
+    "title": "A generic event generator plugin",
+    "description": "A generic source plugin that allows you to insert custom data.",
+    "type": "object",
+    "properties": {
+        "payload": {
+            "description": "An array of event payloads",
+            "title": "Payload",
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/generic_payload"
+            }
+        },
+        "randomize": {
+            "description": "Randomize the events in the payload",
+            "title": "Randomize",
+            "type": "boolean",
+            "default": false
+        },
+        "display": {
+            "description": "Display the event data in stdout",
+            "title": "Display",
+            "type": "boolean",
+            "default": false
+        },
+        "timestamp": {
+            "title": "Time Stamp",
+            "description": "Add an event timestamp, to every event",
+            "type": "boolean",
+            "default": false
+        },
+        "time_format": {
+            "title": "Time Format",
+            "description": "The time format of event timestamp",
+            "enum": [
+                "local",
+                "epoch",
+                "iso8601"
+            ],
+            "default": "local"
+        },
+        "create_index": {
+            "title": "Index Key",
+            "description": "The index to create for each event starts at 0",
+            "type": "string"
+        },
+        "startup_delay": {
+            "title": "Startup Delay",
+            "description": "Number of seconds to wait before injecting events",
+            "type": "number",
+            "default": 0
+        },
+        "event_delay": {
+            "title": "Event Delay",
+            "description": "Number of seconds to wait before injecting the next event from the payload.",
+            "type": "number",
+            "default": 0
+        },
+        "repeat_delay": {
+            "title": "Repeat Delay",
+            "description": "Number of seconds to wait before injecting a repeated event from the payload",
+            "type": "number",
+            "default": 0
+        },
+        "loop_delay": {
+            "title": "Loop Delay",
+            "description": "Number of seconds to wait before inserting the next set of events.",
+            "type": "number",
+            "default": 0
+        },
+        "shutdown_after": {
+            "title": "Shutdown After",
+            "description": "Number of seconds to wait before shutting down the plugin",
+            "type": "number",
+            "default": 0
+        },
+        "loop_count": {
+            "title": "Loop Count",
+            "description": "Number of times the set of events in the payload should be repeated, -1 loops for ever",
+            "type": "integer",
+            "default": 1
+        },
+        "repeat_count": {
+            "title": "Repeat Count",
+            "description": "Number of times each individual event in the payload should be repeated",
+            "type": "integer",
+            "default": 1
+        },
+        "blob_size": {
+            "title": "Blob Size",
+            "description": "An arbitrary blob of blob_size bytes to be inserted into every event payload.",
+            "type": "integer",
+            "default": 0
+        },
+        "final_payload": {
+            "title": "Final Payload",
+            "description": "After all the events have been sent we send the optional final payload which can be used to trigger a shutdown of the rulebook, especially when we are using rulebooks to forward messages to other running rulebooks.",
+            "$ref": "#/$defs/generic_payload"
+        }
+    },
+    "$defs": {
+        "generic_payload": {
+            "type": "object",
+            "additional_properties": "true"
+        }
+    },
+    "required": [
+        "payload"
+    ]
+}

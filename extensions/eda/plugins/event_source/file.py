@@ -18,7 +18,7 @@ Example:
 import pathlib
 
 import yaml
-from watchdog.events import RegexMatchingEventHandler
+from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
@@ -63,18 +63,18 @@ def _observe_files(queue, files: list[str]) -> None:  # noqa: ANN001
         def __init__(self: "Handler", **kwargs) -> None:  # noqa: ANN003
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self: "Handler", event: dict) -> None:
+        def on_created(self: "Handler", event: FileSystemEvent) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
-        def on_deleted(self: "Handler", event: dict) -> None:
+        def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
             pass
 
-        def on_modified(self: "Handler", event: dict) -> None:
+        def on_modified(self: "Handler", event: FileSystemEvent) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
-        def on_moved(self: "Handler", event: dict) -> None:
+        def on_moved(self: "Handler", event: FileSystemEvent) -> None:
             pass
 
     observer = Observer()

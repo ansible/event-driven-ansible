@@ -72,8 +72,10 @@ projects:
   ]
 """  # NOQA
 
+# pylint: disable=wrong-import-position,
 from ansible.module_utils.basic import AnsibleModule
 
+# pylint: disable=relative-beyond-top-level
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
 from ..module_utils.controller import Controller

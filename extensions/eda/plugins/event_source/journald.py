@@ -79,9 +79,8 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A mock implementation of a queue that prints the event."""
 
-        async def put(self, event: str) -> str:
+        async def put(self, event: str) -> None:
             """Add the event to the queue and print it."""
             print(event)  # noqa: T201
-            return ""
 
     asyncio.run(main(MockQueue(), {"match": "ALL"}))
