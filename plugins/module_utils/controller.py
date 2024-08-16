@@ -81,6 +81,12 @@ class Controller:
         msg = f"Request to {display_endpoint} returned {response.json['count']} items, expected 1"
         raise EDAError(msg)
 
+    def get_exactly_one(self, endpoint, name=None, **kwargs):
+        return self.get_one_or_many(endpoint, name=name, allow_none=False, **kwargs)
+
+    def resolve_name_to_id(self, endpoint, name):
+        return self.get_exactly_one(endpoint, name)["id"]
+
     def get_one_or_many(
         self,
         endpoint,
