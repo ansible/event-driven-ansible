@@ -63,3 +63,6 @@ hdrs
 testuser
 testsecret
 keygen
+darkgreen
+nbsp
+larr
