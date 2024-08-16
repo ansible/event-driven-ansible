@@ -48,7 +48,6 @@ Name | Description
 [ansible.eda.decision_environment_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.decision_environment_info_module.rst)|List a decision environment in EDA Controller
 [ansible.eda.project](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.project_module.rst)|Create, update or delete project in EDA Controller
 [ansible.eda.project_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.project_info_module.rst)|List projects in EDA Controller
-[ansible.eda.upcase](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.upcase_module.rst)|Upper cases a passed in string
 
 <!--end collection content-->
 
