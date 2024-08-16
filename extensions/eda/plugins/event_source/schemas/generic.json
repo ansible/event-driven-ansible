@@ -78,19 +78,19 @@
         },
         "loop_count": {
             "title": "Loop Count",
-            "description": "Number of times the set of events in the playload should be repeated, -1 loops for ever",
+            "description": "Number of times the set of events in the payload should be repeated, -1 loops for ever",
             "type": "integer",
             "default": 1
         },
         "repeat_count": {
             "title": "Repeat Count",
-            "description": "Number of times each individual event in the playload should be repeated",
+            "description": "Number of times each individual event in the payload should be repeated",
             "type": "integer",
             "default": 1
         },
         "blob_size": {
             "title": "Blob Size",
-            "description": "An arbitray blob of blob_size bytes to be inserted into every event payload.",
+            "description": "An arbitrary blob of blob_size bytes to be inserted into every event payload.",
             "type": "integer",
             "default": 0
         },
