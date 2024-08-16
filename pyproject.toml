@@ -39,10 +39,6 @@ color_output = true
 error_summary = true
 
 # TODO: Remove temporary skips and close https://github.com/ansible/event-driven-ansible/issues/258
-disable_error_code = [
-  "attr-defined",
-  "override",
-]
 # strict = true
 # disallow_untyped_calls = true
 # disallow_untyped_defs = true
@@ -65,7 +61,6 @@ module = [
   "aiokafka.*", # https://github.com/aio-libs/aiokafka/issues/980
   "ansible.*", # https://github.com/ansible/ansible/issues/83801
   "asyncmock", # https://github.com/timsavage/asyncmock/issues/8
-  # "botocore.*", # https://github.com/boto/botocore/issues/2297
   "kafka.*", # https://github.com/dpkp/kafka-python/issues/2446
 ]
 ignore_missing_imports = true

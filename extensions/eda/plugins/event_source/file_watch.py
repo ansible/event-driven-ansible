@@ -22,7 +22,7 @@ import asyncio
 import concurrent.futures
 from typing import Any
 
-from watchdog.events import RegexMatchingEventHandler
+from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
@@ -37,10 +37,10 @@ def watch(
     class Handler(RegexMatchingEventHandler):
         """A handler for file system events."""
 
-        def __init__(self: "Handler", **kwargs: dict) -> None:
+        def __init__(self: "Handler", **kwargs: FileSystemEvent) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self: "Handler", event: dict) -> None:
+        def on_created(self: "Handler", event: FileSystemEvent) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -51,7 +51,7 @@ def watch(
                 },
             )
 
-        def on_deleted(self: "Handler", event: dict) -> None:
+        def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -62,7 +62,7 @@ def watch(
                 },
             )
 
-        def on_modified(self: "Handler", event: dict) -> None:
+        def on_modified(self: "Handler", event: FileSystemEvent) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -73,7 +73,7 @@ def watch(
                 },
             )
 
-        def on_moved(self: "Handler", event: dict) -> None:
+        def on_moved(self: "Handler", event: FileSystemEvent) -> None:
             loop.call_soon_threadsafe(
                 queue.put_nowait,
                 {
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put_nowait(self: "MockQueue", event: dict) -> None:
+        def put_nowait(self: "MockQueue", event: dict) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 
