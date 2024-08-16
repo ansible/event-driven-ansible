@@ -11,9 +11,17 @@ The primary purpose of this collection is to reduce manual tasks and deliver mor
 
 ## Requirements
 
-### Ansible version compatibility
+<!--start requires_ansible-->
+## Ansible version compatibility
 
-Tested with the Ansible Core >= 2.15.0 versions, and the current development version of Ansible. Ansible Core versions before 2.15.0 are not supported.
+This collection has been tested against following Ansible versions: **>=2.15.0**.
+
+For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
+fully qualified collection name (for example, `cisco.ios.ios`).
+Plugins and modules within a collection may be tested with only specific Ansible versions.
+A collection may contain metadata that identifies these versions.
+PEP440 is the schema used to describe the versions of Ansible.
+<!--end requires_ansible-->
 
 ### Python version compatibility
 
@@ -22,6 +30,26 @@ This collection requires Python 3.9 or greater.
 ### Additional dependencies
 
 This collection requires ansible-rulebook 1.0.0 or greater.
+
+## Included content
+
+<!--start collection content-->
+### Modules
+Name | Description
+--- | ---
+[ansible.eda.activation](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.activation_module.rst)|Manage rulebook activations in the EDA Controller
+[ansible.eda.activation_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.activation_info_module.rst)|List rulebook activations in the EDA Controller
+[ansible.eda.controller_token](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.controller_token_module.rst)|Manage AWX tokens in EDA controller
+[ansible.eda.credential](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.credential_module.rst)|Manage credentials in EDA Controller
+[ansible.eda.credential_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.credential_info_module.rst)|List credentials in the EDA Controller
+[ansible.eda.credential_type](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.credential_type_module.rst)|Manage credential types in EDA Controller
+[ansible.eda.credential_type_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.credential_type_info_module.rst)|List credential types in EDA Controller
+[ansible.eda.decision_environment](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.decision_environment_module.rst)|Create, update or delete decision environment in EDA Controller
+[ansible.eda.decision_environment_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.decision_environment_info_module.rst)|List a decision environment in EDA Controller
+[ansible.eda.project](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.project_module.rst)|Create, update or delete project in EDA Controller
+[ansible.eda.project_info](https://github.com/ansible/event-driven-ansible/blob/main/docs/ansible.eda.project_info_module.rst)|List projects in EDA Controller
+
+<!--end collection content-->
 
 ## Installation
 

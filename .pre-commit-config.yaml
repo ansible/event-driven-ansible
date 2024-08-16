@@ -13,6 +13,11 @@ ci:
     - tox # requires network access
 exclude: "^.*\\.md$"
 repos:
+  - repo: https://github.com/ansible-network/collection_prep
+    rev: 1.1.1
+    hooks:
+      - id: update-docs
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
