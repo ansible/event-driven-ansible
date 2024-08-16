@@ -228,7 +228,7 @@ Examples
 
 .. code-block:: yaml
 
-    
+
       - name: Create a credential type
         ansible.eda.credential_type:
           name: "Test"
@@ -300,4 +300,3 @@ Collection links
 * `Issue Tracker <https://github.com/ansible/event-driven-ansible/issues>`__
 * `Homepage <http://ansible.com/event-driven>`__
 * `Repository (Sources) <https://github.com/ansible/event-driven-ansible>`__
-

@@ -208,7 +208,7 @@ Examples
 
 .. code-block:: yaml
 
-    
+
     - name: Create AWX token
       ansible.eda.controller_token:
         controller_host: https://my_eda_host/
@@ -280,4 +280,3 @@ Collection links
 * `Issue Tracker <https://github.com/ansible/event-driven-ansible/issues>`__
 * `Homepage <http://ansible.com/event-driven>`__
 * `Repository (Sources) <https://github.com/ansible/event-driven-ansible>`__
-

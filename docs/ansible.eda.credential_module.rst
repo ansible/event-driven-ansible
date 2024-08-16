@@ -243,7 +243,7 @@ Examples
 
 .. code-block:: yaml
 
-    
+
     - name: Create an EDA Credential
       ansible.eda.credential:
         name: "Example Credential"
@@ -310,4 +310,3 @@ Collection links
 * `Issue Tracker <https://github.com/ansible/event-driven-ansible/issues>`__
 * `Homepage <http://ansible.com/event-driven>`__
 * `Repository (Sources) <https://github.com/ansible/event-driven-ansible>`__
-

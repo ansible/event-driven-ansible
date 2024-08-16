@@ -156,7 +156,7 @@ Examples
 
 .. code-block:: yaml
 
-    
+
       - name: Get information about a credential
         ansible.eda.credential_info:
           name: "Test"
@@ -217,4 +217,3 @@ Collection links
 * `Issue Tracker <https://github.com/ansible/event-driven-ansible/issues>`__
 * `Homepage <http://ansible.com/event-driven>`__
 * `Repository (Sources) <https://github.com/ansible/event-driven-ansible>`__
-
