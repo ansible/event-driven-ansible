@@ -85,7 +85,7 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def main():
+def main() -> None:
     argument_spec = dict(
         name=dict(required=True),
         description=dict(),

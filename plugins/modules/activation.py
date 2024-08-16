@@ -145,6 +145,7 @@ id:
   sample: 37
 """
 
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -154,7 +155,7 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def lookup(module, controller, endpoint, name):
+def lookup(module: AnsibleModule, controller: Controller, endpoint, name):
     result = None
     try:
         result = controller.resolve_name_to_id(endpoint, name)
@@ -163,7 +164,7 @@ def lookup(module, controller, endpoint, name):
     return result
 
 
-def create_params(module, controller):
+def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
     activation_params = {}
 
     # Get the project id
@@ -182,7 +183,7 @@ def create_params(module, controller):
         params = {"data": {"project_id": project_id}}
     if module.params.get("rulebook_name"):
         try:
-            rulebook = controller.get_one_or_many(
+            rulebook = controller.get_exactly_one(
                 "rulebooks", name=module.params["rulebook_name"], **params
             )
         except EDAError as e:
@@ -270,7 +271,7 @@ def create_params(module, controller):
     return activation_params
 
 
-def main():
+def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
         description=dict(type="str"),
@@ -324,7 +325,7 @@ def main():
 
     # Attempt to find rulebook activation based on the provided name
     try:
-        activation = controller.get_one_or_many("activations", name=name)
+        activation = controller.get_exactly_one("activations", name=name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
 

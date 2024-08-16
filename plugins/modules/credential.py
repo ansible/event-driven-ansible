@@ -101,7 +101,7 @@ def lookup(module, controller, endpoint, name):
     return result
 
 
-def main():
+def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),

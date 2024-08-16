@@ -3,13 +3,13 @@
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type
 
 from ansible.module_utils.basic import env_fallback
 
-AUTH_ARGSPEC = {
+AUTH_ARGSPEC: dict[str, dict[str, object]] = {
     "controller_host": {
         "fallback": (env_fallback, ["CONTROLLER_HOST"]),
         "required": True,

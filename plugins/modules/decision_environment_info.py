@@ -60,6 +60,8 @@ decision_environments:
   ]
 """
 
+from typing import Any
+
 from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
@@ -69,8 +71,8 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def main():
-    argument_spec = dict(
+def main() -> None:
+    argument_spec: dict[str, Any] = dict(
         name=dict(),
     )
 
@@ -90,7 +92,6 @@ def main():
     controller = Controller(client, module)
 
     decision_environment_name = module.params.get("name")
-    ret = {}
 
     try:
         ret = controller.get_one_or_many(
@@ -100,6 +101,7 @@ def main():
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
+        raise  # https://github.com/ansible/ansible/pull/83814
 
     module.exit_json(decision_environments=to_list_of_dict(ret))
 

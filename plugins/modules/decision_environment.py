@@ -96,7 +96,7 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def main():
+def main() -> None:
     argument_spec = dict(
         name=dict(required=True),
         new_name=dict(),
@@ -155,7 +155,7 @@ def main():
     credential_type = None
     if credential:
         try:
-            credential_type = controller.get_one_or_many(
+            credential_type = controller.get_exactly_one(
                 "eda-credentials", name=credential
             )
         except EDAError as eda_err:
