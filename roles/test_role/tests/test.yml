@@ -1,7 +1,0 @@
----
-- hosts: localhost
-  remote_user: root
-  collections:
-    - ansible.eda
-  roles:
-    - { role: test_role, test_name: fred }
