@@ -26,6 +26,12 @@ repos:
         args: [--unique]
         # always_run: true
         files: ^(\.config/dictionary\.txt)$
+  - repo: https://github.com/ansible-community/antsibull-changelog
+    rev: 0.29.0
+    hooks:
+      - id: antsibull-changelog-lint
+      # Enable this when we have working changelog file
+      # - id: antsibull-changelog-lint-changelog-yaml
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.10.0
     hooks:

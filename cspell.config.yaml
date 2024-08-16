@@ -21,3 +21,5 @@ ignorePaths:
   - src/ansiblelint/schemas/*.json
   # Other
   - "*.svg"
+  # Changelog specific
+  - changelogs/config.yaml

@@ -37,3 +37,6 @@ docs/rst/*.rst
 docs/temp-rst
 # Other
 tests/integration/inventory
+
+# Collection specific
+changelogs/.plugin-cache.yaml
