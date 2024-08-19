@@ -68,3 +68,4 @@ testuser
 toxinidir
 trustore
 truststore
+testpass

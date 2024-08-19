@@ -1,11 +1,13 @@
 ---
 - block:
-    - set_fact:
+    - name: Set defaults for credentials
+      set_fact:
         credential_defaults: &credential_defaults
           controller_username: "{{ controller_username }}"
           controller_password: "{{ controller_password }}"
           controller_host: "{{ controller_host }}"
-          validate_certs: false
+          validate_certs: "{{ controller_verify_ssl }}"
+      no_log: true
 
     - name: Generate a random_string for the test
       set_fact:
