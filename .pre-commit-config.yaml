@@ -11,7 +11,10 @@ ci:
     - ansible-test-sanity # requires network access
     - shellcheck  # no docker
     - tox # requires network access
-exclude: "^.*\\.md$"
+exclude: >
+  (?x)^(
+    docs/rst/.*.rst$
+  )$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
