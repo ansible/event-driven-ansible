@@ -2,7 +2,13 @@
 
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
+
+from typing import Any, List, NoReturn, Optional, Union
+
+from ansible.module_utils.basic import AnsibleModule
+
+from .client import Client
 
 __metaclass__ = type
 
@@ -13,7 +19,7 @@ class Controller:
     IDENTITY_FIELDS = {"users": "username"}
     ENCRYPTED_STRING = "$encrypted$"
 
-    def __init__(self, client, module):
+    def __init__(self, client: Client, module: AnsibleModule) -> None:
         self.client = client
         self.module = module
         self.result = {"changed": False}
@@ -24,7 +30,7 @@ class Controller:
             self.update_secrets = True
 
     @staticmethod
-    def get_name_field_from_endpoint(endpoint):
+    def get_name_field_from_endpoint(endpoint: str) -> str:
         return Controller.IDENTITY_FIELDS.get(endpoint, "name")
 
     def get_endpoint(self, endpoint, **kwargs):
@@ -69,7 +75,7 @@ class Controller:
         msg = "Cant determine identity field for Undefined object."
         raise EDAError(msg)
 
-    def fail_wanted_one(self, response, endpoint, query_params):
+    def fail_wanted_one(self, response, endpoint, query_params) -> NoReturn:
         sample = response.json.copy()
         if len(sample["results"]) > 1:
             sample["results"] = sample["results"][:2] + ["...more results snipped..."]
@@ -81,21 +87,30 @@ class Controller:
         msg = f"Request to {display_endpoint} returned {response.json['count']} items, expected 1"
         raise EDAError(msg)
 
-    def get_exactly_one(self, endpoint, name=None, **kwargs):
-        return self.get_one_or_many(endpoint, name=name, allow_none=False, **kwargs)
+    def get_exactly_one(
+        self, endpoint, name=None, **kwargs
+    ) -> Optional[dict[str, bool]]:
+        result = self.get_one_or_many(
+            endpoint, name=name, allow_none=False, want_one=True, **kwargs
+        )
+        # typing: needed as get_one_or_many can also return lists, not expected
+        # to reach this ever.
+        if isinstance(result, list):  # pragma: no cover
+            self.fail_wanted_one(result, endpoint, {})
+        return result
 
     def resolve_name_to_id(self, endpoint, name):
         return self.get_exactly_one(endpoint, name)["id"]
 
     def get_one_or_many(
         self,
-        endpoint,
-        name=None,
-        allow_none=True,
-        check_exists=False,
-        want_one=True,
-        **kwargs,
-    ):
+        endpoint: str,
+        name: Optional[str] = None,
+        allow_none: bool = True,
+        check_exists: bool = False,
+        want_one: bool = True,
+        **kwargs: Any,
+    ) -> Union[None, dict[str, bool], List]:
         new_kwargs = kwargs.copy()
         response = None
 
@@ -142,6 +157,7 @@ class Controller:
         if check_exists:
             self.result["id"] = response.json["results"][0]["id"]
             return self.result
+        return None
 
     def create_if_needed(
         self,

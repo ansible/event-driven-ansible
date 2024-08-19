@@ -73,6 +73,8 @@ projects:
 """  # NOQA
 
 # pylint: disable=wrong-import-position,
+from typing import Any
+
 from ansible.module_utils.basic import AnsibleModule
 
 # pylint: disable=relative-beyond-top-level
@@ -82,8 +84,8 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def main():
-    argument_spec = dict(
+def main() -> None:
+    argument_spec: dict[str, Any] = dict(
         name=dict(),
     )
 
@@ -104,19 +106,19 @@ def main():
 
     project_name = module.params.get("name")
 
-    ret = {}
+    ret: list[Any] = []
 
     try:
-        ret = controller.get_one_or_many(
+        result = controller.get_one_or_many(
             project_endpoint, name=project_name, want_one=False
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
-    if ret is None:
+    if result is None:
         ret = []
-    if not isinstance(ret, list):
-        ret = [ret]
+    if not isinstance(result, list):
+        ret = [result]
     module.exit_json(projects=ret)
 
 

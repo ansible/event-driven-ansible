@@ -1,0 +1,15 @@
+plugins/module_utils/arguments.py future-import-boilerplate!skip
+plugins/module_utils/common.py import-3.7!skip
+plugins/module_utils/common.py import-3.8!skip
+plugins/module_utils/controller.py future-import-boilerplate!skip
+plugins/modules/activation.py import-3.7!skip
+plugins/modules/activation.py import-3.8!skip
+plugins/modules/activation_info.py import-3.7!skip
+plugins/modules/activation_info.py import-3.8!skip
+plugins/modules/credential_info.py import-3.7!skip
+plugins/modules/credential_info.py import-3.8!skip
+plugins/modules/credential_type_info.py future-import-boilerplate!skip
+plugins/modules/credential_type_info.py import-3.7!skip
+plugins/modules/credential_type_info.py import-3.8!skip
+plugins/modules/decision_environment_info.py import-3.7!skip
+plugins/modules/decision_environment_info.py import-3.8!skip

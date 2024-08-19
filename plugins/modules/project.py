@@ -81,6 +81,8 @@ EXAMPLES = """
     state: absent
 """
 
+from typing import Any
+
 from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
@@ -89,7 +91,7 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def main():
+def main() -> None:
     argument_spec = dict(
         name=dict(required=True),
         new_name=dict(),
@@ -135,7 +137,7 @@ def main():
             module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
-    project_type_params = {}
+    project_type_params: dict[str, Any] = {}
     if description:
         project_type_params["description"] = description
     if url:
@@ -144,11 +146,12 @@ def main():
     credential_id = None
     if credential:
         try:
-            credential_id = controller.get_one_or_many(
+            credential_id = controller.get_exactly_one(
                 "eda-credentials", name=credential
             )
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
+            raise  # https://github.com/ansible/ansible/pull/83814
 
     if credential_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
