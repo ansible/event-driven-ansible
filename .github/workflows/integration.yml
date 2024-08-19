@@ -1,0 +1,71 @@
+name: Run integration tests
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+  schedule:
+    - cron: '0 */8 * * *'
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version:
+          - "3.11"
+        ansible-version:
+          - "milestone"
+
+    env:
+      CONTROLLER_URL: "https://localhost:8443"
+      CONTROLLER_USERNAME: "admin"
+      CONTROLLER_PASSWORD: "testpass"
+      CONTROLLER_VERIFY_SSL: false
+
+    steps:
+      - name: Checkout ansible/eda
+        uses: actions/checkout@v3
+        with:
+          path: ansible_collections/ansible/eda
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: "0"
+
+      - name: Checkout ansible/eda-server
+        uses: actions/checkout@v3
+        with:
+          repository: ansible/eda-server
+          path: eda-server # Note: Specify a separate path for this repository
+
+      - name: Run API in background
+        run: |
+          docker compose -p eda -f docker-compose-stage.yaml pull
+          docker compose -p eda -f docker-compose-stage.yaml up -d
+          until curl -s http://localhost:8000/_healthz | grep -q "OK"; do
+            echo "Waiting for API to be ready..."
+            sleep 1
+          done
+        working-directory: eda-server/tools/docker # Adjusted to the specific directory where docker-compose.yaml is located
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install ansible-core (${{ matrix.ansible-version }})
+        run: >-
+          python3 -m pip install
+          https://github.com/ansible/ansible/archive/${{ matrix.ansible-version }}.tar.gz
+          --disable-pip-version-check
+        shell: bash
+
+      - name: Run integration tests
+        run: ansible-test integration -v
+        working-directory: ansible_collections/ansible/eda
