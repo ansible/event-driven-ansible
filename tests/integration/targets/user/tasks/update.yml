@@ -1,0 +1,56 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create super user
+  ansible.eda.user:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    username: "{{ user_name }}"
+    first_name: "{{ first_name }}"
+    last_name: "{{ last_name }}"
+    email: "{{ email }}"
+    password: "{{ random_string }}"
+    is_superuser: true
+    state: present
+  register: r
+
+- name: Check super user creation
+  assert:
+    that:
+      - r.changed
+
+- name: Update super user
+  ansible.eda.user:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    username: "{{ user_name }}"
+    new_username: "{{ user_name }}_new"
+    first_name: "{{ first_name }}_new"
+    last_name: "{{ last_name }}_new"
+    email: "new_{{ email }}"
+    password: "{{ random_string }}"
+    is_superuser: true
+    state: present
+  register: r
+
+- name: Check super user update
+  assert:
+    that:
+      - r.changed
+
+- name: Delete super user
+  ansible.eda.user:
+    controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_user }}"
+    validate_certs: "{{ validate_certs }}"
+    username: "{{ user_name }}_new"
+    state: absent
+  register: r
+
+- name: Check super user deleted
+  assert:
+    that:
+      - r.changed
