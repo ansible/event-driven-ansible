@@ -57,6 +57,7 @@ jobs:
     runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
     continue-on-error: ${{ contains(matrix.name, 'integration') && true || false }}
     needs:
+      - docs
       - prepare
     defaults:
       run:
@@ -153,6 +154,15 @@ jobs:
             exit 99
           fi
         # https://github.com/actions/toolkit/issues/193
+  docs:
+    permissions:
+      contents: read
+    name: Validate Ansible Docs
+    uses: ansible-community/github-docs-build/.github/workflows/_shared-docs-build-pr.yml@main
+    with:
+      collection-name: ansible.eda
+      init-lenient: false
+      init-fail-on-error: true
   check:
     if: always()
     environment: check
