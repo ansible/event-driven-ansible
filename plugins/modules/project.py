@@ -40,6 +40,12 @@ options:
       description:
         - The name of the credential to associate with the project.
       type: str
+    organization_name:
+      description:
+        - The name of the organization.
+      type: str
+      aliases:
+        - organization
     state:
       description:
         - Desired state of the resource.
@@ -59,6 +65,7 @@ EXAMPLES = """
     name: "Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
+    organizatiion_name: Default
     state: present
 
 - name: Update the name of the project
@@ -70,6 +77,7 @@ EXAMPLES = """
     new_name: "Latest Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
+    organization_name: Default
     state: present
 
 - name: Delete the project
@@ -98,12 +106,17 @@ def main() -> None:
         description=dict(),
         url=dict(),
         credential=dict(),
+        organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    required_if = [("state", "present", ("name", "url", "organization_name"))]
+
+    module = AnsibleModule(
+        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
+    )
 
     client = Client(
         host=module.params.get("controller_host"),
@@ -157,6 +170,19 @@ def main() -> None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
         project_type_params["eda_credential_id"] = credential_id["id"]
+
+    organization_id = None
+    if module.params.get("organization_name"):
+        try:
+            organization_id = controller.resolve_name_to_id(
+                "organizations", module.params["organization_name"]
+            )
+        except EDAError as eda_err:
+            module.fail_json(msg=str(eda_err))
+            raise
+
+    if organization_id:
+        project_type_params["organization_id"] = organization_id
 
     if new_name:
         project_type_params["name"] = new_name

@@ -10,6 +10,7 @@
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
+    organization_name: Default
     state: present
   check_mode: true
   register: r
@@ -27,6 +28,7 @@
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
+    organization_name: Default
     state: present
   register: r
 
@@ -43,6 +45,7 @@
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
+    organization_name: Default
     state: present
   register: r
 

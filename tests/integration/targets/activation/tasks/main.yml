@@ -99,6 +99,7 @@
           password: secret
           ssh_key_data: "{{ ssh_key_data }}"
           ssh_key_unlock: "passphrase"
+        organization_name: Default
       register: credential_creation
 
     - name: Assert that the credential was created successfully
@@ -114,6 +115,7 @@
         description: "Test Project Description"
         url: "{{ scm_url }}"
         credential: "{{ credential_name }}"
+        organization_name: Default
         state: present
       register: project_creation
 
@@ -130,6 +132,7 @@
         description: "Test Decision Environment Description"
         credential: "{{ credential_name }}"
         image_url: "{{ image_url }}"
+        organization_name: Default
       register: decision_environment_creation
 
     - name: Create a new rulebook activation in check mode
@@ -142,6 +145,7 @@
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
         awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
       check_mode: true
       register: _result
 
@@ -160,6 +164,7 @@
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
         awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
       register: _result
 
     - name: Check rulebook activation creation
@@ -177,6 +182,7 @@
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
         awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
       register: _result
 
     - name: Check rulebook activation creation

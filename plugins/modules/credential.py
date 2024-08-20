@@ -41,9 +41,9 @@ options:
   organization_name:
     description:
       - The name of the organization.
-    type: int
+    type: str
     aliases:
-      - org_name
+      - organization
   description:
     description:
       - Description of the credential.
@@ -67,6 +67,7 @@ EXAMPLES = """
     inputs:
       field1: "field1"
     credential_type_name: "GitLab Personal Access Token"
+    organization_name: Default
 
 - name: Delete an EDA Credential
   ansible.eda.credential:
@@ -108,13 +109,19 @@ def main() -> None:
         description=dict(type="str"),
         inputs=dict(type="dict"),
         credential_type_name=dict(type="str"),
-        organization_name=dict(type="int", aliases=["org_name"]),
+        organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    required_if = [("state", "present", ("name", "credential_type_name", "inputs"))]
+    required_if = [
+        (
+            "state",
+            "present",
+            ("name", "credential_type_name", "inputs", "organization_name"),
+        )
+    ]
 
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
@@ -154,7 +161,7 @@ def main() -> None:
         credential_params["credential_type_id"] = credential_type_id
 
     organization_id = None
-    if module.params.get("organization_id"):
+    if module.params.get("organization_name"):
         organization_id = lookup(
             module, controller, "organizations", module.params["organization_name"]
         )

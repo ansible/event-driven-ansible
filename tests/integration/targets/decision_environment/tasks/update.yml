@@ -10,6 +10,7 @@
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
+    organization_name: Default
     state: present
   register: r
 
@@ -27,6 +28,7 @@
     new_name: "{{ decision_env_name }}_new"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
+    organization_name: Default
     state: present
   register: r
 
@@ -44,6 +46,7 @@
     new_name: "{{ decision_env_name }}_new"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
+    organization_name: Default
     state: present
   register: r
 

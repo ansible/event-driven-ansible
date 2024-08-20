@@ -46,6 +46,12 @@ options:
       default: "present"
       choices: ["present", "absent"]
       type: str
+    organization_name:
+      description:
+        - The name of the organization.
+      type: str
+      aliases:
+        - organization
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -60,6 +66,7 @@ EXAMPLES = """
     description: "Example Decision Environment description"
     image_url: "quay.io/test"
     credential: "Example Credential"
+    organization_name: Default
     state: present
 
 - name: Update the name of the Decision Environment
@@ -69,6 +76,7 @@ EXAMPLES = """
     controller_password: MySuperSecretPassw0rd
     name: "Example Decision Environment"
     new_name: "Latest Example Decision Environment"
+    organization_name: Default
     state: present
 
 - name: Delete the the Decision Environment
@@ -103,12 +111,17 @@ def main() -> None:
         description=dict(),
         image_url=dict(),
         credential=dict(),
+        organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    required_if = [("state", "present", ("name", "organization_name", "image_url"))]
+
+    module = AnsibleModule(
+        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
+    )
 
     client = Client(
         host=module.params.get("controller_host"),
@@ -165,6 +178,15 @@ def main() -> None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
         decision_environment_type_params["credential"] = credential_type["id"]
+
+    organization_id = None
+    if module.params.get("organization_name"):
+        organization_id = controller.resolve_name_to_id(
+            "organizations", module.params["organization_name"]
+        )
+
+    if organization_id:
+        decision_environment_type_params["organization_id"] = organization_id
 
     if new_name:
         decision_environment_type_params["name"] = new_name

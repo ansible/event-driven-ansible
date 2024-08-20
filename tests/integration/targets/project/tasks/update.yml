@@ -10,6 +10,7 @@
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
+    organization_name: Default
     state: present
   register: r
 
@@ -27,6 +28,7 @@
     url: "{{ url }}"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
+    organization_name: Default
     state: present
   register: r
 
@@ -44,6 +46,7 @@
     new_name: "{{ project_name }}_new"
     description: "Example project description"
     url: "https://example.com/project1"
+    organization_name: Default
     state: present
   register: r
 
