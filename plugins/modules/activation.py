@@ -303,7 +303,11 @@ def main() -> None:
     argument_spec.update(AUTH_ARGSPEC)
 
     required_if = [
-        ("state", "present", ("name", "rulebook_name", "decision_environment_name", "organization_name"))
+        (
+            "state",
+            "present",
+            ("name", "rulebook_name", "decision_environment_name", "organization_name"),
+        )
     ]
 
     module = AnsibleModule(
