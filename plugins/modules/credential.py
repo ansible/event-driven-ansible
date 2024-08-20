@@ -85,21 +85,49 @@ id:
 """
 
 
+from typing import Any
+
 from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
+from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def lookup(module, controller, endpoint, name):
-    result = None
-    try:
-        result = controller.resolve_name_to_id(endpoint, name)
-    except EDAError as e:
-        module.fail_json(msg=f"Failed to lookup resource: {e}")
-    return result
+def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
+    credential_params: dict[str, Any] = {}
+
+    credential_params = {}
+    if module.params.get("description"):
+        credential_params["description"] = module.params["description"]
+
+    if module.params.get("inputs"):
+        credential_params["inputs"] = module.params["inputs"]
+
+    credential_type_id = None
+    if module.params.get("credential_type_name"):
+        credential_type_id = lookup_resource_id(
+            module,
+            controller,
+            "credential-types",
+            module.params["credential_type_name"],
+        )
+
+    if credential_type_id:
+        credential_params["credential_type_id"] = credential_type_id
+
+    organization_id = None
+    if module.params.get("organization_name"):
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", module.params["organization_name"]
+        )
+
+    if organization_id:
+        credential_params["organization_id"] = organization_id
+
+    return credential_params
 
 
 def main() -> None:
@@ -141,37 +169,9 @@ def main() -> None:
     new_name = module.params.get("new_name")
     state = module.params.get("state")
 
-    credential_params = {}
-    if module.params.get("description"):
-        credential_params["description"] = module.params["description"]
-
-    if module.params.get("inputs"):
-        credential_params["inputs"] = module.params["inputs"]
-
-    credential_type_id = None
-    if module.params.get("credential_type_name"):
-        credential_type_id = lookup(
-            module,
-            controller,
-            "credential-types",
-            module.params["credential_type_name"],
-        )
-
-    if credential_type_id:
-        credential_params["credential_type_id"] = credential_type_id
-
-    organization_id = None
-    if module.params.get("organization_name"):
-        organization_id = lookup(
-            module, controller, "organizations", module.params["organization_name"]
-        )
-
-    if organization_id:
-        credential_params["organization_id"] = organization_id
-
     # Attempt to look up credential based on the provided name
     try:
-        credential = controller.get_one_or_many("eda-credentials", name=name)
+        credential = controller.get_exactly_one("eda-credentials", name=name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
 
@@ -183,6 +183,8 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete credential: {e}")
 
+    # Activation Data that will be sent for create/update
+    credential_params = create_params(module, controller)
     credential_params["name"] = (
         new_name
         if new_name

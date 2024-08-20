@@ -119,7 +119,7 @@ def main() -> None:
     ret = {}
 
     try:
-        token_type = controller.get_one_or_many(token_endpoint, name=token_name)
+        token_type = controller.get_exactly_one(token_endpoint, name=token_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 

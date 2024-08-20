@@ -151,17 +151,9 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
+from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
-
-
-def lookup(module: AnsibleModule, controller: Controller, endpoint, name):
-    result = None
-    try:
-        result = controller.resolve_name_to_id(endpoint, name)
-    except EDAError as e:
-        module.fail_json(msg=f"Failed to lookup resource: {e}")
-    return result
 
 
 def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
@@ -170,31 +162,32 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     # Get the project id
     project_id = None
     if module.params.get("project_name"):
-        project_id = lookup(
+        project_id = lookup_resource_id(
             module, controller, "projects", module.params["project_name"]
         )
     if project_id is not None:
         activation_params["project_id"] = project_id
 
     # Get the rulebook id
-    rulebook = None
+    rulebook_id = None
     params = {}
     if project_id is not None:
         params = {"data": {"project_id": project_id}}
     if module.params.get("rulebook_name"):
-        try:
-            rulebook = controller.get_exactly_one(
-                "rulebooks", name=module.params["rulebook_name"], **params
-            )
-        except EDAError as e:
-            module.fail_json(msg=f"Failed to lookup rulebook: {e}")
-    if rulebook is not None:
-        activation_params["rulebook_id"] = rulebook["id"]
+        rulebook_id = lookup_resource_id(
+            module,
+            controller,
+            "rulebooks",
+            module.params["rulebook_name"],
+            params,
+        )
+    if rulebook_id is not None:
+        activation_params["rulebook_id"] = rulebook_id
 
     # Get the decision environment id
     decision_environment_id = None
     if module.params.get("decision_environment_name"):
-        decision_environment_id = lookup(
+        decision_environment_id = lookup_resource_id(
             module,
             controller,
             "decision-environments",
@@ -206,7 +199,7 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     # Get the organization id
     organization_id = None
     if module.params.get("organization_name"):
-        organization_id = lookup(
+        organization_id = lookup_resource_id(
             module, controller, "organizations", module.params["organization_name"]
         )
     if organization_id is not None:
@@ -221,7 +214,7 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     # Get the AWX token id
     awx_token_id = None
     if module.params.get("awx_token_name"):
-        awx_token_id = lookup(
+        awx_token_id = lookup_resource_id(
             module, controller, "/users/me/awx-tokens/", module.params["awx_token_name"]
         )
     if awx_token_id is not None:
@@ -241,7 +234,7 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if module.params.get("eda_credentials"):
         eda_credential_ids = []
         for item in module.params["eda_credentials"]:
-            cred_id = lookup(module, controller, "eda-credentials", item)
+            cred_id = lookup_resource_id(module, controller, "eda-credentials", item)
             if cred_id is not None:
                 eda_credential_ids.append(cred_id)
 
@@ -256,7 +249,7 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if module.params.get("webhooks"):
         webhooks_ids = []
         for item in module.params["webhooks"]:
-            webhook_id = lookup(module, controller, "webhooks", item)
+            webhook_id = lookup_resource_id(module, controller, "webhooks", item)
             if webhook_id is not None:
                 webhooks_ids.append(webhook_id)
     if webhooks_ids is not None:

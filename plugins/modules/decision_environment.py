@@ -100,6 +100,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
+from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -143,7 +144,7 @@ def main() -> None:
     ret = {}
 
     try:
-        decision_environment_type = controller.get_one_or_many(
+        decision_environment_type = controller.get_exactly_one(
             decision_environment_endpoint, name=decision_environment_name
         )
     except EDAError as eda_err:
@@ -165,24 +166,21 @@ def main() -> None:
     if image_url:
         decision_environment_type_params["image_url"] = image_url
 
-    credential_type = None
+    credential_type_id = None
     if credential:
-        try:
-            credential_type = controller.get_exactly_one(
-                "eda-credentials", name=credential
-            )
-        except EDAError as eda_err:
-            module.fail_json(msg=str(eda_err))
+        credential_type_id = lookup_resource_id(
+            module, controller, "eda-credentials", name=credential
+        )
 
-    if credential_type is not None:
+    if credential_type_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
-        decision_environment_type_params["credential"] = credential_type["id"]
+        decision_environment_type_params["credential"] = credential_type_id
 
     organization_id = None
     if module.params.get("organization_name"):
-        organization_id = controller.resolve_name_to_id(
-            "organizations", module.params["organization_name"]
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", module.params["organization_name"]
         )
 
     if organization_id:

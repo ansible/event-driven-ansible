@@ -5,16 +5,30 @@
 
 from __future__ import absolute_import, division, print_function
 
-from typing import Any, Optional, Union
-
 __metaclass__ = type
 
 
-def to_list_of_dict(
-    result: Optional[Union[dict[str, bool], list[dict[Any, Any]]]]
-) -> list[dict]:
-    if result is None:
-        return []
-    if not isinstance(result, list):
-        return [result]
+from typing import Any, Optional
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ..module_utils.controller import Controller
+from ..module_utils.errors import EDAError
+
+
+def lookup_resource_id(
+    module: AnsibleModule,
+    controller: Controller,
+    endpoint: str,
+    name: str,
+    params: Optional[dict[str, Any]] = None,
+):
+    result = None
+
+    try:
+        result = controller.resolve_name_to_id(
+            endpoint, name, **params if params is not None else {}
+        )
+    except EDAError as e:
+        module.fail_json(msg=f"Failed to lookup resource: {e}")
     return result
