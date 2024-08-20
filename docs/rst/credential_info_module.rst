@@ -309,7 +309,7 @@ Parameters
 
       This should only be used on personally controlled sites using self-signed certificates.
 
-      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\ 
+      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\
 
 
       .. rst-class:: ansible-option-line
@@ -341,7 +341,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
+
       - name: Get information about a credential
         ansible.eda.credential_info:
           name: "Test"
@@ -449,4 +449,3 @@ Collection links
 
 
 .. Parsing errors
-

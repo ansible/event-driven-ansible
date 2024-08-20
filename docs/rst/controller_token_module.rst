@@ -423,7 +423,7 @@ Parameters
 
       This should only be used on personally controlled sites using self-signed certificates.
 
-      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\ 
+      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\
 
 
       .. rst-class:: ansible-option-line
@@ -460,7 +460,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
+
     - name: Create AWX token
       ansible.eda.controller_token:
         controller_host: https://my_eda_host/
@@ -580,4 +580,3 @@ Collection links
 
 
 .. Parsing errors
-

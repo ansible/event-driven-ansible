@@ -884,7 +884,7 @@ Parameters
 
       This should only be used on personally controlled sites using self-signed certificates.
 
-      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\ 
+      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\
 
 
       .. rst-class:: ansible-option-line
@@ -955,7 +955,7 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
+
     - name: Create a rulebook activation
       ansible.eda.activation:
         name: "Example Rulebook Activation"
@@ -1072,4 +1072,3 @@ Collection links
 
 
 .. Parsing errors
-

@@ -85,5 +85,3 @@ Modules
     project_module
     project_info_module
     user_module
-
-
