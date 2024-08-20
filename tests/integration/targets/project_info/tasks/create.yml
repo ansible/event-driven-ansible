@@ -4,10 +4,6 @@
 
 - name: Create a project
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: Example
     description: "Example project description"
     url: "https://example.com/project1"

@@ -80,6 +80,7 @@ from ansible.module_utils.basic import AnsibleModule
 # pylint: disable=relative-beyond-top-level
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
+from ..module_utils.common import to_list_of_dict
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -106,8 +107,6 @@ def main() -> None:
 
     project_name = module.params.get("name")
 
-    ret: list[Any] = []
-
     try:
         result = controller.get_one_or_many(
             project_endpoint, name=project_name, want_one=False
@@ -115,11 +114,7 @@ def main() -> None:
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
-    if result is None:
-        ret = []
-    if not isinstance(result, list):
-        ret = [result]
-    module.exit_json(projects=ret)
+    module.exit_json(projects=to_list_of_dict(result))
 
 
 if __name__ == "__main__":

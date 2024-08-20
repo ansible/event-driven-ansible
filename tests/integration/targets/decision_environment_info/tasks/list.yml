@@ -4,10 +4,6 @@
 
 - name: Create decision environment
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
@@ -22,10 +18,6 @@
 
 - name: List all decision environments in check mode
   ansible.eda.decision_environment_info:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
   check_mode: true
   register: r
 
@@ -37,10 +29,6 @@
 
 - name: List all decision environments
   ansible.eda.decision_environment_info:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
   register: r
 
 - name: Check if list decision environments
@@ -51,10 +39,6 @@
 
 - name: List a particular decision environment
   ansible.eda.decision_environment_info:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
   register: r
 
@@ -67,10 +51,6 @@
 
 - name: Delete decision environment
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     state: absent
   register: r

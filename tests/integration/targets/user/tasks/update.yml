@@ -4,10 +4,6 @@
 
 - name: Create super user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -24,10 +20,6 @@
 
 - name: Update super user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     new_username: "{{ user_name }}_new"
     first_name: "{{ first_name }}_new"
@@ -45,10 +37,6 @@
 
 - name: Delete super user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}_new"
     state: absent
   register: r

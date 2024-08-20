@@ -4,10 +4,6 @@
 
 - name: Create decision environment in check mode
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
@@ -23,10 +19,6 @@
 
 - name: Create decision environment
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
@@ -41,10 +33,6 @@
 
 - name: Create decision environment again
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
@@ -59,10 +47,6 @@
 
 - name: Delete decision environment in check mode
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     state: absent
   check_mode: true
@@ -75,10 +59,6 @@
 
 - name: Delete decision environment
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     state: absent
   register: r

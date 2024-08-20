@@ -4,10 +4,6 @@
 
 - name: Create super user in check mode
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -25,10 +21,6 @@
 
 - name: Create super user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -45,10 +37,6 @@
 
 - name: Create super user again
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -65,10 +53,6 @@
 
 - name: Delete super user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    vvalidate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     state: absent
   register: r
@@ -80,10 +64,6 @@
 
 - name: Create normal user in check mode
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -101,10 +81,6 @@
 
 - name: Create normal user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -121,10 +97,6 @@
 
 - name: Create normal user again
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     first_name: "{{ first_name }}"
     last_name: "{{ last_name }}"
@@ -141,10 +113,6 @@
 
 - name: Delete normal user
   ansible.eda.user:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     username: "{{ user_name }}"
     state: absent
   register: r

@@ -91,7 +91,7 @@ class Controller:
         self, endpoint, name=None, **kwargs
     ) -> Optional[dict[str, bool]]:
         result = self.get_one_or_many(
-            endpoint, name=name, allow_none=False, want_one=True, **kwargs
+            endpoint, name=name, allow_none=True, want_one=True, **kwargs
         )
         # typing: needed as get_one_or_many can also return lists, not expected
         # to reach this ever.

@@ -4,10 +4,6 @@
 
 - name: Create decision environment
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
@@ -22,10 +18,6 @@
 
 - name: Update decision environment name
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}"
     new_name: "{{ decision_env_name }}_new"
     description: "Example decision environment description"
@@ -41,10 +33,6 @@
 
 - name: Update decision environment again
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}_new"
     new_name: "{{ decision_env_name }}_new"
     description: "Example decision environment description"
@@ -60,10 +48,6 @@
 
 - name: Delete updated decision environment
   ansible.eda.decision_environment:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_username }}"
-    controller_password: "{{ controller_password }}"
-    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ decision_env_name }}_new"
     state: absent
   register: r

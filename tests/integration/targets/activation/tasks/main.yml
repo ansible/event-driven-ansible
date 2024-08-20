@@ -1,14 +1,12 @@
 ---
-- block:
-    - name: Set defaults for credentials
-      set_fact:
-        credential_defaults: &credential_defaults
-          controller_username: "{{ controller_username }}"
-          controller_password: "{{ controller_password }}"
-          controller_host: "{{ controller_host }}"
-          validate_certs: false
-      no_log: true
-
+- name: Rulebook activation integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_verify_ssl }}"
+  block:
     - name: Generate a random_string for the test
       set_fact:
         random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
@@ -34,7 +32,6 @@
 
     - name: Create an AWX controller token
       ansible.eda.controller_token:
-        <<: *credential_defaults
         name: "{{ awx_token_name }}"
         description: "A test AWX controller token description"
         token: "{{ token_value }}"
@@ -42,7 +39,6 @@
 
     - name: Create a new credential type
       ansible.eda.credential_type:
-        <<: *credential_defaults
         name: "{{ credential_type_name }}"
         state: present
         description: "A test credential type"
@@ -87,10 +83,10 @@
     - name: Read the generated key
       set_fact:
         ssh_key_data: "{{ lookup('file', tempdir.stdout + '/id_rsa') }}"
+      no_log: true
 
     - name: Create a new SCM credential
       ansible.eda.credential:
-        <<: *credential_defaults
         name: "{{ credential_name }}"
         state: present
         credential_type_name: Source Control
@@ -110,7 +106,6 @@
 
     - name: Create a new project
       ansible.eda.project:
-        <<: *credential_defaults
         name: "{{ project_name }}"
         description: "Test Project Description"
         url: "{{ scm_url }}"
@@ -127,7 +122,6 @@
 
     - name: Create a new decision environment
       ansible.eda.decision_environment:
-        <<: *credential_defaults
         name: "{{ decision_env_name }}"
         description: "Test Decision Environment Description"
         credential: "{{ credential_name }}"
@@ -137,7 +131,6 @@
 
     - name: Create a new rulebook activation in check mode
       ansible.eda.activation:
-        <<: *credential_defaults
         name: "{{ activation_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -156,7 +149,6 @@
 
     - name: Create a new rulebook activation
       ansible.eda.activation:
-        <<: *credential_defaults
         name: "{{ activation_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -174,7 +166,6 @@
 
     - name: Create a new rulebook activation again
       ansible.eda.activation:
-        <<: *credential_defaults
         name: "{{ activation_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -193,16 +184,13 @@
 
     - name: Get information about the rulebook activation
       ansible.eda.activation_info:
-        <<: *credential_defaults
         name: "{{ activation_name }}"
 
     - name: List all the rulebook activations
       ansible.eda.activation_info:
-        <<: *credential_defaults
 
     - name: Delete project
       ansible.eda.project:
-        <<: *credential_defaults
         name: "{{ project_name }}"
         state: absent
       register: project_deletion
@@ -215,7 +203,6 @@
 
     - name: Delete credential
       ansible.eda.credential:
-        <<: *credential_defaults
         name: "{{ credential_name }}"
         state: absent
       register: credential_deletion
@@ -228,49 +215,43 @@
 
     - name: Delete rulebook activation
       ansible.eda.activation:
-        <<: *credential_defaults
         name: "{{ activation_name }}"
         state: absent
 
   always:
     - name: Delete AWX token
       ansible.eda.controller_token:
-        <<: *credential_defaults
         name: "{{ awx_token_name }}"
         state: absent
       ignore_errors: true
 
     - name: Delete project
       ansible.eda.project:
-        <<: *credential_defaults
         name: "{{ project_name }}"
-        state: absent
-      ignore_errors: true
-
-    - name: Delete decision environment
-      ansible.eda.decision_environment:
-        <<: *credential_defaults
-        name: "{{ decision_env_name }}"
         state: absent
       ignore_errors: true
 
     - name: Delete credential
       ansible.eda.credential:
-        <<: *credential_defaults
         name: "{{ credential_name }}"
         state: absent
       ignore_errors: true
 
     - name: Delete credential type
       ansible.eda.credential_type:
-        <<: *credential_defaults
         name: "{{ credential_type_name }}"
         state: absent
       ignore_errors: true
 
     - name: Delete rulebook activation
       ansible.eda.activation:
-        <<: *credential_defaults
         name: "{{ activation_name }}"
         state: absent
       ignore_errors: true
+
+    - name: Delete decision environment
+      ansible.eda.decision_environment:
+        name: "{{ decision_env_name }}"
+        state: absent
+      ignore_errors: true
+

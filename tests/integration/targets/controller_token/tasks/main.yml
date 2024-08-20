@@ -2,7 +2,15 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-- block:
+- name: Controller token integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_verify_ssl }}"
+
+  block:
     - name: Generate a random_string for the test
       set_fact:
         random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
@@ -21,10 +29,6 @@
   always:
     - name: Clean up - controller token
       ansible.eda.controller_token:
-        controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_username }}"
-        controller_password: "{{ controller_password }}"
-        validate_certs: "{{ controller_verify_ssl }}"
         name: "{{ item }}"
         state: absent
       loop:

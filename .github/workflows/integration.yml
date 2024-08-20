@@ -73,5 +73,5 @@ jobs:
         working-directory: ansible_collections/ansible/eda
 
       - name: Run integration tests
-        run: ansible-test integration project
+        run: ansible-test integration -v
         working-directory: ansible_collections/ansible/eda
