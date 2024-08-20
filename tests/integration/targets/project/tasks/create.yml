@@ -5,8 +5,9 @@
 - name: Create project in check mode
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
@@ -23,8 +24,9 @@
 - name: Create project
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
@@ -40,8 +42,9 @@
 - name: Create project again
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
@@ -57,8 +60,9 @@
 - name: Delete project in check mode
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ project_name }}"
     state: absent
   check_mode: true
@@ -72,8 +76,9 @@
 - name: Delete project
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ project_name }}"
     state: absent
   register: r

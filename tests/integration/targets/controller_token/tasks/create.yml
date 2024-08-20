@@ -5,8 +5,9 @@
 - name: Create controller token in check mode
   ansible.eda.controller_token:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ controller_token_name }}"
     description: "Example controller token description"
     token: "TOKEN_VALUE"
@@ -23,8 +24,9 @@
 - name: Create controller token
   ansible.eda.controller_token:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ controller_token_name }}"
     description: "Example controller token description"
     token: "TOKEN_VALUE"
@@ -41,8 +43,9 @@
 - name: Create controller token again
   ansible.eda.controller_token:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ controller_token_name }}"
     description: "Example controller token description"
     token: "TOKEN_VALUE"

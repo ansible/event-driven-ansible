@@ -5,6 +5,9 @@
 - name: Delete operation without required name parameter
   ansible.eda.decision_environment:
     controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     state: absent
   ignore_errors: true
   register: r
@@ -18,8 +21,9 @@
 - name: Delete non-existing decision environment in check mode
   ansible.eda.decision_environment:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: Example
     state: absent
   check_mode: true
@@ -33,8 +37,9 @@
 - name: Delete non-existing decision environment
   ansible.eda.decision_environment:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: Example
     state: absent
   register: r

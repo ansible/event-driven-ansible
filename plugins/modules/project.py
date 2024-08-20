@@ -65,7 +65,7 @@ EXAMPLES = """
     name: "Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
-    organizatiion_name: Default
+    organization_name: Default
     state: present
 
 - name: Update the name of the project

@@ -7,8 +7,9 @@
     - name: List all projects in the given EDA Controller in check mode
       ansible.eda.project_info:
         controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_verify_ssl }}"
       check_mode: true
       register: r
 
@@ -20,8 +21,9 @@
     - name: List all projects in the given EDA Controller
       ansible.eda.project_info:
         controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_verify_ssl }}"
       register: r
 
     - name: Check if all the projects are returned
@@ -32,8 +34,9 @@
     - name: List a particular project in the given EDA Controller
       ansible.eda.project_info:
         controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_verify_ssl }}"
         name: "Example"
       register: r
 
@@ -46,8 +49,9 @@
     - name: List a non-existing particular project in the given EDA Controller
       ansible.eda.project_info:
         controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_verify_ssl }}"
         name: "Example2"
       register: r
 
@@ -61,8 +65,9 @@
     - name: Clean up - project
       ansible.eda.project:
         controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_verify_ssl }}"
         name: "{{ item }}"
         state: absent
       loop:

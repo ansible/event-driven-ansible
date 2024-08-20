@@ -25,8 +25,9 @@
     - name: Clean up - decision environment
       ansible.eda.decision_environment:
         controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_verify_ssl }}"
         name: "{{ item }}"
         state: absent
       loop:

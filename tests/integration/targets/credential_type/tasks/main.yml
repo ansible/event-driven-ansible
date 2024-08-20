@@ -6,6 +6,7 @@
             controller_password: "{{ controller_password }}"
             controller_host: "{{ controller_host }}"
             validate_certs: false
+        no_log: true
 
       - name: Generate a random_string for the test
         set_fact:
