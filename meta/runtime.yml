@@ -6,7 +6,13 @@ action_groups:
   eda:
     - activation
     - activation_info
+    - controller_token
     - credential
     - credential_info
     - credential_type
     - credential_type_info
+    - decision_environment
+    - decision_environment_info
+    - project
+    - project_info
+    - user

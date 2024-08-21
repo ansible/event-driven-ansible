@@ -5,6 +5,8 @@
 - name: Delete operation without required name parameter
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
     state: absent
   ignore_errors: true
   register: r
@@ -18,8 +20,9 @@
 - name: Delete non-existing project in check mode
   ansible.eda.project:
     controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
+    controller_username: "{{ controller_username }}"
+    controller_password: "{{ controller_password }}"
+    validate_certs: "{{ controller_verify_ssl }}"
     name: "{{ project_name }}"
     state: absent
   check_mode: true
@@ -32,9 +35,6 @@
 
 - name: Delete non-existing project
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
     name: "{{ project_name }}_ee"
     state: absent
   register: r

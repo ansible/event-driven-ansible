@@ -4,12 +4,10 @@
 
 - name: Create project
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
     name: "{{ project_name }}"
     url: "{{ url }}"
     description: "Example project description"
+    organization_name: Default
     state: present
   register: r
 
@@ -20,13 +18,11 @@
 
 - name: Update project name
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
     name: "{{ project_name }}"
     url: "{{ url }}"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
+    organization_name: Default
     state: present
   register: r
 
@@ -37,13 +33,11 @@
 
 - name: Update project again
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
     name: "{{ project_name }}_new"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
     url: "https://example.com/project1"
+    organization_name: Default
     state: present
   register: r
 
@@ -54,9 +48,6 @@
 
 - name: Delete updated project
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
     name: "{{ project_name }}_new"
     state: absent
   register: r

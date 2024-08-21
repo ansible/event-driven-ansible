@@ -4,12 +4,10 @@
 
 - name: Create a project
   ansible.eda.project:
-    controller_host: "{{ controller_host }}"
-    controller_username: "{{ controller_user }}"
-    validate_certs: "{{ validate_certs }}"
     name: Example
     description: "Example project description"
     url: "https://example.com/project1"
+    organization_name: Default
     state: present
   register: r
 

@@ -165,7 +165,7 @@ def lookup(module: AnsibleModule, controller: Controller, endpoint, name):
 
 
 def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
-    activation_params = {}
+    activation_params: dict[str, Any] = {}
 
     # Get the project id
     project_id = None
@@ -303,7 +303,11 @@ def main() -> None:
     argument_spec.update(AUTH_ARGSPEC)
 
     required_if = [
-        ("state", "present", ("name", "rulebook_name", "decision_environment_name"))
+        (
+            "state",
+            "present",
+            ("name", "rulebook_name", "decision_environment_name", "organization_name"),
+        )
     ]
 
     module = AnsibleModule(

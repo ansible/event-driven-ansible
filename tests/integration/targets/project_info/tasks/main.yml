@@ -2,13 +2,18 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-- block:
+- name: Project info module integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_verify_ssl }}"
+
+  block:
     - include_tasks: create.yml
     - name: List all projects in the given EDA Controller in check mode
       ansible.eda.project_info:
-        controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
       check_mode: true
       register: r
 
@@ -19,9 +24,6 @@
 
     - name: List all projects in the given EDA Controller
       ansible.eda.project_info:
-        controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
       register: r
 
     - name: Check if all the projects are returned
@@ -31,9 +33,6 @@
 
     - name: List a particular project in the given EDA Controller
       ansible.eda.project_info:
-        controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
         name: "Example"
       register: r
 
@@ -45,9 +44,6 @@
 
     - name: List a non-existing particular project in the given EDA Controller
       ansible.eda.project_info:
-        controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
         name: "Example2"
       register: r
 
@@ -60,9 +56,6 @@
   always:
     - name: Clean up - project
       ansible.eda.project:
-        controller_host: "{{ controller_host }}"
-        controller_username: "{{ controller_user }}"
-        validate_certs: "{{ validate_certs }}"
         name: "{{ item }}"
         state: absent
       loop:

@@ -1,0 +1,4 @@
+controller_host: "https://localhost:8443"
+controller_username: "admin"
+controller_password: "testpass"
+controller_verify_ssl: false

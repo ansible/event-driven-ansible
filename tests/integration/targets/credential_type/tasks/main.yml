@@ -1,185 +1,175 @@
 ---
-- block:
-      - set_fact:
-          credential_defaults: &credential_defaults
-            controller_username: "{{ controller_username }}"
-            controller_password: "{{ controller_password }}"
-            controller_host: "{{ controller_host }}"
-            validate_certs: false
+- name: Credential type integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_verify_ssl }}"
+  block:
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
 
-      - name: Generate a random_string for the test
-        set_fact:
-          random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
-        when: random_string is not defined
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
 
-      - name: Generate a ID for the test
-        set_fact:
-          test_id: "{{ random_string | to_uuid }}"
-        when: test_id is not defined
+    - name: Define variables for credential and project
+      set_fact:
+        credential_type_name: "Test_CredentialType_{{ test_id }}"
+        new_credential_type_name: "New_Test_CredentialType_{{ test_id }}"
 
-      - name: Define variables for credential and project
-        set_fact:
-          credential_type_name: "Test_CredentialType_{{ test_id }}"
-          new_credential_type_name: "New_Test_CredentialType_{{ test_id }}"
+    # CREATE
+    - name: Create credential type in check mode
+      ansible.eda.credential_type:
+        name: "{{ credential_type_name }}"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "field1"
+              type: "string"
+              label: "Field 5"
+        injectors:
+          extra_vars:
+            field1: "field1"
+      check_mode: true
+      register: _result
 
-      # CREATE
-      - name: Create credential type in check mode
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "{{ credential_type_name }}"
-          state: present
-          description: "A test credential type"
-          inputs:
-            fields:
-              - id: "field1"
-                type: "string"
-                label: "Field 5"
-          injectors:
-            extra_vars:
-              field1: "field1"
-        check_mode: true
-        register: _result
+    - name: Check credential type creation in check mode
+      assert:
+        that:
+          - _result.changed
 
-      - name: Check credential type creation in check mode
-        assert:
-          that:
-            - _result.changed
+    - name: Create credential type
+      ansible.eda.credential_type:
+        name: "{{ credential_type_name }}"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "field1"
+              type: "string"
+              label: "Field 5"
+        injectors:
+          extra_vars:
+            field1: "field1"
+      register: _result
 
-      - name: Create credential type
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "{{ credential_type_name }}"
-          state: present
-          description: "A test credential type"
-          inputs:
-            fields:
-              - id: "field1"
-                type: "string"
-                label: "Field 5"
-          injectors:
-            extra_vars:
-              field1: "field1"
-        register: _result
+    - name: Check credential type creation
+      assert:
+        that:
+          - _result.changed
 
-      - name: Check credential type creation
-        assert:
-          that:
-            - _result.changed
+    - name: Create credential type again
+      ansible.eda.credential_type:
+        name: "{{ credential_type_name }}"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "field1"
+              type: "string"
+              label: "Field 5"
+        injectors:
+          extra_vars:
+            field1: "field1"
+      register: _result
 
-      - name: Create credential type again
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "{{ credential_type_name }}"
-          state: present
-          description: "A test credential type"
-          inputs:
-            fields:
-              - id: "field1"
-                type: "string"
-                label: "Field 5"
-          injectors:
-            extra_vars:
-              field1: "field1"
-        register: _result
+    - name: Check credential type is not created again
+      assert:
+        that:
+          - not _result.changed
 
-      - name: Check credential type is not created again
-        assert:
-          that:
-            - not _result.changed
+    - name: Get info about a credential type
+      ansible.eda.credential_type_info:
+        name: "{{ credential_type_name }}"
 
-      - name: Get info about a credential type
-        ansible.eda.credential_type_info:
-          <<: *credential_defaults
-          name: "{{ credential_type_name }}"
+    # UPDATE
+    - name: Update credential type name
+      ansible.eda.credential_type:
+        name: "{{ credential_type_name }}"
+        new_name: "{{ new_credential_type_name }}"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "field1"
+              type: "string"
+              label: "Field 5"
+        injectors:
+          extra_vars:
+            field1: "field1"
+      register: _result
 
-      # UPDATE
-      - name: Update credential type name
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "{{ credential_type_name }}"
-          new_name: "{{ new_credential_type_name }}"
-          state: present
-          description: "A test credential type"
-          inputs:
-            fields:
-              - id: "field1"
-                type: "string"
-                label: "Field 5"
-          injectors:
-            extra_vars:
-              field1: "field1"
-        register: _result
+    - name: Check credential type update
+      assert:
+        that:
+          - _result.changed
 
-      - name: Check credential type update
-        assert:
-          that:
-            - _result.changed
+    - name: Update credential type again
+      ansible.eda.credential_type:
+        name: "{{ new_credential_type_name }}"
+        new_name: "{{ new_credential_type_name }}"
+        state: present
+        description: "A test credential type"
+        inputs:
+          fields:
+            - id: "field1"
+              type: "string"
+              label: "Field 5"
+        injectors:
+          extra_vars:
+            field1: "field1"
+      register: _result
 
-      - name: Update credential type again
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "{{ new_credential_type_name }}"
-          new_name: "{{ new_credential_type_name }}"
-          state: present
-          description: "A test credential type"
-          inputs:
-            fields:
-              - id: "field1"
-                type: "string"
-                label: "Field 5"
-          injectors:
-            extra_vars:
-              field1: "field1"
-        register: _result
+    - name: Check credential type is not updated again
+      assert:
+        that:
+          - not _result.changed
 
-      - name: Check credential type is not updated again
-        assert:
-          that:
-            - not _result.changed
+    # DELETE
+    - name: Delete operation type without required name parameter
+      ansible.eda.credential_type:
+        state: absent
+      ignore_errors: true
+      register: _result
 
-      # DELETE
-      - name: Delete operation type without required name parameter
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          state: absent
-        ignore_errors: true
-        register: _result
+    - name: Check if credential type name is required
+      assert:
+        that:
+          - _result.failed
+          - "'missing required arguments: name' in _result.msg"
 
-      - name: Check if credential type name is required
-        assert:
-          that:
-            - _result.failed
-            - "'missing required arguments: name' in _result.msg"
+    - name: Delete non-existing credential type in check mode
+      ansible.eda.credential_type:
+        name: "Example2"
+        state: absent
+      check_mode: true
+      register: _result
 
-      - name: Delete non-existing credential type in check mode
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "Example2"
-          state: absent
-        check_mode: true
-        register: _result
+    - name: Check if delete non-existing credential type in check mode
+      assert:
+        that:
+          - not _result.changed
 
-      - name: Check if delete non-existing credential type in check mode
-        assert:
-          that:
-            - not _result.changed
+    - name: Delete credential type
+      ansible.eda.credential_type:
+        name: "{{ new_credential_type_name }}"
+        state: absent
+      register: _result
 
-      - name: Delete credential type
-        ansible.eda.credential_type:
-          <<: *credential_defaults
-          name: "{{ new_credential_type_name }}"
-          state: absent
-        register: _result
-
-      - name: Check if delete non-existing credential type
-        assert:
-          that:
-            - _result.changed
+    - name: Check if delete non-existing credential type
+      assert:
+        that:
+          - _result.changed
 
   always:
     - name: Clean up - credential type
       ansible.eda.credential_type:
-        <<: *credential_defaults
         name: "{{ item }}"
         state: absent
       loop:
