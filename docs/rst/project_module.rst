@@ -335,6 +335,44 @@ Parameters
   * - .. raw:: html
 
         <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-organization_name"></div>
+        <div class="ansibleOptionAnchor" id="parameter-organization"></div>
+
+      .. _ansible_collections.ansible.eda.project_module__parameter-organization:
+      .. _ansible_collections.ansible.eda.project_module__parameter-organization_name:
+
+      .. rst-class:: ansible-option-title
+
+      **organization_name**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-organization_name" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-aliases:`aliases: organization`
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      The name of the organization.
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
         <div class="ansibleOptionAnchor" id="parameter-request_timeout"></div>
 
       .. _ansible_collections.ansible.eda.project_module__parameter-request_timeout:
@@ -528,6 +566,7 @@ Examples
         name: "Example Project"
         description: "Example project description"
         url: "https://example.com/project1"
+        organization_name: Default
         state: present
 
     - name: Update the name of the project
@@ -539,6 +578,7 @@ Examples
         new_name: "Latest Example Project"
         description: "Example project description"
         url: "https://example.com/project1"
+        organization_name: Default
         state: present
 
     - name: Delete the project

@@ -370,9 +370,9 @@ Parameters
 
         <div class="ansible-option-cell">
         <div class="ansibleOptionAnchor" id="parameter-organization_name"></div>
-        <div class="ansibleOptionAnchor" id="parameter-org_name"></div>
+        <div class="ansibleOptionAnchor" id="parameter-organization"></div>
 
-      .. _ansible_collections.ansible.eda.credential_module__parameter-org_name:
+      .. _ansible_collections.ansible.eda.credential_module__parameter-organization:
       .. _ansible_collections.ansible.eda.credential_module__parameter-organization_name:
 
       .. rst-class:: ansible-option-title
@@ -385,9 +385,9 @@ Parameters
 
       .. ansible-option-type-line::
 
-        :ansible-option-aliases:`aliases: org_name`
+        :ansible-option-aliases:`aliases: organization`
 
-        :ansible-option-type:`integer`
+        :ansible-option-type:`string`
 
       .. raw:: html
 
@@ -565,6 +565,7 @@ Examples
         inputs:
           field1: "field1"
         credential_type_name: "GitLab Personal Access Token"
+        organization_name: Default
 
     - name: Delete an EDA Credential
       ansible.eda.credential:

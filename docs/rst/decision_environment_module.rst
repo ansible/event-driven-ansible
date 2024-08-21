@@ -369,6 +369,44 @@ Parameters
   * - .. raw:: html
 
         <div class="ansible-option-cell">
+        <div class="ansibleOptionAnchor" id="parameter-organization_name"></div>
+        <div class="ansibleOptionAnchor" id="parameter-organization"></div>
+
+      .. _ansible_collections.ansible.eda.decision_environment_module__parameter-organization:
+      .. _ansible_collections.ansible.eda.decision_environment_module__parameter-organization_name:
+
+      .. rst-class:: ansible-option-title
+
+      **organization_name**
+
+      .. raw:: html
+
+        <a class="ansibleOptionLink" href="#parameter-organization_name" title="Permalink to this option"></a>
+
+      .. ansible-option-type-line::
+
+        :ansible-option-aliases:`aliases: organization`
+
+        :ansible-option-type:`string`
+
+      .. raw:: html
+
+        </div>
+
+    - .. raw:: html
+
+        <div class="ansible-option-cell">
+
+      The name of the organization.
+
+
+      .. raw:: html
+
+        </div>
+
+  * - .. raw:: html
+
+        <div class="ansible-option-cell">
         <div class="ansibleOptionAnchor" id="parameter-request_timeout"></div>
 
       .. _ansible_collections.ansible.eda.decision_environment_module__parameter-request_timeout:
@@ -529,6 +567,7 @@ Examples
         description: "Example Decision Environment description"
         image_url: "quay.io/test"
         credential: "Example Credential"
+        organization_name: Default
         state: present
 
     - name: Update the name of the Decision Environment
@@ -538,6 +577,7 @@ Examples
         controller_password: MySuperSecretPassw0rd
         name: "Example Decision Environment"
         new_name: "Latest Example Decision Environment"
+        organization_name: Default
         state: present
 
     - name: Delete the the Decision Environment
