@@ -24,3 +24,7 @@ tests/integration/event_source_kafka/*.jks
 # Coverage
 .coverage*
 *coverage.combined
+# docs/requirements.txt
+docs/build.sh
+docs/antsibull-docs.cfg
+docs/conf.py

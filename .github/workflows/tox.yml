@@ -37,11 +37,11 @@ jobs:
           min_python: "3.9"
           max_python: "3.12"
           default_python: "3.9"
-          # Wwe run sanity with 3 different versions of ansible as the result
+          # We run sanity with 3 different versions of ansible as the result
           # can be different. Each of them is testing with all supported
           # python versions, regardless the tox pyXY name.
           other_names: |
-            lint-sanity:tox -e lint;tox -e py39-sanity-ansible2.15;tox -e py310-sanity-ansible2.16;tox -e py311-sanity-ansible2.17
+            lint-docs-sanity:tox -e lint;tox -e docs;tox -e py39-sanity-ansible2.15;tox -e py310-sanity-ansible2.16;tox -e py311-sanity-ansible2.17
             py39:tox -e py39-unit;tox -e py39-integration;tox -e coverage
             py310:tox -e py310-unit; tox -e py310-integration;tox -e coverage
             py311:tox -e py311-unit; tox -e py311-integration;tox -e coverage
@@ -129,6 +129,9 @@ jobs:
 
       - run: ${{ matrix.command4 }}
         if: ${{ matrix.command4 }}
+
+      - run: ${{ matrix.command5 }}
+        if: ${{ matrix.command5 }}
 
       - name: Archive logs
         uses: actions/upload-artifact@v4

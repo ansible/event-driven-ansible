@@ -3,6 +3,9 @@ libsystemd0 [test platform:debian]
 libsystemd-dev [test platform:debian]
 pkg-config  [test platform:debian]
 
+# docs
+rsync [test platform:debian]
+
 # For sanity testing to pass we need all supported Python versions installed:
 python3.9-dev [test platform:ubuntu-noble]
 python3.9-venv [test platform:ubuntu-noble]

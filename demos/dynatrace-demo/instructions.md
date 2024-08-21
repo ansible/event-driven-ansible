@@ -10,7 +10,7 @@ rulebook CLI runs a remedy playbook to restart the process.
 ### Nodes or instances
 * Rulebook Node: The node where the ansible-rulebook CLI is running
 * Client Node: The node where the monitored process is running
-* Dynatrace Console: An active Dyntrace tenant and its web console
+* Dynatrace Console: An active Dynatrace tenant and its web console
 
 ### Set up client node
 1. Prepare a VM with host name called `lamp`
