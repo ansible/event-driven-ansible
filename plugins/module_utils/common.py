@@ -12,8 +12,8 @@ from typing import Any, Optional
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ..module_utils.controller import Controller
-from ..module_utils.errors import EDAError
+from .controller import Controller
+from .errors import EDAError
 
 
 def lookup_resource_id(
