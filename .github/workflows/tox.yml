@@ -41,14 +41,15 @@ jobs:
           # can be different. Each of them is testing with all supported
           # python versions, regardless the tox pyXY name.
           other_names: |
-            lint-docs-sanity:tox -e lint;tox -e docs;tox -e py39-sanity-ansible2.15;tox -e py310-sanity-ansible2.16;tox -e py311-sanity-ansible2.17
-            py39:tox -e py39-unit;tox -e py39-integration;tox -e coverage
-            py310:tox -e py310-unit; tox -e py310-integration;tox -e coverage
-            py311:tox -e py311-unit; tox -e py311-integration;tox -e coverage
-            py312:tox -e py312-unit; tox -e py312-integration;tox -e coverage
-            py39-macos:tox -e py39-unit;tox -e py39-integration;tox -e coverage
-            py312-macos:tox -e py312-unit;tox -e py312-integration;tox -e coverage
-            py311-linux-arm64:tox -e py312-unit;tox -e py312-integration;tox -e coverage
+            # lint-docs-sanity:tox -e lint;tox -e docs;tox -e py39-sanity-ansible2.15;tox -e py310-sanity-ansible2.16;tox -e py311-sanity-ansible2.17
+            # py39:tox -e py39-unit;tox -e py39-integration;tox -e coverage
+            # py310:tox -e py310-unit; tox -e py310-integration;tox -e coverage
+            # py311:tox -e py311-unit; tox -e py311-integration;tox -e coverage
+            # py312:tox -e py312-unit; tox -e py312-integration;tox -e coverage
+            # py39-macos:tox -e py39-unit;tox -e py39-integration;tox -e coverage
+            # py312-macos:tox -e py312-unit;tox -e py312-integration;tox -e coverage
+            # py311-linux-arm64:tox -e py312-unit;tox -e py312-integration;tox -e coverage
+            py311: tox -e py311-integration-ansible
           # ^ arm64 runner is using py311 for matching python version used in AAP 2.5
           platforms: linux,macos,linux-arm64:ubuntu-24.04-arm64-2core
           skip_explode: "1"

@@ -13,6 +13,7 @@ tests/integration/event_source_kafka/*.crt
 tests/integration/event_source_kafka/*.key
 tests/integration/event_source_kafka/*.csr
 tests/integration/event_source_kafka/*.jks
+tests/integration/integration_config.yml
 
 # Ide's
 .vscode
