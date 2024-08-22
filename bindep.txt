@@ -3,11 +3,4 @@ libsystemd0 [test platform:debian]
 libsystemd-dev [test platform:debian]
 pkg-config  [test platform:debian]
 
-# For sanity testing to pass we need all supported Python versions installed:
-python3.9-dev [py39 platform:ubuntu-noble]
-python3.9-venv [py39 platform:ubuntu-noble]
-python3.10-dev [py310 platform:ubuntu-noble]
-python3.10-venv [py310 platform:ubuntu-noble]
-python3.11-dev [py311 platform:ubuntu-noble]
-python3.11-venv [py311 platform:ubuntu-noble]
 shellcheck [lint platform:ubuntu-noble]
