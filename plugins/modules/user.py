@@ -155,7 +155,7 @@ def main():
     ret = {}
 
     try:
-        user_type = controller.get_one_or_many(user_endpoint, name=username)
+        user_type = controller.get_exactly_one(user_endpoint, name=username)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 

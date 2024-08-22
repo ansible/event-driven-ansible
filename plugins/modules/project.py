@@ -95,6 +95,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
+from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -138,7 +139,7 @@ def main() -> None:
     ret = {}
 
     try:
-        project_type = controller.get_one_or_many(project_endpoint, name=project_name)
+        project_type = controller.get_exactly_one(project_endpoint, name=project_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
@@ -158,28 +159,20 @@ def main() -> None:
 
     credential_id = None
     if credential:
-        try:
-            credential_id = controller.get_exactly_one(
-                "eda-credentials", name=credential
-            )
-        except EDAError as eda_err:
-            module.fail_json(msg=str(eda_err))
-            raise  # https://github.com/ansible/ansible/pull/83814
+        credential_id = lookup_resource_id(
+            module, controller, "eda-credentials", name=credential
+        )
 
     if credential_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
-        project_type_params["eda_credential_id"] = credential_id["id"]
+        project_type_params["eda_credential_id"] = credential_id
 
     organization_id = None
     if module.params.get("organization_name"):
-        try:
-            organization_id = controller.resolve_name_to_id(
-                "organizations", module.params["organization_name"]
-            )
-        except EDAError as eda_err:
-            module.fail_json(msg=str(eda_err))
-            raise
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", module.params["organization_name"]
+        )
 
     if organization_id:
         project_type_params["organization_id"] = organization_id

@@ -135,7 +135,7 @@ def main() -> None:
 
     # Attempt to look up credential_type based on the provided name
     try:
-        credential_type = controller.get_one_or_many("credential-types", name=name)
+        credential_type = controller.get_exactly_one("credential-types", name=name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential type: {e}")
 

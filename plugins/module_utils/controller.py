@@ -4,14 +4,14 @@
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 from __future__ import absolute_import, annotations, division, print_function
 
-from typing import Any, List, NoReturn, Optional, Union
+__metaclass__ = type
+
+
+from typing import Any, List, NoReturn, Optional
 
 from ansible.module_utils.basic import AnsibleModule
 
 from .client import Client
-
-__metaclass__ = type
-
 from .errors import EDAError
 
 
@@ -76,43 +76,52 @@ class Controller:
         raise EDAError(msg)
 
     def fail_wanted_one(self, response, endpoint, query_params) -> NoReturn:
-        sample = response.json.copy()
-        if len(sample["results"]) > 1:
-            sample["results"] = sample["results"][:2] + ["...more results snipped..."]
         url = self.client.build_url(endpoint, query_params)
         host_length = len(self.client.host)
         display_endpoint = url.geturl()[
             host_length:
         ]  # truncate to not include the base URL
-        msg = f"Request to {display_endpoint} returned {response.json['count']} items, expected 1"
+        msg = (
+            f"Request to {display_endpoint} returned {len(response)} items, expected 1"
+        )
         raise EDAError(msg)
 
-    def get_exactly_one(
-        self, endpoint, name=None, **kwargs
-    ) -> Optional[dict[str, bool]]:
-        result = self.get_one_or_many(
-            endpoint, name=name, allow_none=True, want_one=True, **kwargs
-        )
-        # typing: needed as get_one_or_many can also return lists, not expected
-        # to reach this ever.
-        if isinstance(result, list):  # pragma: no cover
-            self.fail_wanted_one(result, endpoint, {})
-        return result
+    def get_exactly_one(self, endpoint, name=None, **kwargs) -> dict[str, Any]:
+        new_kwargs = kwargs.copy()
 
-    def resolve_name_to_id(self, endpoint, name):
-        return self.get_exactly_one(endpoint, name)["id"]
+        result = self.get_one_or_many(endpoint, name=name, **kwargs)
+
+        if len(result) == 0:
+            return {}
+
+        if len(result) > 1:
+            if name:
+                # Since we did a name or ID search and got > 1 return
+                # something if the id matches
+                for asset in result:
+                    if str(asset["id"]) == name:
+                        return asset
+            # We got > 1 and either didn't find something by ID (which means
+            # multiple names)
+            # Or we weren't running with a or search and just got back too
+            # many to begin with.
+            self.fail_wanted_one(result, endpoint, new_kwargs.get("data"))
+
+        return result[0]
+
+    def resolve_name_to_id(self, endpoint, name, **kwargs):
+        result = self.get_exactly_one(endpoint, name, **kwargs)
+        if result:
+            return result["id"]
+        return None
 
     def get_one_or_many(
         self,
         endpoint: str,
         name: Optional[str] = None,
-        allow_none: bool = True,
-        check_exists: bool = False,
-        want_one: bool = True,
         **kwargs: Any,
-    ) -> Union[None, dict[str, bool], List]:
+    ) -> List[Any]:
         new_kwargs = kwargs.copy()
-        response = None
 
         if name:
             name_field = self.get_name_field_from_endpoint(endpoint)
@@ -133,31 +142,9 @@ class Controller:
             raise EDAError("The endpoint did not provide count, results")
 
         if response.json["count"] == 0:
-            if allow_none:
-                return None
-            self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
-        if response.json["count"] == 1:
-            return response.json["results"][0]
-        if response.json["count"] > 1:
-            if want_one:
-                if name:
-                    # Since we did a name or ID search and got > 1 return
-                    # something if the id matches
-                    for asset in response.json["results"]:
-                        if str(asset["id"]) == name:
-                            return asset
-                # We got > 1 and either didn't find something by ID (which means
-                # multiple names)
-                # Or we weren't running with a or search and just got back too
-                # many to begin with.
-                self.fail_wanted_one(response, endpoint, new_kwargs.get("data"))
-            else:
-                return response.json["results"]
+            return []
 
-        if check_exists:
-            self.result["id"] = response.json["results"][0]["id"]
-            return self.result
-        return None
+        return response.json["results"]
 
     def create_if_needed(
         self,
@@ -304,7 +291,7 @@ class Controller:
         #    to you to process the response and exit from the module.
         # Note: common error codes from the EDA API can cause the module to fail
         response = None
-        if existing_item is None:
+        if not existing_item:
             raise RuntimeError(
                 "update_if_needed called incorrectly without existing_item"
             )
@@ -387,7 +374,7 @@ class Controller:
         )
 
     def delete_if_needed(self, existing_item, endpoint, on_delete=None):
-        if existing_item is None:
+        if not existing_item:
             return self.result
 
         # If we have an item, we can try to delete it

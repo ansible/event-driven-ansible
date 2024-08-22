@@ -78,7 +78,6 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import to_list_of_dict
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -111,7 +110,7 @@ def main() -> None:
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
 
-    module.exit_json(credentials=to_list_of_dict(result))
+    module.exit_json(credentials=result)
 
 
 if __name__ == "__main__":

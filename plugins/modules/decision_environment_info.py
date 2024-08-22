@@ -66,7 +66,6 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import to_list_of_dict
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -103,7 +102,7 @@ def main() -> None:
         module.fail_json(msg=str(eda_err))
         raise  # https://github.com/ansible/ansible/pull/83814
 
-    module.exit_json(decision_environments=to_list_of_dict(ret))
+    module.exit_json(decision_environments=ret)
 
 
 if __name__ == "__main__":
