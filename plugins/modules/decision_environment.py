@@ -49,6 +49,7 @@ options:
     organization_name:
       description:
         - The name of the organization.
+        - AAP 2.4 does not support organization name.
       type: str
       aliases:
         - organization
@@ -118,7 +119,7 @@ def main() -> None:
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    required_if = [("state", "present", ("name", "organization_name", "image_url"))]
+    required_if = [("state", "present", ("name", "image_url"))]
 
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
@@ -134,12 +135,23 @@ def main() -> None:
 
     decision_environment_endpoint = "decision-environments"
     controller = Controller(client, module)
+    # Organization is not available in Controller 2.4 API
+    config_endpoint_avail = controller.get_endpoint(
+        "config",
+    )
+    state = module.params.get("state")
+    organization_name = module.params.get("organization_name")
+
+    if state == "present":
+        if config_endpoint_avail.status not in (404,) and organization_name is None:
+            module.fail_json(
+                msg="Parameter organization_name is a required when state is set to present"
+            )
 
     decision_environment_name = module.params.get("name")
     new_name = module.params.get("new_name")
     description = module.params.get("description")
     image_url = module.params.get("image_url")
-    state = module.params.get("state")
     credential = module.params.get("credential")
     ret = {}
 
@@ -167,7 +179,7 @@ def main() -> None:
         decision_environment_type_params["image_url"] = image_url
 
     credential_type_id = None
-    if credential:
+    if config_endpoint_avail.status not in (404,) and credential:
         credential_type_id = lookup_resource_id(
             module, controller, "eda-credentials", name=credential
         )
@@ -178,9 +190,9 @@ def main() -> None:
         decision_environment_type_params["credential"] = credential_type_id
 
     organization_id = None
-    if module.params.get("organization_name"):
+    if config_endpoint_avail.status not in (404,) and organization_name:
         organization_id = lookup_resource_id(
-            module, controller, "organizations", module.params["organization_name"]
+            module, controller, "organizations", organization_name
         )
 
     if organization_id:

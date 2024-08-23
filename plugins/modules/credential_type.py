@@ -48,6 +48,8 @@ options:
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
+notes:
+  - M(ansible.eda.credential_type) supports AAP 2.5 and onwards.
 """
 
 
@@ -116,6 +118,14 @@ def main() -> None:
         validate_certs=module.params.get("validate_certs"),
     )
 
+    controller = Controller(client, module)
+    credential_type_endpoint = "credential-types"
+    credential_type_path = controller.get_endpoint(credential_type_endpoint)
+    if credential_type_path.status in (404,):
+        module.fail_json(
+            msg="Module ansible.eda.credential_type supports AAP 2.5 and onwards"
+        )
+
     name = module.params.get("name")
     new_name = module.params.get("new_name")
     description = module.params.get("description")
@@ -131,11 +141,11 @@ def main() -> None:
     if injectors:
         credential_type_params["injectors"] = injectors
 
-    controller = Controller(client, module)
-
     # Attempt to look up credential_type based on the provided name
     try:
-        credential_type = controller.get_exactly_one("credential-types", name=name)
+        credential_type = controller.get_exactly_one(
+            credential_type_endpoint, name=name
+        )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential type: {e}")
 
@@ -143,7 +153,7 @@ def main() -> None:
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
             result = controller.delete_if_needed(
-                credential_type, endpoint="credential-types"
+                credential_type, endpoint=credential_type_endpoint
             )
             module.exit_json(**result)
         except EDAError as e:
@@ -161,7 +171,7 @@ def main() -> None:
         result = controller.create_or_update_if_needed(
             credential_type,
             credential_type_params,
-            endpoint="credential-types",
+            endpoint=credential_type_endpoint,
             item_type="credential type",
         )
         module.exit_json(**result)

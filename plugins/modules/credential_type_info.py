@@ -26,6 +26,8 @@ options:
     required: false
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
+notes:
+  - M(ansible.eda.credential_type_info) supports AAP 2.5 and onwards.
 """
 
 
@@ -99,11 +101,17 @@ def main() -> None:
 
     name = module.params.get("name")
     controller = Controller(client, module)
+    credential_type_endpoint = "credential-types"
+    credential_type_path = controller.get_endpoint(credential_type_endpoint)
+    if credential_type_path.status in (404,):
+        module.fail_json(
+            msg="Module ansible.eda.credential_type_info supports AAP 2.5 and onwards"
+        )
 
     # Attempt to look up credential_type based on the provided name
     try:
         result = controller.get_one_or_many(
-            "credential-types", name=name, want_one=False
+            credential_type_endpoint, name=name, want_one=False
         )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential type: {e}")

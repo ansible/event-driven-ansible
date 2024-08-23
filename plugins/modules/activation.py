@@ -71,12 +71,16 @@ options:
   organization_name:
     description:
       - The name of the organization.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: str
     aliases:
       - organization
   eda_credentials:
     description:
       - A list of IDs for EDA credentials used by the rulebook activation.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: list
     elements: str
     aliases:
@@ -84,25 +88,35 @@ options:
   k8s_service_name:
     description:
       - The name of the Kubernetes service associated with this rulebook activation.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: str
   webhooks:
     description:
       - A list of webhook IDs associated with the rulebook activation.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: list
     elements: str
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: bool
     default: true
   event_streams:
     description:
       -  A list of IDs representing the event streams that this rulebook activation listens to.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: list
     elements: int
   log_level:
     description:
       - Allow setting the desired log level.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
     type: str
     default: "debug"
     choices: ["debug", "info", "error"]
@@ -156,7 +170,9 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
+def create_params(
+    module: AnsibleModule, controller: Controller, is_aap_24: bool
+) -> dict[str, Any]:
     activation_params: dict[str, Any] = {}
 
     # Get the project id
@@ -198,7 +214,7 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
 
     # Get the organization id
     organization_id = None
-    if module.params.get("organization_name"):
+    if not is_aap_24 and module.params.get("organization_name"):
         organization_id = lookup_resource_id(
             module, controller, "organizations", module.params["organization_name"]
         )
@@ -226,12 +242,12 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if module.params.get("enabled"):
         activation_params["is_enabled"] = module.params["enabled"]
 
-    if module.params.get("event_streams"):
+    if not is_aap_24 and module.params.get("event_streams"):
         activation_params["event_streams"] = module.params["event_streams"]
 
     # Get the eda credential ids
     eda_credential_ids = None
-    if module.params.get("eda_credentials"):
+    if not is_aap_24 and module.params.get("eda_credentials"):
         eda_credential_ids = []
         for item in module.params["eda_credentials"]:
             cred_id = lookup_resource_id(module, controller, "eda-credentials", item)
@@ -241,12 +257,12 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if eda_credential_ids is not None:
         activation_params["eda_credentials"] = eda_credential_ids
 
-    if module.params.get("k8s_service_name"):
+    if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
     # Get the webhook ids
     webhooks_ids = None
-    if module.params.get("webhooks"):
+    if not is_aap_24 and module.params.get("webhooks"):
         webhooks_ids = []
         for item in module.params["webhooks"]:
             webhook_id = lookup_resource_id(module, controller, "webhooks", item)
@@ -255,10 +271,10 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if webhooks_ids is not None:
         activation_params["webhooks"] = webhooks_ids
 
-    if module.params.get("log_level"):
+    if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    if module.params.get("swap_single_source"):
+    if not is_aap_24 and module.params.get("swap_single_source"):
         activation_params["swap_single_source"] = module.params["swap_single_source"]
 
     return activation_params
@@ -299,7 +315,7 @@ def main() -> None:
         (
             "state",
             "present",
-            ("name", "rulebook_name", "decision_environment_name", "organization_name"),
+            ("name", "rulebook_name", "decision_environment_name"),
         )
     ]
 
@@ -319,7 +335,16 @@ def main() -> None:
     state = module.params.get("state")
 
     controller = Controller(client, module)
-
+    # Organization is not available in Controller 2.4 API
+    config_endpoint_avail = controller.get_endpoint(
+        "config",
+    )
+    is_aap_24 = config_endpoint_avail.status in (404,)
+    organization_name = module.params.get("organization_name")
+    if state == "present" and not is_aap_24 and organization_name is None:
+        module.fail_json(
+            msg="Parameter organization_name is required when state is present."
+        )
     # Attempt to find rulebook activation based on the provided name
     try:
         activation = controller.get_exactly_one("activations", name=name)
@@ -341,7 +366,7 @@ def main() -> None:
         )
 
     # Activation Data that will be sent for create/update
-    activation_params = create_params(module, controller)
+    activation_params = create_params(module, controller, is_aap_24=is_aap_24)
     activation_params["name"] = (
         controller.get_item_name(activation) if activation else name
     )
