@@ -3,6 +3,7 @@
 import asyncio
 import json
 import uuid
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,17 +22,17 @@ from extensions.eda.plugins.event_source.pg_listener import main as pg_listener_
 MAX_LENGTH = 7 * 1024
 
 
-class _MockQueue:
-    def __init__(self):
-        self.queue = []
+class _MockQueue(asyncio.Queue[Any]):
+    def __init__(self) -> None:
+        self.queue: list[Any] = []
 
-    async def put(self, event):
+    async def put(self, event) -> None:
         """Put an event into the queue"""
         self.queue.append(event)
 
 
 class _AsyncIterator:
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         self.count = 0
         self.data = data
 
@@ -51,7 +52,7 @@ class _AsyncIterator:
         return mock
 
 
-def _to_chunks(payload: str, result: list[str]):
+def _to_chunks(payload: str, result: list[str]) -> None:
     message_length = len(payload)
     if message_length >= MAX_LENGTH:
         xx_hash = xxhash.xxh32(payload.encode("utf-8")).hexdigest()
@@ -81,9 +82,9 @@ TEST_PAYLOADS = [
 
 
 @pytest.mark.parametrize("events", TEST_PAYLOADS)
-def test_receive_from_pg_listener(events):
+def test_receive_from_pg_listener(events) -> None:
     """Test receiving different payloads from pg notify."""
-    notify_payload = []
+    notify_payload: list[str] = []
     myqueue = _MockQueue()
     for event in events:
         _to_chunks(json.dumps(event), notify_payload)

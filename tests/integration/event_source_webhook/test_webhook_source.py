@@ -32,7 +32,7 @@ def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0):
         pytest.param(5001, id="custom_port"),
     ],
 )
-def test_webhook_source_sanity(subprocess_teardown, port: int):
+def test_webhook_source_sanity(subprocess_teardown, port: int) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -72,7 +72,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int):
     assert proc.returncode == 0
 
 
-def test_webhook_source_with_busy_port(subprocess_teardown):
+def test_webhook_source_with_busy_port(subprocess_teardown) -> None:
     """
     Ensure the CLI responds correctly if the desired port is
     already in use.
@@ -90,7 +90,7 @@ def test_webhook_source_with_busy_port(subprocess_teardown):
     assert proc2.returncode == 1
 
 
-def test_webhook_source_hmac_sanity(subprocess_teardown):
+def test_webhook_source_hmac_sanity(subprocess_teardown) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -138,7 +138,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown):
     assert proc.returncode == 0
 
 
-def test_webhook_source_with_unsupported_hmac_algo(subprocess_teardown):
+def test_webhook_source_with_unsupported_hmac_algo(subprocess_teardown) -> None:
     """
     Ensure the CLI responds correctly if the desired HMAC algorithm is not supported.
     """

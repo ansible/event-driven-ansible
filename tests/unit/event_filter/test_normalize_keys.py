@@ -42,6 +42,6 @@ TEST_DATA_1 = [
 
 
 @pytest.mark.parametrize("event, overwrite, updated_event", TEST_DATA_1)
-def test_normalize_keys(event, overwrite, updated_event):
+def test_normalize_keys(event, overwrite, updated_event) -> None:
     data = normalize_main(event, overwrite)
     assert data == updated_event

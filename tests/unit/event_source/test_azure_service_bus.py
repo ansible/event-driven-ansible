@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,10 +8,10 @@ from extensions.eda.plugins.event_source.azure_service_bus import main as azure_
 
 
 class MockQueue:
-    def __init__(self):
-        self.queue = []
+    def __init__(self) -> None:
+        self.queue: list[Any] = []
 
-    def put_nowait(self, event):
+    def put_nowait(self, event) -> None:
         self.queue.append(event)
 
 
@@ -19,7 +20,7 @@ def myqueue():
     return MockQueue()
 
 
-def test_receive_from_azure_service_bus(myqueue):
+def test_receive_from_azure_service_bus(myqueue) -> None:
     client = MagicMock()
     with patch(
         "extensions.eda.plugins.event_source.azure_service_bus.ServiceBusClient."
@@ -28,11 +29,11 @@ def test_receive_from_azure_service_bus(myqueue):
     ):
         payload1 = MagicMock()
         payload1.message_id = 1
-        payload1.__str__.return_value = "Hello World"
+        payload1.__str__.return_value = "Hello World"  # type: ignore[attr-defined]
 
         payload2 = MagicMock()
         payload2.message_id = 2
-        payload2.__str__.return_value = '{"Say":"Hello World"}'
+        payload2.__str__.return_value = '{"Say":"Hello World"}'  # type: ignore[attr-defined]
 
         receiver = MagicMock()
         receiver.__iter__.return_value = [payload1, payload2]

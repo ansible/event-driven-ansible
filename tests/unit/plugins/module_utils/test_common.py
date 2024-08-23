@@ -55,7 +55,7 @@ def test_lookup_resource_id(
     expected_result: Optional[Any],
     fail_json_called: bool,
     fail_json_args: Optional[dict[str, Any]],
-):
+) -> None:
     mock_controller = MagicMock()
     mock_module = MagicMock()
 

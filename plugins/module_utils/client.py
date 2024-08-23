@@ -5,11 +5,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+from typing import Any, Optional
+
 __metaclass__ = type
 
 import json
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, urlparse
+from urllib.parse import ParseResult, urlencode, urlparse
 
 from ansible.module_utils.urls import Request
 
@@ -17,7 +19,7 @@ from .errors import AuthError, EDAHTTPError
 
 
 class Response:
-    def __init__(self, status, data, headers=None):
+    def __init__(self, status: int, data: Any, headers: Optional[Any] = None) -> None:
         self.status = status
         self.data = data
         # [('h1', 'v1'), ('H2', 'V2')] -> {'h1': 'v1', 'h2': 'V2'}
@@ -28,7 +30,7 @@ class Response:
         self._json = None
 
     @property
-    def json(self):
+    def json(self) -> Any:
         if self._json is None:
             try:
                 self._json = json.loads(self.data)
@@ -42,12 +44,12 @@ class Response:
 class Client:
     def __init__(
         self,
-        host,
-        username=None,
-        password=None,
-        timeout=None,
-        validate_certs=None,
-    ):
+        host: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        timeout: Optional[Any] = None,
+        validate_certs: Optional[Any] = None,
+    ) -> None:
 
         if not (host or "").startswith(("https://", "http://")):
             raise EDAHTTPError(
@@ -73,7 +75,13 @@ class Client:
 
         self.session = Request()
 
-    def _request(self, method, path, data=None, headers=None):
+    def _request(
+        self,
+        method: str,
+        path: str,
+        data: Optional[Any] = None,
+        headers: Optional[Any] = None,
+    ) -> Response:
         try:
             raw_resp = self.session.open(
                 method,
@@ -101,7 +109,12 @@ class Client:
 
         return Response(raw_resp.status, raw_resp.read(), raw_resp.headers)
 
-    def build_url(self, endpoint, query_params=None, identifier=None):
+    def build_url(
+        self,
+        endpoint: str,
+        query_params: Optional[Any] = None,
+        identifier: Optional[Any] = None,
+    ) -> ParseResult:
         # Make sure we start with /api/vX
         if not endpoint.startswith("/"):
             endpoint = f"/{endpoint}"
@@ -122,7 +135,7 @@ class Client:
 
         return url
 
-    def request(self, method, endpoint, **kwargs):
+    def request(self, method: str, endpoint: str, **kwargs: Any) -> Response:
         # In case someone is calling us directly; make sure we were given a
         # method, let's not just assume a GET
         if not method:
@@ -136,7 +149,7 @@ class Client:
             url = self.build_url(endpoint, query_params=kwargs.get("data"))
 
         # Extract the headers, this will be used in a couple of places
-        headers = kwargs.get("headers", {})
+        headers: dict[str, str] = kwargs.get("headers", {})
 
         if method in ["POST", "PUT", "PATCH"]:
             headers.setdefault("Content-Type", "application/json")
@@ -151,25 +164,25 @@ class Client:
 
         return self._request(method, url.geturl(), data=data, headers=headers)
 
-    def get(self, path, **kwargs):
+    def get(self, path: str, **kwargs: str) -> Response:
         resp = self.request("GET", path, **kwargs)
         if resp.status in (200, 404):
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
-    def post(self, path, **kwargs):
+    def post(self, path: str, **kwargs: Any) -> Response:
         resp = self.request("POST", path, **kwargs)
         if resp.status == 201:
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
-    def patch(self, path, **kwargs):
+    def patch(self, path: str, **kwargs: Any) -> Response:
         resp = self.request("PATCH", path, **kwargs)
         if resp.status == 200:
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
-    def delete(self, path, **kwargs):
+    def delete(self, path: str, **kwargs: Any) -> Response:
         resp = self.request("DELETE", path, **kwargs)
         if resp.status == 204:
             return resp

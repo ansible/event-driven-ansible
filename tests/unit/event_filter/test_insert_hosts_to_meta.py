@@ -39,7 +39,7 @@ EVENT_DATA_1 = [
 
 
 @pytest.mark.parametrize("data, args, expected_hosts", EVENT_DATA_1)
-def test_find_hosts(data, args, expected_hosts):
+def test_find_hosts(data, args, expected_hosts) -> None:
     data = hosts_main(data, **args)
     if expected_hosts:
         assert data["meta"]["hosts"] == expected_hosts
@@ -64,18 +64,18 @@ EVENT_DATA_2 = [
 
 
 @pytest.mark.parametrize("data, args", EVENT_DATA_2)
-def test_fail_find_hosts(data, args):
+def test_fail_find_hosts(data, args) -> None:
     with pytest.raises(TypeError):
         hosts_main(data, **args)
 
 
-def test_host_path_not_exist():
+def test_host_path_not_exist() -> None:
     event = {"app": {"target": 5000}}
     host_path = "app.bad"
     assert hosts_main(event, host_path=host_path) == event
 
 
-def test_host_path_not_exist_exception():
+def test_host_path_not_exist_exception() -> None:
     event = {"app": {"target": 5000}}
     host_path = "app.bad"
     with pytest.raises(PathNotExistError):

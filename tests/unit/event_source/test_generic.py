@@ -3,6 +3,7 @@
 import asyncio
 import os
 import tempfile
+from typing import Any
 
 import pytest
 import yaml
@@ -10,11 +11,11 @@ import yaml
 from extensions.eda.plugins.event_source.generic import main as generic_main
 
 
-class _MockQueue:
-    def __init__(self):
-        self.queue = []
+class _MockQueue(asyncio.Queue[Any]):
+    def __init__(self) -> None:
+        self.queue: list[Any] = []
 
-    async def put(self, event):
+    async def put(self, event) -> None:
         """Put an event into the queue"""
         self.queue.append(event)
 
@@ -27,7 +28,7 @@ TEST_PAYLOADS = [
 
 
 @pytest.mark.parametrize("events", TEST_PAYLOADS)
-def test_generic(events):
+def test_generic(events) -> None:
     """Test receiving different payloads from generic."""
     myqueue = _MockQueue()
 
@@ -47,7 +48,7 @@ def test_generic(events):
         index += 1
 
 
-def test_generic_loop_count():
+def test_generic_loop_count() -> None:
     """Test receiving events multiple times."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -67,7 +68,7 @@ def test_generic_loop_count():
         index += 1
 
 
-def test_generic_create_index():
+def test_generic_create_index() -> None:
     """Test receiving events with index."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -92,7 +93,7 @@ def test_generic_create_index():
         index += 1
 
 
-def test_generic_final_payload():
+def test_generic_final_payload() -> None:
     """Test receiving events with final payload."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -119,7 +120,7 @@ def test_generic_final_payload():
     assert myqueue.queue[index] == final_payload
 
 
-def test_generic_blob():
+def test_generic_blob() -> None:
     """Test receiving events with final payload."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -143,7 +144,7 @@ TEST_TIME_FORMATS = [["iso8601", str], ["local", str], ["epoch", int]]
 
 
 @pytest.mark.parametrize("time_format,expected_type", TEST_TIME_FORMATS)
-def test_generic_timestamps(time_format, expected_type):
+def test_generic_timestamps(time_format, expected_type) -> None:
     """Test receiving events with timestamps."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -163,7 +164,7 @@ def test_generic_timestamps(time_format, expected_type):
     assert isinstance(myqueue.queue[0]["timestamp"], expected_type)
 
 
-def test_generic_bad_time_format():
+def test_generic_bad_time_format() -> None:
     """Test bad time format."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -181,7 +182,7 @@ def test_generic_bad_time_format():
         )
 
 
-def test_generic_payload_file():
+def test_generic_payload_file() -> None:
     """Test reading events from file."""
     myqueue = _MockQueue()
     event = {"name": "fred"}
@@ -209,7 +210,7 @@ def test_generic_payload_file():
         index += 1
 
 
-def test_generic_missing_payload_file():
+def test_generic_missing_payload_file() -> None:
     """Test reading events from missing file."""
     myqueue = _MockQueue()
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -225,7 +226,7 @@ def test_generic_missing_payload_file():
             )
 
 
-def test_generic_parsing_payload_file():
+def test_generic_parsing_payload_file() -> None:
     """Test parsing failure events from file."""
     myqueue = _MockQueue()
     with tempfile.TemporaryDirectory() as tmpdir:
