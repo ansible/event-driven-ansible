@@ -140,3 +140,18 @@ repos:
         require_serial: true
         stages: [manual]
         pass_filenames: false
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.4.1
+    hooks:
+      - id: pip-compile
+        name: pip-combile -> constraints.txt
+        alias: deps
+        always_run: true
+        entry: pip-compile --upgrade --no-annotate --strip-extras --unsafe-package=ansible-core --unsafe-package=setuptools --output-file=.config/constraints.txt .config/requirements.txt .config/requirements-test.txt .config/requirements-docs.txt
+        files: ^.config\/.*requirements.*$
+        language: python
+        language_version: "3.9" # minimal we support officially
+        pass_filenames: false
+        stages: [manual]
+        additional_dependencies:
+          - pip>=22.3.1
