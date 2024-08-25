@@ -1,7 +1,5 @@
-
-
 .. meta::
-  :antsibull-docs: 2.12.0
+  :antsibull-docs: 2.13.0
 
 
 .. _plugins_in_ansible.eda:
@@ -85,5 +83,3 @@ Modules
     project_module
     project_info_module
     user_module
-
-

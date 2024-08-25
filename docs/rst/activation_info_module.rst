@@ -1,4 +1,3 @@
-
 .. Document meta
 
 :orphan:
@@ -7,7 +6,7 @@
     :trim:
 
 .. meta::
-  :antsibull-docs: 2.12.0
+  :antsibull-docs: 2.13.0
 
 .. Anchors
 
@@ -111,7 +110,7 @@ Parameters
 
       The URL of the EDA controller.
 
-      If not set, the value of the \ :literal:`CONTROLLER\_URL`\  environment variable will be used.
+      If not set, the value of the :literal:`CONTROLLER\_URL` environment variable will be used.
 
 
       .. raw:: html
@@ -150,7 +149,7 @@ Parameters
 
       Password used for authentication.
 
-      If not set, the value of the \ :literal:`CONTROLLER\_PASSWORD`\  environment variable will be used.
+      If not set, the value of the :literal:`CONTROLLER\_PASSWORD` environment variable will be used.
 
 
       .. raw:: html
@@ -189,7 +188,7 @@ Parameters
 
       Username used for authentication.
 
-      If not set, the value of the \ :literal:`CONTROLLER\_USERNAME`\  environment variable will be used.
+      If not set, the value of the :literal:`CONTROLLER\_USERNAME` environment variable will be used.
 
 
       .. raw:: html
@@ -262,7 +261,7 @@ Parameters
 
       Timeout in seconds for the connection with the EDA controller.
 
-      If not set, the value of the \ :literal:`CONTROLLER\_TIMEOUT`\  environment variable will be used.
+      If not set, the value of the :literal:`CONTROLLER\_TIMEOUT` environment variable will be used.
 
 
       .. rst-class:: ansible-option-line
@@ -305,11 +304,11 @@ Parameters
 
       Whether to allow insecure connections to Ansible Automation Platform EDA Controller instance.
 
-      If \ :literal:`no`\ , SSL certificates will not be validated.
+      If :literal:`no`\ , SSL certificates will not be validated.
 
       This should only be used on personally controlled sites using self-signed certificates.
 
-      If value not set, will try environment variable \ :literal:`CONTROLLER\_VERIFY\_SSL`\ 
+      If value not set, will try environment variable :literal:`CONTROLLER\_VERIFY\_SSL`
 
 
       .. rst-class:: ansible-option-line
@@ -341,14 +340,12 @@ Examples
 
 .. code-block:: yaml+jinja
 
-    
-      - name: Get information about a rulebook activation
-        ansible.eda.activation_info:
-          name: "Example Rulebook Activation"
+    - name: Get information about a rulebook activation
+      ansible.eda.activation_info:
+        name: "Example Rulebook Activation"
 
-      - name: List all rulebook activations
-        ansible.eda.activation_info:
-
+    - name: List all rulebook activations
+      ansible.eda.activation_info:
 
 
 
@@ -449,4 +446,3 @@ Collection links
 
 
 .. Parsing errors
-
