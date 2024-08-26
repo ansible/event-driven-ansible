@@ -75,14 +75,10 @@ class Controller:
         msg = "Cant determine identity field for Undefined object."
         raise EDAError(msg)
 
-    def fail_wanted_one(
-        self, response: list[Any]
-    ) -> NoReturn:
+    def fail_wanted_one(self, response: list[Any]) -> NoReturn:
         sample = response.copy()
-        sample = sample[:2] + ['...more results snipped...']
-        msg = (
-            f"Request returned {len(response)} items, expected 1. See: {sample}"
-        )
+        sample = sample[:2] + ["...more results snipped..."]
+        msg = f"Request returned {len(response)} items, expected 1. See: {sample}"
         raise EDAError(msg)
 
     def get_exactly_one(
