@@ -252,16 +252,6 @@ class Controller:
         endpoint,
         item_type,
     ):
-        # This will exit from the module on its own
-        # If the method successfully updates an item and on_update param is
-        # defined,
-        #   the on_update parameter will be called as a method passing in this
-        #   object and the json from the response
-        # This will return one of two things:
-        #    1. None if the existing_item does not need to be updated
-        #    2. The response from EDA from patching to the endpoint. It's up
-        #    to you to process the response and exit from the module.
-        # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if not existing_item:
             raise RuntimeError(
