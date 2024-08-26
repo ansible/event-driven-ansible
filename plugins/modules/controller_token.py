@@ -142,7 +142,6 @@ def main() -> None:
     }
     # Attempt to create the new AWX token
     ret = controller.create_if_needed(
-        existing_item=None,
         new_item=token_param,
         endpoint=token_endpoint,
         item_type="controller token type",
