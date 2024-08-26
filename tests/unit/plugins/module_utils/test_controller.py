@@ -39,30 +39,19 @@ def controller(mock_client, mock_module):
 
 
 @pytest.mark.parametrize(
-    "existing_item, new_item, mock_response, expected_result, expected_calls",
+    "new_item, mock_response, expected_result, expected_calls",
     [
-        # create_if_needed without existing item
         (
-            None,
             {"name": "Test"},
             Mock(status=201, json={"id": 1}),
             {"changed": True, "id": 1},
             1,  # Expected number of post calls
-        ),
-        # create_if_needed with existing item
-        (
-            {"id": 1, "url": "http://test.com/api/item/1"},
-            {"name": "Test"},
-            None,
-            None,
-            0,  # Expected number of post calls
         ),
     ],
 )
 def test_create_if_needed(
     mock_client,
     controller,
-    existing_item,
     new_item,
     mock_response,
     expected_result,
@@ -70,7 +59,7 @@ def test_create_if_needed(
 ) -> None:
     if mock_response:
         mock_client.post.return_value = mock_response
-    result = controller.create_if_needed(existing_item, new_item, ENDPOINT)
+    result = controller.create_if_needed(new_item, ENDPOINT)
     assert result == expected_result
     assert mock_client.post.call_count == expected_calls
     if expected_calls > 0:
@@ -181,7 +170,7 @@ def test_fail_wanted_one(mock_client, controller) -> None:
     mock_client.build_url.return_value.geturl.return_value = "http://example.com/api"
     mock_client.host = "http://example.com"
     with pytest.raises(EDAError, match="expected 1"):
-        controller.fail_wanted_one(response, "endpoint", {})
+        controller.fail_wanted_one(response)
 
 
 def test_fields_could_be_same() -> None:
