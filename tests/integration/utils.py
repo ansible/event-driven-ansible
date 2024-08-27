@@ -54,7 +54,7 @@ class CLIRunner:
 
         return args
 
-    def run(self):
+    def run(self) -> subprocess.CompletedProcess:
         args = self._process_args()
         print("Running command: ", " ".join(args))
         return subprocess.run(
@@ -66,7 +66,7 @@ class CLIRunner:
             env=self.env,
         )
 
-    def run_in_background(self):
+    def run_in_background(self) -> subprocess.Popen:
         args = self._process_args()
         print("Running command: ", " ".join(args))
         return subprocess.Popen(

@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import time
+from typing import Callable
 
 import pytest
 import requests
@@ -9,7 +10,7 @@ import requests
 from ..utils import TESTS_PATH, CLIRunner
 
 
-def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0):
+def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0) -> None:
     """
     Wait for events to be processed by ansible-rulebook, or timeout.
     Requires the process to be running in debug mode.
@@ -32,7 +33,7 @@ def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0):
         pytest.param(5001, id="custom_port"),
     ],
 )
-def test_webhook_source_sanity(subprocess_teardown, port: int) -> None:
+def test_webhook_source_sanity(subprocess_teardown: Callable, port: int) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -59,7 +60,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int) -> None:
 
     for msg in msgs:
         headers = {"Authorization": "Bearer secret"}
-        requests.post(url, data=msg, headers=headers)
+        requests.post(url, data=msg, headers=headers, timeout=5.0)
 
     try:
         stdout, _unused_stderr = proc.communicate(timeout=5)
@@ -72,7 +73,7 @@ def test_webhook_source_sanity(subprocess_teardown, port: int) -> None:
     assert proc.returncode == 0
 
 
-def test_webhook_source_with_busy_port(subprocess_teardown) -> None:
+def test_webhook_source_with_busy_port(subprocess_teardown: Callable) -> None:
     """
     Ensure the CLI responds correctly if the desired port is
     already in use.
@@ -90,7 +91,7 @@ def test_webhook_source_with_busy_port(subprocess_teardown) -> None:
     assert proc2.returncode == 1
 
 
-def test_webhook_source_hmac_sanity(subprocess_teardown) -> None:
+def test_webhook_source_hmac_sanity(subprocess_teardown: Callable) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -138,7 +139,9 @@ def test_webhook_source_hmac_sanity(subprocess_teardown) -> None:
     assert proc.returncode == 0
 
 
-def test_webhook_source_with_unsupported_hmac_algo(subprocess_teardown) -> None:
+def test_webhook_source_with_unsupported_hmac_algo(
+    subprocess_teardown: Callable,
+) -> None:
     """
     Ensure the CLI responds correctly if the desired HMAC algorithm is not supported.
     """

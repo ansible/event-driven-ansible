@@ -15,9 +15,9 @@ class _MockQueue(asyncio.Queue[Any]):
     def __init__(self) -> None:
         self.queue: list[Any] = []
 
-    async def put(self, event) -> None:
+    async def put(self, item: Any) -> None:
         """Put an event into the queue"""
-        self.queue.append(event)
+        self.queue.append(item)
 
 
 TEST_PAYLOADS = [
@@ -28,7 +28,7 @@ TEST_PAYLOADS = [
 
 
 @pytest.mark.parametrize("events", TEST_PAYLOADS)
-def test_generic(events) -> None:
+def test_generic(events: Any) -> None:
     """Test receiving different payloads from generic."""
     myqueue = _MockQueue()
 
@@ -144,7 +144,7 @@ TEST_TIME_FORMATS = [["iso8601", str], ["local", str], ["epoch", int]]
 
 
 @pytest.mark.parametrize("time_format,expected_type", TEST_TIME_FORMATS)
-def test_generic_timestamps(time_format, expected_type) -> None:
+def test_generic_timestamps(time_format: list, expected_type: type) -> None:
     """Test receiving events with timestamps."""
     myqueue = _MockQueue()
     event = {"name": "fred"}

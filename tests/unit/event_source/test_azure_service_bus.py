@@ -7,20 +7,20 @@ import pytest
 from extensions.eda.plugins.event_source.azure_service_bus import main as azure_main
 
 
-class MockQueue:
+class MockQueue(asyncio.Queue):
     def __init__(self) -> None:
         self.queue: list[Any] = []
 
-    def put_nowait(self, event) -> None:
-        self.queue.append(event)
+    def put_nowait(self, item: Any) -> None:
+        self.queue.append(item)
 
 
 @pytest.fixture
-def myqueue():
+def myqueue() -> MockQueue:
     return MockQueue()
 
 
-def test_receive_from_azure_service_bus(myqueue) -> None:
+def test_receive_from_azure_service_bus(myqueue: MockQueue) -> None:
     client = MagicMock()
     with patch(
         "extensions.eda.plugins.event_source.azure_service_bus.ServiceBusClient."

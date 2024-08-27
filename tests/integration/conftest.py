@@ -1,12 +1,16 @@
+from subprocess import Popen
+from typing import Callable, Iterator
+
 import pytest
 
 
 @pytest.fixture(scope="function")
-def subprocess_teardown():
-    processes = []
+def subprocess_teardown() -> Iterator[Callable]:
+    processes: list[Popen[bytes]] = []
 
-    def _teardown(process) -> None:
+    def _teardown(process: Popen[bytes]) -> None:
         processes.append(process)
 
     yield _teardown
-    [proc.terminate() for proc in processes]
+    for proc in processes:
+        proc.terminate()

@@ -16,7 +16,8 @@ Example:
 """
 
 import pathlib
-from typing import Union
+from asyncio import Queue
+from typing import Any, Union
 
 import yaml
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
@@ -98,7 +99,7 @@ def _observe_files(queue, files: list[str]) -> None:  # noqa: ANN001
 if __name__ == "__main__":
     """MockQueue if running directly."""
 
-    class MockQueue:
+    class MockQueue(Queue[Any]):
         """A fake queue."""
 
         async def put(self: "MockQueue", event: dict) -> None:

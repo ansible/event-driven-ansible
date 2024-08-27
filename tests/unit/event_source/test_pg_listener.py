@@ -26,23 +26,23 @@ class _MockQueue(asyncio.Queue[Any]):
     def __init__(self) -> None:
         self.queue: list[Any] = []
 
-    async def put(self, event) -> None:
+    async def put(self, event: Any) -> None:
         """Put an event into the queue"""
         self.queue.append(event)
 
 
 class _AsyncIterator:
-    def __init__(self, data) -> None:
+    def __init__(self, data: Any) -> None:
         self.count = 0
         self.data = data
 
-    def __aiter__(self):
+    def __aiter__(self) -> "_AsyncIterator":
         return _AsyncIterator(self.data)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "_AsyncIterator":
         return self
 
-    async def __anext__(self):
+    async def __anext__(self) -> MagicMock:
         if self.count >= len(self.data):
             raise StopAsyncIteration
 
@@ -81,15 +81,18 @@ TEST_PAYLOADS = [
 ]
 
 
+from typing import List
+
+
 @pytest.mark.parametrize("events", TEST_PAYLOADS)
-def test_receive_from_pg_listener(events) -> None:
+def test_receive_from_pg_listener(events: List[dict]) -> None:
     """Test receiving different payloads from pg notify."""
     notify_payload: list[str] = []
     myqueue = _MockQueue()
     for event in events:
         _to_chunks(json.dumps(event), notify_payload)
 
-    def my_iterator():
+    def my_iterator() -> _AsyncIterator:
         return _AsyncIterator(notify_payload)
 
     with patch(
