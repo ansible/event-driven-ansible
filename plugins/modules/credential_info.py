@@ -26,6 +26,8 @@ options:
     required: false
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
+notes:
+  - M(ansible.eda.credential_info) supports AAP 2.5 and onwards.
 """
 
 
@@ -101,11 +103,17 @@ def main() -> None:
 
     name = module.params.get("name")
     controller = Controller(client, module)
+    credential_endpoint = "eda-credentials"
+    credential_path = controller.get_endpoint(credential_endpoint)
+    if credential_path.status in (404,):
+        module.fail_json(
+            msg="Module ansible.eda.credential_info supports AAP 2.5 and onwards"
+        )
 
     # Attempt to look up credential based on the provided name
     try:
         result = controller.get_one_or_many(
-            "eda-credentials", name=name, want_one=False
+            credential_endpoint, name=name, want_one=False
         )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")

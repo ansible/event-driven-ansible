@@ -56,6 +56,8 @@ options:
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
+notes:
+  - M(ansible.eda.credential) supports AAP 2.5 and onwards.
 """
 
 
@@ -164,6 +166,12 @@ def main() -> None:
     )
 
     controller = Controller(client, module)
+    credential_endpoint = "eda-credentials"
+    credential_path = controller.get_endpoint(credential_endpoint)
+    if credential_path.status in (404,):
+        module.fail_json(
+            msg="Module ansible.eda.credential supports AAP 2.5 and onwards"
+        )
 
     name = module.params.get("name")
     new_name = module.params.get("new_name")
@@ -171,14 +179,16 @@ def main() -> None:
 
     # Attempt to look up credential based on the provided name
     try:
-        credential = controller.get_exactly_one("eda-credentials", name=name)
+        credential = controller.get_exactly_one(credential_endpoint, name=name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
-            result = controller.delete_if_needed(credential, endpoint="eda-credentials")
+            result = controller.delete_if_needed(
+                credential, endpoint=credential_endpoint
+            )
             module.exit_json(**result)
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete credential: {e}")
@@ -197,7 +207,7 @@ def main() -> None:
         result = controller.create_or_update_if_needed(
             credential,
             credential_params,
-            endpoint="eda-credentials",
+            endpoint=credential_endpoint,
             item_type="credential",
         )
         module.exit_json(**result)

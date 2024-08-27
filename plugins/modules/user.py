@@ -62,8 +62,17 @@ options:
     is_superuser:
       description:
         - Make user as superuser.
+        - This parameter is valid for AAP 2.5 and onwards.
       default: false
       type: bool
+    roles:
+      description:
+        - Set of roles to be associated with the user.
+        - This parameter is only valid and required if targeted controller is AAP 2.4 and O(state=present).
+          For AAP 2.5 and onwards this parameter is ignored.
+      choices: ["Admin", "Editor", "Contributor", "Operator", "Auditor", "Viewer"]
+      type: list
+      elements: str
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -129,6 +138,18 @@ def main() -> None:
         is_superuser=dict(type="bool", default=False),
         update_secrets=dict(type="bool", default=True),
         state=dict(choices=["present", "absent"], default="present"),
+        roles=dict(
+            type="list",
+            elements="str",
+            choices=[
+                "Admin",
+                "Editor",
+                "Contributor",
+                "Operator",
+                "Auditor",
+                "Viewer",
+            ],
+        ),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -151,6 +172,15 @@ def main() -> None:
     new_username = module.params.get("new_username")
     state = module.params.get("state")
     is_superuser = module.params.get("is_superuser")
+    roles = module.params.get("roles")
+
+    # Check for AAP 2.4
+    config_endpoint_avail = controller.get_endpoint(
+        "config",
+    )
+    is_aap_24 = config_endpoint_avail.status in (404,)
+    if is_aap_24 and state == "present" and roles is None:
+        module.fail_json(msg="Parameter roles is required while creating a user.")
 
     ret = {}
 
@@ -175,6 +205,15 @@ def main() -> None:
         user_fields["username"] = controller.get_item_name(user_type)
     elif username:
         user_fields["username"] = username
+
+    role_ids = []
+    if is_aap_24 and roles:
+        for role in roles:
+            role_id = controller.resolve_name_to_id("roles", role)
+            role_ids.append(role_id)
+
+    if role_ids:
+        user_fields["roles"] = role_ids
 
     for field_name in (
         "first_name",
