@@ -1,0 +1,2 @@
+antsibull-docs>=2.13.1
+sphinx-ansible-theme>=0.10.3

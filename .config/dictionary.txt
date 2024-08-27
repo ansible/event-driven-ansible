@@ -63,9 +63,9 @@ skipsdist
 snakeoil
 storepass
 testenv
+testpass
 testsecret
 testuser
 toxinidir
 trustore
 truststore
-testpass
