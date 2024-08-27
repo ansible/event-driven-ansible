@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 
 import aiohttp
 import pytest
@@ -6,11 +7,11 @@ import pytest
 from extensions.eda.plugins.event_source.alertmanager import main as alert_main
 
 
-async def start_server(queue, args):
+async def start_server(queue, args) -> None:
     await alert_main(queue, args)
 
 
-async def post_code(server_task, info):
+async def post_code(server_task, info) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
 
@@ -21,13 +22,13 @@ async def post_code(server_task, info):
     server_task.cancel()
 
 
-async def cancel_code(server_task):
+async def cancel_code(server_task) -> None:
     server_task.cancel()
 
 
 @pytest.mark.asyncio
-async def test_cancel():
-    queue = asyncio.Queue()
+async def test_cancel() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {"host": "localhost", "port": 8001}
     plugin_task = asyncio.create_task(start_server(queue, args))
@@ -38,8 +39,8 @@ async def test_cancel():
 
 
 @pytest.mark.asyncio
-async def test_post_endpoint_with_default():
-    queue = asyncio.Queue()
+async def test_post_endpoint_with_default() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {"host": "localhost", "port": 8002}
     plugin_task = asyncio.create_task(start_server(queue, args))
@@ -71,10 +72,14 @@ async def test_post_endpoint_with_default():
     assert data["meta"]["headers"]["Host"] == task_info["host"]
 
     data = await queue.get()
+    assert isinstance(data, dict)
+    assert isinstance(task_info["payload"], dict)
+    assert isinstance(task_info["payload"]["alerts"], list)
     assert data["alert"] == task_info["payload"]["alerts"][0]
     assert data["meta"]["hosts"] == ["host1"]
 
     data = await queue.get()
+    assert isinstance(data, dict)
     assert data["alert"] == task_info["payload"]["alerts"][1]
     assert data["meta"]["hosts"] == ["host2"]
 
@@ -82,8 +87,8 @@ async def test_post_endpoint_with_default():
 
 
 @pytest.mark.asyncio
-async def test_post_endpoint_with_options():
-    queue = asyncio.Queue()
+async def test_post_endpoint_with_options() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",

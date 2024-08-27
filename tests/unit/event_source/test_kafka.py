@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,11 +9,11 @@ from asyncmock import AsyncMock
 from extensions.eda.plugins.event_source.kafka import main as kafka_main
 
 
-class MockQueue:
-    def __init__(self):
-        self.queue = []
+class MockQueue(asyncio.Queue[Any]):
+    def __init__(self) -> None:
+        self.queue: list[Any] = []
 
-    async def put(self, event):
+    async def put(self, event) -> None:
         self.queue.append(event)
 
 
@@ -22,7 +23,7 @@ def myqueue():
 
 
 class AsyncIterator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.count = 0
 
     async def __anext__(self):
@@ -44,7 +45,7 @@ class MockConsumer(AsyncMock):
         return AsyncIterator()
 
 
-def test_receive_from_kafka_place_in_queue(myqueue):
+def test_receive_from_kafka_place_in_queue(myqueue) -> None:
     with patch(
         "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer
     ):

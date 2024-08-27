@@ -349,8 +349,7 @@ def main() -> None:
     # If the state was present and we can let the module build or update the
     # existing activation, this will return on its own
     try:
-        result = controller.create_or_update_if_needed(
-            activation,
+        result = controller.create_if_needed(
             activation_params,
             endpoint="activations",
             item_type="activation",

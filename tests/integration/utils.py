@@ -27,7 +27,7 @@ class CLIRunner:
     timeout: float = 10.0
     env: Optional[dict] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.env = os.environ.copy() if self.env is None else self.env
 
     def _process_args(self) -> List[str]:

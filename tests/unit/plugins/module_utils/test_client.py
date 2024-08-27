@@ -106,7 +106,7 @@ def test_client_methods(
     mock_response,
     mock_http_error,
     mock_url_error,
-):
+) -> None:
     client_instance, mock_request_instance = client
     mock_request_instance.open = Mock()
 

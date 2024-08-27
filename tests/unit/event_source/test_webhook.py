@@ -1,6 +1,7 @@
 import asyncio
 import ssl
 from http import HTTPStatus
+from typing import Any
 
 import aiohttp
 import pytest
@@ -8,11 +9,11 @@ import pytest
 from extensions.eda.plugins.event_source.webhook import main as webhook_main
 
 
-async def start_server(queue, args):
+async def start_server(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     await webhook_main(queue, args)
 
 
-async def post_code(server_task, info):
+async def post_code(server_task, info) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
 
@@ -32,7 +33,7 @@ async def post_code(server_task, info):
 
 async def assert_post(
     server_task, info, expected_status=HTTPStatus.OK, expected_text=None
-):
+) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
     headers = {}
@@ -51,13 +52,13 @@ async def assert_post(
                 assert expected_text in await resp.text()
 
 
-async def cancel_code(server_task):
+async def cancel_code(server_task) -> None:
     server_task.cancel()
 
 
 @pytest.mark.asyncio
-async def test_cancel():
-    queue = asyncio.Queue()
+async def test_cancel() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {"host": "localhost", "port": 8000, "token": "secret"}
     plugin_task = asyncio.create_task(start_server(queue, args))
@@ -68,8 +69,8 @@ async def test_cancel():
 
 
 @pytest.mark.asyncio
-async def test_post_endpoint():
-    queue = asyncio.Queue()
+async def test_post_endpoint() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -100,11 +101,11 @@ async def test_post_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_post_unsupported_body():
-    queue = asyncio.Queue()
+async def test_post_unsupported_body() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
     args = {"host": "localhost", "port": 8000}
 
-    async def do_request():
+    async def do_request() -> None:
         async with aiohttp.ClientSession() as session:
             url = f'http://{args["host"]}:{args["port"]}/test'
             async with session.post(url, data="not a json") as resp:
@@ -117,8 +118,8 @@ async def test_post_unsupported_body():
 
 
 @pytest.mark.asyncio
-async def test_post_hmac_hex_endpoint():
-    queue = asyncio.Queue()
+async def test_post_hmac_hex_endpoint() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -150,8 +151,8 @@ async def test_post_hmac_hex_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_post_hmac_hex_wo_digest_prefix_endpoint():
-    queue = asyncio.Queue()
+async def test_post_hmac_hex_wo_digest_prefix_endpoint() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -183,8 +184,8 @@ async def test_post_hmac_hex_wo_digest_prefix_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_post_hmac_hex_endpoint_invalid_signature():
-    queue = asyncio.Queue()
+async def test_post_hmac_hex_endpoint_invalid_signature() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -213,8 +214,8 @@ async def test_post_hmac_hex_endpoint_invalid_signature():
 
 
 @pytest.mark.asyncio
-async def test_post_hmac_hex_endpoint_missing_signature():
-    queue = asyncio.Queue()
+async def test_post_hmac_hex_endpoint_missing_signature() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -243,8 +244,8 @@ async def test_post_hmac_hex_endpoint_missing_signature():
 
 
 @pytest.mark.asyncio
-async def test_post_hmac_base64_endpoint():
-    queue = asyncio.Queue()
+async def test_post_hmac_base64_endpoint() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -276,8 +277,8 @@ async def test_post_hmac_base64_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_post_hmac_base64_endpoint_invalid_signature():
-    queue = asyncio.Queue()
+async def test_post_hmac_base64_endpoint_invalid_signature() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -306,8 +307,8 @@ async def test_post_hmac_base64_endpoint_invalid_signature():
 
 
 @pytest.mark.asyncio
-async def test_post_token_and_hmac_hex_endpoint():
-    queue = asyncio.Queue()
+async def test_post_token_and_hmac_hex_endpoint() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
@@ -338,8 +339,8 @@ async def test_post_token_and_hmac_hex_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_post_token_and_hmac_hex_endpoint_invalid_signature():
-    queue = asyncio.Queue()
+async def test_post_token_and_hmac_hex_endpoint_invalid_signature() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = args = {
         "host": "localhost",
@@ -368,8 +369,8 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_signature():
 
 
 @pytest.mark.asyncio
-async def test_post_token_and_hmac_hex_endpoint_invalid_token():
-    queue = asyncio.Queue()
+async def test_post_token_and_hmac_hex_endpoint_invalid_token() -> None:
+    queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",

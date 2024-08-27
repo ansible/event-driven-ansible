@@ -11,7 +11,7 @@ from typing import Any, List, NoReturn, Optional
 
 from ansible.module_utils.basic import AnsibleModule
 
-from .client import Client
+from .client import Client, Response
 from .errors import EDAError
 
 
@@ -33,7 +33,7 @@ class Controller:
     def get_name_field_from_endpoint(endpoint: str) -> str:
         return Controller.IDENTITY_FIELDS.get(endpoint, "name")
 
-    def get_endpoint(self, endpoint, **kwargs):
+    def get_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
         return self.client.get(endpoint, **kwargs)
 
     def post_endpoint(self, endpoint, **kwargs):
@@ -60,7 +60,7 @@ class Controller:
 
         return self.client.delete(endpoint, **kwargs)
 
-    def get_item_name(self, item):
+    def get_item_name(self, item: Any) -> Any:
         if item:
             if "name" in item:
                 return item["name"]
@@ -75,25 +75,18 @@ class Controller:
         msg = "Cant determine identity field for Undefined object."
         raise EDAError(msg)
 
-    def fail_wanted_one(self, response, endpoint, query_params) -> NoReturn:
-        url = self.client.build_url(endpoint, query_params)
-        host_length = len(self.client.host)
-        display_endpoint = url.geturl()[
-            host_length:
-        ]  # truncate to not include the base URL
-        msg = (
-            f"Request to {display_endpoint} returned {len(response)} items, expected 1"
-        )
+    def fail_wanted_one(self, response: list[Any]) -> NoReturn:
+        sample = response.copy()
+        sample = sample[:2] + ["...more results snipped..."]
+        msg = f"Request returned {len(response)} items, expected 1. See: {sample}"
         raise EDAError(msg)
 
-    def get_exactly_one(self, endpoint, name=None, **kwargs) -> dict[str, Any]:
-        new_kwargs = kwargs.copy()
-
+    def get_exactly_one(
+        self, endpoint: str, name: Optional[str] = None, **kwargs: Any
+    ) -> dict[str, Any]:
         result = self.get_one_or_many(endpoint, name=name, **kwargs)
-
         if len(result) == 0:
             return {}
-
         if len(result) > 1:
             if name:
                 # Since we did a name or ID search and got > 1 return
@@ -105,11 +98,13 @@ class Controller:
             # multiple names)
             # Or we weren't running with a or search and just got back too
             # many to begin with.
-            self.fail_wanted_one(result, endpoint, new_kwargs.get("data"))
+            self.fail_wanted_one(result)
 
         return result[0]
 
-    def resolve_name_to_id(self, endpoint, name, **kwargs):
+    def resolve_name_to_id(
+        self, endpoint: str, name: str, **kwargs: Any
+    ) -> Optional[str]:
         result = self.get_exactly_one(endpoint, name, **kwargs)
         if result:
             return result["id"]
@@ -148,66 +143,38 @@ class Controller:
 
     def create_if_needed(
         self,
-        existing_item,
         new_item,
         endpoint,
-        on_create=None,
         item_type="unknown",
     ):
-        # This will exit from the module on its own
-        # If the method successfully creates an item and on_create param is
-        # defined,
-        #    the on_create parameter will be called as a method passing in
-        #    this object and the json from the response
-        # This will return one of two things:
-        #    1. None if the existing_item is already defined (so no create
-        #    needs to happen)
-        #    2. The response from EDA from calling the post on the endpoint.
-        #    It's up to you to process the response and exit from the module
-        # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if not endpoint:
             msg = f"Unable to create new {item_type}, missing endpoint"
             raise EDAError(msg)
 
-        item_url = None
-        if existing_item:
-            try:
-                item_url = existing_item["url"]
-            except KeyError as e:
-                msg = f"Unable to process create for {item_url}, missing data {e}"
-                raise EDAError(msg) from e
-        else:
-            if self.module.check_mode:
-                return {"changed": True}
+        if self.module.check_mode:
+            return {"changed": True}
 
-            # If we don't have an existing_item, we can try to create it
-            # We will pull the item_name out from the new_item, if it exists
-            item_name = self.get_item_name(new_item)
-            response = self.post_endpoint(endpoint, **{"data": new_item})
-            if response.status in [200, 201]:
-                self.result["id"] = response.json["id"]
-                self.result["changed"] = True
-                return self.result
-            if response.json and "__all__" in response.json:
-                msg = f"Unable to create {item_type} {item_name}: {response.json['__all__'][0]}"
-                raise EDAError(msg)
-            if response.json:
-                msg = f"Unable to create {item_type} {item_name}: {response.json}"
-                raise EDAError(msg)
-            msg = f"Unable to create {item_type} {item_name}: {response.status}"
+        # We don't have an existing_item, we can try to create it
+        # We will pull the item_name out from the new_item, if it exists
+        item_name = self.get_item_name(new_item)
+        response = self.post_endpoint(endpoint, **{"data": new_item})
+        if response.status in [200, 201]:
+            self.result["id"] = response.json["id"]
+            self.result["changed"] = True
+            return self.result
+        if response.json and "__all__" in response.json:
+            msg = f"Unable to create {item_type} {item_name}: {response.json['__all__'][0]}"
             raise EDAError(msg)
+        if response.json:
+            msg = f"Unable to create {item_type} {item_name}: {response.json}"
+            raise EDAError(msg)
+        msg = f"Unable to create {item_type} {item_name}: {response.status}"
+        raise EDAError(msg)
 
-        # If we have an on_create method and we actually changed something we can call on_create
-        if on_create is not None and self.result["changed"]:
-            on_create(self, response["json"])
-        else:
-            if response is not None:
-                last_data = response["json"]
-                return last_data
-            return
-
-    def _encrypted_changed_warning(self, field, old, warning=False):
+    def _encrypted_changed_warning(
+        self, field: str, old: dict[str, Any], warning: bool = False
+    ) -> None:
         if not warning:
             return
         self.module.warn(
@@ -233,7 +200,7 @@ class Controller:
         return False
 
     @staticmethod
-    def fields_could_be_same(old_field, new_field):
+    def fields_could_be_same(old_field: Any, new_field: Any) -> bool:
         """Treating $encrypted$ as a wild card,
         return False if the two values are KNOWN to be different
         return True if the two values are the same, or could potentially be same
@@ -250,7 +217,13 @@ class Controller:
             return True
         return bool(new_field == old_field)
 
-    def objects_could_be_different(self, old, new, field_set=None, warning=False):
+    def objects_could_be_different(
+        self,
+        old: dict[str, Any],
+        new: dict[str, Any],
+        field_set: Optional[set] = None,
+        warning: bool = False,
+    ) -> bool:
         if field_set is None:
             field_set = set(fd for fd in new.keys())
         for field in field_set:
@@ -278,18 +251,7 @@ class Controller:
         new_item,
         endpoint,
         item_type,
-        on_update=None,
     ):
-        # This will exit from the module on its own
-        # If the method successfully updates an item and on_update param is
-        # defined,
-        #   the on_update parameter will be called as a method passing in this
-        #   object and the json from the response
-        # This will return one of two things:
-        #    1. None if the existing_item does not need to be updated
-        #    2. The response from EDA from patching to the endpoint. It's up
-        #    to you to process the response and exit from the module.
-        # Note: common error codes from the EDA API can cause the module to fail
         response = None
         if not existing_item:
             raise RuntimeError(
@@ -317,7 +279,7 @@ class Controller:
                 return {"changed": True}
 
             response = self.patch_endpoint(
-                endpoint, **{"data": new_item, "id": item_id}
+                endpoint, **{"data": new_item, "id": self.result["id"]}
             )
             if response.status == 200:
                 # compare apples-to-apples, old API data to new API data
@@ -334,28 +296,14 @@ class Controller:
             msg = f"Unable to update {item_type} {item_name}"
             raise EDAError(msg)
 
-        # If we change something and have an on_change call it
-        if on_update is not None and self.result["changed"]:
-            if response is None:
-                last_data = existing_item
-            else:
-                last_data = response["json"]
-            on_update(self, last_data)
-        else:
-            if response is None:
-                last_data = existing_item
-            else:
-                last_data = response["json"]
-            return last_data
+        return self.result
 
     def create_or_update_if_needed(
         self,
-        existing_item,
-        new_item,
-        endpoint=None,
-        item_type="unknown",
-        on_create=None,
-        on_update=None,
+        existing_item: dict[str, Any],
+        new_item: dict,
+        endpoint: Optional[str] = None,
+        item_type: str = "unknown",
     ):
         if existing_item:
             return self.update_if_needed(
@@ -363,17 +311,14 @@ class Controller:
                 new_item,
                 endpoint,
                 item_type=item_type,
-                on_update=on_update,
             )
         return self.create_if_needed(
-            existing_item,
             new_item,
             endpoint,
             item_type=item_type,
-            on_create=on_create,
         )
 
-    def delete_if_needed(self, existing_item, endpoint, on_delete=None):
+    def delete_if_needed(self, existing_item, endpoint: str):
         if not existing_item:
             return self.result
 
@@ -391,8 +336,6 @@ class Controller:
         response = self.delete_endpoint(endpoint, **{"id": item_id})
 
         if response.status in [202, 204]:
-            if on_delete:
-                on_delete(self, response.json)
             self.result["changed"] = True
             self.result["id"] = item_id
             return self.result

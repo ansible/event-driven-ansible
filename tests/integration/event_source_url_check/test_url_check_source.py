@@ -11,11 +11,11 @@ EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
 
 class HttpHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         base_dir = os.path.join(TESTS_PATH, EVENT_SOURCE_DIR, "webserver_files")
         super().__init__(*args, **kwargs, directory=base_dir)
 
-    def log_message(self, format, *args):
+    def log_message(self, format, *args) -> None:
         # do not log http.server messages
         pass
 
@@ -41,7 +41,7 @@ def init_webserver() -> Generator[Any, Any, Any]:
 )
 def test_url_check_source_sanity(
     init_webserver, subprocess_teardown, endpoint, expected_resp_data
-):
+) -> None:
     """
     Ensure the url check plugin queries the desired endpoint
     and receives the expected response.
@@ -63,7 +63,7 @@ def test_url_check_source_sanity(
 
 
 @pytest.mark.timeout(timeout=DEFAULT_TEST_TIMEOUT, method="signal")
-def test_url_check_source_error_handling(subprocess_teardown):
+def test_url_check_source_error_handling(subprocess_teardown) -> None:
     """
     Ensure the url check source plugin responds correctly
     when the desired HTTP server is unreachable

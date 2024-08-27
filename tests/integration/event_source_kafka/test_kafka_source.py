@@ -35,7 +35,7 @@ def kafka_producer(kafka_certs, kafka_broker):
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer):
+def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_plaintext.yml"
     )
@@ -54,7 +54,7 @@ def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer):
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer):
+def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_headers.yml"
     )
@@ -78,7 +78,7 @@ def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer):
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer):
+def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer) -> None:
     ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules_ssl.yml")
 
     msgs = [
@@ -95,7 +95,7 @@ def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer):
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer):
+def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_sasl_plaintext.yml"
     )
@@ -116,7 +116,7 @@ def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer):
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_sasl_ssl(kafka_certs, kafka_broker, kafka_producer):
+def test_kafka_source_sasl_ssl(kafka_certs, kafka_broker, kafka_producer) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_sasl_ssl.yml"
     )
