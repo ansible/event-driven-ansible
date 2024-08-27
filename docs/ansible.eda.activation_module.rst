@@ -423,7 +423,7 @@ Examples
 
 .. code-block:: yaml
 
-    
+
     - name: Create a rulebook activation
       ansible.eda.activation:
         name: "Example Rulebook Activation"
@@ -492,4 +492,3 @@ Collection links
 * `Issue Tracker <https://github.com/ansible/event-driven-ansible/issues>`__
 * `Homepage <http://ansible.com/event-driven>`__
 * `Repository (Sources) <https://github.com/ansible/event-driven-ansible>`__
-

@@ -156,7 +156,7 @@ Examples
 
 .. code-block:: yaml
 
-    
+
     - name: List all EDA Decision Environments
       ansible.eda.decision_environment_info:
         controller_host: https://my_eda_host/
@@ -223,4 +223,3 @@ Collection links
 * `Issue Tracker <https://github.com/ansible/event-driven-ansible/issues>`__
 * `Homepage <http://ansible.com/event-driven>`__
 * `Repository (Sources) <https://github.com/ansible/event-driven-ansible>`__
-
