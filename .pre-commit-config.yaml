@@ -45,6 +45,7 @@ repos:
       - id: mypy
         # empty args needed in order to match mypy cli behavior
         args: []
+        language_version: python3.9 # minimal supported version, keeps results consistent
         additional_dependencies:
           - aiohttp
           - aiokafka

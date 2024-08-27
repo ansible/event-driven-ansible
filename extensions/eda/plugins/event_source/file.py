@@ -16,14 +16,17 @@ Example:
 """
 
 import pathlib
+from typing import Union
 
 import yaml
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
-def send_facts(queue, filename: str) -> None:  # noqa: ANN001
+def send_facts(queue, filename: Union[str, bytes]) -> None:  # noqa: ANN001
     """Send facts to the queue."""
+    if isinstance(filename, bytes):
+        filename = str(filename, "utf-8")
     with pathlib.Path(filename).open(encoding="utf-8") as file:
         data = yaml.safe_load(file.read())
         if data is None:
@@ -82,7 +85,7 @@ def _observe_files(queue, files: list[str]) -> None:  # noqa: ANN001
 
     for filename in files:
         directory = pathlib.Path(filename).parent
-        observer.schedule(handler, directory, recursive=False)
+        observer.schedule(handler, directory.absolute().as_posix(), recursive=False)
 
     observer.start()
 
