@@ -5,6 +5,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+from http.client import HTTPMessage
+from typing import Any, Iterator, Literal, Optional, Union
+
+from typing_extensions import LiteralString
+
 __metaclass__ = type
 
 import json
@@ -28,7 +33,7 @@ JSON_DATA = '{"key": "value"}'
 
 
 @pytest.fixture
-def mock_response():
+def mock_response() -> Mock:
     response = Mock()
     response.status = 200
     response.read.return_value = JSON_DATA.encode("utf-8")
@@ -37,7 +42,7 @@ def mock_response():
 
 
 @pytest.fixture
-def mock_error_response():
+def mock_error_response() -> Mock:
     response = Mock()
     response.status = 401
     response.read.return_value = b"Unauthorized"
@@ -46,19 +51,23 @@ def mock_error_response():
 
 
 @pytest.fixture
-def mock_http_error():
+def mock_http_error() -> HTTPError:
     return HTTPError(
-        url="http://example.com", code=401, msg="Unauthorized", hdrs={}, fp=None
+        url="http://example.com",
+        code=401,
+        msg="Unauthorized",
+        hdrs=HTTPMessage(),
+        fp=None,
     )
 
 
 @pytest.fixture
-def mock_url_error():
+def mock_url_error() -> URLError:
     return URLError("URL error")
 
 
 @pytest.fixture
-def client():
+def client() -> Iterator[tuple[Client, Mock]]:
     with patch(
         "ansible_collections.ansible.eda.plugins.module_utils.client.Request"
     ) as mock_request:
@@ -95,17 +104,19 @@ def client():
     ],
 )
 def test_client_methods(
-    method,
-    status_code,
-    expected_response,
-    exception_type,
-    exception_message,
-    headers,
-    data,
-    client,
-    mock_response,
-    mock_http_error,
-    mock_url_error,
+    method: str,
+    status_code: Optional[
+        Union[Literal[200], Literal[201], Literal[204], Literal[401], Literal[404]]
+    ],
+    expected_response: Optional[dict[str, str]],
+    exception_type: Optional[Any],
+    exception_message: Optional[Union[LiteralString, Literal["URL error"]]],
+    headers: dict[str, str],
+    data: Optional[dict[str, str]],
+    client: tuple[Any, Mock],
+    mock_response: Mock,
+    mock_http_error: HTTPError,
+    mock_url_error: URLError,
 ) -> None:
     client_instance, mock_request_instance = client
     mock_request_instance.open = Mock()

@@ -1,7 +1,7 @@
 import http.server
 import os
 import threading
-from typing import Any, Generator
+from typing import Any, Callable, Generator
 
 import pytest
 
@@ -11,11 +11,11 @@ EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
 
 class HttpHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         base_dir = os.path.join(TESTS_PATH, EVENT_SOURCE_DIR, "webserver_files")
         super().__init__(*args, **kwargs, directory=base_dir)
 
-    def log_message(self, format, *args) -> None:
+    def log_message(self, format: str, *args: Any) -> None:
         # do not log http.server messages
         pass
 
@@ -40,7 +40,10 @@ def init_webserver() -> Generator[Any, Any, Any]:
     ],
 )
 def test_url_check_source_sanity(
-    init_webserver, subprocess_teardown, endpoint, expected_resp_data
+    init_webserver: None,
+    subprocess_teardown: Callable,
+    endpoint: str,
+    expected_resp_data: str,
 ) -> None:
     """
     Ensure the url check plugin queries the desired endpoint
@@ -56,6 +59,7 @@ def test_url_check_source_sanity(
     runner = CLIRunner(rules=ruleset, envvars="URL_ENDPOINT").run_in_background()
     subprocess_teardown(runner)
 
+    assert runner.stdout is not None
     while line := runner.stdout.readline().decode():
         if "msg" in line:
             assert f'"msg": "{expected_resp_data}"' in line
@@ -63,7 +67,7 @@ def test_url_check_source_sanity(
 
 
 @pytest.mark.timeout(timeout=DEFAULT_TEST_TIMEOUT, method="signal")
-def test_url_check_source_error_handling(subprocess_teardown) -> None:
+def test_url_check_source_error_handling(subprocess_teardown: Callable) -> None:
     """
     Ensure the url check source plugin responds correctly
     when the desired HTTP server is unreachable
@@ -76,6 +80,7 @@ def test_url_check_source_error_handling(subprocess_teardown) -> None:
     runner = CLIRunner(rules=ruleset).run_in_background()
     subprocess_teardown(runner)
 
+    assert runner.stdout is not None
     while line := runner.stdout.readline().decode():
         if "msg" in line:
             assert "Endpoint down" in line

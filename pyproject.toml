@@ -41,7 +41,7 @@ error_summary = true
 # TODO: Remove temporary skips and close https://github.com/ansible/event-driven-ansible/issues/258
 # strict = true
 # disallow_untyped_calls = true
-# disallow_untyped_defs = true
+disallow_untyped_defs = true
 # disallow_any_generics = true
 # disallow_any_unimported = True
 # warn_redundant_casts = True
@@ -64,6 +64,14 @@ module = [
   "kafka.*", # https://github.com/dpkp/kafka-python/issues/2446
 ]
 ignore_missing_imports = true
+
+# TODO: Remove as part of https://github.com/ansible/event-driven-ansible/issues/258
+[[tool.mypy.overrides]]
+module = [
+  "plugins.module_utils.controller",
+  "extensions.eda.plugins.event_source.file"
+  ]
+disallow_untyped_defs = false
 
 [tool.pylint.MASTER]
 # Temporary ignore until we are able to address issues on these:

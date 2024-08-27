@@ -1,7 +1,7 @@
 import asyncio
 import ssl
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Optional
 
 import aiohttp
 import pytest
@@ -13,7 +13,7 @@ async def start_server(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     await webhook_main(queue, args)
 
 
-async def post_code(server_task, info) -> None:
+async def post_code(server_task: asyncio.Task[None], info: dict[str, Any]) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
 
@@ -32,7 +32,10 @@ async def post_code(server_task, info) -> None:
 
 
 async def assert_post(
-    server_task, info, expected_status=HTTPStatus.OK, expected_text=None
+    server_task: asyncio.Task[None],
+    info: dict[str, Any],
+    expected_status: HTTPStatus = HTTPStatus.OK,
+    expected_text: Optional[str] = None,
 ) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
@@ -52,7 +55,7 @@ async def assert_post(
                 assert expected_text in await resp.text()
 
 
-async def cancel_code(server_task) -> None:
+async def cancel_code(server_task: asyncio.Task[None]) -> None:
     server_task.cancel()
 
 

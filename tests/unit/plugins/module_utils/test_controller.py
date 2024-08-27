@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from typing import Literal, Optional, Union
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -21,12 +22,12 @@ ENDPOINT = "test_endpoint"
 
 
 @pytest.fixture
-def mock_client():
+def mock_client() -> Mock:
     return Mock()
 
 
 @pytest.fixture
-def mock_module():
+def mock_module() -> Mock:
     module = Mock()
     module.params = {"update_secrets": True}
     module.check_mode = False
@@ -34,7 +35,7 @@ def mock_module():
 
 
 @pytest.fixture
-def controller(mock_client, mock_module):
+def controller(mock_client: Mock, mock_module: Mock) -> Controller:
     return Controller(client=mock_client, module=mock_module)
 
 
@@ -50,12 +51,12 @@ def controller(mock_client, mock_module):
     ],
 )
 def test_create_if_needed(
-    mock_client,
-    controller,
-    new_item,
-    mock_response,
-    expected_result,
-    expected_calls,
+    mock_client: Mock,
+    controller: Controller,
+    new_item: dict[str, str],
+    mock_response: Mock,
+    expected_result: dict[str, Union[bool, int]],
+    expected_calls: Literal[1],
 ) -> None:
     if mock_response:
         mock_client.post.return_value = mock_response
@@ -86,12 +87,12 @@ def test_create_if_needed(
     ],
 )
 def test_delete_if_needed(
-    mock_client,
-    controller,
-    existing_item,
-    mock_response,
-    expected_result,
-    expected_calls,
+    mock_client: Mock,
+    controller: Controller,
+    existing_item: dict[str, Union[int, str]],
+    mock_response: Optional[Mock],
+    expected_result: dict[str, Union[bool, int]],
+    expected_calls: Union[Literal[1], Literal[0]],
 ) -> None:
     if mock_response:
         mock_client.delete.return_value = mock_response
@@ -103,7 +104,9 @@ def test_delete_if_needed(
         mock_client.delete.assert_called_with(ENDPOINT, **{"id": existing_item["id"]})
 
 
-def test_update_if_needed_with_existing_item(mock_client, controller) -> None:
+def test_update_if_needed_with_existing_item(
+    mock_client: Mock, controller: Controller
+) -> None:
     existing_item = {"id": 1, "name": "Test1"}
     new_item = {"name": "Test2"}
     response = Mock(status=200, json={"id": 1, "name": "Test2"})
@@ -116,7 +119,7 @@ def test_update_if_needed_with_existing_item(mock_client, controller) -> None:
     assert result["id"] == 1
 
 
-def test_get_endpoint(mock_client, controller) -> None:
+def test_get_endpoint(mock_client: Mock, controller: Controller) -> None:
     response = Mock(status=200, json={"count": 1, "results": [{"id": 1}]})
     mock_client.get.return_value = response
     result = controller.get_endpoint(ENDPOINT)
@@ -124,7 +127,7 @@ def test_get_endpoint(mock_client, controller) -> None:
     assert result == response
 
 
-def test_post_endpoint(mock_client, controller) -> None:
+def test_post_endpoint(mock_client: Mock, controller: Controller) -> None:
     response = Mock(status=201, json={"id": 1})
     mock_client.post.return_value = response
     result = controller.post_endpoint(ENDPOINT)
@@ -132,7 +135,7 @@ def test_post_endpoint(mock_client, controller) -> None:
     assert result == response
 
 
-def test_patch_endpoint_check_mode(controller) -> None:
+def test_patch_endpoint_check_mode(controller: Controller) -> None:
     controller.module.check_mode = True
     result = controller.patch_endpoint(ENDPOINT)
     assert result["changed"] is True
@@ -151,7 +154,12 @@ def test_get_name_field_from_endpoint() -> None:
         ({}, None, True),
     ],
 )
-def test_get_item_name(controller, item, expected_name, should_raise) -> None:
+def test_get_item_name(
+    controller: Controller,
+    item: dict[str, str],
+    expected_name: Optional[Union[Literal["test_item"], Literal["test_user"]]],
+    should_raise: bool,
+) -> None:
     if should_raise:
         with pytest.raises(EDAError):
             controller.get_item_name(item)
@@ -164,7 +172,7 @@ def test_has_encrypted_values() -> None:
     assert Controller.has_encrypted_values({"key": "value"}) is False
 
 
-def test_fail_wanted_one(mock_client, controller) -> None:
+def test_fail_wanted_one(mock_client: Mock, controller: Controller) -> None:
     response = MagicMock()
     response.json.return_value = {"count": 2, "results": [{"id": 1}, {"id": 2}]}
     mock_client.build_url.return_value.geturl.return_value = "http://example.com/api"
@@ -190,5 +198,7 @@ def test_fields_could_be_same() -> None:
         ({"key": "value"}, {"key": "value"}, False),
     ],
 )
-def test_objects_could_be_different(controller, old, new, expected) -> None:
+def test_objects_could_be_different(
+    controller: "Controller", old: dict[str, str], new: dict[str, str], expected: bool
+) -> None:
     assert controller.objects_could_be_different(old, new) is expected

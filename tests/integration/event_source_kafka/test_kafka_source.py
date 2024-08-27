@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+from typing import Any, Generator
 
 import pytest
 from kafka import KafkaProducer
@@ -9,7 +10,7 @@ from ..utils import TESTS_PATH, CLIRunner
 
 
 @pytest.fixture(scope="session")
-def kafka_certs():
+def kafka_certs() -> Generator[subprocess.CompletedProcess[bytes], None, None]:
     cwd = os.path.join(TESTS_PATH, "event_source_kafka")
     print(cwd)
     result = subprocess.run([os.path.join(cwd, "certs-create.sh")], cwd=cwd, check=True)
@@ -18,7 +19,7 @@ def kafka_certs():
 
 
 @pytest.fixture(scope="session")
-def kafka_broker():
+def kafka_broker() -> Generator[subprocess.CompletedProcess[bytes], None, None]:
     cwd = os.path.join(TESTS_PATH, "event_source_kafka")
     print(cwd)
     # Keep --quiet-pull here is it does spam CI/CD console
@@ -30,12 +31,19 @@ def kafka_broker():
 
 
 @pytest.fixture(scope="session")
-def kafka_producer(kafka_certs, kafka_broker):
+def kafka_producer(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+) -> KafkaProducer:
     return KafkaProducer(bootstrap_servers="localhost:9092")
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer) -> None:
+def test_kafka_source_plaintext(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+    kafka_producer: Any,
+) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_plaintext.yml"
     )
@@ -54,7 +62,11 @@ def test_kafka_source_plaintext(kafka_certs, kafka_broker, kafka_producer) -> No
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer) -> None:
+def test_kafka_source_with_headers(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+    kafka_producer: Any,
+) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_headers.yml"
     )
@@ -78,7 +90,11 @@ def test_kafka_source_with_headers(kafka_certs, kafka_broker, kafka_producer) ->
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer) -> None:
+def test_kafka_source_ssl(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+    kafka_producer: Any,
+) -> None:
     ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules_ssl.yml")
 
     msgs = [
@@ -95,7 +111,11 @@ def test_kafka_source_ssl(kafka_certs, kafka_broker, kafka_producer) -> None:
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer) -> None:
+def test_kafka_source_sasl_plaintext(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+    kafka_producer: Any,
+) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_sasl_plaintext.yml"
     )
@@ -116,7 +136,11 @@ def test_kafka_source_sasl_plaintext(kafka_certs, kafka_broker, kafka_producer) 
 
 
 @pytest.mark.xfail(reason="https://github.com/ansible/event-driven-ansible/issues/234")
-def test_kafka_source_sasl_ssl(kafka_certs, kafka_broker, kafka_producer) -> None:
+def test_kafka_source_sasl_ssl(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+    kafka_producer: Any,
+) -> None:
     ruleset = os.path.join(
         TESTS_PATH, "event_source_kafka", "test_kafka_rules_sasl_ssl.yml"
     )

@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from extensions.eda.plugins.event_filter.insert_hosts_to_meta import PathNotExistError
@@ -39,7 +41,7 @@ EVENT_DATA_1 = [
 
 
 @pytest.mark.parametrize("data, args, expected_hosts", EVENT_DATA_1)
-def test_find_hosts(data, args, expected_hosts) -> None:
+def test_find_hosts(data: dict, args: dict, expected_hosts: list) -> None:
     data = hosts_main(data, **args)
     if expected_hosts:
         assert data["meta"]["hosts"] == expected_hosts
@@ -47,26 +49,26 @@ def test_find_hosts(data, args, expected_hosts) -> None:
         assert "hosts" not in data["meta"]
 
 
-EVENT_DATA_2 = [
-    (
-        {"app": {"target": 5000}},
-        {"host_path": "app.target"},
-    ),
-    (
-        {"app": {"target": ("host1", 5000)}},
-        {"host_path": "app.target"},
-    ),
-    (
-        {"app": {"target": {"foo": "bar"}}},
-        {"host_path": "app.target"},
-    ),
-]
-
-
-@pytest.mark.parametrize("data, args", EVENT_DATA_2)
-def test_fail_find_hosts(data, args) -> None:
+@pytest.mark.parametrize(
+    "data, args",
+    [
+        pytest.param(
+            {"app": {"target": 5000}},
+            {"host_path": "app.target"},
+        ),
+        pytest.param(
+            {"app": {"target": ("host1", 5000)}},
+            {"host_path": "app.target"},
+        ),
+        pytest.param(
+            {"app": {"target": {"foo": "bar"}}},
+            {"host_path": "app.target"},
+        ),
+    ],
+)
+def test_fail_find_hosts(data: dict[str, Any], args: dict[str, str]) -> None:
     with pytest.raises(TypeError):
-        hosts_main(data, **args)
+        hosts_main(data, **args)  # type: ignore
 
 
 def test_host_path_not_exist() -> None:

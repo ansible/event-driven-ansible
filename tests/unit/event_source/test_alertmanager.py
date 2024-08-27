@@ -7,11 +7,11 @@ import pytest
 from extensions.eda.plugins.event_source.alertmanager import main as alert_main
 
 
-async def start_server(queue, args) -> None:
+async def start_server(queue: asyncio.Queue, args: dict[str, Any]) -> None:
     await alert_main(queue, args)
 
 
-async def post_code(server_task, info) -> None:
+async def post_code(server_task: asyncio.Task[None], info: dict[str, Any]) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
 
@@ -22,7 +22,7 @@ async def post_code(server_task, info) -> None:
     server_task.cancel()
 
 
-async def cancel_code(server_task) -> None:
+async def cancel_code(server_task: asyncio.Task[None]) -> None:
     server_task.cancel()
 
 
