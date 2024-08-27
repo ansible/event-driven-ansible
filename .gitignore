@@ -30,3 +30,4 @@ docs/build.sh
 docs/antsibull-docs.cfg
 docs/conf.py
 tests/integration/inventory
+docs/temp-rst
