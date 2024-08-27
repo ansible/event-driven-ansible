@@ -25,9 +25,15 @@ tests/integration/integration_config.yml
 # Coverage
 .coverage*
 *coverage.combined
-# docs/requirements.txt
-docs/build.sh
+
+# Generated with antsibull-docs
+docs/.gitignore
 docs/antsibull-docs.cfg
+docs/build.sh
+docs/build/
 docs/conf.py
-tests/integration/inventory
+docs/requirements.txt
+docs/rst/*.rst
 docs/temp-rst
+# Other
+tests/integration/inventory
