@@ -1,0 +1,59 @@
+- hosts: localhost
+  tasks:
+    - name: Generate next release version
+      block:
+        - name: Get the next release version
+          ansible.builtin.shell: git tag --sort=-creatordate --merged|head -n1|perl -pe 's/(\d+\.)(\d+)\.\d+/"$1" . ($2+1) . ".0"/e'
+          register: result
+
+        - name: Set the release version
+          ansible.builtin.set_fact:
+            version: "{{ result.stdout }}"
+      when: version is not defined
+
+    - name: Install antsibull-docs and antsibull-changelog
+      ansible.builtin.pip:
+        name:
+          - antsibull-docs
+          - antsibull-changelog
+
+    - name: Create release branch
+      ansible.builtin.command: git checkout -b "prepare_{{ version }}_release"
+
+    - block:
+      - name: Update galaxy.yml
+        ansible.builtin.lineinfile:
+          path: "{{ playbook_dir }}/../galaxy.yml"
+          regexp: "^version: "
+          line: "version: {{ version }}"
+
+      - name: Update documentation
+        ansible.builtin.command: 'antsibull-docs collection-plugins ansible.eda --dest-dir {{ playbook_dir }}/../docs --use-current --output-format simplified-rst --fqcn-plugin-names'
+
+      - name: Refresh the changelog
+        ansible.builtin.command: 'antsibull-changelog release --verbose --version {{ version }}'
+
+      - name: Find the yaml file
+        find:
+          paths: "{{ playbook_dir }}/../changelogs/fragments"
+          excludes: ".gitkeep,"
+        register: files_to_delete
+
+      - name: Clean up the changelog fragments
+        ansible.builtin.file:
+          path: "{{ item.path }}"
+          state: absent
+        with_items: "{{ files_to_delete.files }}"
+
+      - name: Add everything
+        ansible.builtin.command: git add --all
+
+      # git diff-index --quiet HEAD
+      #   0 -> repository is clean, nothing to commit
+      #   1 -> the opposite
+      - name: Commit everything
+        ansible.builtin.shell: 'git diff-index --quiet HEAD || git commit -m "prepare {{ version }} release"'
+
+      rescue:
+        - debug:
+            msg: "Failed to release {{ version }}. Git source is dirty, perform 'git branch -D prepare_{{ version }}_release' before running this playbook."

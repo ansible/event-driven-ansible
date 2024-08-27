@@ -1,0 +1,48 @@
+ancestor: null
+releases:
+  2.0.0-devel:
+    changes:
+      release_summary: 'This is the major release of the ``ansible.eda`` collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``ansible.eda`` 1.4.7.
+
+        '
+    fragments:
+    - release.yml
+    modules:
+    - description: List rulebook activations in the EDA Controller.
+      name: activation_info
+      namespace: ''
+    - description: Manage AWX tokens in EDA controller.
+      name: controller_token
+      namespace: ''
+    - description: Manage credentials in EDA Controller.
+      name: credential
+      namespace: ''
+    - description: List credentials in the EDA Controller.
+      name: credential_info
+      namespace: ''
+    - description: Manage credential types in EDA Controller.
+      name: credential_type
+      namespace: ''
+    - description: List credential types in EDA Controller.
+      name: credential_type_info
+      namespace: ''
+    - description: Create, update or delete decision environment in EDA Controller.
+      name: decision_environment
+      namespace: ''
+    - description: List a decision environment in EDA Controller.
+      name: decision_environment_info
+      namespace: ''
+    - description: Create, update or delete project in EDA Controller.
+      name: project
+      namespace: ''
+    - description: List projects in EDA Controller.
+      name: project_info
+      namespace: ''
+    - description: Manage users in EDA controller.
+      name: user
+      namespace: ''
+    release_date: '2024-08-27'
