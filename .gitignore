@@ -40,3 +40,4 @@ tests/integration/inventory
 
 # Collection specific
 changelogs/.plugin-cache.yaml
+importer_result.json

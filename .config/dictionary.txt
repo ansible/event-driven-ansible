@@ -27,6 +27,7 @@ capath
 caroot
 cliconf
 confluentinc
+conftest
 conninfo
 containerd
 darglint
