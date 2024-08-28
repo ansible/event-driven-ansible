@@ -24,7 +24,7 @@ from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
-def send_facts(queue, filename: Union[str, bytes]) -> None:  # noqa: ANN001
+def send_facts(queue: Queue, filename: Union[str, bytes]) -> None:
     """Send facts to the queue."""
     if isinstance(filename, bytes):
         filename = str(filename, "utf-8")
@@ -33,7 +33,8 @@ def send_facts(queue, filename: Union[str, bytes]) -> None:  # noqa: ANN001
         if data is None:
             return
         if isinstance(data, dict):
-            queue.put(data)
+            # pylint: disable=unused-variable
+            coroutine = queue.put(data)  # noqa: F841
         else:
             if not isinstance(data, list):
                 msg = (
@@ -45,10 +46,11 @@ def send_facts(queue, filename: Union[str, bytes]) -> None:  # noqa: ANN001
                 msg = f"Unsupported facts type, expects a list of dicts found {data}"
                 raise TypeError(msg)
             for item in data:
-                queue.put(item)
+                # pylint: disable=unused-variable
+                coroutine = queue.put(item)  # noqa: F841
 
 
-def main(queue, args: dict) -> None:  # noqa: ANN001
+def main(queue: Queue, args: dict) -> None:
     """Load facts from YAML files initially and when the file changes."""
     files = [pathlib.Path(f).resolve().as_posix() for f in args.get("files", [])]
 
@@ -60,14 +62,14 @@ def main(queue, args: dict) -> None:  # noqa: ANN001
     _observe_files(queue, files)
 
 
-def _observe_files(queue, files: list[str]) -> None:  # noqa: ANN001
+def _observe_files(queue: Queue, files: list[str]) -> None:
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 
-        def __init__(self: "Handler", **kwargs) -> None:  # noqa: ANN003
+        def __init__(self, **kwargs: Any) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
-        def on_created(self: "Handler", event: FileSystemEvent) -> None:
+        def on_created(self, event: FileSystemEvent) -> None:
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 

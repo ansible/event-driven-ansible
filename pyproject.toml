@@ -65,14 +65,6 @@ module = [
 ]
 ignore_missing_imports = true
 
-# TODO: Remove as part of https://github.com/ansible/event-driven-ansible/issues/258
-[[tool.mypy.overrides]]
-module = [
-  "plugins.module_utils.controller",
-  "extensions.eda.plugins.event_source.file"
-  ]
-disallow_untyped_defs = false
-
 [tool.pylint.MASTER]
 # Temporary ignore until we are able to address issues on these:
 ignore-paths = "^(demos/dynatrace-demo/fake_app.py|tests/|plugins/modules).*$"

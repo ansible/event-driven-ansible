@@ -138,7 +138,7 @@ def test_post_endpoint(mock_client: Mock, controller: Controller) -> None:
 def test_patch_endpoint_check_mode(controller: Controller) -> None:
     controller.module.check_mode = True
     result = controller.patch_endpoint(ENDPOINT)
-    assert result["changed"] is True
+    assert result.json["changed"] is True
 
 
 def test_get_name_field_from_endpoint() -> None:
