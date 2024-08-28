@@ -72,7 +72,7 @@ repos:
           - types-botocore
           - types-mock
           - types-requests
-          - watchdog
+          - watchdog>=5.0.0
           - xxhash
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -113,7 +113,7 @@ repos:
           - pyyaml
           - requests
           - types-aiobotocore
-          - watchdog
+          - watchdog>=5.0.0
           - xxhash
   - repo: local
     hooks:

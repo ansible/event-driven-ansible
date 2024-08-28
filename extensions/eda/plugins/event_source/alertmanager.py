@@ -114,7 +114,7 @@ def clean_host(host: str) -> str:
     return host
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Receive events via alertmanager webhook."""
     app = web.Application()
     app["queue"] = queue
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

@@ -44,7 +44,7 @@ import json
 import logging
 import ssl
 import typing
-from typing import Any
+from typing import Any, Awaitable
 
 from aiohttp import web
 
@@ -117,7 +117,10 @@ async def _hmac_verify(request: web.Request) -> bool:
 
 
 @web.middleware
-async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResponse:
+async def bearer_auth(
+    request: web.Request,
+    handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+) -> web.StreamResponse:
     """Verify authorization is Bearer type."""
     try:
         _parse_token(request)
@@ -130,7 +133,10 @@ async def bearer_auth(request: web.Request, handler: Callable) -> web.StreamResp
 
 
 @web.middleware
-async def hmac_verify(request: web.Request, handler: Callable) -> web.StreamResponse:
+async def hmac_verify(
+    request: web.Request,
+    handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+) -> web.StreamResponse:
     """Verify event's HMAC signature."""
     hmac_verified = await _hmac_verify(request)
     if not hmac_verified:
@@ -166,7 +172,7 @@ def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
     return context
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Receive events via webhook."""
     if "port" not in args:
         msg = "Missing required argument: port"
@@ -224,7 +230,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put(self: MockQueue, event: dict) -> None:
+        async def put(self: MockQueue, event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

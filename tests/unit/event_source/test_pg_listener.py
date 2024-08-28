@@ -1,4 +1,4 @@
-""" Tests for pg_listener source plugin """
+"""Tests for pg_listener source plugin"""
 
 import asyncio
 import json
@@ -81,11 +81,8 @@ TEST_PAYLOADS = [
 ]
 
 
-from typing import List
-
-
 @pytest.mark.parametrize("events", TEST_PAYLOADS)
-def test_receive_from_pg_listener(events: List[dict]) -> None:
+def test_receive_from_pg_listener(events: list[dict[str, Any]]) -> None:
     """Test receiving different payloads from pg notify."""
     notify_payload: list[str] = []
     myqueue = _MockQueue()

@@ -45,7 +45,7 @@ from aiokafka.helpers import create_ssl_context
 
 
 async def main(  # pylint: disable=R0914
-    queue: asyncio.Queue,
+    queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
     """Receive events via a kafka topic."""
@@ -116,7 +116,7 @@ async def main(  # pylint: disable=R0914
 
 
 async def receive_msg(
-    queue: asyncio.Queue,
+    queue: asyncio.Queue[Any],
     kafka_consumer: AIOKafkaConsumer,
     encoding: str,
 ) -> None:
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

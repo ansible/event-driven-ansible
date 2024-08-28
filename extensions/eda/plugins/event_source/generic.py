@@ -100,7 +100,9 @@ class DelayArgs:
 class Generic:
     """Generic source plugin to generate different events."""
 
-    def __init__(self: Generic, queue: asyncio.Queue, args: dict[str, Any]) -> None:
+    def __init__(
+        self: Generic, queue: asyncio.Queue[Any], args: dict[str, Any]
+    ) -> None:
         """Insert event data into the queue."""
         self.queue = queue
         field_names = [f.name for f in fields(Args)]
@@ -164,7 +166,7 @@ class Generic:
 
         await asyncio.sleep(self.delay_args.shutdown_after)
 
-    async def _post_event(self: Generic, event: dict, index: int) -> None:
+    async def _post_event(self: Generic, event: dict[str, Any], index: int) -> None:
         data = self._create_data(index)
 
         data.update(event)
@@ -189,7 +191,7 @@ class Generic:
     def _create_data(
         self: Generic,
         index: int,
-    ) -> dict:
+    ) -> dict[str, Any]:
         data: dict[str, str | int] = {}
         if self.my_args.create_index:
             data[self.my_args.create_index] = index
@@ -206,7 +208,7 @@ class Generic:
 
 
 async def main(  # pylint: disable=R0914
-    queue: asyncio.Queue,
+    queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
     """Call the Generic Source Plugin."""
@@ -218,7 +220,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put(self: MockQueue, event: dict) -> None:
+        async def put(self: MockQueue, event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

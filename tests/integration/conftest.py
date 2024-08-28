@@ -5,7 +5,7 @@ import pytest
 
 
 @pytest.fixture(scope="function")
-def subprocess_teardown() -> Iterator[Callable]:
+def subprocess_teardown() -> Iterator[Callable[[Popen[bytes]], None]]:
     processes: list[Popen[bytes]] = []
 
     def _teardown(process: Popen[bytes]) -> None:

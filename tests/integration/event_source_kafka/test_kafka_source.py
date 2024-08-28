@@ -6,7 +6,8 @@ from typing import Any, Generator
 import pytest
 from kafka import KafkaProducer
 
-from ..utils import TESTS_PATH, CLIRunner
+from .. import TESTS_PATH
+from ..utils import CLIRunner
 
 
 @pytest.fixture(scope="session")

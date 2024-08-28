@@ -39,14 +39,14 @@ color_output = true
 error_summary = true
 
 # TODO: Remove temporary skips and close https://github.com/ansible/event-driven-ansible/issues/258
-# strict = true
-# disallow_untyped_calls = true
+strict = true
+disallow_untyped_calls = true
 disallow_untyped_defs = true
 # disallow_any_generics = true
-# disallow_any_unimported = True
+# disallow_any_unimported = true
 # warn_redundant_casts = True
 # warn_return_any = True
-# warn_unused_configs = True
+warn_unused_configs = true
 
 # site-packages is here to help vscode mypy integration getting confused
 exclude = "(build|dist|test/local-content|site-packages|~/.pyenv|examples/playbooks/collections|plugins/modules)"

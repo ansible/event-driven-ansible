@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import json
 from typing import Any
@@ -40,7 +42,7 @@ class AsyncIterator:
             raise StopAsyncIteration
 
 
-class MockConsumer(AsyncMock):
+class MockConsumer(AsyncMock):  # type: ignore[misc]
     def __aiter__(self) -> AsyncIterator:
         return AsyncIterator()
 

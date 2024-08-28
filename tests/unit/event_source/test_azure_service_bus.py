@@ -7,7 +7,7 @@ import pytest
 from extensions.eda.plugins.event_source.azure_service_bus import main as azure_main
 
 
-class MockQueue(asyncio.Queue):
+class MockQueue(asyncio.Queue[Any]):
     def __init__(self) -> None:
         self.queue: list[Any] = []
 
