@@ -82,13 +82,13 @@ class MissingChunkKeyError(Exception):
         super().__init__(f"Chunked payload is missing required {key}")
 
 
-def _validate_chunked_payload(payload: dict) -> None:
+def _validate_chunked_payload(payload: dict[str, Any]) -> None:
     for key in REQUIRED_CHUNK_KEYS:
         if key not in payload:
             raise MissingChunkKeyError(key)
 
 
-async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Listen for events from a channel."""
     for key in REQUIRED_KEYS:
         if key not in args:
@@ -119,8 +119,8 @@ async def main(queue: asyncio.Queue, args: dict[str, Any]) -> None:
 
 async def _handle_chunked_message(
     data: dict[str, Any],
-    chunked_cache: dict,
-    queue: asyncio.Queue,
+    chunked_cache: dict[str, Any],
+    queue: asyncio.Queue[Any],
 ) -> None:
     message_uuid = data[MESSAGE_CHUNKED_UUID]
     number_of_chunks = data[MESSAGE_CHUNK_COUNT]
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

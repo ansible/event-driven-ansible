@@ -105,10 +105,14 @@ class Controller:
 
     def resolve_name_to_id(
         self, endpoint: str, name: str, **kwargs: Any
-    ) -> Optional[str]:
+    ) -> Optional[int]:
         result = self.get_exactly_one(endpoint, name, **kwargs)
         if result:
-            return result["id"]
+            if isinstance(result["id"], int):
+                return result["id"]
+            raise EDAError(
+                f"The endpoint did not provide an id as integer: {result['id']}"
+            )
         return None
 
     def get_one_or_many(
@@ -116,7 +120,7 @@ class Controller:
         endpoint: str,
         name: Optional[str] = None,
         **kwargs: Any,
-    ) -> List[Any]:
+    ) -> List[dict[str, Any]]:
         new_kwargs = kwargs.copy()
 
         if name:
@@ -140,11 +144,18 @@ class Controller:
         if response.json["count"] == 0:
             return []
 
-        return response.json["results"]
+        # type safeguard
+        results = response.json["results"]
+        if not isinstance(results, list):
+            raise EDAError("The endpoint did not provide a list of dictionaries")
+        for result in results:
+            if not isinstance(result, dict):
+                raise EDAError("The endpoint did not provide a list of dictionaries")
+        return results
 
     def create_if_needed(
         self,
-        new_item: dict,
+        new_item: dict[str, Any],
         endpoint: str,
         item_type: str = "unknown",
     ) -> dict[str, bool]:
@@ -222,7 +233,7 @@ class Controller:
         self,
         old: dict[str, Any],
         new: dict[str, Any],
-        field_set: Optional[set] = None,
+        field_set: Optional[set[str]] = None,
         warning: bool = False,
     ) -> bool:
         if field_set is None:
@@ -248,7 +259,7 @@ class Controller:
 
     def update_if_needed(
         self,
-        existing_item: dict,
+        existing_item: dict[str, Any],
         new_item: dict[str, Any],
         endpoint: str,
         item_type: str,
@@ -302,7 +313,7 @@ class Controller:
     def create_or_update_if_needed(
         self,
         existing_item: dict[str, Any],
-        new_item: dict,
+        new_item: dict[str, Any],
         endpoint: str,
         item_type: str = "unknown",
     ) -> dict[str, bool]:

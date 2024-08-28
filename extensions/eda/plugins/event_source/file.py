@@ -24,7 +24,7 @@ from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
 
-def send_facts(queue: Queue, filename: Union[str, bytes]) -> None:
+def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
     """Send facts to the queue."""
     if isinstance(filename, bytes):
         filename = str(filename, "utf-8")
@@ -50,7 +50,7 @@ def send_facts(queue: Queue, filename: Union[str, bytes]) -> None:
                 coroutine = queue.put(item)  # noqa: F841
 
 
-def main(queue: Queue, args: dict) -> None:
+def main(queue: Queue[Any], args: dict[str, Any]) -> None:
     """Load facts from YAML files initially and when the file changes."""
     files = [pathlib.Path(f).resolve().as_posix() for f in args.get("files", [])]
 
@@ -62,7 +62,7 @@ def main(queue: Queue, args: dict) -> None:
     _observe_files(queue, files)
 
 
-def _observe_files(queue: Queue, files: list[str]) -> None:
+def _observe_files(queue: Queue[Any], files: list[str]) -> None:
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     class MockQueue(Queue[Any]):
         """A fake queue."""
 
-        async def put(self: "MockQueue", event: dict) -> None:
+        async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

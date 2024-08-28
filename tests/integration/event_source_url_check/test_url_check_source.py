@@ -5,7 +5,8 @@ from typing import Any, Callable, Generator
 
 import pytest
 
-from ..utils import DEFAULT_TEST_TIMEOUT, TESTS_PATH, CLIRunner
+from .. import TESTS_PATH
+from ..utils import DEFAULT_TEST_TIMEOUT, CLIRunner
 
 EVENT_SOURCE_DIR = os.path.dirname(__file__)
 
@@ -41,7 +42,7 @@ def init_webserver() -> Generator[Any, Any, Any]:
 )
 def test_url_check_source_sanity(
     init_webserver: None,
-    subprocess_teardown: Callable,
+    subprocess_teardown: Callable[..., None],
     endpoint: str,
     expected_resp_data: str,
 ) -> None:
@@ -67,7 +68,9 @@ def test_url_check_source_sanity(
 
 
 @pytest.mark.timeout(timeout=DEFAULT_TEST_TIMEOUT, method="signal")
-def test_url_check_source_error_handling(subprocess_teardown: Callable) -> None:
+def test_url_check_source_error_handling(
+    subprocess_teardown: Callable[..., None],
+) -> None:
     """
     Ensure the url check source plugin responds correctly
     when the desired HTTP server is unreachable

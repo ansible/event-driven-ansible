@@ -1,4 +1,4 @@
-""" Tests for generic source plugin """
+"""Tests for generic source plugin"""
 
 import asyncio
 import os
@@ -144,7 +144,7 @@ TEST_TIME_FORMATS = [["iso8601", str], ["local", str], ["epoch", int]]
 
 
 @pytest.mark.parametrize("time_format,expected_type", TEST_TIME_FORMATS)
-def test_generic_timestamps(time_format: list, expected_type: type) -> None:
+def test_generic_timestamps(time_format: list[str], expected_type: type) -> None:
     """Test receiving events with timestamps."""
     myqueue = _MockQueue()
     event = {"name": "fred"}

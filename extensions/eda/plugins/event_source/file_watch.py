@@ -28,8 +28,8 @@ from watchdog.observers import Observer
 
 def watch(
     loop: asyncio.events.AbstractEventLoop,
-    queue: asyncio.Queue,
-    args: dict,
+    queue: asyncio.Queue[Any],
+    args: dict[str, Any],
 ) -> None:
     """Watch for changes and put events on the queue."""
     root_path = args["path"]
@@ -96,7 +96,7 @@ def watch(
         observer.join()
 
 
-async def main(queue: asyncio.Queue, args: dict) -> None:
+async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Watch for changes to a file and put events on the queue."""
     loop = asyncio.get_event_loop()
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        def put_nowait(self: "MockQueue", event: dict) -> None:
+        def put_nowait(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

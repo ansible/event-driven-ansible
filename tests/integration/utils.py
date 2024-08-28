@@ -1,7 +1,7 @@
 import os
 import subprocess
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from . import TESTS_PATH
 
@@ -25,7 +25,7 @@ class CLIRunner:
     verbose: bool = False
     debug: bool = False
     timeout: float = 10.0
-    env: Optional[dict] = None
+    env: Optional[dict[str, str]] = None
 
     def __post_init__(self) -> None:
         self.env = os.environ.copy() if self.env is None else self.env
@@ -54,7 +54,7 @@ class CLIRunner:
 
         return args
 
-    def run(self) -> subprocess.CompletedProcess:
+    def run(self) -> subprocess.CompletedProcess[Any]:
         args = self._process_args()
         print("Running command: ", " ".join(args))
         return subprocess.run(
@@ -66,7 +66,7 @@ class CLIRunner:
             env=self.env,
         )
 
-    def run_in_background(self) -> subprocess.Popen:
+    def run_in_background(self) -> subprocess.Popen[bytes]:
         args = self._process_args()
         print("Running command: ", " ".join(args))
         return subprocess.Popen(

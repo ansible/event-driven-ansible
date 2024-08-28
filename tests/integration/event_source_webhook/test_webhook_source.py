@@ -7,10 +7,11 @@ from typing import Callable
 import pytest
 import requests
 
-from ..utils import TESTS_PATH, CLIRunner
+from .. import TESTS_PATH
+from ..utils import CLIRunner
 
 
-def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0) -> None:
+def wait_for_events(proc: subprocess.Popen[bytes], timeout: float = 15.0) -> None:
     """
     Wait for events to be processed by ansible-rulebook, or timeout.
     Requires the process to be running in debug mode.
@@ -33,7 +34,9 @@ def wait_for_events(proc: subprocess.Popen, timeout: float = 15.0) -> None:
         pytest.param(5001, id="custom_port"),
     ],
 )
-def test_webhook_source_sanity(subprocess_teardown: Callable, port: int) -> None:
+def test_webhook_source_sanity(
+    subprocess_teardown: Callable[..., None], port: int
+) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -73,7 +76,9 @@ def test_webhook_source_sanity(subprocess_teardown: Callable, port: int) -> None
     assert proc.returncode == 0
 
 
-def test_webhook_source_with_busy_port(subprocess_teardown: Callable) -> None:
+def test_webhook_source_with_busy_port(
+    subprocess_teardown: Callable[..., None],
+) -> None:
     """
     Ensure the CLI responds correctly if the desired port is
     already in use.
@@ -91,7 +96,7 @@ def test_webhook_source_with_busy_port(subprocess_teardown: Callable) -> None:
     assert proc2.returncode == 1
 
 
-def test_webhook_source_hmac_sanity(subprocess_teardown: Callable) -> None:
+def test_webhook_source_hmac_sanity(subprocess_teardown: Callable[..., None]) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -140,7 +145,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown: Callable) -> None:
 
 
 def test_webhook_source_with_unsupported_hmac_algo(
-    subprocess_teardown: Callable,
+    subprocess_teardown: Callable[..., None],
 ) -> None:
     """
     Ensure the CLI responds correctly if the desired HMAC algorithm is not supported.

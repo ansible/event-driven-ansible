@@ -41,8 +41,10 @@ EVENT_DATA_1 = [
 
 
 @pytest.mark.parametrize("data, args, expected_hosts", EVENT_DATA_1)
-def test_find_hosts(data: dict, args: dict, expected_hosts: list) -> None:
-    data = hosts_main(data, **args)
+def test_find_hosts(
+    data: dict[str, Any], args: dict[str, str], expected_hosts: list[str]
+) -> None:
+    data = hosts_main(data, **args)  # type: ignore
     if expected_hosts:
         assert data["meta"]["hosts"] == expected_hosts
     else:

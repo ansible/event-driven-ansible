@@ -16,21 +16,22 @@ Arguments:
 from __future__ import annotations
 
 import fnmatch
+from typing import Any, Optional
 
 
-def _matches_include_keys(include_keys: list, string: str) -> bool:
+def _matches_include_keys(include_keys: list[str], string: str) -> bool:
     return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
 
 
-def _matches_exclude_keys(exclude_keys: list, string: str) -> bool:
+def _matches_exclude_keys(exclude_keys: list[str], string: str) -> bool:
     return any(fnmatch.fnmatch(string, pattern) for pattern in exclude_keys)
 
 
 def main(
-    event: dict,
-    exclude_keys: list | None = None,
-    include_keys: list | None = None,
-) -> dict:
+    event: dict[str, Any],
+    exclude_keys: Optional[list[str]] = None,
+    include_keys: Optional[list[str]] = None,
+) -> dict[str, Any]:
     """Filter keys out of events."""
     if exclude_keys is None:
         exclude_keys = []

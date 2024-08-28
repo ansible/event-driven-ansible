@@ -27,7 +27,7 @@ from azure.servicebus import ServiceBusClient
 
 def receive_events(
     loop: asyncio.events.AbstractEventLoop,
-    queue: asyncio.Queue,
+    queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
     """Receive events from service bus."""
@@ -53,7 +53,7 @@ def receive_events(
 
 
 async def main(
-    queue: asyncio.Queue,
+    queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
     """Receive events from service bus in a loop."""
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        def put_nowait(self: "MockQueue", event: dict) -> None:
+        def put_nowait(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 

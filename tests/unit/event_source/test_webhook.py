@@ -9,7 +9,7 @@ import pytest
 from extensions.eda.plugins.event_source.webhook import main as webhook_main
 
 
-async def start_server(queue: asyncio.Queue, args: dict[str, Any]) -> None:
+async def start_server(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     await webhook_main(queue, args)
 
 
