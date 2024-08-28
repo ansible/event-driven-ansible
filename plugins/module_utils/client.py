@@ -19,7 +19,7 @@ from .errors import AuthError, EDAHTTPError
 
 
 class Response:
-    def __init__(self, status: int, data: Any, headers: Optional[Any] = None) -> None:
+    def __init__(self, status: int, data: str, headers: Optional[Any] = None) -> None:
         self.status = status
         self.data = data
         # [('h1', 'v1'), ('H2', 'V2')] -> {'h1': 'v1', 'h2': 'V2'}
@@ -50,7 +50,6 @@ class Client:
         timeout: Optional[Any] = None,
         validate_certs: Optional[Any] = None,
     ) -> None:
-
         if not (host or "").startswith(("https://", "http://")):
             raise EDAHTTPError(
                 f"Invalid instance host value: '{host}'. "
@@ -103,7 +102,9 @@ class Client:
                 ) from http_exp
             # Other HTTP error codes do not necessarily mean errors.
             # This is for the caller to decide.
-            return Response(http_exp.code, http_exp.read(), http_exp.headers)
+            return Response(
+                http_exp.code, http_exp.read().decode("utf-8"), http_exp.headers
+            )
         except URLError as url_exp:
             raise EDAHTTPError(url_exp.reason) from url_exp
 

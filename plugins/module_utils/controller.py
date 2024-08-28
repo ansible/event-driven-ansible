@@ -7,6 +7,7 @@ from __future__ import absolute_import, annotations, division, print_function
 __metaclass__ = type
 
 
+import json
 from typing import Any, List, NoReturn, Optional
 
 from ansible.module_utils.basic import AnsibleModule
@@ -36,27 +37,27 @@ class Controller:
     def get_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
         return self.client.get(endpoint, **kwargs)
 
-    def post_endpoint(self, endpoint, **kwargs):
+    def post_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
-            return self.result
+            return Response(status=200, data=json.dumps(self.result))
 
         return self.client.post(endpoint, **kwargs)
 
-    def patch_endpoint(self, endpoint, **kwargs):
+    def patch_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
-            return self.result
+            return Response(status=200, data=json.dumps(self.result))
 
         return self.client.patch(endpoint, **kwargs)
 
-    def delete_endpoint(self, endpoint, **kwargs):
+    def delete_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
-            return self.result
+            return Response(status=200, data=json.dumps(self.result))
 
         return self.client.delete(endpoint, **kwargs)
 
@@ -143,10 +144,10 @@ class Controller:
 
     def create_if_needed(
         self,
-        new_item,
-        endpoint,
-        item_type="unknown",
-    ):
+        new_item: dict,
+        endpoint: str,
+        item_type: str = "unknown",
+    ) -> dict[str, bool]:
         response = None
         if not endpoint:
             msg = f"Unable to create new {item_type}, missing endpoint"
@@ -183,7 +184,7 @@ class Controller:
         )
 
     @staticmethod
-    def has_encrypted_values(obj):
+    def has_encrypted_values(obj: Any) -> bool:
         """Returns True if JSON-like python content in obj has $encrypted$
         anywhere in the data as a value
         """
@@ -247,11 +248,11 @@ class Controller:
 
     def update_if_needed(
         self,
-        existing_item,
-        new_item,
-        endpoint,
-        item_type,
-    ):
+        existing_item: dict,
+        new_item: dict[str, Any],
+        endpoint: str,
+        item_type: str,
+    ) -> dict[str, bool]:
         response = None
         if not existing_item:
             raise RuntimeError(
@@ -287,7 +288,7 @@ class Controller:
                 self.result["changed"] |= self.objects_could_be_different(
                     existing_item,
                     response.json,
-                    field_set=new_item.keys(),
+                    field_set=set(new_item.keys()),
                     warning=True,
                 )
                 return self.result
@@ -302,9 +303,9 @@ class Controller:
         self,
         existing_item: dict[str, Any],
         new_item: dict,
-        endpoint: Optional[str] = None,
+        endpoint: str,
         item_type: str = "unknown",
-    ):
+    ) -> dict[str, bool]:
         if existing_item:
             return self.update_if_needed(
                 existing_item,
@@ -318,7 +319,9 @@ class Controller:
             item_type=item_type,
         )
 
-    def delete_if_needed(self, existing_item, endpoint: str):
+    def delete_if_needed(
+        self, existing_item: dict[str, Any], endpoint: str
+    ) -> dict[str, Any]:
         if not existing_item:
             return self.result
 
@@ -340,15 +343,15 @@ class Controller:
             self.result["id"] = item_id
             return self.result
         if response.json and "__all__" in response.json:
-            msg = f"Unable to delete {item_name}: {response['json']['__all__'][0]}"
+            msg = f"Unable to delete {item_name}: {response.json['__all__'][0]}"
             raise EDAError(msg)
         if response.json:
             # This is from a project delete (if there is an active
             # job against it)
             if "error" in response.json:
-                msg = f"Unable to delete {item_name}: {response['json']['error']}"
+                msg = f"Unable to delete {item_name}: {response.json['error']}"
                 raise EDAError(msg)
-            msg = f"Unable to delete {item_name}: {response['json']}"
+            msg = f"Unable to delete {item_name}: {response.json}"
             raise EDAError(msg)
-        msg = f"Unable to delete {item_name}: {response['status_code']}"
+        msg = f"Unable to delete {item_name}: {response.status}"
         raise EDAError(msg)
