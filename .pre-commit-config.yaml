@@ -117,6 +117,12 @@ repos:
           - xxhash
   - repo: local
     hooks:
+      - id: build
+        name: build collection and verify manifest
+        entry: ./tests/run-galaxy-importer
+        language: python
+        additional_dependencies:
+          - galaxy-importer
       - id: ansible-test-sanity
         name: Run ansible-test sanity
         entry: ansible-test sanity

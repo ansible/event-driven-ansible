@@ -1,0 +1,12 @@
+#!/bin/bash -eu
+set -e
+rm -f ./*.tar.gz importer_result.json
+# produces importer_result.json
+GALAXY_IMPORTER_CONFIG=.config/galaxy-importer.cfg python3 -m galaxy_importer.main --git-clone-path=. --output-path=.
+ARCHIVE=$(python3 -c "import json; print(json.load(open('importer_result.json'))[-1])")
+tar -tf "$ARCHIVE" | sort > .config/manifest.txt
+sync
+git --no-pager diff -U0 --minimal || {
+    echo "Manifest at .config/manifest.txt changed, please update it."
+    exit 3
+}
