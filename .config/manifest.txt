@@ -103,4 +103,3 @@ tests/
 tests/__init__.py
 tests/integration/
 tests/run-galaxy-importer
-tests/sanity/
