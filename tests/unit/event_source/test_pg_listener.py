@@ -6,6 +6,7 @@ import uuid
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import psycopg
 import pytest
 import xxhash
 
@@ -116,3 +117,66 @@ def test_receive_from_pg_listener(events: list[dict[str, Any]]) -> None:
         for event in events:
             assert myqueue.queue[index] == event
             index += 1
+
+
+def test_decoding_error() -> None:
+    """Test json parsing error"""
+    notify_payload: list[str] = ['{"a"; "b"}']
+    myqueue = _MockQueue()
+
+    def my_iterator() -> _AsyncIterator:
+        return _AsyncIterator(notify_payload)
+
+    with patch(
+        "extensions.eda.plugins.event_source.pg_listener.AsyncConnection.connect"
+    ) as conn:
+        mock_object = AsyncMock()
+        conn.return_value = mock_object
+        conn.return_value.__aenter__.return_value = mock_object
+        mock_object.cursor = AsyncMock
+        mock_object.notifies = my_iterator
+
+        with pytest.raises(json.decoder.JSONDecodeError):
+            asyncio.run(
+                pg_listener_main(
+                    myqueue,
+                    {
+                        "dsn": (
+                            "host=localhost dbname=mydb "
+                            "user=postgres password=password"
+                        ),
+                        "channels": ["test"],
+                    },
+                )
+            )
+
+
+def test_operational_error() -> None:
+    """Test json parsing error"""
+    notify_payload: list[str] = ['{"a": "b"}']
+    myqueue = _MockQueue()
+
+    def my_iterator() -> _AsyncIterator:
+        return _AsyncIterator(notify_payload)
+
+    with patch(
+        "extensions.eda.plugins.event_source.pg_listener.AsyncConnection.connect"
+    ) as conn:
+        mock_object = AsyncMock()
+        conn.return_value = mock_object
+        conn.return_value.__aenter__.side_effect = psycopg.OperationalError("Kaboom")
+        mock_object.cursor = AsyncMock
+        mock_object.notifies = my_iterator
+        with pytest.raises(psycopg.OperationalError):
+            asyncio.run(
+                pg_listener_main(
+                    myqueue,
+                    {
+                        "dsn": (
+                            "host=localhost dbname=mydb "
+                            "user=postgres password=password"
+                        ),
+                        "channels": ["test"],
+                    },
+                )
+            )

@@ -112,9 +112,11 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
                 else:
                     await queue.put(data)
     except json.decoder.JSONDecodeError:
-        LOGGER.exception("Error decoding data, ignoring it")
+        LOGGER.exception("Error decoding data")
+        raise
     except OperationalError:
         LOGGER.exception("PG Listen operational error")
+        raise
 
 
 async def _handle_chunked_message(
