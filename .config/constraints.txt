@@ -27,7 +27,7 @@ attrs==24.2.0
 azure-core==1.30.2
 azure-servicebus==7.12.2
 babel==2.16.0
-botocore==1.35.7
+botocore==1.35.8
 build==1.2.1
 cachetools==5.5.0
 certifi==2024.7.4
@@ -40,7 +40,7 @@ coverage==6.5.0 ; python_version < "3.10"
 coverage-enable-subprocess==1.0
 cryptography==43.0.0
 distlib==0.3.8
-docutils==0.20.1
+docutils==0.21.2
 dpath==2.2.0
 drools-jpy==0.3.9
 exceptiongroup==1.2.2
@@ -48,8 +48,8 @@ filelock==3.15.4
 frozenlist==1.4.1
 idna==3.8
 imagesize==1.4.1
-importlib-metadata==6.2.1
-importlib-resources==5.0.7
+importlib-metadata==8.4.0
+importlib-resources==6.4.4
 iniconfig==2.0.0
 isodate==0.6.1
 janus==1.0.0
@@ -71,8 +71,8 @@ pexpect==4.9.0
 platformdirs==4.2.2
 pluggy==1.5.0
 podman-compose==1.2.0
-psycopg==3.1.18
-psycopg-binary==3.1.18
+psycopg==3.2.1
+psycopg-binary==3.2.1
 psycopg-pool==3.2.2
 ptyprocess==0.7.0
 pycparser==2.22
@@ -115,7 +115,7 @@ tox==4.18.0
 twiggy==0.5.1
 typer==0.12.5
 typing-extensions==4.12.2
-urllib3==1.26.19
+urllib3==2.2.2
 virtualenv==20.26.3
 watchdog==5.0.0
 websockets==13.0.1
