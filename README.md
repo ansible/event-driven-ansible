@@ -108,7 +108,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
 ## Release notes
 
-See the [raw generated changelog](https://github.com/ansible/event-driven-ansible/tree/main/CHANGELOG.rst).
+See the [raw generated changelog](./CHANGELOG.md).
 
 ## Related Information
 
