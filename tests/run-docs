@@ -1,0 +1,23 @@
+#!/bin/bash -eu
+set -eux
+# Determine the collection version, if current commit is tagged, use it. Otherwise, generate pre-release version.
+COLLECTION_VERSION_WITH_PREFIX=$(git describe --dirty --tags --long --match "v*.*" | cut -f1,2 -d'-')
+COLLECTION_VERSION=${COLLECTION_VERSION_WITH_PREFIX/v/}
+echo "INFO:  Determined collection version to be ${COLLECTION_VERSION}"
+
+echo "INFO: Running 'antsibull-changelog release' to generate a changelog that includes unreleased changes."
+antsibull-changelog release -v --version="${COLLECTION_VERSION}" --codename unreleased --update-existing
+
+echo "INFO: Resetting changes mage by 'antsibull-changelog release' call."
+git checkout --no-overlay -- changelogs/changelog.yaml changelogs/fragments/
+
+# ansible-galaxy collection install --force .
+antsibull-docs sphinx-init --project="Event Driven Ansible Collection" --title="Event Driven Ansible Collection" --html-short-title="ansible.eda" --fail-on-error --squash-hierarchy --dest-dir=docs ansible.eda --use-current
+bash ./docs/build.sh
+
+if [[ ! -f ./docs/build/html/changelog.html ]]; then
+  echo "ERROR: Changelog file not found."
+  exit 1
+fi
+
+echo "INFO:  Finished building docs for version ${COLLECTION_VERSION} - Open it at ./docs/build/html/index.html"

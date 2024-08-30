@@ -14,6 +14,7 @@ ignorePaths:
   # The requirements file
   - requirements.txt
   - .config/constraints.txt
+  - .config/manifest.txt
   - docs/requirements.txt
   - docs/requirements.in
   # Test fixtures generated from outside

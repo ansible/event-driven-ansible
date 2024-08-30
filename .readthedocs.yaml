@@ -10,16 +10,9 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.12"
-  # When using commands we canon install apt_package due to
-  # https://github.com/readthedocs/readthedocs.org/issues/11219
-  # https://github.com/readthedocs/readthedocs.org/issues/9599
-  # apt_packages:
-  #   - rsync
   commands:
     # Copy executable in the first directory in path, which happens to be writable on RTD
-    - mkdir -p ${PATH%%:*}
-    - cp docs/bin/rsync ${PATH%%:*}/
-    - rsync --version
+    - git fetch --unshallow || true
     - pip install --user tox
     - python3 -m tox -e docs
     - mkdir -p $READTHEDOCS_OUTPUT
