@@ -1,9 +1,8 @@
 #!/usr/bin/python
-# coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the Ansible project
-# GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 
@@ -14,7 +13,7 @@ DOCUMENTATION = r"""
 ---
 module: event_stream
 author:
-   - "Alina Buzachis (@alinabuzachis)"
+   - Alina Buzachis (@alinabuzachis)
 short_description: Manage event streams in EDA Controller
 description:
     - This module allows the user to create, update or delete a event streams in EDA controller.
@@ -48,7 +47,7 @@ options:
       - organization
   event_stream_type:
     description:
-      - Type of the event stream
+      - Type of the event stream.
     type: str
     aliases:
       - type
@@ -118,9 +117,10 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
         credential_params["eda_credential_id"] = credential_id
 
     organization_id = None
-    if module.params.get("organization_name"):
+    organization_name = module.params.get("organization_name")
+    if organization_name:
         organization_id = lookup_resource_id(
-            module, controller, "organizations", module.params["organization_name"]
+            module, controller, "organizations", organization_name
         )
 
     if organization_id:
@@ -145,7 +145,7 @@ def main() -> None:
         (
             "state",
             "present",
-            ("name", "credential_name", "organization_name"),
+            ("name", "credential_name"),
         )
     ]
 
@@ -169,9 +169,17 @@ def main() -> None:
             msg="Module ansible.eda.event_stream supports AAP 2.5 and onwards"
         )
 
+    state = module.params.get("state")
+    organization_name = module.params.get("organization_name")
+
+    if state == "present":
+        if event_stream_path.status not in (404,) and organization_name is None:
+            module.fail_json(
+                msg="Parameter organization_name is required when state is present"
+            )
+
     name = module.params.get("name")
     new_name = module.params.get("new_name")
-    state = module.params.get("state")
 
     # Attempt to look up event stream based on the provided name
     try:
@@ -204,7 +212,7 @@ def main() -> None:
             event_stream,
             event_stream_params,
             endpoint=event_stream_endpoint,
-            item_type="credential",
+            item_type="event stream type",
         )
         module.exit_json(**result)
     except EDAError as e:
