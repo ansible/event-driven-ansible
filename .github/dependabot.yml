@@ -13,6 +13,8 @@ updates:
       dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - pydantic-core # pydantic pins specific versions of it
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

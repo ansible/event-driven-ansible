@@ -98,7 +98,6 @@ schemas/README.md
 schemas/event/
 schemas/event/README.md
 schemas/event/range.json
-test_requirements.txt
 tests/
 tests/__init__.py
 tests/integration/
