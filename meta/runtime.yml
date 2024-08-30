@@ -13,6 +13,8 @@ action_groups:
     - credential_type_info
     - decision_environment
     - decision_environment_info
+    - event_stream
+    - event_stream_info
     - project
     - project_info
     - user

@@ -1,0 +1,178 @@
+---
+- name: Event stream integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_verify_ssl }}"
+  block:
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
+
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
+
+    - name: Define variables for event stream
+      set_fact:
+        event_stream_name: "Test_EvenStream_{{ test_id }}"
+        new_event_stream_name: "New_Test_EventStream_{{ test_id }}"
+        credential_name: "Test_Credential_{{ test_id }}"
+
+    - name: Create credential
+      ansible.eda.credential:
+        state: present
+        name: "{{ credential_name }}"
+        description: "This is a test credential"
+        credential_type_name: "Basic Event Stream"
+        inputs:
+          username: "test"
+          password: "test"
+        organization_name: Default
+      register: _result
+
+    - name: Check credential creation
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create an event stream in check mode
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ event_stream_name }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      check_mode: true
+      register: _result
+
+    - name: Check event stream creation in check mode
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create event stream
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ event_stream_name }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check event stream is not created again
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create event stream again
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ event_stream_name }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      register: _result
+
+    # [WARNING]: The field eda_credential_id of unknown 2 has encrypted data and may
+    # inaccurately report task is changed.
+    - name: Check event stream is not created again
+      assert:
+        that:
+          - not _result.changed
+      ignore_errors: true
+
+    - name: Get info about an event stream
+      ansible.eda.event_stream_info:
+        name: "{{ event_stream_name }}"
+
+    # UPDATE
+    - name: Update event_stream name
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ new_event_stream_name }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+        event_stream_type: "Basic Event Stream"
+      register: _result
+
+    - name: Check event stream update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Update event stream again
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ new_event_stream_name }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+        event_stream_type: "Basic Event Stream"
+      register: _result
+
+    # [WARNING]: The field eda_credential_id of unknown 5 has encrypted data and may
+    # inaccurately report task is changed.
+    - name: Check event stream is not updated again
+      assert:
+        that:
+          - not _result.changed
+      ignore_errors: true
+
+    - name: Get info about event stream
+      ansible.eda.event_stream_info:
+        name: "{{ new_event_stream_name }}"
+
+    - name: List all event stream
+      ansible.eda.event_stream_info:
+
+    # DELETE
+    - name: Delete operation type without required name parameter
+      ansible.eda.event_stream:
+        state: absent
+      ignore_errors: true
+      register: _result
+
+    - name: Check if event stream name is required
+      assert:
+        that:
+          - _result.failed
+          - "'missing required arguments: name' in _result.msg"
+
+    - name: Delete non-existing event stream in check mode
+      ansible.eda.event_stream:
+        name: "Example2"
+        state: absent
+      check_mode: true
+      register: _result
+
+    - name: Check if delete non-existing event stream in check mode
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Delete event stream
+      ansible.eda.event_stream:
+        name: "{{ new_event_stream_name }}"
+        state: absent
+      register: _result
+
+    - name: Check if delete non-existing event_stream
+      assert:
+        that:
+          - _result.changed
+  always:
+    - name: Clean up - event stream
+      ansible.eda.event_stream:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ event_stream_name }}"
+        - "{{ new_event_stream_name }}"
+      ignore_errors: true
+
+    - name: Clean up - credential
+      ansible.eda.credential:
+        name: "{{ credential_name }}"
+        state: absent
+      ignore_errors: true
