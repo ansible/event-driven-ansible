@@ -89,6 +89,8 @@ plugins/modules/credential_type.py
 plugins/modules/credential_type_info.py
 plugins/modules/decision_environment.py
 plugins/modules/decision_environment_info.py
+plugins/modules/event_stream.py
+plugins/modules/event_stream_info.py
 plugins/modules/project.py
 plugins/modules/project_info.py
 plugins/modules/user.py
