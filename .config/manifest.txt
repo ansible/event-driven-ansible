@@ -16,17 +16,9 @@ changelogs/fragments/
 changelogs/fragments/.gitkeep
 changelogs/fragments/297-bug.yaml
 docs/
-docs/.gitignore
-docs/antsibull-docs.cfg
-docs/build.sh
-docs/collections/
-docs/collections/ansible/
-docs/collections/ansible/eda/
-docs/conf.py
 docs/docsite/
 docs/docsite/config.yml
 docs/docsite/extra-docs.yml
-docs/requirements.txt
 extensions/
 extensions/eda/
 extensions/eda/plugins/
