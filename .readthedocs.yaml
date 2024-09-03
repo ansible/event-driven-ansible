@@ -12,6 +12,9 @@ build:
     python: "3.12"
   commands:
     # Copy executable in the first directory in path, which happens to be writable on RTD
+    - asdf --version
+    - asdf plugin add github-cli
+    - asdf install
     - git fetch --unshallow || true
     - pip install --user tox
     - python3 -m tox -e docs

@@ -74,6 +74,7 @@ build_ignore:
   - .pytest_cache
   - .readthedocs.yaml
   - .ruff_cache
+  - .tool-versions
   - .tox
   - .venv
   - ansible_collections

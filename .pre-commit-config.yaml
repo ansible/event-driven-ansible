@@ -26,12 +26,6 @@ repos:
         args: [--unique]
         # always_run: true
         files: ^(\.config/dictionary\.txt)$
-  - repo: https://github.com/ansible-community/antsibull-changelog
-    rev: 0.29.0
-    hooks:
-      - id: antsibull-changelog-lint
-      # Enable this when we have working changelog file
-      # - id: antsibull-changelog-lint-changelog-yaml
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.10.0
     hooks:
@@ -117,16 +111,6 @@ repos:
           - xxhash
   - repo: local
     hooks:
-      - id: build
-        name: build collection and verify manifest
-        entry: ./tests/run-galaxy-importer
-        language: python
-        always_run: true
-        pass_filenames: false
-        additional_dependencies:
-          - antsibull-changelog
-          - galaxy-importer
-          - setuptools # https://issues.redhat.com/browse/AAH-3375
       - id: ansible-test-sanity
         name: Run ansible-test sanity
         entry: ansible-test sanity
