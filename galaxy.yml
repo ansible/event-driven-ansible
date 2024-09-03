@@ -8,7 +8,7 @@ namespace: ansible
 name: eda
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.4.7
+version: 2.0.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -49,7 +49,7 @@ dependencies: {}
 repository: https://github.com/ansible/event-driven-ansible
 
 # The URL to any online docs
-documentation: https://github.com/ansible/event-driven-ansible
+documentation: https://ansible.readthedocs.io/projects/ansible-eda/
 
 # The URL to the homepage of the collection/project
 homepage: http://ansible.com/event-driven
@@ -77,12 +77,14 @@ build_ignore:
   - .tox
   - .venv
   - ansible_collections
-  - changelogs
+  - changelogs/.plugin-cache.yaml
   - codecov.yml
   - collections
   - cspell.config.yaml
   - demos
-  - docs
+  - docs/build
+  - docs/rst
+  - docs/temp-rst
   - pyproject.toml
   - run_pytest.yml
   - start_app.yml

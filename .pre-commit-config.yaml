@@ -121,8 +121,12 @@ repos:
         name: build collection and verify manifest
         entry: ./tests/run-galaxy-importer
         language: python
+        always_run: true
+        pass_filenames: false
         additional_dependencies:
+          - antsibull-changelog
           - galaxy-importer
+          - setuptools # https://issues.redhat.com/browse/AAH-3375
       - id: ansible-test-sanity
         name: Run ansible-test sanity
         entry: ansible-test sanity
@@ -147,7 +151,7 @@ repos:
         name: pip-combile -> constraints.txt
         alias: deps
         always_run: true
-        entry: pip-compile --upgrade --no-annotate --strip-extras --unsafe-package=ansible-core --unsafe-package=setuptools --output-file=.config/constraints.txt .config/requirements.txt .config/requirements-test.txt .config/requirements-docs.txt
+        entry: pip-compile --upgrade --no-annotate --strip-extras --unsafe-package=ansible-core --unsafe-package=doctutils --unsafe-package=setuptools --output-file=.config/constraints.txt .config/requirements.txt .config/requirements-test.txt .config/requirements-docs.txt
         files: ^.config\/.*requirements.*$
         language: python
         language_version: "3.9" # minimal we support officially
