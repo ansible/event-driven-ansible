@@ -1,2 +1,6 @@
-antsibull-docs>=2.13.1
+ansible-pygments
+antsibull-docs>=2.13.1,<3.0.0
+mk>=2.6.1
+myst-parser
+sphinx
 sphinx-ansible-theme>=0.10.3

@@ -1,0 +1,20 @@
+---
+file_name: rst/CHANGELOG.md
+excluded_labels:
+- maintenance
+- dependencies
+- skip-changelog
+sections:
+  added:
+  - feature
+  - enhancement
+  changed:
+  - backwards-incompatible
+  fixed:
+  - bug
+  - bugfix
+  - documentation
+skip_entries_without_label: false
+show_unreleased: true
+check_for_updates: true
+logger: spinner
