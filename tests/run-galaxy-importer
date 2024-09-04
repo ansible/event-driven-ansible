@@ -1,12 +1,12 @@
 #!/bin/bash -eu
-set -e
+set -ex
 
 echo "INFO:  Cleaning up old files"
 rm -f ./*.tar.gz importer_result.json
 
 # we produce the changelog as that is not tracked in git
 echo "INFO:  Generating changelog"
-python3 -m antsibull_changelog generate -vvv
+# python3 -m antsibull_changelog generate -vvv
 
 echo "INFO:  Run galaxy-importer"
 # produces importer_result.json

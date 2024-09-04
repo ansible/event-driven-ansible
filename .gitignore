@@ -27,20 +27,13 @@ tests/integration/integration_config.yml
 *coverage.combined
 
 # Generated with antsibull-docs
-docs/.gitignore
-docs/antsibull-docs.cfg
-docs/build.sh
 docs/build/
-docs/conf.py
-docs/requirements.txt
 docs/rst/*.rst
 docs/temp-rst
 # Other
 tests/integration/inventory
 
 # Collection specific
-changelogs/.plugin-cache.yaml
 importer_result.json
 docs/rst/CHANGELOG.md
 CHANGELOG.md
-CHANGELOG.rst
