@@ -4,6 +4,8 @@ name: tox
 on:
   push:
     branches: ["main"]
+    tags:
+      - "v*.*"
   pull_request:
     branches: ["main"]
   # Run the tox tests every 8 hours.
@@ -80,14 +82,14 @@ jobs:
       - name: Install package dependencies (ubuntu)
         if: ${{ contains(matrix.os, 'ubuntu') }}
         run: |
-          sudo apt remove -y docker-compose
-          sudo apt-get update -y
-          sudo apt-get --assume-yes --no-install-recommends install -y apt-transport-https curl libsystemd0 libsystemd-dev pkg-config
+          sudo apt-get -qq -o Dpkg::Use-Pty=0 remove -y docker-compose
+          sudo apt-get -qq -o Dpkg::Use-Pty=0 update -y --fix-missing
+          sudo apt-get -qq -o Dpkg::Use-Pty=0 --assume-yes --no-install-recommends install -y apt-transport-https curl libsystemd0 libsystemd-dev pkg-config
           sudo add-apt-repository ppa:deadsnakes/ppa
           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt update -y
-          sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin shellcheck
+          sudo apt-get -qq -o Dpkg::Use-Pty=0 update -y --fix-missing
+          sudo apt-get -qq -o Dpkg::Use-Pty=0 install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin shellcheck
           # Do not install docker-compose-plugin because it would v1 (broken due to not working with newer requests library)
           sudo systemctl enable --now docker
           sudo curl -sL "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -136,7 +138,7 @@ jobs:
       - name: Archive logs
         uses: actions/upload-artifact@v4
         with:
-          name: logs-${{ matrix.name }}.zip
+          name: logs-${{ matrix.name }}
           if-no-files-found: error
           include-hidden-files: true
           path: |
@@ -144,6 +146,17 @@ jobs:
             ansible_collections/ansible/eda/.tox/**/coverage.xml
             ansible_collections/ansible/eda/tests/output/reports/coverage.xml
             ansible_collections/ansible/eda/tests/output/junit/*.xml
+
+      - name: Archive collection archive
+        uses: actions/upload-artifact@v4
+        # we need to do for only one job, 'tox -e docs' when run on linux:
+        if: ${{ matrix.name == 'lint-docs-sanity' }}
+        with:
+          name: collection-artifact
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            ansible_collections/ansible/eda/*.tar.gz
 
       - name: Report failure if git reports dirty status
         run: |
@@ -180,16 +193,17 @@ jobs:
       - name: Merge logs into a single archive
         uses: actions/upload-artifact/merge@v4
         with:
-          name: logs.zip
+          name: logs
           include-hidden-files: true
-          pattern: logs-*.zip
+          pattern: logs-*
+          delete-merged: true
           # artifacts like py312.zip and py312-macos do have overlapping files
           separate-directories: true
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: logs.zip
+          name: logs
           path: .
 
       - name: Check for expected number of coverage reports
@@ -227,7 +241,33 @@ jobs:
         with:
           jobs: ${{ toJSON(needs) }}
 
-      - name: Delete Merged Artifacts
-        uses: actions/upload-artifact/merge@v4
+  publish:
+    runs-on: ubuntu-24.04
+    needs:
+      - check
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the artifact
+        uses: actions/download-artifact@v4
         with:
-          delete-merged: true
+          name: collection-artifact
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install ansible-core
+
+      - name: Publish the collection on Galaxy
+        if: github.ref_type == 'tag' || github.ref == 'refs/heads/main'
+        run: >
+          [[ "${{ secrets.ANSIBLE_GALAXY_API_KEY != '' }}" ]] || { echo
+          "ANSIBLE_GALAXY_API_KEY is required to publish on galaxy" ; exit 1; }
+
+          TARBALL=$(ls -1 ./*.tar.gz)
+
+          ansible-galaxy collection publish "${TARBALL}" --api-key "${{
+          secrets.ANSIBLE_GALAXY_API_KEY }}"
