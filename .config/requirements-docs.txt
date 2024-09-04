@@ -1,6 +1,9 @@
 ansible-pygments
 antsibull-docs>=2.13.1,<3.0.0
+attrs
+galaxy-importer>=0.4.24
 mk>=2.6.1
 myst-parser
+setuptools # https://issues.redhat.com/browse/AAH-3375
 sphinx
 sphinx-ansible-theme>=0.10.3
