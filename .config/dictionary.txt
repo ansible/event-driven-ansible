@@ -67,6 +67,8 @@ testenv
 testpass
 testsecret
 testuser
+toctree
 toxinidir
 trustore
 truststore
+unshallow

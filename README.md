@@ -2,6 +2,7 @@
 
 This collection contains event source plugins, event filters and example rulebooks to be used with [ansible-rulebook](https://ansible-rulebook.readthedocs.io/en/stable/).
 
+[![galaxy](https://img.shields.io/badge/galaxy-ansible.eda-5bbdbf?style=flat&logo=ansible&cacheSeconds=3600)](<(https://img.shields.io/badge/galaxy-ansible.eda-green?style=flat)(https://galaxy.ansible.com/ui/repo/published/ansible/eda/)>)
 [![tox](https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml/badge.svg?event=push)](https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml)
 [![codecov](https://codecov.io/github/ansible/event-driven-ansible/graph/badge.svg?token=XvFwDpezAH)](https://codecov.io/github/ansible/event-driven-ansible)
 
@@ -68,7 +69,8 @@ pip install -r requirements.txt
 ```
 
 Refer to the following for more details.
-* [using Ansible collections](https://docs.ansible.com/ansible/latest/user_guide/collections_using.html) for more details.
+
+- [using Ansible collections](https://docs.ansible.com/ansible/latest/user_guide/collections_using.html) for more details.
 
 ## Use Cases
 

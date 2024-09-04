@@ -41,3 +41,6 @@ tests/integration/inventory
 # Collection specific
 changelogs/.plugin-cache.yaml
 importer_result.json
+docs/rst/CHANGELOG.md
+CHANGELOG.md
+CHANGELOG.rst

@@ -1,12 +1,25 @@
 #!/bin/bash -eu
 set -e
+
+echo "INFO:  Cleaning up old files"
 rm -f ./*.tar.gz importer_result.json
+
+# we produce the changelog as that is not tracked in git
+echo "INFO:  Generating changelog"
+python3 -m antsibull_changelog generate -vvv
+
+echo "INFO:  Run galaxy-importer"
 # produces importer_result.json
 GALAXY_IMPORTER_CONFIG=.config/galaxy-importer.cfg python3 -m galaxy_importer.main --git-clone-path=. --output-path=.
+
+echo "INFO:  Check if importer_result.json is not empty"
 ARCHIVE=$(python3 -c "import json; print(json.load(open('importer_result.json'))[-1])")
+
+echo "INFO:  Check that list of files (manifest) inside the collection archive is the expected one."
 tar -tf "$ARCHIVE" | sort > .config/manifest.txt
 sync
 git --no-pager diff -U0 --minimal || {
-    echo "Manifest at .config/manifest.txt changed, please update it."
+    echo "ERROR: Manifest at .config/manifest.txt changed, please update it."
     exit 3
 }
+echo "INFO:  Galaxy importer check passed."
