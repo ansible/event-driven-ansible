@@ -14,7 +14,9 @@ updates:
         patterns:
           - "*"
         exclude-patterns:
-          - attrs  # galaxy-importer ceiling confuses dependabot
+          # galaxy-importer ceiling confuses dependabot
+          - attrs
+          - bleach
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
