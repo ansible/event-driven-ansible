@@ -13,6 +13,8 @@ updates:
       dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - attrs  # galaxy-importer ceiling confuses dependabot
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
