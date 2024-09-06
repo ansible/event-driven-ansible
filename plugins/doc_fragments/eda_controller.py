@@ -5,13 +5,12 @@
 
 
 class ModuleDocFragment:
-
     AUTHS = """
 options:
     controller_host:
         description:
           - The URL of the EDA controller.
-          - If not set, the value of the C(CONTROLLER_URL) environment variable will be used.
+          - If not set, the value of the C(CONTROLLER_HOST) environment variable will be used.
         required: true
         type: str
         version_added: '2.0.0'
