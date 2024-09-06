@@ -1,0 +1,116 @@
+# Example playbook that demonstrates how to use the Ansible EDA collection to perform a basic setup.
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    controller_host: your eda controller url, e.g. https://eda-controller.example.com
+    controller_username: your eda controller username
+    controller_password: your eda controller password
+
+    github_username: your github username
+    github_token: your github token
+
+    quay_username: your quay.io username
+    quay_password: your quay.io password
+
+    organization_name: Default
+    validate_certs: no
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ validate_certs }}"
+  tasks:
+    - name: Create a credential for AAP controller
+      ansible.eda.credential:
+        organization_name: "{{ organization_name }}"
+        name: My AAP controller credential
+        credential_type_name: Red Hat Ansible Automation Platform
+        inputs:
+          host: "{{ controller_host }}"
+          username: "{{ controller_username }}"
+          password: "{{ controller_password }}"
+          verify_ssl: "{{ validate_certs }}"
+
+    - name: Create a credential for github
+      ansible.eda.credential:
+        organization_name: "{{ organization_name }}"
+        name: github credential
+        credential_type_name: Source Control
+        inputs:
+          username: "{{ github_username }}"
+          password: "{{ github_token }}"
+
+    - name: Create a credential for quay.io
+      ansible.eda.credential:
+        organization_name: "{{ organization_name }}"
+        name: quay.io credential
+        credential_type_name: Container Registry
+        inputs:
+          username: "{{ quay_username }}"
+          password: "{{ quay_password }}"
+
+    - name: Create a credential for a basic event stream
+      ansible.eda.credential:
+        organization_name: "{{ organization_name }}"
+        name: basic event stream credential
+        credential_type_name: Basic Event Stream
+        inputs:
+          username: secret
+          password: secret
+
+    - name: Import a project
+      ansible.eda.project:
+        organization_name: "{{ organization_name }}"
+        url: https://github.com/ansible/eda-sample-project
+        name: test project
+        credential: github credential
+
+    - name: Create a decision environment
+      ansible.eda.decision_environment:
+        organization_name: "{{ organization_name }}"
+        name: upstream decision environment
+        credential: quay.io credential
+        image_url: quay.io/ansible/ansible-rulebook:main
+
+    - name: Create a basic event stream
+      ansible.eda.event_stream:
+        organization_name: "{{ organization_name }}"
+        name: basic event stream
+        credential_name: basic event stream
+        event_stream_type: Basic Event Stream
+
+    - name: Get the event stream generated
+      register: event_stream_data
+      ansible.eda.event_stream_info:
+        name: basic event stream
+
+    - name: Print the event stream url
+      debug:
+        msg: "Event Stream URL: {{ event_stream_data.event_streams[0].url }}"
+
+    - name: Remove the activation if it exists
+      ansible.eda.activation:
+        organization_name: "{{ organization_name }}"
+        name: activation-example
+        state: absent
+
+    - name: Activate a rulebook
+      ansible.eda.activation:
+        organization_name: "{{ organization_name }}"
+        decision_environment_name: upstream decision environment
+        project_name: test project
+        rulebook_name: hello_echo.yml
+        name: activation-example
+        eda_credentials:
+          - My AAP controller credential
+
+    - name: Wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations | length > 0 and activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.activation_info:
+        name: activation-example

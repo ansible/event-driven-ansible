@@ -6,6 +6,8 @@ CONTRIBUTING.md
 docs/
 docs/CHANGELOG.md
 docs/README.md
+examples/
+examples/eda-setup.yml
 extensions/
 extensions/eda/
 extensions/eda/plugins/
