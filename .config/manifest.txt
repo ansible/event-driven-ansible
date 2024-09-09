@@ -2,16 +2,10 @@
 .flake8
 .gitignore
 bindep.txt
-CHANGELOG.md
 CONTRIBUTING.md
 docs/
-docs/.changelog.yml
-docs/.gitignore
-docs/antsibull-docs.cfg
-docs/build.sh
-docs/conf.py
-docs/docsite/
-docs/docsite/links.yml
+docs/CHANGELOG.md
+docs/README.md
 extensions/
 extensions/eda/
 extensions/eda/plugins/
@@ -111,4 +105,3 @@ schemas/README.md
 tests/
 tests/integration/
 tests/__init__.py
-test_requirements.txt

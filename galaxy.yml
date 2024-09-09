@@ -77,13 +77,20 @@ build_ignore:
   - .tool-versions
   - .tox
   - .venv
+  - CHANGELOG.md
   - ansible_collections
   - changelogs/.plugin-cache.yaml
   - codecov.yml
   - collections
   - cspell.config.yaml
   - demos
+  - docs/.changelog.yml
+  - docs/.gitignore
+  - docs/antsibull-docs.cfg
   - docs/build
+  - docs/build.sh
+  - docs/conf.py
+  - docs/docsite
   - docs/rst
   - docs/temp-rst
   - pyproject.toml
