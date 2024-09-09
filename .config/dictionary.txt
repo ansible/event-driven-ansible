@@ -33,6 +33,7 @@ containerd
 darglint
 deadsnakes
 digestmod
+docsite
 dynatrace
 envlist
 extfile

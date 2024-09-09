@@ -7,6 +7,9 @@ trap "{ popd; }" EXIT
 GALAXY_VERSION=$(python -c "import yaml; print(yaml.safe_load(open('../galaxy.yml'))['version'])")
 # Determine the collection version, if current commit is tagged, use it. Otherwise, generate pre-release version.
 
+# this is for inclusion in collection archive (galaxy renders docs/*.md in the web UI)
+cp -f ../README.md ./README.md
+
 # Create collection documentation
 mkdir -p rst
 chmod og-w rst  # antsibull-docs wants that directory only readable by itself
@@ -20,10 +23,14 @@ antsibull-docs \
     --dest-dir rst \
     ansible.eda
 
+
 # To be included inside the built collection archive
 pushd ..
 mk -v changelog
-cp CHANGELOG.md ./docs/rst/changelog.md
+cp -f CHANGELOG.md ./docs/CHANGELOG.md
+
+# that is for our sphinx build site:
+cp -f CHANGELOG.md ./docs/rst/changelog.md
 popd
 
 CHANGELOG_VERSION=$(grep -m 1 '^#' rst/changelog.md  | awk '/^#/ {print $2; exit}' | sed 's/v//')

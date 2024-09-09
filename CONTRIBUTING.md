@@ -70,7 +70,7 @@ We recommend setting up a Python virtual environment to install the test depende
 
 3. Install the test requirements:
 
-        pip install -r test_requirements.txt
+        pip install -r .config/requirements.in
 
 ## Sanity and Unit tests
 

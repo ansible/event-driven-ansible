@@ -17,6 +17,11 @@ updates:
           # galaxy-importer ceiling confuses dependabot
           - attrs
           - bleach
+          - flake8
+    exclude:
+      - dependency-name: attrs
+      - dependency-name: bleach
+      - dependency-name: flake8
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

@@ -16,6 +16,7 @@ build:
     - asdf plugin add github-cli
     - asdf install
     - git fetch --unshallow || true
+    - git fetch --tags
     - pip install --user tox
     - python3 -m tox -e docs
     - mkdir -p $READTHEDOCS_OUTPUT
