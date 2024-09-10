@@ -91,13 +91,6 @@ options:
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
-  webhooks:
-    description:
-      - A list of webhook IDs associated with the rulebook activation.
-      - This parameter is supported in AAP 2.5 and onwards.
-        If specified for AAP 2.4, value will be ignored.
-    type: list
-    elements: str
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
@@ -107,11 +100,11 @@ options:
     default: true
   event_streams:
     description:
-      -  A list of IDs representing the event streams that this rulebook activation listens to.
+      - A list of event streams names that this rulebook activation listens to.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: list
-    elements: int
+    elements: str
   log_level:
     description:
       - Allow setting the desired log level.
@@ -260,16 +253,16 @@ def create_params(
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
-    # Get the webhook ids
-    webhooks_ids = None
-    if not is_aap_24 and module.params.get("webhooks"):
-        webhooks_ids = []
-        for item in module.params["webhooks"]:
-            webhook_id = lookup_resource_id(module, controller, "webhooks", item)
-            if webhook_id is not None:
-                webhooks_ids.append(webhook_id)
-    if webhooks_ids is not None:
-        activation_params["webhooks"] = webhooks_ids
+    # Get the event stream ids
+    event_stream_ids = None
+    if not is_aap_24 and module.params.get("event-streams"):
+        event_stream_ids = []
+        for item in module.params["event_streams"]:
+            event_stream_id = lookup_resource_id(module, controller, "event-streams", item)
+            if event_stream_id is not None:
+                event_stream_ids.append(event_stream_id)
+    if event_stream_ids is not None:
+        activation_params["event_streams"] = event_stream_ids
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -300,10 +293,9 @@ def main() -> None:
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
-        event_streams=dict(type="list", elements="int"),
         eda_credentials=dict(type="list", elements="str", aliases=["credentials"]),
         k8s_service_name=dict(type="str"),
-        webhooks=dict(type="list", elements="str"),
+        event_streams=dict(type="list", elements="str"),
         swap_single_source=dict(type="bool", default=True),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),

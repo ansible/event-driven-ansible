@@ -67,11 +67,10 @@ activations:
       "modified_at": "2024-08-15T11:45:00.987Z",
       "status_message": "Activation is running successfully.",
       "awx_token_id": 1,
-      "event_streams": [],
       "log_level": "info",
       "eda_credentials": [],
       "k8s_service_name": "",
-      "webhooks": [],
+      "event_streams": [],
       "swap_single_source": false
     }
   ]

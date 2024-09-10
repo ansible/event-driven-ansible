@@ -29,6 +29,8 @@
         image_url: "quay.io/ansible/awx:latest"
         scm_url: https://github.com/ansible/event-driven-ansible.git
         rulebook_name: "demo_controller_rulebook.yml"
+        event_stream_name: "Test_EvenStream_{{ test_id }}"
+        credential_name_basic: "Test_CredentialBasic_{{ test_id }}"
 
     - name: Create an AWX controller token
       ansible.eda.controller_token:
@@ -189,6 +191,55 @@
     - name: List all the rulebook activations
       ansible.eda.activation_info:
 
+    - name: Delete rulebook activation
+      ansible.eda.activation:
+        name: "{{ activation_name }}"
+        state: absent
+
+    - name: Get information about the rulebook activation
+      ansible.eda.activation_info:
+        name: "{{ activation_name }}"
+
+    # Test event_streams option
+    - name: Create a new credential
+      ansible.eda.credential:
+        state: present
+        name: "{{ credential_name_basic }}"
+        description: "This is a test credential"
+        credential_type_name: "Basic Event Stream"
+        inputs:
+          username: "test"
+          password: "test"
+        organization_name: Default
+      register: _result
+
+    - name: Create an event stream
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ event_stream_name }}"
+        credential_name: "{{ credential_name_basic }}"
+        organization_name: Default
+      register: _result
+
+    - name: Create a rulebook activation
+      ansible.eda.activation:
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
+        event_streams:
+          - "{{ event_stream_name }}"
+      register: _result
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.changed
+
     - name: Delete project
       ansible.eda.project:
         name: "{{ project_name }}"
@@ -213,11 +264,6 @@
           - credential_deletion is changed
           - credential_deletion is success
 
-    - name: Delete rulebook activation
-      ansible.eda.activation:
-        name: "{{ activation_name }}"
-        state: absent
-
   always:
     - name: Delete AWX token
       ansible.eda.controller_token:
@@ -231,18 +277,6 @@
         state: absent
       ignore_errors: true
 
-    - name: Delete credential
-      ansible.eda.credential:
-        name: "{{ credential_name }}"
-        state: absent
-      ignore_errors: true
-
-    - name: Delete credential type
-      ansible.eda.credential_type:
-        name: "{{ credential_type_name }}"
-        state: absent
-      ignore_errors: true
-
     - name: Delete rulebook activation
       ansible.eda.activation:
         name: "{{ activation_name }}"
@@ -252,5 +286,26 @@
     - name: Delete decision environment
       ansible.eda.decision_environment:
         name: "{{ decision_env_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete event stream
+      ansible.eda.event_stream:
+        name: "{{ event_stream_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete credentials
+      ansible.eda.credential:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ credential_name }}"
+        - "{{ credential_name_basic }}"
+      ignore_errors: true
+
+    - name: Delete credential type
+      ansible.eda.credential_type:
+        name: "{{ credential_type_name }}"
         state: absent
       ignore_errors: true
