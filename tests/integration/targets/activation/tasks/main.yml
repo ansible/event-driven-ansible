@@ -138,7 +138,7 @@
       register: decision_environment_creation
 
     - name: Create a new rulebook activation in check mode
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -156,7 +156,7 @@
           - _result.changed
 
     - name: Create a new rulebook activation
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -173,7 +173,7 @@
           - _result.changed
 
     - name: Create a new rulebook activation again
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -191,11 +191,11 @@
           - "'A rulebook activation with name: ' + activation_name + ' already exists. The module does not support modifying a rulebook activation.' in _result.msg"
 
     - name: Get information about the rulebook activation
-      ansible.eda.activation_info:
+      ansible.eda.rulebook_activation_info:
         name: "{{ activation_name }}"
 
     - name: List all the rulebook activations
-      ansible.eda.activation_info:
+      ansible.eda.rulebook_activation_info:
 
     - name: Delete rulebook activation
       ansible.eda.activation:
@@ -353,7 +353,7 @@
           - credential_deletion is success
 
     - name: Delete rulebook activation
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         state: absent
 
@@ -370,9 +370,21 @@
         state: absent
       ignore_errors: true
 
-    - name: Delete rulebook activations
-      ansible.eda.activation:
-        name: "{{ item }}"
+    - name: Delete credential
+      ansible.eda.credential:
+        name: "{{ credential_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete credential type
+      ansible.eda.credential_type:
+        name: "{{ credential_type_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete rulebook activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
         state: absent
       loop:
         - "{{ activation_name }}"
