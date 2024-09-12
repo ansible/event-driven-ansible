@@ -46,6 +46,7 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
+        forward_events: False
       check_mode: true
       register: _result
 
@@ -62,7 +63,7 @@
         organization_name: Default
       register: _result
 
-    - name: Check event stream is not created again
+    - name: Check event stream is created
       assert:
         that:
           - _result.changed
@@ -122,6 +123,40 @@
     - name: Get info about event stream
       ansible.eda.event_stream_info:
         name: "{{ new_event_stream_name }}"
+      register: _result
+
+    - name: Check if event stream name is updated
+      assert:
+        that:
+          - _result.event_streams[0].name == new_event_stream_name
+
+    - name: Update event stream headers and forward_events
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ new_event_stream_name }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+        event_stream_type: "Basic Event Stream"
+        headers: "Authorization,Custom-Header"
+        forward_events: False
+      register: _result
+
+    - name: Check event stream is updated
+      assert:
+        that:
+          - _result.changed
+
+    - name: Get info about event stream
+      ansible.eda.event_stream_info:
+        name: "{{ new_event_stream_name }}"
+      register: _result
+
+    - name: Check if event stream headers and forward_events are updated
+      assert:
+        that:
+          - _result.event_streams[0].name == new_event_stream_name
+          - _result.event_streams[0].additional_data_headers == "Authorization,Custom-Header"
+          - _result.event_streams[0].test_mode == False
 
     - name: List all event stream
       ansible.eda.event_stream_info:
@@ -161,6 +196,7 @@
       assert:
         that:
           - _result.changed
+
   always:
     - name: Clean up - event stream
       ansible.eda.event_stream:
