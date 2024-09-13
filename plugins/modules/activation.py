@@ -293,18 +293,26 @@ def create_params(
         for elem in module.params.get("event_streams"):
             event = elem.copy()
             if event.get("source_index") and event.get("source_name"):
-                module.fail_json(msg="source_index and source_name options are mutually exclusive.")
+                module.fail_json(
+                    msg="source_index and source_name options are mutually exclusive."
+                )
 
             if event.get("source_index") is None and event.get("source_name") is None:
-                module.fail_json(msg="You must specify one of the options source_index or source_name.")
+                module.fail_json(
+                    msg="You must specify one of the options source_index or source_name."
+                )
 
             if event.get("source_index"):
                 try:
                     event["source_name"] = sources[event["source_index"]]
                 except IndexError as e:
-                    module.fail_json(msg=f"The specified source_index {event['source_index']} is out of range: {e}")
+                    module.fail_json(
+                        msg=f"The specified source_index {event['source_index']} is out of range: {e}"
+                    )
                 event.pop("source_index")
-            elif event.get("source_name") and not any(d["name"] == event.get("source_name") for d in sources):
+            elif event.get("source_name") and not any(
+                d["name"] == event.get("source_name") for d in sources
+            ):
                 module.fail_json(
                     msg=f"The specified source_name {event.get('source_name')} does not exist."
                 )
