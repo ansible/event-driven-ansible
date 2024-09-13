@@ -122,6 +122,9 @@
           - project_creation is changed
           - project_creation is success
 
+    - name: List all rulebooks
+      ansible.eda.rulebook_info:
+
     - name: Create a new decision environment
       ansible.eda.decision_environment:
         name: "{{ decision_env_name }}"
@@ -221,6 +224,12 @@
         organization_name: Default
       register: _result
 
+    - name: Get information about a rulebook
+      ansible.eda.rulebook_info:
+        name: "{{ rulebook_name }}"
+        project_name: "{{ project_name }}"
+      register: _result_rulebook_info
+
     - name: Create a rulebook activation
       ansible.eda.activation:
         name: "{{ activation_name }}"
@@ -232,7 +241,9 @@
         awx_token_name: "{{ awx_token_name }}"
         organization_name: Default
         event_streams:
-          - "{{ event_stream_name }}"
+          - event_stream: "{{ event_stream_name }}"
+            source_name: "{{ _result_rulebook_info.rulebooks[0].sources[0].name }}"
+            rulebook_hash: "{{ _result_rulebook_info.rulebooks[0].sources[0].rulebook_hash }}"
       register: _result
 
     - name: Check rulebook activation creation

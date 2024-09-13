@@ -104,7 +104,20 @@ options:
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: list
-    elements: str
+    elements: dict
+    suboptions:
+      event_stream:
+        description:
+          - The name of the event stream.
+        type: str
+      source_name:
+        description:
+          - The name of the source.
+        type: str
+      rulebook_hash:
+        description:
+          - The hash value.
+        type: str
   log_level:
     description:
       - Allow setting the desired log level.
@@ -136,6 +149,21 @@ EXAMPLES = """
     decision_environment_name: "Example Decision Environment"
     enabled: False
     awx_token_name: "Example Token"
+
+  - name: Create a rulebook activation with event_streams option
+    ansible.eda.activation:
+      name: "Example Rulebook Activation"
+      description: "Example Activation description"
+      project_name: "Example Project"
+      rulebook_name: "hello_controller.yml"
+      decision_environment_name: "Example Decision Environment"
+      enabled: False
+      awx_token_name: "Example Token"
+      organization_name: Default
+      event_streams:
+        - event_stream: "Example Event Stream"
+          source_name: "__SOURCE_1"
+          rulebook_hash: "1e0f22025ab0a4e729fb68bcb9497412c3d9f477ce5a8cb91cc2ef15e35c4dc6"
 
 - name: Delete a rulebook activation
   ansible.eda.activation:
@@ -253,16 +281,8 @@ def create_params(
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
-    # Get the event stream ids
-    event_stream_ids = None
-    if not is_aap_24 and module.params.get("event-streams"):
-        event_stream_ids = []
-        for item in module.params["event_streams"]:
-            event_stream_id = lookup_resource_id(module, controller, "event-streams", item)
-            if event_stream_id is not None:
-                event_stream_ids.append(event_stream_id)
-    if event_stream_ids is not None:
-        activation_params["event_streams"] = event_stream_ids
+    if module.params["event_streams"]:
+        activation_params["event_streams"] = module.params["event_streams"]
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -295,7 +315,15 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         eda_credentials=dict(type="list", elements="str", aliases=["credentials"]),
         k8s_service_name=dict(type="str"),
-        event_streams=dict(type="list", elements="str"),
+        event_streams=dict(
+            type="list",
+            elements="dict",
+            options=dict(
+                event_stream=dict(type="str"),
+                rulebook_hash=dict(type="str"),
+                source_name=dict(type="str"),
+            ),
+        ),
         swap_single_source=dict(type="bool", default=True),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),

@@ -105,7 +105,7 @@ def main() -> None:
     name = module.params.get("name")
     controller = Controller(client, module)
 
-    # Attempt to look up credential based on the provided name
+    # Attempt to look up rulebook activation based on the provided name
     try:
         result = controller.get_one_or_many("activations", name=name)
     except EDAError as e:
