@@ -321,6 +321,11 @@
           - credential_deletion is changed
           - credential_deletion is success
 
+    - name: Delete rulebook activation
+      ansible.eda.activation:
+        name: "{{ activation_name }}"
+        state: absent
+
   always:
     - name: Delete AWX token
       ansible.eda.controller_token:
