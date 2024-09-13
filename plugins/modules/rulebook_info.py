@@ -42,7 +42,7 @@ EXAMPLES = """
   - name: Get information about a rulebook
     ansible.eda.rulebook_info:
       name: "Example Rulebook Activation"
-      projectname: "Example Project"
+      project_name: "Example Project"
 
   - name: List all rulebooks
     ansible.eda.rulebook_info:
