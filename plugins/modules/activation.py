@@ -113,11 +113,13 @@ options:
       source_name:
         description:
           - The name of the source.
+          - O(source_name) and O(source_index) are mutually exclusive.
         type: str
-      rulebook_hash:
+      source_index:
         description:
-          - The hash value.
-        type: str
+          - The index of the source.
+          - O(source_name) and O(source_index) are mutually exclusive.
+        type: int
   log_level:
     description:
       - Allow setting the desired log level.
@@ -163,7 +165,6 @@ EXAMPLES = """
       event_streams:
         - event_stream: "Example Event Stream"
           source_name: "__SOURCE_1"
-          rulebook_hash: "1e0f22025ab0a4e729fb68bcb9497412c3d9f477ce5a8cb91cc2ef15e35c4dc6"
 
 - name: Delete a rulebook activation
   ansible.eda.activation:
@@ -263,9 +264,6 @@ def create_params(
     if module.params.get("enabled"):
         activation_params["is_enabled"] = module.params["enabled"]
 
-    if not is_aap_24 and module.params.get("event_streams"):
-        activation_params["event_streams"] = module.params["event_streams"]
-
     # Get the eda credential ids
     eda_credential_ids = None
     if not is_aap_24 and module.params.get("eda_credentials"):
@@ -281,8 +279,36 @@ def create_params(
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
-    if module.params["event_streams"]:
-        activation_params["event_streams"] = module.params["event_streams"]
+    # Get the webhook ids
+    sources = []
+    if not is_aap_24 and module.params.get("event_streams"):
+        activation_params["event_streams"] = []
+        try:
+            sources = controller.get_one_or_many(
+                f"rulebooks/{rulebook_id}/sources", name=module.params["rulebook_name"]
+            )
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to get rulebook source list: {e}")
+
+        for elem in module.params.get("event_streams"):
+            event = elem.copy()
+            if event.get("source_index") and event.get("source_name"):
+                module.fail_json(msg="source_index and source_name options are mutually exclusive.")
+
+            if event.get("source_index") is None and event.get("source_name") is None:
+                module.fail_json(msg="You must specify one of the options source_index or source_name.")
+
+            if event.get("source_index"):
+                try:
+                    event["source_name"] = sources[event["source_index"]]
+                except IndexError as e:
+                    module.fail_json(msg=f"The specified source_index {event['source_index']} is out of range: {e}")
+                event.pop("source_index")
+            elif event.get("source_name") and not any(d["name"] == event.get("source_name") for d in sources):
+                module.fail_json(
+                    msg=f"The specified source_name {event.get('source_name')} does not exist."
+                )
+            activation_params["event_streams"].append(event)
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -320,7 +346,7 @@ def main() -> None:
             elements="dict",
             options=dict(
                 event_stream=dict(type="str"),
-                rulebook_hash=dict(type="str"),
+                source_index=dict(type="int"),
                 source_name=dict(type="str"),
             ),
         ),

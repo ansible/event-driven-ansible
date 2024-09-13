@@ -230,6 +230,28 @@
         project_name: "{{ project_name }}"
       register: _result_rulebook_info
 
+    - name: Create a rulebook activation (wrong source_name)
+      ansible.eda.activation:
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
+        event_streams:
+          - event_stream: "{{ event_stream_name }}"
+            source_name: "Test source name"
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - not _result.changed
+          - '"The specified source_name Test source name does not exist." in _result.msg'
+
     - name: Create a rulebook activation
       ansible.eda.activation:
         name: "{{ activation_name }}"
@@ -242,8 +264,32 @@
         organization_name: Default
         event_streams:
           - event_stream: "{{ event_stream_name }}"
+            source_index: 0
+      register: _result
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.changed
+
+    - name: Delete rulebook activation
+      ansible.eda.activation:
+        name: "{{ activation_name }}"
+        state: absent
+
+    - name: Create a new rulebook activation
+      ansible.eda.activation:
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
+        event_streams:
+          - event_stream: "{{ event_stream_name }}"
             source_name: "{{ _result_rulebook_info.rulebooks[0].sources[0].name }}"
-            rulebook_hash: "{{ _result_rulebook_info.rulebooks[0].sources[0].rulebook_hash }}"
       register: _result
 
     - name: Check rulebook activation creation
