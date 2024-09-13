@@ -47,7 +47,7 @@ options:
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
-    default: "always"
+    default: "on-failure"
     choices: ["on-failure", "always", "never"]
     type: str
   enabled:
@@ -118,7 +118,7 @@ options:
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
-    default: "debug"
+    default: "error"
     choices: ["debug", "info", "error"]
   state:
     description:
@@ -289,7 +289,7 @@ def main() -> None:
         extra_vars=dict(type="str"),
         restart_policy=dict(
             type="str",
-            default="always",
+            default="on-failure",
             choices=[
                 "on-failure",
                 "always",
@@ -305,7 +305,7 @@ def main() -> None:
         k8s_service_name=dict(type="str"),
         webhooks=dict(type="list", elements="str"),
         swap_single_source=dict(type="bool", default=True),
-        log_level=dict(type="str", choices=["debug", "info", "error"], default="debug"),
+        log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
