@@ -23,6 +23,9 @@
         credential_name: "Test_Credential_{{ test_id }}"
         decision_env_name: "Test_Decision_Env_{{ test_id }}"
         activation_name: "Test_Activation_{{ test_id }}"
+        activation_name_source_name: "Test_ActivationSourceName_{{ test_id }}"
+        activation_name_source_index: "Test_ActivationSourceIndex_{{ test_id }}"
+        activation_name_wrong_source: "Test_ActivationWrongSource_{{ test_id }}"
         project_name: "Test_Project_{{ test_id }}"
         awx_token_name: "Test_AWXToken_{{ test_id }}"
         token_value: "your_private_access_token_name"
@@ -232,7 +235,7 @@
 
     - name: Create a rulebook activation (wrong source_name)
       ansible.eda.activation:
-        name: "{{ activation_name }}"
+        name: "{{ activation_name_wrong_source }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
@@ -254,7 +257,7 @@
 
     - name: Create a rulebook activation
       ansible.eda.activation:
-        name: "{{ activation_name }}"
+        name: "{{ activation_name_source_index }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
@@ -274,12 +277,12 @@
 
     - name: Delete rulebook activation
       ansible.eda.activation:
-        name: "{{ activation_name }}"
+        name: "{{ activation_name_source_index }}"
         state: absent
 
     - name: Create a new rulebook activation
       ansible.eda.activation:
-        name: "{{ activation_name }}"
+        name: "{{ activation_name_source_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
@@ -339,10 +342,15 @@
         state: absent
       ignore_errors: true
 
-    - name: Delete rulebook activation
+    - name: Delete rulebook activations
       ansible.eda.activation:
-        name: "{{ activation_name }}"
+        name: "{{ item }}"
         state: absent
+      loop:
+        - "{{ activation_name }}"
+        - "{{ activation_name_source_name }}"
+        - "{{ activation_name_source_index }}"
+        - "{{ activation_name_wrong_source }}"
       ignore_errors: true
 
     - name: Delete decision environment
@@ -371,3 +379,4 @@
         name: "{{ credential_type_name }}"
         state: absent
       ignore_errors: true
+
