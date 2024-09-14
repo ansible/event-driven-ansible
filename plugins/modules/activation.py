@@ -113,12 +113,12 @@ options:
       source_name:
         description:
           - The name of the source.
-          - O(source_name) and O(source_index) are mutually exclusive.
+          - O(event_streams.source_name) and O(event_streams.source_index) are mutually exclusive.
         type: str
       source_index:
         description:
           - The index of the source.
-          - O(source_name) and O(source_index) are mutually exclusive.
+          - O(event_streams.source_name) and O(event_streams.source_index) are mutually exclusive.
         type: int
   log_level:
     description:
