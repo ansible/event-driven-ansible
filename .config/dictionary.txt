@@ -60,6 +60,7 @@ refspec
 rulebook
 rulebooks
 ruleset
+rulesets
 servicebus
 skipsdist
 snakeoil
