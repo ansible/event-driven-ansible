@@ -379,4 +379,3 @@
         name: "{{ credential_type_name }}"
         state: absent
       ignore_errors: true
-
