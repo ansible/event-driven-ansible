@@ -184,10 +184,20 @@ id:
 """
 
 
-import yaml
 from typing import Any, Dict, List
+import traceback
+
+try:
+  import yaml
+except ImportError:
+    HAS_YAML = False
+    YAML_IMPORT_ERROR = traceback.format_exc()
+else:
+    HAS_YAML = True
+    YAML_IMPORT_ERROR = ''
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import missing_required_lib
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
@@ -196,7 +206,9 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def find_matching_source(event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule) -> Dict[str, Any]:
+def find_matching_source(
+    event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
+) -> Dict[str, Any]:
     """
     Finds a matching source based on the source_name in the event.
     Raises an error if no match is found.
@@ -210,9 +222,7 @@ def find_matching_source(event: Dict[str, Any], sources: List[Dict[str, Any]], m
             return source  # Return the matching source if found
 
     # If no match is found, raise an error
-    module.fail_json(
-        msg=f"The specified source_name {source_name} does not exist."
-    )
+    module.fail_json(msg=f"The specified source_name {source_name} does not exist.")
 
     return {}  # Explicit return to satisfy mypy
 
@@ -261,8 +271,12 @@ def process_event_streams(
         # Handle source_index
         if event.get("source_index") is not None:
             try:
-                source_mapping["source_name"] = sources[event["source_index"]].get("name")
-                source_mapping["rulebook_hash"] = sources[event["source_index"]].get("rulebook_hash")
+                source_mapping["source_name"] = sources[event["source_index"]].get(
+                    "name"
+                )
+                source_mapping["rulebook_hash"] = sources[event["source_index"]].get(
+                    "rulebook_hash"
+                )
             except IndexError as e:
                 module.fail_json(
                     msg=f"The specified source_index {event['source_index']} is out of range: {e}"
@@ -275,9 +289,7 @@ def process_event_streams(
             source_mapping["rulebook_hash"] = matching_source.get("rulebook_hash")
 
         if event.get("event_stream") is None:
-            module.fail_json(
-                msg="You must specify an event stream name."
-            )
+            module.fail_json(msg="You must specify an event stream name.")
 
         # Lookup event_stream_id
         event_stream_id = lookup_resource_id(
@@ -389,11 +401,13 @@ def create_params(
 
     if not is_aap_24 and module.params.get("event_streams"):
         # Process event streams and source mappings
-        activation_params["source_mappings"] = yaml.dump(process_event_streams(
-            rulebook_id=rulebook_id,
-            controller=controller,
-            module=module,
-        ))
+        activation_params["source_mappings"] = yaml.dump(
+            process_event_streams(
+                rulebook_id=rulebook_id,
+                controller=controller,
+                module=module,
+            )
+        )
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -453,6 +467,12 @@ def main() -> None:
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
+
+    if not HAS_YAML:
+        module.fail_json(
+            msg=missing_required_lib('pyyaml'),
+            exception=YAML_IMPORT_ERROR)
+
 
     client = Client(
         host=module.params.get("controller_host"),
