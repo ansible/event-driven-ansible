@@ -185,7 +185,7 @@ id:
 
 
 import yaml
-from typing import Any, Dict, List, NoReturn, Optional, Union
+from typing import Any, Dict, List, Union
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -196,7 +196,7 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def find_matching_source(event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule) -> Union[Dict[str, Any], NoReturn]:
+def find_matching_source(event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule) -> Dict[str, Any]:
     """
     Finds a matching source based on the source_name in the event.
     Raises an error if no match is found.
@@ -214,6 +214,8 @@ def find_matching_source(event: Dict[str, Any], sources: List[Dict[str, Any]], m
         msg=f"The specified source_name {source_name} does not exist."
     )
 
+    return {}  # Explicit return to satisfy mypy
+
 
 def process_event_streams(
     rulebook_id: int,
@@ -229,7 +231,7 @@ def process_event_streams(
         module: The module object, typically for error handling.
 
     Returns:
-        List of source mappings.
+        List source mappings.
     """
 
     source_mappings = []
