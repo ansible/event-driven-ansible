@@ -198,12 +198,12 @@
       ansible.eda.rulebook_activation_info:
 
     - name: Delete rulebook activation
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         state: absent
 
     - name: Get information about the rulebook activation
-      ansible.eda.activation_info:
+      ansible.eda.rulebook_activation_info:
         name: "{{ activation_name }}"
 
     # Test event_streams option
@@ -234,7 +234,7 @@
       register: _result_rulebook_info
 
     - name: Create a rulebook activation (wrong source_name)
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name_wrong_source }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -256,7 +256,7 @@
           - '"The specified source_name Test source name does not exist." in _result.msg'
 
     - name: Create a rulebook activation
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name_source_index }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -276,7 +276,7 @@
           - _result.changed
 
     - name: Get information about the rulebook activation
-      ansible.eda.activation_info:
+      ansible.eda.rulebook_activation_info:
         name: "{{ activation_name_source_index }}"
       register: _result_activation_info
 
@@ -290,12 +290,12 @@
           - event_stream_name in (source_mappings_dict | map(attribute='event_stream_name') | list)
 
     - name: Delete rulebook activation
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name_source_index }}"
         state: absent
 
     - name: Create a new rulebook activation
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         name: "{{ activation_name_source_name }}"
         description: "Example Activation description"
         project_name: "{{ project_name }}"
@@ -315,7 +315,7 @@
           - _result.changed
 
     - name: Get information about the rulebook activation
-      ansible.eda.activation_info:
+      ansible.eda.rulebook_activation_info:
         name: "{{ activation_name_source_name }}"
       register: _result_activation_info
 
@@ -370,21 +370,9 @@
         state: absent
       ignore_errors: true
 
-    - name: Delete credential
-      ansible.eda.credential:
-        name: "{{ credential_name }}"
-        state: absent
-      ignore_errors: true
-
-    - name: Delete credential type
-      ansible.eda.credential_type:
-        name: "{{ credential_type_name }}"
-        state: absent
-      ignore_errors: true
-
     - name: Delete rulebook activation
       ansible.eda.rulebook_activation:
-        name: "{{ activation_name }}"
+        name: "{{ item }}"
         state: absent
       loop:
         - "{{ activation_name }}"

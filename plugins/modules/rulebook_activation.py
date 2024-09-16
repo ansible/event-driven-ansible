@@ -47,7 +47,7 @@ options:
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
-    default: "always"
+    default: "on-failure"
     choices: ["on-failure", "always", "never"]
     type: str
   enabled:
@@ -91,13 +91,6 @@ options:
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
-  webhooks:
-    description:
-      - A list of webhook IDs associated with the rulebook activation.
-      - This parameter is supported in AAP 2.5 and onwards.
-        If specified for AAP 2.4, value will be ignored.
-    type: list
-    elements: str
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
@@ -107,18 +100,35 @@ options:
     default: true
   event_streams:
     description:
-      -  A list of IDs representing the event streams that this rulebook activation listens to.
+      - A list of event stream names that this rulebook activation listens to.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: list
-    elements: int
+    elements: dict
+    suboptions:
+      event_stream:
+        description:
+          - The name of the event stream.
+        type: str
+      source_name:
+        description:
+          - The name of the source. It can be the name defined in the rulebook or the generated one by
+            the API if the rulebook has not defined one, in this case the name can be retrieved with
+            M(ansible.eda.rulebook_info) module.
+          - O(event_streams.source_name) and O(event_streams.source_index) are mutually exclusive.
+        type: str
+      source_index:
+        description:
+          - The index of the source.
+          - O(event_streams.source_name) and O(event_streams.source_index) are mutually exclusive.
+        type: int
   log_level:
     description:
       - Allow setting the desired log level.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
-    default: "debug"
+    default: "error"
     choices: ["debug", "info", "error"]
   state:
     description:
@@ -144,6 +154,20 @@ EXAMPLES = """
     enabled: False
     awx_token_name: "Example Token"
 
+- name: Create a rulebook activation with event_streams option
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    description: "Example Activation description"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    enabled: False
+    awx_token_name: "Example Token"
+    organization_name: "Default"
+    event_streams:
+      - event_stream: "Example Event Stream"
+        source_name: "Sample source"
+
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
@@ -159,9 +183,20 @@ id:
   sample: 37
 """
 
-from typing import Any
 
-from ansible.module_utils.basic import AnsibleModule
+import traceback
+from typing import Any, Dict, List
+
+try:
+    import yaml
+except ImportError:
+    HAS_YAML = False
+    YAML_IMPORT_ERROR = traceback.format_exc()
+else:
+    HAS_YAML = True
+    YAML_IMPORT_ERROR = ""
+
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
@@ -170,10 +205,116 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
+def find_matching_source(
+    event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
+) -> Dict[str, Any]:
+    """
+    Finds a matching source based on the source_name in the event.
+    Raises an error if no match is found.
+    """
+    # Get the source_name from the event
+    source_name = event.get("source_name")
+
+    # Search for the matching source in the list of sources
+    for source in sources:
+        if source["name"] == source_name:
+            return source  # Return the matching source if found
+
+    # If no match is found, raise an error
+    module.fail_json(msg=f"The specified source_name {source_name} does not exist.")
+
+    return {}  # Explicit return to satisfy mypy
+
+
+def process_event_streams(
+    rulebook_id: int,
+    controller: Controller,
+    module: AnsibleModule,
+) -> List[Dict[str, Any]]:
+    """
+    Processes event streams and updates activation_params with source mappings.
+
+    Args:
+        rulebook_id: The ID of the rulebook.
+        controller: The controller object used for API calls.
+        module: The module object, typically for error handling.
+
+    Returns:
+        List source mappings.
+    """
+
+    source_mappings = []
+
+    try:
+        sources = controller.get_one_or_many(
+            f"rulebooks/{rulebook_id}/sources", name=module.params["rulebook_name"]
+        )
+    except EDAError as e:
+        module.fail_json(msg=f"Failed to get rulebook source list: {e}")
+
+    # Process each event_stream
+    for event in module.params.get("event_streams"):
+        source_mapping = {}
+
+        # Check mutually exclusive conditions
+        if event.get("source_index") and event.get("source_name"):
+            module.fail_json(
+                msg="source_index and source_name options are mutually exclusive."
+            )
+
+        if event.get("source_index") is None and event.get("source_name") is None:
+            module.fail_json(
+                msg="You must specify one of the options: source_index or source_name."
+            )
+
+        # Handle source_index
+        if event.get("source_index") is not None:
+            try:
+                source_mapping["source_name"] = sources[event["source_index"]].get(
+                    "name"
+                )
+                source_mapping["rulebook_hash"] = sources[event["source_index"]].get(
+                    "rulebook_hash"
+                )
+            except IndexError as e:
+                module.fail_json(
+                    msg=f"The specified source_index {event['source_index']} is out of range: {e}"
+                )
+
+        # Handle source_name
+        elif event.get("source_name"):
+            matching_source = find_matching_source(event, sources, module)
+            source_mapping["source_name"] = matching_source.get("name")
+            source_mapping["rulebook_hash"] = matching_source.get("rulebook_hash")
+
+        if event.get("event_stream") is None:
+            module.fail_json(msg="You must specify an event stream name.")
+
+        # Lookup event_stream_id
+        event_stream_id = lookup_resource_id(
+            module,
+            controller,
+            "event-streams",
+            event["event_stream"],
+        )
+
+        if event_stream_id is None:
+            module.fail_json(
+                msg=f"The event stream {event['event_stream']} does not exist."
+            )
+
+        # Add the event stream to the source mapping
+        source_mapping["event_stream_name"] = event["event_stream"]
+        source_mapping["event_stream_id"] = event_stream_id
+        source_mappings.append(source_mapping)
+
+    return source_mappings
+
+
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
-) -> dict[str, Any]:
-    activation_params: dict[str, Any] = {}
+) -> Dict[str, Any]:
+    activation_params: Dict[str, Any] = {}
 
     # Get the project id
     project_id = None
@@ -242,9 +383,6 @@ def create_params(
     if module.params.get("enabled"):
         activation_params["is_enabled"] = module.params["enabled"]
 
-    if not is_aap_24 and module.params.get("event_streams"):
-        activation_params["event_streams"] = module.params["event_streams"]
-
     # Get the eda credential ids
     eda_credential_ids = None
     if not is_aap_24 and module.params.get("eda_credentials"):
@@ -260,16 +398,15 @@ def create_params(
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
-    # Get the webhook ids
-    webhooks_ids = None
-    if not is_aap_24 and module.params.get("webhooks"):
-        webhooks_ids = []
-        for item in module.params["webhooks"]:
-            webhook_id = lookup_resource_id(module, controller, "webhooks", item)
-            if webhook_id is not None:
-                webhooks_ids.append(webhook_id)
-    if webhooks_ids is not None:
-        activation_params["webhooks"] = webhooks_ids
+    if not is_aap_24 and module.params.get("event_streams"):
+        # Process event streams and source mappings
+        activation_params["source_mappings"] = yaml.dump(
+            process_event_streams(
+                rulebook_id=rulebook_id,
+                controller=controller,
+                module=module,
+            )
+        )
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -289,7 +426,7 @@ def main() -> None:
         extra_vars=dict(type="str"),
         restart_policy=dict(
             type="str",
-            default="always",
+            default="on-failure",
             choices=[
                 "on-failure",
                 "always",
@@ -300,12 +437,19 @@ def main() -> None:
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
-        event_streams=dict(type="list", elements="int"),
         eda_credentials=dict(type="list", elements="str", aliases=["credentials"]),
         k8s_service_name=dict(type="str"),
-        webhooks=dict(type="list", elements="str"),
+        event_streams=dict(
+            type="list",
+            elements="dict",
+            options=dict(
+                event_stream=dict(type="str"),
+                source_index=dict(type="int"),
+                source_name=dict(type="str"),
+            ),
+        ),
         swap_single_source=dict(type="bool", default=True),
-        log_level=dict(type="str", choices=["debug", "info", "error"], default="debug"),
+        log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
@@ -322,6 +466,11 @@ def main() -> None:
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
+
+    if not HAS_YAML:
+        module.fail_json(
+            msg=missing_required_lib("pyyaml"), exception=YAML_IMPORT_ERROR
+        )
 
     client = Client(
         host=module.params.get("controller_host"),

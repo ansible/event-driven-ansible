@@ -74,8 +74,6 @@ plugins/doc_fragments/
 plugins/doc_fragments/eda_controller.py
 plugins/doc_fragments/__init__.py
 plugins/modules/
-plugins/modules/activation.py
-plugins/modules/activation_info.py
 plugins/modules/controller_token.py
 plugins/modules/credential.py
 plugins/modules/credential_info.py
