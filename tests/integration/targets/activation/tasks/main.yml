@@ -225,6 +225,7 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name_basic }}"
         organization_name: Default
+        event_stream_type: Basic Event Stream
       register: _result
 
     - name: Get information about a rulebook
