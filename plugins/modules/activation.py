@@ -100,7 +100,7 @@ options:
     default: true
   event_streams:
     description:
-      - A list of event streams names that this rulebook activation listens to.
+      - A list of event stream names that this rulebook activation listens to.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: list
@@ -112,7 +112,9 @@ options:
         type: str
       source_name:
         description:
-          - The name of the source.
+          - The name of the source. It can be the name defined in the rulebook or the generated one by
+            the API if the rulebook has not defined one, in this case the name can be retrieved with
+            M(ansible.eda.rulebook_info) module.
           - O(event_streams.source_name) and O(event_streams.source_index) are mutually exclusive.
         type: str
       source_index:
@@ -164,7 +166,7 @@ EXAMPLES = """
       organization_name: Default
       event_streams:
         - event_stream: "Example Event Stream"
-          source_name: "__SOURCE_1"
+          source_name: "Sample source"
 
 - name: Delete a rulebook activation
   ansible.eda.activation:
@@ -181,7 +183,9 @@ id:
   sample: 37
 """
 
-from typing import Any
+
+import yaml
+from typing import Any, Dict, List, NoReturn, Optional, Union
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -192,10 +196,112 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
+def find_matching_source(event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule) -> Union[Dict[str, Any], NoReturn]:
+    """
+    Finds a matching source based on the source_name in the event.
+    Raises an error if no match is found.
+    """
+    # Get the source_name from the event
+    source_name = event.get("source_name")
+
+    # Search for the matching source in the list of sources
+    for source in sources:
+        if source["name"] == source_name:
+            return source  # Return the matching source if found
+
+    # If no match is found, raise an error
+    module.fail_json(
+        msg=f"The specified source_name {source_name} does not exist."
+    )
+
+
+def process_event_streams(
+    rulebook_id: int,
+    controller: Controller,
+    module: AnsibleModule,
+) -> List[Dict[str, Any]]:
+    """
+    Processes event streams and updates activation_params with source mappings.
+
+    Args:
+        rulebook_id: The ID of the rulebook.
+        controller: The controller object used for API calls.
+        module: The module object, typically for error handling.
+
+    Returns:
+        List of source mappings.
+    """
+
+    source_mappings = []
+
+    try:
+        sources = controller.get_one_or_many(
+            f"rulebooks/{rulebook_id}/sources", name=module.params["rulebook_name"]
+        )
+    except EDAError as e:
+        module.fail_json(msg=f"Failed to get rulebook source list: {e}")
+
+    # Process each event_stream
+    for event in module.params.get("event_streams"):
+        source_mapping = {}
+
+        # Check mutually exclusive conditions
+        if event.get("source_index") and event.get("source_name"):
+            module.fail_json(
+                msg="source_index and source_name options are mutually exclusive."
+            )
+
+        if event.get("source_index") is None and event.get("source_name") is None:
+            module.fail_json(
+                msg="You must specify one of the options: source_index or source_name."
+            )
+
+        # Handle source_index
+        if event.get("source_index") is not None:
+            try:
+                source_mapping["source_name"] = sources[event["source_index"]].get("name")
+                source_mapping["rulebook_hash"] = sources[event["source_index"]].get("rulebook_hash")
+            except IndexError as e:
+                module.fail_json(
+                    msg=f"The specified source_index {event['source_index']} is out of range: {e}"
+                )
+
+        # Handle source_name
+        elif event.get("source_name"):
+            matching_source = find_matching_source(event, sources, module)
+            source_mapping["source_name"] = matching_source.get("name")
+            source_mapping["rulebook_hash"] = matching_source.get("rulebook_hash")
+
+        if event.get("event_stream") is None:
+            module.fail_json(
+                msg="You must specify an event stream name."
+            )
+
+        # Lookup event_stream_id
+        event_stream_id = lookup_resource_id(
+            module,
+            controller,
+            "event-streams",
+            event["event_stream"],
+        )
+
+        if event_stream_id is None:
+            module.fail_json(
+                msg=f"The event stream {event['event_stream']} does not exist."
+            )
+
+        # Add the event stream to the source mapping
+        source_mapping["event_stream_name"] = event["event_stream"]
+        source_mapping["event_stream_id"] = event_stream_id
+        source_mappings.append(source_mapping)
+
+    return source_mappings
+
+
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
-) -> dict[str, Any]:
-    activation_params: dict[str, Any] = {}
+) -> Dict[str, Any]:
+    activation_params: Dict[str, Any] = {}
 
     # Get the project id
     project_id = None
@@ -279,44 +385,13 @@ def create_params(
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
-    # Get the webhook ids
-    sources = []
     if not is_aap_24 and module.params.get("event_streams"):
-        activation_params["event_streams"] = []
-        try:
-            sources = controller.get_one_or_many(
-                f"rulebooks/{rulebook_id}/sources", name=module.params["rulebook_name"]
-            )
-        except EDAError as e:
-            module.fail_json(msg=f"Failed to get rulebook source list: {e}")
-
-        for elem in module.params.get("event_streams"):
-            event = elem.copy()
-            if event.get("source_index") and event.get("source_name"):
-                module.fail_json(
-                    msg="source_index and source_name options are mutually exclusive."
-                )
-
-            if event.get("source_index") is None and event.get("source_name") is None:
-                module.fail_json(
-                    msg="You must specify one of the options source_index or source_name."
-                )
-
-            if event.get("source_index"):
-                try:
-                    event["source_name"] = sources[event["source_index"]]
-                except IndexError as e:
-                    module.fail_json(
-                        msg=f"The specified source_index {event['source_index']} is out of range: {e}"
-                    )
-                event.pop("source_index")
-            elif event.get("source_name") and not any(
-                d["name"] == event.get("source_name") for d in sources
-            ):
-                module.fail_json(
-                    msg=f"The specified source_name {event.get('source_name')} does not exist."
-                )
-            activation_params["event_streams"].append(event)
+        # Process event streams and source mappings
+        activation_params["source_mappings"] = yaml.dump(process_event_streams(
+            rulebook_id=rulebook_id,
+            controller=controller,
+            module=module,
+        ))
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]

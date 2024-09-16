@@ -275,6 +275,20 @@
         that:
           - _result.changed
 
+    - name: Get information about the rulebook activation
+      ansible.eda.activation_info:
+        name: "{{ activation_name_source_index }}"
+      register: _result_activation_info
+
+    - name: Parse the source mappings from YAML to dictionary
+      set_fact:
+        source_mappings_dict: "{{ _result_activation_info.activations[0].source_mappings | from_yaml }}"
+
+    - name: Assert that rulebook activation has been created and it mapped to an event stream
+      assert:
+        that:
+          - event_stream_name in (source_mappings_dict | map(attribute='event_stream_name') | list)
+
     - name: Delete rulebook activation
       ansible.eda.activation:
         name: "{{ activation_name_source_index }}"
@@ -299,6 +313,20 @@
       assert:
         that:
           - _result.changed
+
+    - name: Get information about the rulebook activation
+      ansible.eda.activation_info:
+        name: "{{ activation_name_source_name }}"
+      register: _result_activation_info
+
+    - name: Parse the source mappings from YAML to dictionary
+      set_fact:
+        source_mappings_dict: "{{ _result_activation_info.activations[0].source_mappings | from_yaml }}"
+
+    - name: Assert that rulebook activation has been created and it mapped to an event stream
+      assert:
+        that:
+          - event_stream_name in (source_mappings_dict | map(attribute='event_stream_name') | list)
 
     - name: Delete project
       ansible.eda.project:
