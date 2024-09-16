@@ -18,4 +18,22 @@ action_groups:
     - project
     - project_info
     - rulebook_info
+    - rulebook_activation
+    - rulebook_activation_info
     - user
+plugin_routing:
+  modules:
+    activation:
+      redirect: ansible.eda.rulebook_activation
+      deprecation:
+         removal_version: 4.0.0
+         warning_text: >-
+           activation has been renamed to rulebook_activation.
+           Please update your tasks.
+    activation_info:
+      redirect: ansible.eda.rulebook_activation_info
+      deprecation:
+         removal_version: 4.0.0
+         warning_text: >-
+           activation_info has been renamed to rulebook_activation_info.
+           Please update your tasks.

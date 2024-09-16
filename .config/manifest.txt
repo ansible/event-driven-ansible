@@ -74,8 +74,6 @@ plugins/doc_fragments/
 plugins/doc_fragments/eda_controller.py
 plugins/doc_fragments/__init__.py
 plugins/modules/
-plugins/modules/activation.py
-plugins/modules/activation_info.py
 plugins/modules/controller_token.py
 plugins/modules/credential.py
 plugins/modules/credential_info.py
@@ -87,6 +85,8 @@ plugins/modules/event_stream.py
 plugins/modules/event_stream_info.py
 plugins/modules/project.py
 plugins/modules/project_info.py
+plugins/modules/rulebook_activation.py
+plugins/modules/rulebook_activation_info.py
 plugins/modules/rulebook_info.py
 plugins/modules/user.py
 plugins/modules/__init__.py

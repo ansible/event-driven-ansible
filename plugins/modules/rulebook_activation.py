@@ -11,7 +11,7 @@ __metaclass__ = type
 
 DOCUMENTATION = """
 ---
-module: activation
+module: rulebook_activation
 author:
   - "Nikhil Jain (@jainnikhil30)"
   - "Alina Buzachis (@alinabuzachis)"
@@ -145,7 +145,7 @@ notes:
 
 EXAMPLES = """
 - name: Create a rulebook activation
-  ansible.eda.activation:
+  ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     description: "Example Rulebook Activation description"
     project_name: "Example Project"
@@ -155,7 +155,7 @@ EXAMPLES = """
     awx_token_name: "Example Token"
 
 - name: Create a rulebook activation with event_streams option
-  ansible.eda.activation:
+  ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     description: "Example Activation description"
     project_name: "Example Project"
@@ -169,7 +169,7 @@ EXAMPLES = """
         source_name: "Sample source"
 
 - name: Delete a rulebook activation
-  ansible.eda.activation:
+  ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
 """
