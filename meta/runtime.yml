@@ -17,4 +17,5 @@ action_groups:
     - event_stream_info
     - project
     - project_info
+    - rulebook_info
     - user

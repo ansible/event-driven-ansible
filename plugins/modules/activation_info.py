@@ -67,11 +67,10 @@ activations:
       "modified_at": "2024-08-15T11:45:00.987Z",
       "status_message": "Activation is running successfully.",
       "awx_token_id": 1,
-      "event_streams": [],
       "log_level": "info",
       "eda_credentials": [],
       "k8s_service_name": "",
-      "webhooks": [],
+      "event_streams": [],
       "swap_single_source": false
     }
   ]
@@ -106,7 +105,7 @@ def main() -> None:
     name = module.params.get("name")
     controller = Controller(client, module)
 
-    # Attempt to look up credential based on the provided name
+    # Attempt to look up rulebook activation based on the provided name
     try:
         result = controller.get_one_or_many("activations", name=name)
     except EDAError as e:
