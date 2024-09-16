@@ -7,3 +7,4 @@ myst-parser
 setuptools # https://issues.redhat.com/browse/AAH-3375
 sphinx
 sphinx-ansible-theme>=0.10.3
+pyyaml
