@@ -11,7 +11,7 @@ __metaclass__ = type
 
 DOCUMENTATION = """
 ---
-module: activation_info
+module: rulebook_activation_info
 author:
   - Alina Buzachis (@alinabuzachis)
 short_description: List rulebook activations in the EDA Controller
@@ -31,11 +31,11 @@ extends_documentation_fragment:
 
 EXAMPLES = """
   - name: Get information about a rulebook activation
-    ansible.eda.activation_info:
+    ansible.eda.rulebook_activation_info:
       name: "Example Rulebook Activation"
 
   - name: List all rulebook activations
-    ansible.eda.activation_info:
+    ansible.eda.rulebook_activation_info:
 """
 
 

@@ -79,21 +79,21 @@ You can either call modules, rulebooks and playbooks by their Fully Qualified Co
 ```yaml
 ---
   - name: Create a rulebook activation
-    ansible.eda.activation:
+    ansible.eda.rulebook_activation:
       name: "Example Activation"
       description: "Example Activation description"
       project: "Example Project"
       rulebook_name: "basic_short.yml"
       decision_environment_name: "Example Decision Environment"
       enabled: False
-      awx_token_id: 1
+      awx_token_name: "Example AWX Token"
 
   - name: Get information about the rulebook activation
-    ansible.eda.activation_info:
+    ansible.eda.rulebook_activation_info:
       name: "Example Activation"
 
   - name: Delete rulebook activation
-    ansible.eda.activation:
+    ansible.eda.rulebook_activation:
       name: "Example Activation"
       state: absent
 ```
