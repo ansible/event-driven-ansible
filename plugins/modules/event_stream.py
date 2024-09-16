@@ -51,6 +51,19 @@ options:
     type: str
     aliases:
       - type
+  headers:
+    description:
+      - Comma separated HTTP header keys that you want to include in the event payload.
+        To include all headers in the event payload, leave the field empty.
+    type: str
+    default: ''
+    version_added: 2.1.0
+  forward_events:
+    description:
+      - Enable the event stream to forward events to the rulebook activation where it is configured.
+    type: bool
+    default: True
+    version_added: 2.1.0
   state:
     description:
       - Desired state of the resource.
@@ -104,6 +117,12 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if module.params.get("event_stream_type"):
         credential_params["event_stream_type"] = module.params["event_stream_type"]
 
+    if module.params.get("forward_events") is not None:
+        credential_params["test_mode"] = module.params["forward_events"]
+
+    if module.params.get("headers"):
+        credential_params["additional_data_headers"] = module.params["headers"]
+
     credential_id = None
     if module.params.get("credential_name"):
         credential_id = lookup_resource_id(
@@ -136,6 +155,8 @@ def main() -> None:
         credential_name=dict(type="str", aliases=["credential"]),
         organization_name=dict(type="str", aliases=["organization"]),
         event_stream_type=dict(type="str", aliases=["type"]),
+        headers=dict(type="str", default=""),
+        forward_events=dict(type="bool", default=True),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
