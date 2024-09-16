@@ -184,20 +184,19 @@ id:
 """
 
 
-from typing import Any, Dict, List
 import traceback
+from typing import Any, Dict, List
 
 try:
-  import yaml
+    import yaml
 except ImportError:
     HAS_YAML = False
     YAML_IMPORT_ERROR = traceback.format_exc()
 else:
     HAS_YAML = True
-    YAML_IMPORT_ERROR = ''
+    YAML_IMPORT_ERROR = ""
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.basic import missing_required_lib
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
@@ -470,9 +469,8 @@ def main() -> None:
 
     if not HAS_YAML:
         module.fail_json(
-            msg=missing_required_lib('pyyaml'),
-            exception=YAML_IMPORT_ERROR)
-
+            msg=missing_required_lib("pyyaml"), exception=YAML_IMPORT_ERROR
+        )
 
     client = Client(
         host=module.params.get("controller_host"),
