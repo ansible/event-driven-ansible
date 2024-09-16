@@ -154,19 +154,19 @@ EXAMPLES = """
     enabled: False
     awx_token_name: "Example Token"
 
-  - name: Create a rulebook activation with event_streams option
-    ansible.eda.activation:
-      name: "Example Rulebook Activation"
-      description: "Example Activation description"
-      project_name: "Example Project"
-      rulebook_name: "hello_controller.yml"
-      decision_environment_name: "Example Decision Environment"
-      enabled: False
-      awx_token_name: "Example Token"
-      organization_name: Default
-      event_streams:
-        - event_stream: "Example Event Stream"
-          source_name: "Sample source"
+- name: Create a rulebook activation with event_streams option
+  ansible.eda.activation:
+    name: "Example Rulebook Activation"
+    description: "Example Activation description"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    enabled: False
+    awx_token_name: "Example Token"
+    organization_name: "Default"
+    event_streams:
+      - event_stream: "Example Event Stream"
+        source_name: "Sample source"
 
 - name: Delete a rulebook activation
   ansible.eda.activation:
