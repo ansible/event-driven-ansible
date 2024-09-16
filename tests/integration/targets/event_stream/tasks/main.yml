@@ -47,6 +47,7 @@
         credential_name: "{{ credential_name }}"
         organization_name: Default
         forward_events: False
+        event_stream_type: Basic Event Stream
       check_mode: true
       register: _result
 
@@ -61,6 +62,7 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
+        event_stream_type: Basic Event Stream
       register: _result
 
     - name: Check event stream is created
@@ -74,6 +76,7 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
+        event_stream_type: Basic Event Stream
       register: _result
 
     # [WARNING]: The field eda_credential_id of unknown 2 has encrypted data and may
