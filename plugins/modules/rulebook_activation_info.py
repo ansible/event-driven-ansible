@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: rulebook_activation_info
 author:
@@ -29,7 +29,7 @@ extends_documentation_fragment:
 """
 
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Get information about a rulebook activation
   ansible.eda.rulebook_activation_info:
     name: "Example Rulebook Activation"
@@ -39,7 +39,7 @@ EXAMPLES = """
 """
 
 
-RETURN = """
+RETURN = r"""
 activations:
   description: Information about rulebook activations.
   returned: always

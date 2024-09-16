@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: rulebook_activation
 author:
@@ -143,7 +143,7 @@ notes:
     not perform any modification when an existing rulebook activation is found.
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Create a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
@@ -175,7 +175,7 @@ EXAMPLES = """
 """
 
 
-RETURN = """
+RETURN = r"""
 id:
   description: ID of the rulebook activation.
   returned: when exists

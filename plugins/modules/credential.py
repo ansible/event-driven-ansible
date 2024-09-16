@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: credential
 author:
@@ -61,7 +61,7 @@ notes:
 """
 
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Create an EDA Credential
   ansible.eda.credential:
     name: "Example Credential"
@@ -78,7 +78,7 @@ EXAMPLES = """
 """
 
 
-RETURN = """
+RETURN = r"""
 id:
   description: ID of the credential.
   returned: when exists

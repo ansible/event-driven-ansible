@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: controller_token
 author:
@@ -47,7 +47,7 @@ extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Create AWX token
   ansible.eda.controller_token:
     controller_host: https://my_eda_host/
@@ -69,7 +69,7 @@ EXAMPLES = """
 """
 
 
-RETURN = """
+RETURN = r"""
 id:
     description: ID of the managed AWX token.
     returned: when state is 'present' and successful
