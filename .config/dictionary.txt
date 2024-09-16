@@ -60,10 +60,12 @@ refspec
 rulebook
 rulebooks
 ruleset
+rulesets
 servicebus
 skipsdist
 snakeoil
 storepass
+suboptions
 testenv
 testpass
 testsecret
