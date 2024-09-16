@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: decision_environment
 author:
@@ -57,7 +57,7 @@ extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Create EDA Decision Environment
   ansible.eda.decision_environment:
     controller_host: https://my_eda_host/
@@ -89,7 +89,7 @@ EXAMPLES = """
     state: absent
 """
 
-RETURN = """
+RETURN = r"""
 id:
   description: ID of the decision environment
   returned: when exists
