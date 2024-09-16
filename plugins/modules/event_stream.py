@@ -145,7 +145,7 @@ def main() -> None:
         (
             "state",
             "present",
-            ("name", "credential_name"),
+            ("name", "credential_name", "organization_name", "event_stream_type"),
         )
     ]
 
