@@ -96,7 +96,6 @@ build_ignore:
   - pyproject.toml
   - run_pytest.yml
   - start_app.yml
-  - tests/config.yml
   - tests/conftest.py
   - tests/integration/*
   - tests/run-staging

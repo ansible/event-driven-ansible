@@ -32,12 +32,12 @@ notes:
 
 
 EXAMPLES = r"""
-  - name: Get information about a event stream
-    ansible.eda.event_stream_info:
-      name: "Test"
+- name: Get information about a event stream
+  ansible.eda.event_stream_info:
+    name: "Test"
 
-  - name: List all event streams
-    ansible.eda.event_stream_info:
+- name: List all event streams
+  ansible.eda.event_stream_info:
 """
 
 

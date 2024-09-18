@@ -32,12 +32,12 @@ notes:
 
 
 EXAMPLES = """
-  - name: Get information about a credential
-    ansible.eda.credential_info:
-      name: "Test"
+- name: Get information about a credential
+  ansible.eda.credential_info:
+    name: "Test"
 
-  - name: List all credentials
-    ansible.eda.credential_info:
+- name: List all credentials
+  ansible.eda.credential_info:
 """
 
 

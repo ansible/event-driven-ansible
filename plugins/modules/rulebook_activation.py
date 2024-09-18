@@ -151,7 +151,7 @@ EXAMPLES = """
     project_name: "Example Project"
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
-    enabled: False
+    enabled: false
     awx_token_name: "Example Token"
 
 - name: Create a rulebook activation with event_streams option
@@ -161,7 +161,7 @@ EXAMPLES = """
     project_name: "Example Project"
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
-    enabled: False
+    enabled: false
     awx_token_name: "Example Token"
     organization_name: "Default"
     event_streams:

@@ -1,8 +1,9 @@
 # Example playbook that demonstrates how to use the Ansible EDA collection to perform a basic setup.
 
-- hosts: localhost
+- name: Example playbook for Ansible EDA collection
+  hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   vars:
     controller_host: your eda controller url, e.g. https://eda-controller.example.com
     controller_username: your eda controller username
@@ -15,7 +16,7 @@
     quay_password: your quay.io password
 
     organization_name: Default
-    validate_certs: no
+    validate_certs: false
   module_defaults:
     group/ansible.eda.eda:
       controller_host: "{{ controller_host }}"
@@ -88,17 +89,17 @@
         name: basic event stream
 
     - name: Print the event stream url
-      debug:
+      ansible.builtin.debug:
         msg: "Event Stream URL: {{ event_stream_data.event_streams[0].url }}"
 
     - name: Remove the activation if it exists
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         organization_name: "{{ organization_name }}"
         name: activation-example
         state: absent
 
     - name: Activate a rulebook
-      ansible.eda.activation:
+      ansible.eda.rulebook_activation:
         organization_name: "{{ organization_name }}"
         decision_environment_name: upstream decision environment
         project_name: test project
@@ -112,5 +113,5 @@
       until: activation_status.activations | length > 0 and activation_status.activations[0].status == "running"
       retries: 30
       delay: 2
-      ansible.eda.activation_info:
+      ansible.eda.rulebook_activation_info:
         name: activation-example
