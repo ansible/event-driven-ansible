@@ -32,12 +32,12 @@ notes:
 
 
 EXAMPLES = """
-  - name: Get information about a credential type
-    ansible.eda.credential_type_info:
-      name: "Test"
+- name: Get information about a credential type
+  ansible.eda.credential_type_info:
+    name: "Test"
 
-  - name: List all credential types
-    ansible.eda.credential_type_info:
+- name: List all credential types
+  ansible.eda.credential_type_info:
 """
 
 

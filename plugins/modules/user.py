@@ -88,7 +88,7 @@ EXAMPLES = """
     last_name: "Test Collection User"
     email: "test@test.com"
     password: "test"
-    is_superuser: True
+    is_superuser: true
     state: present
   no_log: true
 

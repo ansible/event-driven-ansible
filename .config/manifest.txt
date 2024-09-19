@@ -106,5 +106,6 @@ schemas/event/range.json
 schemas/event/README.md
 schemas/README.md
 tests/
+tests/config.yml
 tests/integration/
 tests/__init__.py
