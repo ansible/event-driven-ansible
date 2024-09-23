@@ -254,6 +254,10 @@ jobs:
         with:
           name: collection-artifact
 
+      - name: Set tarball as environment variable
+        id: set_tarball
+        run: echo "TARBALL=$(ls -1 ./*.tar.gz)" >> $GITHUB_ENV
+
       - name: Setup python
         uses: actions/setup-python@v5
         with:
@@ -269,7 +273,23 @@ jobs:
           [[ "${{ secrets.ANSIBLE_GALAXY_API_KEY != '' }}" ]] || { echo
           "ANSIBLE_GALAXY_API_KEY is required to publish on galaxy" ; exit 1; }
 
-          TARBALL=$(ls -1 ./*.tar.gz)
-
-          ansible-galaxy collection publish "${TARBALL}" --api-key "${{
+          ansible-galaxy collection publish "${{ env.TARBALL }}" --api-key "${{
           secrets.ANSIBLE_GALAXY_API_KEY }}"
+
+      - name: Upload the artifact to the release
+        if: github.ref_type == 'tag'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
+
+          # Check if a release exists for the current tag
+          RELEASE_EXISTS=$(gh release view $TAG_NAME --json id --jq '.id' || echo "no_release")
+
+          # If a release exists, upload the artifact
+          if [ "$RELEASE_EXISTS" != "no_release" ]; then
+            echo "Release found for tag $TAG_NAME. Uploading artifact."
+            gh release upload $TAG_NAME "${{ env.TARBALL }}"
+          else
+            echo "No release found for tag $TAG_NAME. Skipping artifact upload."
+          fi
