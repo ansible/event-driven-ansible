@@ -30,12 +30,12 @@ extends_documentation_fragment:
 
 
 EXAMPLES = """
-  - name: Get information about a rulebook activation
-    ansible.eda.rulebook_activation_info:
-      name: "Example Rulebook Activation"
+- name: Get information about a rulebook activation
+  ansible.eda.rulebook_activation_info:
+    name: "Example Rulebook Activation"
 
-  - name: List all rulebook activations
-    ansible.eda.rulebook_activation_info:
+- name: List all rulebook activations
+  ansible.eda.rulebook_activation_info:
 """
 
 
