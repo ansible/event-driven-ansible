@@ -67,3 +67,37 @@
   assert:
     that:
       - r.changed
+
+- name: Check create project with partial name match
+  loop:
+    - "{{ project_name }}_test_partial"
+    - "{{ project_name }}"
+  ansible.eda.project:
+    name: "{{ item }}"
+    url: "{{ url }}"
+    description: "Example project description"
+    organization_name: Default
+    state: present
+
+- name: Delete project with partial name match
+  loop:
+    - "{{ project_name }}"
+    - "{{ project_name }}_test_partial"
+  ansible.eda.project:
+    name: "{{ item }}"
+    state: absent
+
+- name: Check create project with missing url
+  ansible.eda.project:
+    name: "{{ project_name }}"
+    description: "Example project description"
+    organization_name: Default
+    state: present
+  register: r
+  ignore_errors: true
+
+- name: Check if missing url is required
+  assert:
+    that:
+      - r.failed
+      - "'Parameter url is required' in r.msg"
