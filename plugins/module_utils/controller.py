@@ -83,25 +83,23 @@ class Controller:
         raise EDAError(msg)
 
     def get_exactly_one(
-        self, endpoint: str, name: Optional[str] = None, **kwargs: Any
+        self, endpoint: str, name: Optional[str], **kwargs: Any
     ) -> dict[str, Any]:
         result = self.get_one_or_many(endpoint, name=name, **kwargs)
-        if len(result) == 0:
-            return {}
-        if len(result) > 1:
-            if name:
-                # Since we did a name or ID search and got > 1 return
-                # something if the id matches
-                for asset in result:
-                    if str(asset["id"]) == name:
-                        return asset
-            # We got > 1 and either didn't find something by ID (which means
-            # multiple names)
-            # Or we weren't running with a or search and just got back too
-            # many to begin with.
-            self.fail_wanted_one(result)
+        matches = []
+        name_field = self.get_name_field_from_endpoint(endpoint)
 
-        return result[0]
+        for asset in result:
+            if str(asset[name_field]) == name:
+                matches.append(asset)
+
+        if len(matches) == 0:
+            return {}
+
+        if len(matches) == 1:
+            return matches[0]
+
+        self.fail_wanted_one(result)
 
     def resolve_name_to_id(
         self, endpoint: str, name: str, **kwargs: Any
@@ -183,6 +181,23 @@ class Controller:
             raise EDAError(msg)
         msg = f"Unable to create {item_type} {item_name}: {response.status}"
         raise EDAError(msg)
+
+    def create(
+        self, new_item: dict[str, Any], endpoint: str, item_type: str = "unknown"
+    ) -> dict[str, bool]:
+        """Run a create (post) operation unconditionally and return the result."""
+
+        response = self.post_endpoint(endpoint, data=new_item)
+
+        if response.status in [201, 202]:
+            self.result["changed"] = True
+            return self.result
+
+        error_msg = f"Unable to create {item_type} {new_item}: {response.status} {response.data}"
+        if response.json:
+            error_msg = f"Unable to create {item_type} {new_item}: {response.json}"
+
+        raise EDAError(error_msg)
 
     def _encrypted_changed_warning(
         self, field: str, old: dict[str, Any], warning: bool = False

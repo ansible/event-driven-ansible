@@ -173,7 +173,7 @@ class Client:
 
     def post(self, path: str, **kwargs: Any) -> Response:
         resp = self.request("POST", path, **kwargs)
-        if resp.status == 201:
+        if resp.status in [201, 202]:
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
