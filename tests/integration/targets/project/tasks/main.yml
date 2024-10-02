@@ -22,11 +22,12 @@
     - name: Define variables for credential and decision environment
       set_fact:
         project_name: "test_project_{{ test_id }}"
-        url: "https://example.com/ansible/eda-server"
+        url: "https://github.com/ansible/eda-sample-project"
 
     - include_tasks: create.yml
     - include_tasks: delete.yml
     - include_tasks: update.yml
+    - include_tasks: sync.yml
   always:
     - name: Clean up - project
       ansible.eda.project:

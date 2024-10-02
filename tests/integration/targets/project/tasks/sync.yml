@@ -1,0 +1,86 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Create non existing project with sync
+  block:
+    - name: Create non existing project with sync
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        url: "{{ url }}"
+        description: "Example project description"
+        organization_name: Default
+        state: present
+        sync: true
+      register: r
+
+    - name: Check project creation
+      assert:
+        that:
+          - r.changed
+  always:
+    - name: Clean up - project
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        state: absent
+      ignore_errors: true
+
+- name: Sync existing project
+  block:
+    - name: Create project before sync
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        url: "{{ url }}"
+        description: "Example project description"
+        organization_name: Default
+        state: present
+      register: r
+
+    # need to wait for project creation otherwise sync can fail
+    - name: Wait for project creation
+      pause:
+        seconds: 5
+
+    - name: Sync project
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        sync: true
+      register: r
+
+    - name: Get info project after sync
+      ansible.eda.project_info:
+        name: "{{ project_name }}_test_sync"
+      register: r_info
+
+    - name: Check project sync
+      assert:
+        that:
+          - r.changed
+          - r_info.projects[0].modified_at != r_info.projects[0].created_at
+  always:
+    - name: Clean up - project
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        state: absent
+      ignore_errors: true
+
+- name: Check wrong parameters with sync enabled
+  block:
+    - name: Try to sync non existing project without url
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        sync: true
+      register: r
+      ignore_errors: true
+
+    - name: Check if sync non existing project without url
+      assert:
+        that:
+          - r.failed
+          - "'Parameter url is required' in r.msg"
+  always:
+    - name: Clean up - project
+      ansible.eda.project:
+        name: "{{ project_name }}_test_sync"
+        state: absent
+      ignore_errors: true
