@@ -53,6 +53,13 @@ options:
       default: "present"
       choices: ["present", "absent"]
       type: str
+    sync:
+      description:
+        - Triggers the synchronization of the project.
+        - This only takes effect when the project already exists.
+      type: bool
+      default: False
+      version_added: 2.2.0
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -110,15 +117,12 @@ def main() -> None:
         credential=dict(),
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
+        sync=dict(type="bool", default=False),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    required_if = [("state", "present", ("name", "url"))]
-
-    module = AnsibleModule(
-        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     client = Client(
         host=module.params.get("controller_host"),
@@ -136,23 +140,34 @@ def main() -> None:
     )
     state = module.params.get("state")
     organization_name = module.params.get("organization_name")
-    if state == "present":
-        if config_endpoint_avail.status not in (404,) and organization_name is None:
-            module.fail_json(
-                msg="Parameter organization_name is required when state is present"
-            )
-
     project_name = module.params.get("name")
-    new_name = module.params.get("new_name")
-    description = module.params.get("description")
     url = module.params.get("url")
-    credential = module.params.get("credential")
-    ret = {}
+    sync_enabled = module.params.get("sync")
+    project_type = {}
 
     try:
         project_type = controller.get_exactly_one(project_endpoint, name=project_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
+
+    if state == "present":
+        if not project_type and not url:
+            module.fail_json(
+                msg="Parameter url is required when state is present and project does not exist"
+            )
+        if (
+            config_endpoint_avail.status not in (404,)
+            and organization_name is None
+            and not project_type
+        ):
+            module.fail_json(
+                msg="Parameter organization_name is required when state is present and project does not exist"
+            )
+
+    new_name = module.params.get("new_name")
+    description = module.params.get("description")
+    credential = module.params.get("credential")
+    ret = {}
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -207,6 +222,17 @@ def main() -> None:
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
+
+    if sync_enabled and project_type:
+        sync_endpoint = f"{project_endpoint}/{ret['id']}/sync"
+        try:
+            controller.create(
+                {"name": project_type_params["name"]},
+                endpoint=sync_endpoint,
+                item_type="sync",
+            )
+        except EDAError as eda_err:
+            module.fail_json(msg=str(eda_err))
 
     module.exit_json(**ret)
 

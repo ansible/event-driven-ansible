@@ -90,12 +90,12 @@ class Controller:
             return {}
         if len(result) > 1:
             if name:
-                # Since we did a name or ID search and got > 1 return
-                # something if the id matches
+                # Since we did a name search and got > 1 return
+                # something if the name matches
                 for asset in result:
-                    if str(asset["id"]) == name:
+                    if str(asset["name"]) == name:
                         return asset
-            # We got > 1 and either didn't find something by ID (which means
+            # We got > 1 and either didn't find something by name (which means
             # multiple names)
             # Or we weren't running with a or search and just got back too
             # many to begin with.
@@ -183,6 +183,23 @@ class Controller:
             raise EDAError(msg)
         msg = f"Unable to create {item_type} {item_name}: {response.status}"
         raise EDAError(msg)
+
+    def create(
+        self, new_item: dict[str, Any], endpoint: str, item_type: str = "unknown"
+    ) -> dict[str, bool]:
+        """Run a create (post) operation unconditionally and return the result."""
+
+        response = self.post_endpoint(endpoint, data=new_item)
+
+        if response.status in [201, 202]:
+            self.result["changed"] = True
+            return self.result
+
+        error_msg = f"Unable to create {item_type} {new_item}: {response.status} {response.data}"
+        if response.json:
+            error_msg = f"Unable to create {item_type} {new_item}: {response.json}"
+
+        raise EDAError(error_msg)
 
     def _encrypted_changed_warning(
         self, field: str, old: dict[str, Any], warning: bool = False
