@@ -62,7 +62,7 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: Basic Event Stream
+        event_stream_type: "basic"
       register: _result
 
     - name: Check event stream is created
@@ -76,7 +76,7 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: Basic Event Stream
+        event_stream_type: "basic"
       register: _result
 
     # [WARNING]: The field eda_credential_id of unknown 2 has encrypted data and may
@@ -98,7 +98,7 @@
         name: "{{ new_event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "Basic Event Stream"
+        event_stream_type: "basic"
       register: _result
 
     - name: Check event stream update
@@ -112,7 +112,7 @@
         name: "{{ new_event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "Basic Event Stream"
+        event_stream_type: "basic"
       register: _result
 
     # [WARNING]: The field eda_credential_id of unknown 5 has encrypted data and may
@@ -139,7 +139,7 @@
         name: "{{ new_event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "Basic Event Stream"
+        event_stream_type: "basic"
         headers: "Authorization,Custom-Header"
         forward_events: False
       register: _result
