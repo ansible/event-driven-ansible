@@ -58,12 +58,15 @@ options:
     type: str
     default: ''
     version_added: 2.1.0
-  forward_events:
+  test_mode:
     description:
       - Enable the event stream to forward events to the rulebook activation where it is configured.
+      - The O(forward_events) alias has been deprecated and will be removed in release 4.0.0.
     type: bool
-    default: True
+    default: true
     version_added: 2.1.0
+    aliases:
+      - forward_events
   state:
     description:
       - Desired state of the resource.
@@ -117,8 +120,8 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if module.params.get("event_stream_type"):
         credential_params["event_stream_type"] = module.params["event_stream_type"]
 
-    if module.params.get("forward_events") is not None:
-        credential_params["test_mode"] = module.params["forward_events"]
+    if module.params.get("test_mode") is not None:
+        credential_params["test_mode"] = module.params["test_mode"]
 
     if module.params.get("headers"):
         credential_params["additional_data_headers"] = module.params["headers"]
@@ -156,7 +159,18 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         event_stream_type=dict(type="str", aliases=["type"]),
         headers=dict(type="str", default=""),
-        forward_events=dict(type="bool", default=True),
+        test_mode=dict(
+            type="bool",
+            default=True,
+            aliases=["forward_events"],
+            deprecated_aliases=[
+                dict(
+                    name="forward_events",
+                    version="4.0.0",
+                    collection_name="ansible.eda",
+                )
+            ],
+        ),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
