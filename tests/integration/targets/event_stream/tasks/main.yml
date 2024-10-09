@@ -46,8 +46,8 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        forward_events: False
-        event_stream_type: Basic Event Stream
+        forward_events: false
+        event_stream_type: "basic"
       check_mode: true
       register: _result
 
@@ -135,7 +135,7 @@
         organization_name: Default
         event_stream_type: "basic"
         headers: "Authorization,Custom-Header"
-        forward_events: False
+        forward_events: true
       register: _result
 
     - name: Check event stream is updated
@@ -148,7 +148,7 @@
         name: "{{ new_event_stream_name }}"
       register: _result
 
-    - name: Check if event stream headers and forward_events are updated
+    - name: Check if event stream headers and test_mode are updated
       assert:
         that:
           - _result.event_streams[0].name == new_event_stream_name
