@@ -62,7 +62,7 @@ options:
     description:
       - Enable the event stream to forward events to the rulebook activation where it is configured.
     type: bool
-    default: True
+    default: false
     version_added: 2.1.0
   state:
     description:
@@ -118,7 +118,10 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
         credential_params["event_stream_type"] = module.params["event_stream_type"]
 
     if module.params.get("forward_events") is not None:
-        credential_params["test_mode"] = module.params["forward_events"]
+        if module.params["forward_events"]:
+            credential_params["test_mode"] = False
+        else:
+            credential_params["test_mode"] = True
 
     if module.params.get("headers"):
         credential_params["additional_data_headers"] = module.params["headers"]
@@ -156,7 +159,7 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         event_stream_type=dict(type="str", aliases=["type"]),
         headers=dict(type="str", default=""),
-        forward_events=dict(type="bool", default=True),
+        forward_events=dict(type="bool", default=False),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
