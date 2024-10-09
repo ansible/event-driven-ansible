@@ -62,7 +62,7 @@ options:
     description:
       - Enable the event stream to forward events to the rulebook activation where it is configured.
     type: bool
-    default: true
+    default: false
     version_added: 2.1.0
   state:
     description:
@@ -159,7 +159,7 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         event_stream_type=dict(type="str", aliases=["type"]),
         headers=dict(type="str", default=""),
-        forward_events=dict(type="bool", default=True),
+        forward_events=dict(type="bool", default=False),
         state=dict(choices=["present", "absent"], default="present"),
     )
 
