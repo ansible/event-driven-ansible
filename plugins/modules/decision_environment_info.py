@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: decision_environment_info
 author:
@@ -26,7 +26,7 @@ extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: List all EDA Decision Environments
   ansible.eda.decision_environment_info:
     controller_host: https://my_eda_host/
@@ -41,7 +41,7 @@ EXAMPLES = """
     name: Example
 """
 
-RETURN = """
+RETURN = r"""
 decision_environments:
   description: List of dict containing information about decision environments
   returned: when exists

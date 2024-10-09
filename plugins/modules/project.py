@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: project
 author:
@@ -64,7 +64,7 @@ extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Create EDA Projects
   ansible.eda.project:
     controller_host: https://my_eda_host/
@@ -96,6 +96,15 @@ EXAMPLES = """
     name: "Example Project"
     state: absent
 """
+
+RETURN = r"""
+id:
+  description: ID of the project.
+  returned: when exists
+  type: int
+  sample: 24
+"""
+
 
 from typing import Any
 

@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: project_info
 author:
@@ -27,7 +27,7 @@ extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: List a particular project
   ansible.eda.project_info:
     controller_host: https://my_eda_host/
@@ -44,9 +44,9 @@ EXAMPLES = """
     register: r
 """
 
-RETURN = """
+RETURN = r"""
 projects:
-  description: List of dicts containing information about projects
+  description: List of dicts containing information about projects.
   returned: success
   type: list
   sample: [

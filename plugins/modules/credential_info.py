@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: credential_info
 author:
@@ -31,7 +31,7 @@ notes:
 """
 
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Get information about a credential
   ansible.eda.credential_info:
     name: "Test"
@@ -41,7 +41,7 @@ EXAMPLES = """
 """
 
 
-RETURN = """
+RETURN = r"""
 credentials:
   description: Information about credentials.
   returned: always
