@@ -459,7 +459,7 @@ def main() -> None:
         (
             "state",
             "present",
-            ("name", "rulebook_name", "decision_environment_name"),
+            ("name", "rulebook_name", "decision_environment_name", "project_name"),
         )
     ]
 
