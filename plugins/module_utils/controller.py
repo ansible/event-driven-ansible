@@ -242,6 +242,7 @@ class Controller:
             return True  # all sub-fields are either equal or could be equal
         if old_field == Controller.ENCRYPTED_STRING:
             return True
+
         return bool(new_field == old_field)
 
     def objects_could_be_different(
@@ -256,13 +257,14 @@ class Controller:
         for field in field_set:
             new_field = new.get(field, None)
             old_field = old.get(field, None)
+
             if old_field != new_field:
                 if self.update_secrets or (
                     not self.fields_could_be_same(old_field, new_field)
                 ):
                     return True  # Something doesn't match, or something
                     # might not match
-            elif self.has_encrypted_values(new_field) or field not in new:
+            elif self.has_encrypted_values(new_field):
                 if self.update_secrets or (
                     not self.fields_could_be_same(old_field, new_field)
                 ):

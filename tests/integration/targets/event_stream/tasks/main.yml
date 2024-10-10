@@ -79,13 +79,10 @@
         event_stream_type: "basic"
       register: _result
 
-    # [WARNING]: The field eda_credential_id of unknown 2 has encrypted data and may
-    # inaccurately report task is changed.
     - name: Check event stream is not created again
       assert:
         that:
           - not _result.changed
-      ignore_errors: true
 
     - name: Get info about an event stream
       ansible.eda.event_stream_info:
@@ -115,13 +112,10 @@
         event_stream_type: "basic"
       register: _result
 
-    # [WARNING]: The field eda_credential_id of unknown 5 has encrypted data and may
-    # inaccurately report task is changed.
     - name: Check event stream is not updated again
       assert:
         that:
           - not _result.changed
-      ignore_errors: true
 
     - name: Get info about event stream
       ansible.eda.event_stream_info:
