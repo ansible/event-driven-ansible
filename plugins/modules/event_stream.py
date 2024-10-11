@@ -48,6 +48,8 @@ options:
   event_stream_type:
     description:
       - Type of the event stream.
+      - This field is not necessary to create an event stream and will be ignored.
+      - This field will be removed in version 3.0.0.
     type: str
     aliases:
       - type
@@ -114,9 +116,6 @@ from ..module_utils.errors import EDAError
 def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
     credential_params: dict[str, Any] = {}
 
-    if module.params.get("event_stream_type"):
-        credential_params["event_stream_type"] = module.params["event_stream_type"]
-
     if module.params.get("forward_events") is not None:
         if module.params["forward_events"]:
             credential_params["test_mode"] = False
@@ -157,10 +156,16 @@ def main() -> None:
         new_name=dict(type="str"),
         credential_name=dict(type="str", aliases=["credential"]),
         organization_name=dict(type="str", aliases=["organization"]),
-        event_stream_type=dict(type="str", aliases=["type"]),
         headers=dict(type="str", default=""),
         forward_events=dict(type="bool", default=False),
         state=dict(choices=["present", "absent"], default="present"),
+        # fix: event_stream_type is not used in the module
+        event_stream_type=dict(
+            type="str",
+            aliases=["type"],
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -169,7 +174,7 @@ def main() -> None:
         (
             "state",
             "present",
-            ("name", "credential_name", "organization_name", "event_stream_type"),
+            ("name", "credential_name", "organization_name"),
         )
     ]
 
@@ -206,6 +211,7 @@ def main() -> None:
     new_name = module.params.get("new_name")
 
     # Attempt to look up event stream based on the provided name
+    event_stream = {}
     try:
         event_stream = controller.get_exactly_one(event_stream_endpoint, name=name)
     except EDAError as e:
