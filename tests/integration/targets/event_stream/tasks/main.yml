@@ -47,7 +47,6 @@
         credential_name: "{{ credential_name }}"
         organization_name: Default
         forward_events: false
-        event_stream_type: "basic"
       check_mode: true
       register: _result
 
@@ -62,7 +61,6 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "basic"
       register: _result
 
     - name: Check event stream is created
@@ -76,7 +74,6 @@
         name: "{{ event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "basic"
       register: _result
 
     - name: Check event stream is not created again
@@ -95,7 +92,6 @@
         name: "{{ new_event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "basic"
       register: _result
 
     - name: Check event stream update
@@ -109,7 +105,6 @@
         name: "{{ new_event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "basic"
       register: _result
 
     - name: Check event stream is not updated again
@@ -133,7 +128,6 @@
         name: "{{ new_event_stream_name }}"
         credential_name: "{{ credential_name }}"
         organization_name: Default
-        event_stream_type: "basic"
         headers: "Authorization,Custom-Header"
         forward_events: true
       register: _result
