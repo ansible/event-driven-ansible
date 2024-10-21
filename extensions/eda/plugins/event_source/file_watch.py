@@ -41,47 +41,55 @@ def watch(
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self: "Handler", event: FileSystemEvent) -> None:
-            loop.call_soon_threadsafe(
-                queue.put_nowait,
-                {
-                    "change": "created",
-                    "src_path": event.src_path,
-                    "type": event.__class__.__name__,
-                    "root_path": root_path,
-                },
+            asyncio.run_coroutine_threadsafe(
+                queue.put(
+                    {
+                        "change": "created",
+                        "src_path": event.src_path,
+                        "type": event.__class__.__name__,
+                        "root_path": root_path,
+                    },
+                ),
+                loop,
             )
 
         def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
-            loop.call_soon_threadsafe(
-                queue.put_nowait,
-                {
-                    "change": "deleted",
-                    "src_path": event.src_path,
-                    "type": event.__class__.__name__,
-                    "root_path": root_path,
-                },
+            asyncio.run_coroutine_threadsafe(
+                queue.put(
+                    {
+                        "change": "deleted",
+                        "src_path": event.src_path,
+                        "type": event.__class__.__name__,
+                        "root_path": root_path,
+                    },
+                ),
+                loop,
             )
 
         def on_modified(self: "Handler", event: FileSystemEvent) -> None:
-            loop.call_soon_threadsafe(
-                queue.put_nowait,
-                {
-                    "change": "modified",
-                    "src_path": event.src_path,
-                    "type": event.__class__.__name__,
-                    "root_path": root_path,
-                },
+            asyncio.run_coroutine_threadsafe(
+                queue.put(
+                    {
+                        "change": "modified",
+                        "src_path": event.src_path,
+                        "type": event.__class__.__name__,
+                        "root_path": root_path,
+                    },
+                ),
+                loop,
             )
 
         def on_moved(self: "Handler", event: FileSystemEvent) -> None:
-            loop.call_soon_threadsafe(
-                queue.put_nowait,
-                {
-                    "change": "moved",
-                    "src_path": event.src_path,
-                    "type": event.__class__.__name__,
-                    "root_path": root_path,
-                },
+            asyncio.run_coroutine_threadsafe(
+                queue.put(
+                    {
+                        "change": "moved",
+                        "src_path": event.src_path,
+                        "type": event.__class__.__name__,
+                        "root_path": root_path,
+                    },
+                ),
+                loop,
             )
 
     observer = Observer()
