@@ -32,7 +32,7 @@ options:
     request_timeout:
         description:
           - Timeout in seconds for the connection with the EDA controller.
-          - If not set, the value of C(CONTROLLER_TIMEOUT), E(AAP_REQUEST_TIMEOUT) environment variables 
+          - If not set, the value of C(CONTROLLER_TIMEOUT), E(AAP_REQUEST_TIMEOUT) environment variables
           - will be used.
         type: float
         default: 10

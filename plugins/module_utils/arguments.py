@@ -37,7 +37,10 @@ AUTH_ARGSPEC: dict[str, dict[str, object]] = {
         "type": "float",
         "default": 10.0,
         "required": False,
-        "fallback": (env_fallback, ["CONTROLLER_REQUEST_TIMEOUT", "AAP_REQUEST_TIMEOUT"]),
+        "fallback": (
+            env_fallback,
+            ["CONTROLLER_REQUEST_TIMEOUT", "AAP_REQUEST_TIMEOUT"],
+        ),
         "aliases": ["aap_request_timeout"],
     },
 }
