@@ -47,7 +47,7 @@ options:
     choices: ["present", "absent"]
     type: str
 extends_documentation_fragment:
-  - ansible.eda.eda_controller.auths
+  - ansible.eda.eda_controller
 notes:
   - M(ansible.eda.credential_type) supports AAP 2.5 and onwards.
 """

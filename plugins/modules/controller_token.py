@@ -44,7 +44,7 @@ notes:
       and re-creates the token when existing controller token is found.
       This will cause module to report changed, every time update is called.
 extends_documentation_fragment:
-    - ansible.eda.eda_controller.auths
+    - ansible.eda.eda_controller
 """
 
 EXAMPLES = r"""

@@ -73,7 +73,7 @@ options:
     choices: ["present", "absent"]
     type: str
 extends_documentation_fragment:
-  - ansible.eda.eda_controller.auths
+  - ansible.eda.eda_controller
 notes:
   - M(ansible.eda.event_stream) supports AAP 2.5 and onwards.
 """

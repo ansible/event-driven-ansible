@@ -23,7 +23,7 @@ options:
         - The name of the decision environment.
       type: str
 extends_documentation_fragment:
-    - ansible.eda.eda_controller.auths
+    - ansible.eda.eda_controller
 """
 
 EXAMPLES = r"""

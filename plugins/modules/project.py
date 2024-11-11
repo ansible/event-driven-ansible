@@ -61,7 +61,7 @@ options:
       default: False
       version_added: 2.2.0
 extends_documentation_fragment:
-    - ansible.eda.eda_controller.auths
+    - ansible.eda.eda_controller
 """
 
 EXAMPLES = r"""
