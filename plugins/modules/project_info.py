@@ -24,7 +24,7 @@ options:
         - Return information about particular project available on EDA Controller.
       type: str
 extends_documentation_fragment:
-    - ansible.eda.eda_controller
+    - ansible.eda.eda_controller.auths
 """
 
 EXAMPLES = r"""

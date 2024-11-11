@@ -137,7 +137,7 @@ options:
     choices: ["present", "absent"]
     type: str
 extends_documentation_fragment:
-  - ansible.eda.eda_controller
+  - ansible.eda.eda_controller.auths
 notes:
   - Rulebook Activation API does not support PATCH method, due to this reason the module will
     not perform any modification when an existing rulebook activation is found.

@@ -54,7 +54,7 @@ options:
       aliases:
         - organization
 extends_documentation_fragment:
-    - ansible.eda.eda_controller
+    - ansible.eda.eda_controller.auths
 """
 
 EXAMPLES = r"""
