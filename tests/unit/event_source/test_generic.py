@@ -8,6 +8,10 @@ from typing import Any
 import pytest
 import yaml
 
+from extensions.eda.plugins.event_source.generic import (
+    EnvVarMismatchError,
+    MissingEnvVarError,
+)
 from extensions.eda.plugins.event_source.generic import main as generic_main
 
 
@@ -243,3 +247,57 @@ def test_generic_parsing_payload_file() -> None:
                     },
                 )
             )
+
+
+def test_env_vars_missing() -> None:
+    """Test missing env vars"""
+    myqueue = _MockQueue()
+    event = {"name": "fred"}
+
+    with pytest.raises(MissingEnvVarError):
+        asyncio.run(
+            generic_main(
+                myqueue,
+                {
+                    "payload": event,
+                    "check_env_vars": {"NAME_MISSING": "Fred"},
+                },
+            )
+        )
+
+
+def test_env_vars_mismatch() -> None:
+    """Test env vars with incorrect values"""
+    myqueue = _MockQueue()
+    event = {"name": "fred"}
+
+    os.environ["TEST_ENV1"] = "Kaboom"
+    with pytest.raises(EnvVarMismatchError):
+        asyncio.run(
+            generic_main(
+                myqueue,
+                {
+                    "payload": event,
+                    "check_env_vars": {"TEST_ENV1": "Fred"},
+                },
+            )
+        )
+
+
+def test_env_vars() -> None:
+    """Test env vars with correct values"""
+    myqueue = _MockQueue()
+    event = {"name": "fred"}
+
+    os.environ["TEST_ENV1"] = "Fred"
+    asyncio.run(
+        generic_main(
+            myqueue,
+            {
+                "payload": event,
+                "check_env_vars": {"TEST_ENV1": "Fred"},
+            },
+        )
+    )
+    assert len(myqueue.queue) == 1
+    assert myqueue.queue[0] == {"name": "fred"}
