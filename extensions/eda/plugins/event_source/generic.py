@@ -32,6 +32,10 @@ final_payload dict After all the events have been sent we send the optional
                    final payload which can be used to trigger a shutdown of
                    the rulebook, especially when we are using rulebooks to
                    forward messages to other running rulebooks.
+check_env_vars dict Optionally check if all the defined env vars are set
+                    before generating the events. If any of the env_var is missing
+                    or the value doesn't match the source plugin will end
+                    with an exception
 
 
 """
@@ -53,14 +57,33 @@ final_payload dict After all the events have been sent we send the optional
 from __future__ import annotations
 
 import asyncio
+import os
 import random
 import time
 from dataclasses import dataclass, fields
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional
 
 import yaml
+
+
+class MissingEnvVarError(Exception):
+    """Exception class for missing env var."""
+
+    def __init__(self: "MissingEnvVarError", env_var: str) -> None:
+        """Class constructor with the missing env_var."""
+        super().__init__(f"Env Var {env_var} is required")
+
+
+class EnvVarMismatchError(Exception):
+    """Exception class for mismatch in the env var value."""
+
+    def __init__(
+        self: "EnvVarMismatchError", env_var: str, value: str, expected: str
+    ) -> None:
+        """Class constructor with mismatch in env_var value."""
+        super().__init__(f"Env Var {env_var} expected: {expected} passed in: {value}")
 
 
 @dataclass
@@ -84,6 +107,7 @@ class ControlArgs:
     loop_count: int = 1
     repeat_count: int = 1
     timestamp: bool = False
+    check_env_vars: Optional[Dict[str, str]] = None
 
 
 @dataclass
@@ -135,6 +159,7 @@ class Generic:
             msg = "time_format must be one of local, iso8601, epoch"
             raise ValueError(msg)
 
+        await self._check_env_vars()
         await self._load_payload_from_file()
 
         if not isinstance(self.my_args.payload, list):
@@ -173,6 +198,14 @@ class Generic:
         if self.my_args.display:
             print(data)  # noqa: T201
         await self.queue.put(data)
+
+    async def _check_env_vars(self: Generic) -> None:
+        if self.control_args.check_env_vars:
+            for key, value in self.control_args.check_env_vars.items():
+                if key not in os.environ:
+                    raise MissingEnvVarError(key)
+                if os.environ[key] != value:
+                    raise EnvVarMismatchError(key, os.environ[key], value)
 
     async def _load_payload_from_file(self: Generic) -> None:
         if not self.my_args.payload_file:
