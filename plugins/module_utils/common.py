@@ -22,7 +22,7 @@ def lookup_resource_id(
     endpoint: str,
     name: str,
     params: Optional[dict[str, Any]] = None,
-) -> Optional[Any]:
+) -> Optional[int]:
     result = None
 
     try:

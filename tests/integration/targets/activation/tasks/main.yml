@@ -172,6 +172,82 @@
         that:
           - _result.changed
 
+    - name: Create a rulebook activation with missing project name
+      ansible.eda.rulebook_activation:
+        name: Invalid_activation
+        description: "Example Activation description"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
+        project_name: Invalid_Project
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'Project Invalid_Project not found.' in _result.msg"
+
+    - name: Create a rulebook activation with missing rulebook name
+      ansible.eda.rulebook_activation:
+        name: Invalid_activation
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
+        rulebook_name: Invalid_Rulebook
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'Rulebook Invalid_Rulebook not found' in _result.msg"
+
+    - name: Create a rulebook activation with missing decision environment name
+      ansible.eda.rulebook_activation:
+        name: Invalid_activation
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Default
+        decision_environment_name: Invalid_Decision_Env
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'Decision Environment Invalid_Decision_Env not found.' in _result.msg"
+
+    - name: Create a rulebook activation with missing organization name
+      ansible.eda.rulebook_activation:
+        name: Invalid_activation
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        awx_token_name: "{{ awx_token_name }}"
+        organization_name: Invalid_Organization
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'Organization Invalid_Organization not found.' in _result.msg"
+
     - name: Create a new rulebook activation again
       ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
@@ -379,6 +455,7 @@
         - "{{ activation_name_source_name }}"
         - "{{ activation_name_source_index }}"
         - "{{ activation_name_wrong_source }}"
+        - Invalid_activation
       ignore_errors: true
 
     - name: Delete decision environment
