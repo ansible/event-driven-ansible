@@ -246,6 +246,7 @@ jobs:
     needs:
       - check
     environment: release
+    if: github.event_name == 'push' && github.ref_type == 'tag'
     steps:
       - uses: actions/checkout@v4
 
@@ -266,9 +267,6 @@ jobs:
       - run: pip install ansible-core
 
       - name: Publish the collection on Galaxy
-        if: |
-          github.event_name == 'push' &&
-          (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
         run: >
           [[ "${{ secrets.ANSIBLE_GALAXY_API_KEY != '' }}" ]] || { echo
           "ANSIBLE_GALAXY_API_KEY is required to publish on galaxy" ; exit 1; }
@@ -277,7 +275,6 @@ jobs:
           secrets.ANSIBLE_GALAXY_API_KEY }}"
 
       - name: Upload the artifact to the release
-        if: github.ref_type == 'tag'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
