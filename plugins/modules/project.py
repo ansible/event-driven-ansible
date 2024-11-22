@@ -47,6 +47,10 @@ options:
       type: str
       aliases:
         - organization
+    scm_branch:
+      description:
+        - The scm branch of the git project.
+      type: str
     state:
       description:
         - Desired state of the resource.
@@ -85,6 +89,7 @@ EXAMPLES = r"""
     new_name: "Latest Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
+    scm_branch: "devel"
     organization_name: Default
     state: present
 
@@ -124,6 +129,7 @@ def main() -> None:
         description=dict(),
         url=dict(),
         credential=dict(),
+        scm_branch=dict(),
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
         sync=dict(type="bool", default=False),
@@ -175,6 +181,7 @@ def main() -> None:
 
     new_name = module.params.get("new_name")
     description = module.params.get("description")
+    scm_branch = module.marams.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
 
@@ -191,6 +198,8 @@ def main() -> None:
         project_type_params["description"] = description
     if url:
         project_type_params["url"] = url
+    if scm_branch:
+        project_type_params["scm_branch"] = scm_branch
 
     credential_id = None
     if credential:
