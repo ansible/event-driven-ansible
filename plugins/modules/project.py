@@ -181,7 +181,7 @@ def main() -> None:
 
     new_name = module.params.get("new_name")
     description = module.params.get("description")
-    scm_branch = module.marams.get("scm_branch")
+    scm_branch = module.params.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
 
