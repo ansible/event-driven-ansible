@@ -412,13 +412,13 @@ def create_params(
     if module.params.get("restart_policy"):
         activation_params["restart_policy"] = module.params["restart_policy"]
 
-    if module.params.get("enabled"):
+    if module.params.get("enabled") is not None:
         activation_params["is_enabled"] = module.params["enabled"]
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    if not is_aap_24 and module.params.get("swap_single_source"):
+    if not is_aap_24 and module.params.get("swap_single_source") is not None:
         activation_params["swap_single_source"] = module.params["swap_single_source"]
 
     return activation_params
