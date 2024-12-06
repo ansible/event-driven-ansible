@@ -31,12 +31,14 @@ options:
   project_name:
     description:
       - The name of the project associated with the rulebook activation.
+      - Required when state is present.
     type: str
     aliases:
       - project
   rulebook_name:
     description:
       - The name of the rulebook associated with the rulebook activation.
+      - Required when state is present.
     type: str
     aliases:
       - rulebook
@@ -58,6 +60,7 @@ options:
   decision_environment_name:
     description:
       - The name of the decision environment associated with the rulebook activation.
+      - Required when state is present.
     type: str
     aliases:
       - decision_environment
@@ -70,7 +73,7 @@ options:
       - token
   organization_name:
     description:
-      - The name of the organization.
+      - The name of the organization. Required when state is present.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
@@ -316,57 +319,53 @@ def create_params(
 ) -> Dict[str, Any]:
     activation_params: Dict[str, Any] = {}
 
-    # Get the project id
-    project_id = None
-    if module.params.get("project_name"):
-        project_id = lookup_resource_id(
-            module, controller, "projects", module.params["project_name"]
-        )
-    if project_id is not None:
-        activation_params["project_id"] = project_id
+    # Get the project id, only required to get the rulebook id
+    project_name = module.params["project_name"]
+    project_id = lookup_resource_id(module, controller, "projects", project_name)
+
+    if project_id is None:
+        module.fail_json(msg=f"Project {project_name} not found.")
 
     # Get the rulebook id
-    rulebook_id = None
-    params = {}
-    if project_id is not None:
-        params = {"data": {"project_id": project_id}}
-    if module.params.get("rulebook_name"):
-        rulebook_id = lookup_resource_id(
-            module,
-            controller,
-            "rulebooks",
-            module.params["rulebook_name"],
-            params,
+    rulebook_name = module.params["rulebook_name"]
+    params = {"data": {"project_id": project_id}}
+    rulebook_id = lookup_resource_id(
+        module,
+        controller,
+        "rulebooks",
+        rulebook_name,
+        params,
+    )
+    if rulebook_id is None:
+        module.fail_json(
+            msg=f"Rulebook {rulebook_name} not found for project {project_name}."
         )
-    if rulebook_id is not None:
-        activation_params["rulebook_id"] = rulebook_id
+
+    activation_params["rulebook_id"] = rulebook_id
 
     # Get the decision environment id
-    decision_environment_id = None
-    if module.params.get("decision_environment_name"):
-        decision_environment_id = lookup_resource_id(
-            module,
-            controller,
-            "decision-environments",
-            module.params["decision_environment_name"],
+    decision_environment_name = module.params["decision_environment_name"]
+    decision_environment_id = lookup_resource_id(
+        module,
+        controller,
+        "decision-environments",
+        decision_environment_name,
+    )
+    if decision_environment_id is None:
+        module.fail_json(
+            msg=f"Decision Environment {decision_environment_name} not found."
         )
-    if decision_environment_id is not None:
-        activation_params["decision_environment_id"] = decision_environment_id
+    activation_params["decision_environment_id"] = decision_environment_id
 
     # Get the organization id
-    organization_id = None
-    if not is_aap_24 and module.params.get("organization_name"):
+    organization_name = module.params["organization_name"]
+    if not is_aap_24:
         organization_id = lookup_resource_id(
-            module, controller, "organizations", module.params["organization_name"]
+            module, controller, "organizations", organization_name
         )
-    if organization_id is not None:
+        if organization_id is None:
+            module.fail_json(msg=f"Organization {organization_name} not found.")
         activation_params["organization_id"] = organization_id
-
-    if module.params.get("description"):
-        activation_params["description"] = module.params["description"]
-
-    if module.params.get("extra_vars"):
-        activation_params["extra_var"] = module.params["extra_vars"]
 
     # Get the AWX token id
     awx_token_id = None
@@ -376,12 +375,6 @@ def create_params(
         )
     if awx_token_id is not None:
         activation_params["awx_token_id"] = awx_token_id
-
-    if module.params.get("restart_policy"):
-        activation_params["restart_policy"] = module.params["restart_policy"]
-
-    if module.params.get("enabled"):
-        activation_params["is_enabled"] = module.params["enabled"]
 
     # Get the eda credential ids
     eda_credential_ids = None
@@ -402,11 +395,25 @@ def create_params(
         # Process event streams and source mappings
         activation_params["source_mappings"] = yaml.dump(
             process_event_streams(
-                rulebook_id=rulebook_id,
+                # ignore type error, if rulebook_id is None, it will fail earlier
+                rulebook_id=rulebook_id,  # type: ignore[arg-type]
                 controller=controller,
                 module=module,
             )
         )
+
+    # Set the remaining parameters
+    if module.params.get("description"):
+        activation_params["description"] = module.params["description"]
+
+    if module.params.get("extra_vars"):
+        activation_params["extra_var"] = module.params["extra_vars"]
+
+    if module.params.get("restart_policy"):
+        activation_params["restart_policy"] = module.params["restart_policy"]
+
+    if module.params.get("enabled"):
+        activation_params["is_enabled"] = module.params["enabled"]
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -492,9 +499,13 @@ def main() -> None:
     organization_name = module.params.get("organization_name")
     if state == "present" and not is_aap_24 and organization_name is None:
         module.fail_json(
-            msg="Parameter organization_name is required when state is present."
+            msg=(
+                "Parameter organization_name is required when state "
+                "is present for this version of EDA."
+            ),
         )
     # Attempt to find rulebook activation based on the provided name
+    activation = {}
     try:
         activation = controller.get_exactly_one("activations", name=name)
     except EDAError as e:
@@ -511,14 +522,13 @@ def main() -> None:
         module.exit_json(
             msg=f"A rulebook activation with name: {name} already exists. "
             "The module does not support modifying a rulebook activation.",
-            **{"changed": False, "id": activation["id"]},
+            changed=False,
+            id=activation["id"],
         )
 
     # Activation Data that will be sent for create/update
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
-    activation_params["name"] = (
-        controller.get_item_name(activation) if activation else name
-    )
+    activation_params["name"] = name
 
     # If the state was present and we can let the module build or update the
     # existing activation, this will return on its own
