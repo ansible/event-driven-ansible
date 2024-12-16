@@ -273,7 +273,7 @@
 
     - name: Assert that rulebook activation is disabled
       ansible.builtin.assert:
-        that: 
+        that:
           - not _result_activation_info.activations[0].is_enabled
 
     - name: List all the rulebook activations
@@ -413,7 +413,7 @@
 
     - name: Assert that swap single source flag is disabled
       ansible.builtin.assert:
-        that: 
+        that:
           - not _result_activation_info.activations[0].swap_single_source
 
     - name: Delete project
