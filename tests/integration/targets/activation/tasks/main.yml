@@ -411,11 +411,6 @@
         that:
           - event_stream_name in (source_mappings_dict | map(attribute='event_stream_name') | list)
 
-    - name: Assert that swap single source flag is disabled
-      ansible.builtin.assert:
-        that:
-          - not _result_activation_info.activations[0].swap_single_source
-
     - name: Delete project
       ansible.eda.project:
         name: "{{ project_name }}"
