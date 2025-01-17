@@ -269,6 +269,12 @@
     - name: Get information about the rulebook activation
       ansible.eda.rulebook_activation_info:
         name: "{{ activation_name }}"
+      register: _result_activation_info
+
+    - name: Assert that rulebook activation is disabled
+      ansible.builtin.assert:
+        that:
+          - not _result_activation_info.activations[0].is_enabled
 
     - name: List all the rulebook activations
       ansible.eda.rulebook_activation_info:
@@ -380,6 +386,7 @@
         enabled: False
         awx_token_name: "{{ awx_token_name }}"
         organization_name: Default
+        swap_single_source: False
         event_streams:
           - event_stream: "{{ event_stream_name }}"
             source_name: "{{ _result_rulebook_info.rulebooks[0].sources[0].name }}"
