@@ -51,6 +51,7 @@ options:
       description:
         - The scm branch of the git project.
       type: str
+      version_added: 2.4.0
     state:
       description:
         - Desired state of the resource.
