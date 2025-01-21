@@ -27,7 +27,7 @@
       until:
         - r_info.projects[0].modified_at != r_info.projects[0].created_at
         - r_info.projects[0].scm_branch == scm_branch
-      retries: 30  
+      retries: 30
       delay: 1
 
   always:
