@@ -24,7 +24,7 @@
     - name: Define variables for credential and decision environment
       set_fact:
         decision_env_name: "Test_Decision_Env_{{ test_id }}"
-        image_url: "https://quay.io/repository/ansible/eda-server"
+        image_url: "quay.io/ansible/ansible-rulebook:main"
 
     - include_tasks: list.yml
   always:
