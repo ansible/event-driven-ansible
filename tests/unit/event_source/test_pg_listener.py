@@ -3,7 +3,7 @@
 import asyncio
 import json
 import uuid
-from typing import Any
+from typing import Any, Type
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import psycopg
@@ -17,6 +17,8 @@ from extensions.eda.plugins.event_source.pg_listener import (
     MESSAGE_CHUNKED_UUID,
     MESSAGE_LENGTH,
     MESSAGE_XX_HASH,
+    MissingRequiredArgumentError,
+    _validate_args,
 )
 from extensions.eda.plugins.event_source.pg_listener import main as pg_listener_main
 
@@ -180,3 +182,133 @@ def test_operational_error() -> None:
                     },
                 )
             )
+
+
+def test_validate_args_with_missing_keys() -> None:
+    """Test missing required arguments."""
+    args: dict[str, str] = {}
+    with pytest.raises(MissingRequiredArgumentError) as exc:
+        _validate_args(args)
+    assert str(exc.value) == "Missing required arguments: channels"
+
+
+def test_validate_args_with_missing_dsn_and_postgres_params() -> None:
+    """Test missing dsn and postgres_params."""
+    args = {"channels": ["test"]}
+    with pytest.raises(MissingRequiredArgumentError) as exc:
+        _validate_args(args)
+    assert str(exc.value) == "Missing dsn or postgres_params, at least one is required"
+
+
+def test_validate_args_with_missing_dsn() -> None:
+    """Test missing dsn."""
+    args = {
+        "postgres_params": {"user": "postgres", "password": "password"},
+        "channels": ["test"],
+    }
+    with (
+        patch(
+            "extensions.eda.plugins.event_source.pg_listener.REQUIRED_KEYS",
+            ["dsn"],
+        ),
+        pytest.raises(MissingRequiredArgumentError) as exc,
+    ):
+        _validate_args(args)
+    assert str(exc.value) == "Missing required arguments: dsn"
+
+
+def test_validate_args_with_missing_postgres_params() -> None:
+    """Test missing postgres_params."""
+    args = {
+        "dsn": "host=localhost dbname=mydb user=postgres password=password",
+        "channels": ["test"],
+    }
+    with (
+        patch(
+            "extensions.eda.plugins.event_source.pg_listener.REQUIRED_KEYS",
+            ["postgres_params"],
+        ),
+        pytest.raises(MissingRequiredArgumentError) as exc,
+    ):
+        _validate_args(args)
+    assert str(exc.value) == "Missing required arguments: postgres_params"
+
+
+def test_validate_args_with_valid_args() -> None:
+    """Test valid arguments."""
+    args = {
+        "dsn": "host=localhost dbname=mydb user=postgres password=password",
+        "channels": ["test"],
+    }
+    _validate_args(args)  # No exception should be raised
+
+
+@pytest.mark.parametrize(
+    "args, expected_exception, expected_message",
+    [
+        # Valid channels
+        ({"channels": ["channel1", "channel2"], "dsn": "dummy"}, None, None),
+        # Empty channels
+        (
+            {"channels": [], "dsn": "dummy"},
+            ValueError,
+            "Channels must be a list and not empty",
+        ),
+        # Non-list channels
+        (
+            {"channels": "channel1", "dsn": "dummy"},
+            ValueError,
+            "Channels must be a list and not empty",
+        ),
+        # Valid dsn
+        (
+            {
+                "channels": ["channel1"],
+                "dsn": "postgres://user:password@host:port/database",
+            },
+            None,
+            None,
+        ),
+        # Invalid dsn
+        (
+            {"channels": ["channel1"], "dsn": 123},
+            ValueError,
+            "DSN must be a string",
+        ),
+        # Valid postgres params
+        (
+            {
+                "channels": ["channel1"],
+                "postgres_params": {"host": "localhost", "port": 5432},
+            },
+            None,
+            None,
+        ),
+        # Invalid postgres params
+        (
+            {"channels": ["channel1"], "postgres_params": "invalid_params"},
+            ValueError,
+            "Postgres params must be a dictionary",
+        ),
+        # Invalid postgres params
+        (
+            {
+                "channels": ["channel1"],
+                "postgres_params": [{"host": "localhost"}, {"port": "5432"}],
+            },
+            ValueError,
+            "Postgres params must be a dictionary",
+        ),
+    ],
+)
+def test_validate_args_type_checks(
+    args: dict[str, Any],
+    expected_exception: Type[Exception],
+    expected_message: str,
+) -> None:
+    """Test _validate_args type checks."""
+    if expected_exception is None:
+        _validate_args(args)
+    else:
+        with pytest.raises(expected_exception, match=expected_message):
+            _validate_args(args)

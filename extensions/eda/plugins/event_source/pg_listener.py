@@ -4,14 +4,30 @@ An ansible-rulebook event source plugin for reading events from
 pg_pub_sub
 
 Arguments:
+# cSpell:ignore libpq
 ---------
-    dsn: The connection string/dsn for Postgres
-    channels: The list of channels to listen
+    dsn: Optional, the connection string/dsn for Postgres as supported by psycopg/libpq
+        refer to https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-KEYWORD-VALUE
+        Either dsn or postgres_params is required
+    postgres_params: Optional, dict, the parameters for the pg connection as they are supported by psycopg/libpq
+        refer to https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS
+        If the param is already in the dsn, it will be overridden by the value in postgres_params
+        Either dsn or postgres_params is required
+    channels: Required, the list of channels to listen
 
-Example:
+Examples:
 -------
     - ansible.eda.pg_listener:
         dsn: "host=localhost port=5432 dbname=mydb"
+        channels:
+          - my_events
+          - my_alerts
+
+    - ansible.eda.pg_listener:
+        postgres_params:
+          host: localhost
+          port: 5432
+          dbname: mydb
         channels:
           - my_events
           - my_alerts
@@ -55,7 +71,7 @@ MESSAGE_CHUNK_SEQUENCE = "_message_chunk_sequence"
 MESSAGE_CHUNK = "_chunk"
 MESSAGE_LENGTH = "_message_length"
 MESSAGE_XX_HASH = "_message_xx_hash"
-REQUIRED_KEYS = ("dsn", "channels")
+REQUIRED_KEYS = ["channels"]
 
 REQUIRED_CHUNK_KEYS = (
     MESSAGE_CHUNK_COUNT,
@@ -68,10 +84,6 @@ REQUIRED_CHUNK_KEYS = (
 
 class MissingRequiredArgumentError(Exception):
     """Exception class for missing arguments."""
-
-    def __init__(self: "MissingRequiredArgumentError", key: str) -> None:
-        """Class constructor with the missing key."""
-        super().__init__(f"PG Listener {key} is a required argument")
 
 
 class MissingChunkKeyError(Exception):
@@ -88,16 +100,38 @@ def _validate_chunked_payload(payload: dict[str, Any]) -> None:
             raise MissingChunkKeyError(key)
 
 
+def _validate_args(args: dict[str, Any]) -> None:
+    """Validate the arguments and raise exception accordingly."""
+    missing_keys = [key for key in REQUIRED_KEYS if key not in args]
+    if missing_keys:
+        msg = f"Missing required arguments: {', '.join(missing_keys)}"
+        raise MissingRequiredArgumentError(msg)
+    if args.get("dsn") is None and args.get("postgres_params") is None:
+        msg = "Missing dsn or postgres_params, at least one is required"
+        raise MissingRequiredArgumentError(msg)
+
+    # Type checking
+    # TODO(alejandro): We should implement a standard way to validate the schema
+    # of the arguments for all the plugins
+    if not isinstance(args["channels"], list) or not args["channels"]:
+        raise ValueError("Channels must be a list and not empty")
+    if args.get("dsn") is not None and not isinstance(args["dsn"], str):
+        raise ValueError("DSN must be a string")
+    if args.get("postgres_params") is not None and not isinstance(
+        args["postgres_params"], dict
+    ):
+        raise ValueError("Postgres params must be a dictionary")
+
+
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Listen for events from a channel."""
-    for key in REQUIRED_KEYS:
-        if key not in args:
-            raise MissingRequiredArgumentError(key)
+    _validate_args(args)
 
     try:
         async with await AsyncConnection.connect(
-            conninfo=args["dsn"],
+            conninfo=args.get("dsn", ""),
             autocommit=True,
+            **args.get("postgres_params", {}),
         ) as conn:
             chunked_cache: dict[str, Any] = {}
             cursor = conn.cursor()
