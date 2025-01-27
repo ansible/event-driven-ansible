@@ -81,7 +81,6 @@
         organization_name: "{{ organization_name }}"
         name: basic event stream
         credential_name: basic event stream credential
-        event_stream_type: Basic Event Stream
 
     - name: Get the event stream generated
       register: event_stream_data
