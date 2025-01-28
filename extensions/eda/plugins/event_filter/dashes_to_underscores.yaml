@@ -1,0 +1,17 @@
+DOCUMENTATION:
+  author:
+    - Doston Toirov (@dtoirov)
+  short_description: Change dashes to underscores.
+  description:
+    - An event filter that changes dashes in keys to underscores. For instance, the key X-Y becomes the new key X_Y.
+  version_added: '2.3.2'
+  options:
+    overwrite:
+      description:
+        - Overwrite the values if there is a collision with a new key.
+      type: bool
+      default: "true"
+
+EXAMPLES:
+  - ansible.eda.range:
+      limit: 5

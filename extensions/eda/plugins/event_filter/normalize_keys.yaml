@@ -1,0 +1,36 @@
+DOCUMENTATION:
+  author:
+    - Doston Toirov (@dtoirov)
+  short_description: Change keys that contain non-alpha numeric or underscore to underscores.
+  description: |
+    - An event filter that changes keys that contain non alpha numeric or
+      underscore to underscores.
+    - For instance, the key server-name becomes the new key server_name.
+      If there are consecutive non alpha numeric or under score, they would
+      be coalesced into a single underscore.
+      For instance the key server.com/&abc becomes server_com_abc
+      instead of server_com__abc.
+    - If there is a existing key with the normalized name, it will get overwritten
+      by default. If you don't want to over write it you can pass in "overwrite: false"
+      The default value of overwrite is true.
+  version_added: '2.3.2'
+  options:
+    overwrite:
+      description:
+        - Overwrite the values if there is a collision with a new key.
+      type: bool
+      default: "true"
+
+EXAMPLES:
+  - sources:
+      - my_source:
+          ....
+        filters:
+          ansible.eda.normalize_keys:
+
+  - sources:
+      - my_source:
+          ....
+        filters:
+          ansible.eda.normalize_keys:
+            overwrite: false
