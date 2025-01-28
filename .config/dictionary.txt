@@ -5,10 +5,7 @@ AUTHS
 Abhijeet
 Alina
 Buzachis
-dbname
-certfile
 Doston
-dtoirov
 EDAHTTP
 FQCN
 GSSAPI
@@ -17,6 +14,7 @@ Nikhil
 OAUTHBEARER
 PYTHONUNBUFFERED
 Passw
+Toirov
 akasurde
 alertmanager
 alinabuzachis
@@ -29,15 +27,18 @@ buildx
 cafile
 capath
 caroot
+certfile
 cliconf
 confluentinc
 conftest
 conninfo
 containerd
 darglint
+dbname
 deadsnakes
 digestmod
 docsite
+dtoirov
 dynatrace
 envlist
 extfile
@@ -75,7 +76,6 @@ testpass
 testsecret
 testuser
 toctree
-Toirov
 toxinidir
 trustore
 truststore
