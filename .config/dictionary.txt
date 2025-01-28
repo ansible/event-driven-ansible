@@ -5,6 +5,10 @@ AUTHS
 Abhijeet
 Alina
 Buzachis
+dbname
+certfile
+Doston
+dtoirov
 EDAHTTP
 FQCN
 GSSAPI
@@ -71,6 +75,7 @@ testpass
 testsecret
 testuser
 toctree
+Toirov
 toxinidir
 trustore
 truststore
