@@ -1,20 +1,3 @@
-"""file.py.
-
-An ansible-rulebook event source plugin for loading facts from YAML files
-initially and when the file changes.
-
-Arguments:
----------
-    files - a list of YAML files
-
-Example:
--------
-    - ansible.eda.file:
-      files:
-        - fact.yml
-
-"""
-
 import pathlib
 from asyncio import Queue
 from typing import Any, Union

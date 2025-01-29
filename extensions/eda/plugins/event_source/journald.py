@@ -1,28 +1,3 @@
-"""journald.py.
-
-An ansible-events event source plugin that tails systemd journald logs.
-
-Arguments:
----------
-    match - return messages that matches this field,
-    see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
-
-Examples:
---------
-    - name: Return severity 6 messages
-      ansible.eda.journald:
-        match: "PRIORITY=6"
-
-    - name: Return messages when sudo is used
-      ansible.eda.journald:
-        match: "_EXE=/usr/bin/sudo"
-
-    - name: Return all messages
-      ansible.eda.journald:
-        match: "ALL"
-
-"""
-
 import asyncio
 from typing import Any
 

@@ -1,36 +1,3 @@
-"""aws_cloudtrail.py.
-
-An ansible-rulebook event source module for getting events from an AWS CloudTrail
-
-Arguments:
----------
-    access_key:    Optional AWS access key ID
-    secret_key:    Optional AWS secret access key
-    session_token: Optional STS session token for use with temporary credentials
-    endpoint_url:  Optional URL to connect to instead of the default AWS endpoints
-    region:        Optional AWS region to use
-    delay_seconds: The number of seconds to wait between polling (default 10sec)
-
-    lookup_attributes:  The optional list of lookup attributes.
-                        lookup attribute are dictionary with an AttributeKey (string),
-                        which specifies an attribute on which to filter the events
-                        returned and an AttributeValue (string) which specifies
-                        a value for the specified AttributeKey
-    event_category:     The optional event category to return. (e.g. 'insight')
-
-Example:
--------
-    - ansible.eda.aws_cloudtrail:
-        region: us-east-1
-        lookup_attributes:
-            - AttributeKey: 'EventSource'
-              AttributeValue: 'ec2.amazonaws.com'
-            - AttributeKey: 'ReadOnly'
-              AttributeValue: 'true'
-        event_category: management
-
-"""
-
 import asyncio
 import json
 from datetime import datetime

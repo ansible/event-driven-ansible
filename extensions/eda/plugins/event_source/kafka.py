@@ -1,39 +1,3 @@
-"""kafka.py.
-
-An ansible-rulebook event source plugin for receiving events via a kafka topic.
-
-Arguments:
----------
-    host:      The host where the kafka topic is hosted
-    port:      The port where the kafka server is listening
-    cafile:    The optional certificate authority file path containing certificates
-               used to sign kafka broker certificates
-    certfile:  The optional client certificate file path containing the client
-               certificate, as well as CA certificates needed to establish
-               the certificate's authenticity
-    keyfile:   The optional client key file path containing the client private key
-    password:  The optional password to be used when loading the certificate chain
-    check_hostname:  Enable SSL hostname verification. [True (default), False]
-    verify_mode: Whether to try to verify other peers' certificates and how to
-               behave if verification fails. [CERT_NONE, CERT_OPTIONAL,
-               CERT_REQUIRED (default)]
-    encoding:  Message encoding scheme. Default to utf-8
-    topic:     The kafka topic
-    group_id:  A kafka group id
-    offset:    Where to automatically reset the offset. [latest, earliest]
-               Default to latest
-    security_protocol: Protocol used to communicate with brokers. [PLAINTEXT, SSL,
-               SASL_PLAINTEXT, SASL_SSL]. Default to PLAINTEXT
-    sasl_mechanism: Authentication mechanism when security_protocol is configured.
-               [PLAIN, GSSAPI, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER].
-               Default to PLAIN.
-    sasl_plain_username: Username for SASL PLAIN authentication
-    sasl_plain_password: Password for SASL PLAIN authentication
-
-
-
-"""
-
 import asyncio
 import json
 import logging

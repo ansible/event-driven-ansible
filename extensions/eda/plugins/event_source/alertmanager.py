@@ -1,37 +1,3 @@
-"""alertmanager.py.
-
-An ansible-rulebook event source module for receiving events via a webhook from
-alertmanager or alike system.
-
-Arguments:
----------
-    host: The webserver hostname to listen to. Set to 0.0.0.0 to listen on all
-          interfaces. Defaults to localhost
-    port: The TCP port to listen to.  Defaults to 5000
-    data_alerts_path: The json path to find alert data. Default to "alerts"
-                      Use empty string "" to treat the whole payload data as
-                      one alert.
-    data_host_path: The json path inside the alert data to find alerting host.
-                    Use empty string "" if there is no need to find host.
-                    Default to  "labels.instance".
-    data_path_separator: The separator to interpret data_host_path and
-                         data_alerts_path. Default to "."
-    skip_original_data: true/false. Default to false
-                        true: put only alert data to the queue
-                        false: put sequentially both the received original
-                               data and each parsed alert item to the queue.
-
-Example:
--------
-    - ansible.eda.alertmanager:
-        host: 0.0.0.0
-        port: 8000
-        data_alerts_path: alerts
-        data_host_path: labels.instance
-        data_path_separator: .
-
-"""
-
 import asyncio
 import logging
 from typing import Any

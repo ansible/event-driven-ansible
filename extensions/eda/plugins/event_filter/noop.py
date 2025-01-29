@@ -1,5 +1,3 @@
-"""noop.py:   An event filter that does nothing to the input."""
-
 from typing import Any
 
 

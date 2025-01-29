@@ -1,26 +1,3 @@
-"""aws_sqs_queue.py.
-
-An ansible-rulebook event source plugin for receiving events via an AWS SQS queue.
-
-Arguments:
----------
-    access_key:    Optional AWS access key ID
-    secret_key:    Optional AWS secret access key
-    session_token: Optional STS session token for use with temporary credentials
-    endpoint_url:  Optional URL to connect to instead of the default AWS endpoints
-    region:        Optional AWS region to use
-    name:          Name of the queue
-    delay_seconds: The SQS long polling duration. Set to 0 to disable. Defaults to 2.
-
-Example:
--------
-    - ansible.eda.aws_sqs_queue:
-        region: us-east-1
-        name: eda
-        delay_seconds: 10
-
-"""
-
 import asyncio
 import json
 import logging

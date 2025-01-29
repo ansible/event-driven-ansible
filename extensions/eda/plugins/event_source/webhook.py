@@ -1,39 +1,3 @@
-"""webhook.py.
-
-An ansible-rulebook event source module for receiving events via a webhook.
-The message must be a valid JSON object.
-
-The body received from the webhook post is placed under the key payload in
-the data pushed to the event queue. Do not expect the host(s) in the path
-"payload.meta.limit" will be automatically used to limit an ansible action
-running on these hosts. Use insert_hosts_to_meta filter instead. See
-https://ansible.readthedocs.io/projects/rulebook/en/latest/host_limit.html
-for more details.
-
-Arguments:
----------
-    host:     The hostname to listen to. Defaults to 0.0.0.0 (all interfaces)
-    port:     The TCP port to listen to.  Defaults to 5000
-    token:    The optional authentication token expected from client
-    certfile: The optional path to a certificate file to enable TLS support
-    keyfile:  The optional path to a key file to be used together with certfile
-    password: The optional password to be used when loading the certificate chain
-    cafile:   The optional path to a file containing CA certificates used to validate
-              clients' certificates
-    capath:   The optional path to a directory containing CA certificates
-              Provide either cafile or capath to enable mTLS support
-    hmac_secret: The optional HMAC secret used to verify the payload from the client
-    hmac_algo: The optional HMAC algorithm used to calculate the payload hash.
-               See your python's hashlib.algorithms_available set for available options.
-               Defaults to sha256
-    hmac_header: The optional HMAC header sent by the client with the payload signature.
-                 Defaults to x-hub-signature-256
-    hmac_format: The optional HMAC signature format format.
-                 Supported formats: hex, base64
-                 Defaults to hex
-
-"""
-
 from __future__ import annotations
 
 import asyncio
