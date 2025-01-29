@@ -418,11 +418,32 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    if not is_aap_24 and module.params.get("swap_single_source") is not None:
-        activation_params["swap_single_source"] = module.params["swap_single_source"]
+#    if not is_aap_24 and module.params.get("swap_single_source") is not None:
+#        activation_params["swap_single_source"] = module.params["swap_single_source"]
 
     return activation_params
 
+def enable_or_disable(
+    activation: dict[str, Any],
+    activation_params: dict[str, Any]
+) -> str:
+    """
+    Check if the user wants to disable or enable an existing activation.
+
+    Args:
+        activation: Existing activation.
+        activation_params: Parameters passed in the module.
+
+    Returns:
+        String of the desired operation, either 'enable' or 'disable'.
+    """
+
+    operation = {
+        (True, False): "disable",
+        (False, True): "enable"
+    }.get((activation["is_enabled"], activation_params["is_enabled"]), "")
+
+    return operation if operation in ("enable", "disable") else ""
 
 def main() -> None:
     argument_spec = dict(
@@ -455,7 +476,7 @@ def main() -> None:
                 source_name=dict(type="str"),
             ),
         ),
-        swap_single_source=dict(type="bool", default=True),
+#        swap_single_source=dict(type="bool", default=True),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),
     )
@@ -518,20 +539,40 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
 
-    if activation:
-        module.exit_json(
-            msg=f"A rulebook activation with name: {name} already exists. "
-            "The module does not support modifying a rulebook activation.",
-            changed=False,
-            id=activation["id"],
-        )
-
     # Activation Data that will be sent for create/update
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
     activation_params["name"] = name
 
-    # If the state was present and we can let the module build or update the
-    # existing activation, this will return on its own
+    # Check activation exists and it's being changed
+    if activation:
+        if controller.objects_could_be_different(activation, activation_params):
+            if module.check_mode:
+                module.exit_json(changed=True)
+            try:
+                enable_disable_suffix = enable_or_disable(activation, activation_params)
+
+                # First handle enable or disable an activation
+                if enable_disable_suffix:
+                    item_id = activation["id"]
+                    enable_disable = f"activations/{item_id}/{enable_disable_suffix}"
+                    controller.post_endpoint(endpoint=enable_disable)
+
+                # If not enable or disable, update other fields normally
+                result = controller.update_if_needed(
+                    activation,
+                    activation_params,
+                    endpoint="activations",
+                    item_type="activation"
+                )
+                module.exit_json(**result)
+            except EDAError as e:
+                if "Received invalid JSON response" in str(e):
+                    module.exit_json(changed=True)
+                else:
+                    module.fail_json(msg=f"Failed to update rulebook activation: {e}")
+        else:
+            module.exit_json(changed=False)
+
     try:
         result = controller.create_if_needed(
             activation_params,
@@ -540,7 +581,7 @@ def main() -> None:
         )
         module.exit_json(**result)
     except EDAError as e:
-        module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
+        module.fail_json(msg=f"Failed to create rulebook activation: {e}")
 
 
 if __name__ == "__main__":
