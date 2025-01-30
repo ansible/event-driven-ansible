@@ -6,7 +6,7 @@ DOCUMENTATION:
     - An ansible-rulebook event filter that extracts hosts from the event data and
       inserts them to the meta dict. Ansible-rulebook will limit an ansible action
       running on hosts in the meta dict.
-  version_added: '2.3.2'
+  version_added: '2.4.0'
   options:
     host_path:
       description:

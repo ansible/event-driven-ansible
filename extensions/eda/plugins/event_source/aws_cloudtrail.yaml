@@ -4,7 +4,7 @@ DOCUMENTATION:
   short_description: Receive events from an AWS CloudTrail
   description:
     - An ansible-rulebook event source module for getting events from an AWS CloudTrail.
-  version_added: '2.3.2'
+  version_added: '2.4.0'
   options:
     access_key:
       description:

@@ -13,7 +13,7 @@ DOCUMENTATION:
     - If there is a existing key with the normalized name, it will get overwritten
       by default. If you don't want to over write it you can pass in "overwrite: false"
       The default value of overwrite is true.
-  version_added: '2.3.2'
+  version_added: '2.4.0'
   options:
     overwrite:
       description:

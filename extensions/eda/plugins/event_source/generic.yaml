@@ -6,7 +6,7 @@ DOCUMENTATION:
     - A generic source plugin that allows you to insert custom data.
     - The event data to insert into the queue is specified in the required
       parameter payload and is an array of events.
-  version_added: '2.3.2'
+  version_added: '2.4.0'
   options:
     payload_file:
       description:

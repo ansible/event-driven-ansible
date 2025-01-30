@@ -6,7 +6,7 @@ DOCUMENTATION:
     - An event filter that filters keys out of events.
       Includes override excludes.
       This is useful to exclude information from events that is unneeded by the rule engine.
-  version_added: '2.3.2'
+  version_added: '2.4.0'
   options:
     exclude_keys:
       description:

@@ -4,7 +4,7 @@ DOCUMENTATION:
   short_description: Read events from pg_pub_sub.
   description:
     - An ansible-rulebook event source plugin for reading events from pg_pub_sub.
-  version_added: '2.3.2'
+  version_added: '2.4.0'
   options:
     dsn:
       description:
