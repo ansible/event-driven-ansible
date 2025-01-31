@@ -37,7 +37,7 @@ options:
     description:
       - The TCP port to listen to..
     type: str
-    default: "5000"
+    required: true
   token:
     description:
       - The optional authentication token expected from client.

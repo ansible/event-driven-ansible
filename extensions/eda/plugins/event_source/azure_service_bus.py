@@ -27,6 +27,7 @@ options:
       - Whether to turn on logging.
     type: bool
     default: true
+    choices: [true, false]
 """
 
 EXAMPLES = r"""

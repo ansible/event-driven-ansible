@@ -46,8 +46,8 @@ options:
       - 'true: put only alert data to the queue'
       - 'false: put sequentially both the received original data and each parsed alert item to the queue.'
     type: bool
-    default: "false"
-    choices: ["true", "false"]
+    default: false
+    choices: [true, false]
 """
 
 EXAMPLES = r"""
