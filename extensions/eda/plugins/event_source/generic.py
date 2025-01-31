@@ -71,42 +71,42 @@ options:
     description:
       - Number of seconds to wait before injecting events into the queue.
     type: float
-    default: "0"
+    default: 0
   event_delay:
     description:
       - Number of seconds to wait before injecting the next event from the payload.
     type: float
-    default: "0"
+    default: 0
   repeat_delay:
     description:
       - Number of seconds to wait before injecting a repeated event from the payload.
     type: float
-    default: "0"
+    default: 0
   loop_delay:
     description:
       - Number of seconds to wait before inserting the next set of events.
     type: float
-    default: "0"
+    default: 0
   shutdown_after:
     description:
       - Number of seconds to wait before shutting down the plugin.
     type: float
-    default: "0"
+    default: 0
   loop_count:
     description:
       - Number of times the set of events in the payload should be repeated.
     type: int
-    default: "0"
+    default: 1
   repeat_count:
     description:
       - Number of times each individual event in the payload should be repeated.
     type: int
-    default: "0"
+    default: 1
   blob_size:
     description:
       - An arbitrary blob of blob_size bytes to be inserted into every event payload. Default is 0 don't create a blob.
     type: int
-    default: "0"
+    default: 0
   final_payload:
     description:
       - After all the events have been sent we send the optional

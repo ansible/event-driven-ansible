@@ -43,7 +43,7 @@ options:
       - The SQS long polling duration.
       - Set to 0 to disable.
     type: int
-    default: "2"
+    default: 2
 """
 
 EXAMPLES = r"""

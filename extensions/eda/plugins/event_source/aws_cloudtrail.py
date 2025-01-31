@@ -38,7 +38,7 @@ options:
     description:
       - The number of seconds to wait between polling.
     type: int
-    default: "10"
+    default: 10
   lookup_attributes:
     description:
       - The optional list of lookup attributes.
