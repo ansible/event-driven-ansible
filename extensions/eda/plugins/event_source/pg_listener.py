@@ -35,12 +35,22 @@ version_added: '2.4.0'
 options:
   dsn:
     description:
-      - The connection string/dsn for Postgres.
+      - The connection string/dsn for Postgres as supported by psycopg/libpq.
+        Refer to https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-KEYWORD-VALUE.
+        Either dsn or postgres_params is required.
     type: str
+  postgres_params:
+    description:
+      - The parameters for the pg connection as they are supported by psycopg/libpq.
+        Refer to https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS
+        If the param is already in the dsn, it will be overridden by the value in postgres_params.
+        Either dsn or postgres_params is required.
+    type: dict
   channels:
     description:
       - The list of channels to listen
     type: list
+    required: true
 notes:
   - Chunking - this is just informational, a user doesn't have to do anything
     special to enable chunking. The sender which is the pg_notify
