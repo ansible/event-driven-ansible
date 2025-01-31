@@ -123,6 +123,7 @@ options:
         with an exception.
 """
 
+
 class MissingEnvVarError(Exception):
     """Exception class for missing env var."""
 

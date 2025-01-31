@@ -36,6 +36,7 @@ EXAMPLES = r"""
     match: "ALL"
 """
 
+
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:  # noqa: D417
     """Read journal entries and add them to the provided queue.
 

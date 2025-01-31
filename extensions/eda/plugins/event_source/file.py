@@ -36,6 +36,7 @@ EXAMPLES = r"""
       - fact.yml
 """
 
+
 def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
     """Send facts to the queue."""
     if isinstance(filename, bytes):

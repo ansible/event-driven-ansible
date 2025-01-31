@@ -21,6 +21,7 @@ EXAMPLES = r"""
     limit: 5
 """
 
+
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Generate events with an increasing index i with a limit."""
     delay = args.get("delay", 0)
