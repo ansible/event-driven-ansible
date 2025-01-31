@@ -18,7 +18,8 @@ version_added: '2.4.0'
 options:
   match:
     description:
-      - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html.
+      - return messages that matches this field, see 
+        https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html.
     type: str
 """
 
