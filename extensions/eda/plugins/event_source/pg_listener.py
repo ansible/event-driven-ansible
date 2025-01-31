@@ -1,3 +1,4 @@
+# cspell:ignore libpq
 import asyncio
 import json
 import logging
