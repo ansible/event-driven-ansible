@@ -13,7 +13,6 @@ author:
 short_description: Receive events from an Azure service bus.
 description:
   - An ansible-rulebook event source module for receiving events from an Azure service bus.
-version_added: '2.4.0'
 options:
   conn_str:
     description:
@@ -27,7 +26,7 @@ options:
     description:
       - Whether to turn on logging.
     type: bool
-    default: "true"
+    default: true
 """
 
 EXAMPLES = r"""

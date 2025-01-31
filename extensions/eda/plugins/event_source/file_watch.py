@@ -12,7 +12,6 @@ author:
 short_description: Watch file system changes.
 description:
   - An ansible-rulebook event source plugin for watching file system changes.
-version_added: '2.4.0'
 options:
   path:
     description:

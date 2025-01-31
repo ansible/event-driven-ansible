@@ -13,7 +13,6 @@ author:
 short_description: Receive events via an AWS SQS queue.
 description:
   - An ansible-rulebook event source plugin for receiving events via an AWS SQS queue.
-version_added: '2.4.0'
 options:
   access_key:
     description:

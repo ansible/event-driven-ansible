@@ -12,16 +12,17 @@ description:
   - An event filter that filters keys out of events.
     Includes override excludes.
     This is useful to exclude information from events that is unneeded by the rule engine.
-version_added: '2.4.0'
 options:
   exclude_keys:
     description:
       - A list of strings or patterns to remove.
     type: list
+    elements: str
   include_keys:
     description:
       - A list of strings or patterns to keep even if it matches exclude_keys patterns.
     type: list
+    elements: str
 """
 
 

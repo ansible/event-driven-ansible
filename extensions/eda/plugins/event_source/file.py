@@ -14,7 +14,6 @@ short_description: Load facts from YAML files initially and when the file change
 description:
   - An ansible-rulebook event source plugin for loading facts from YAML files
     initially and when the file changes.
-version_added: '2.4.0'
 options:
   files:
     description:

@@ -9,7 +9,6 @@ author:
 short_description: Generate events with an increasing index i that never ends.
 description:
   - An ansible-rulebook event source plugin for generating events with an increasing index i that never ends.
-version_added: '2.4.0'
 options:
   delay:
     description:

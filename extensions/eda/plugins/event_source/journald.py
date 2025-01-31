@@ -14,7 +14,6 @@ author:
 short_description: Tail systemd journald logs.
 description:
   - An ansible-rulebook event source plugin that tails systemd journald logs.
-version_added: '2.4.0'
 options:
   match:
     description:

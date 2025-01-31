@@ -8,13 +8,12 @@ author:
 short_description: Change dashes to underscores.
 description:
   - An event filter that changes dashes in keys to underscores. For instance, the key X-Y becomes the new key X_Y.
-version_added: '2.4.0'
 options:
   overwrite:
     description:
       - Overwrite the values if there is a collision with a new key.
     type: bool
-    default: "true"
+    default: true
 """
 
 EXAMPLES = r"""

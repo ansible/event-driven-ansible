@@ -14,7 +14,6 @@ description:
   - An ansible-rulebook event filter that extracts hosts from the event data and
     inserts them to the meta dict. Ansible-rulebook will limit an ansible action
     running on hosts in the meta dict.
-version_added: '2.4.0'
 options:
   host_path:
     description:
@@ -41,7 +40,7 @@ options:
       - It is recommended to turn it on during the rulebook
         development time. You can then turn it off for production.
     type: bool
-    default: "false"
+    default: false
   log_error:
     description:
       - Whether log an error message if host_path does not
@@ -49,7 +48,7 @@ options:
       - You can turn if off if it is expected to have events not
         having the host_path to avoid noises in the log.
     type: bool
-    default: "bool"
+    default: true
 """
 
 EXAMPLES = r"""

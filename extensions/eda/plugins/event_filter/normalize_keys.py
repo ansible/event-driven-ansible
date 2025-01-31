@@ -19,13 +19,12 @@ description: |
   - If there is a existing key with the normalized name, it will get overwritten
     by default. If you don't want to over write it you can pass in "overwrite: false"
     The default value of overwrite is true.
-version_added: '2.4.0'
 options:
   overwrite:
     description:
       - Overwrite the values if there is a collision with a new key.
     type: bool
-    default: "true"
+    default: true
 """
 
 EXAMPLES = r"""

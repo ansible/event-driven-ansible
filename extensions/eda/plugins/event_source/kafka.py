@@ -14,7 +14,6 @@ author:
 short_description: Receive events via a kafka topic.
 description:
   - An ansible-rulebook event source plugin for receiving events via a kafka topic.
-version_added: '2.4.0'
 options:
   host:
     description:
@@ -47,8 +46,8 @@ options:
     description:
       - Enable SSL hostname verification.
     type: bool
-    default: "true"
-    choices: ["true", "false"]
+    default: true
+    choices: [true, false]
   verify_mode:
     description:
       - Whether to try to verify other peers' certificates and how to

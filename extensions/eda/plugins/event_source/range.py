@@ -8,7 +8,6 @@ author:
 short_description: Generate events with an increasing index i.
 description:
   - An ansible-rulebook event source plugin for generating events with an increasing index i.
-version_added: '2.4.0'
 options:
   limit:
     description:

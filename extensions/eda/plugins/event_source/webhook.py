@@ -27,7 +27,6 @@ description:
     running on these hosts. Use insert_hosts_to_meta filter instead. See
     https://ansible.readthedocs.io/projects/rulebook/en/latest/host_limit.html
     for more details.
-version_added: '2.4.0'
 options:
   host:
     description:

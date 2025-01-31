@@ -34,30 +34,29 @@ description:
   - A generic source plugin that allows you to insert custom data.
   - The event data to insert into the queue is specified in the required
     parameter payload and is an array of events.
-version_added: '2.4.0'
 options:
   payload_file:
     description:
       - A yaml with an array of events can be used instead of payload.
-    type: list
+    type: str
   randomize:
     description:
       - Randomize the events in the payload.
     type: bool
-    default: "false"
-    choices: ["true", "false"]
+    default: false
+    choices: [true, false]
   display:
     description:
       - Display the event data in stdout.
     type: bool
-    default: "false"
-    choices: ["true", "false"]
+    default: false
+    choices: [true, false]
   timestamp:
     description:
-      - Add an event timestamp
+      - Add an event timestamp.
     type: bool
-    default: "false"
-    choices: ["true", "false"]
+    default: false
+    choices: [true, false]
   time_format:
     description:
       - The format of event timestamp.

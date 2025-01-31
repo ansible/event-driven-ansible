@@ -12,7 +12,6 @@ author:
 short_description: Receive events via a webhook from alertmanager or alike system
 description:
   - An ansible-rulebook event source module for receiving events via a webhook from alertmanager or alike system.
-version_added: '2.4.0'
 options:
   host:
     description:

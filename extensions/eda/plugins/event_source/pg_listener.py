@@ -32,7 +32,6 @@ author:
 short_description: Read events from pg_pub_sub.
 description:
   - An ansible-rulebook event source plugin for reading events from pg_pub_sub.
-version_added: '2.4.0'
 options:
   dsn:
     description:
@@ -51,6 +50,7 @@ options:
     description:
       - The list of channels to listen
     type: list
+    elements: str
     required: true
 notes:
   - Chunking - this is just informational, a user doesn't have to do anything

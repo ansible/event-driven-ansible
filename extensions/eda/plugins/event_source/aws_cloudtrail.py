@@ -13,7 +13,6 @@ author:
 short_description: Receive events from an AWS CloudTrail
 description:
   - An ansible-rulebook event source module for getting events from an AWS CloudTrail.
-version_added: '2.4.0'
 options:
   access_key:
     description:
@@ -48,6 +47,7 @@ options:
         returned and an AttributeValue (string) which specifies
         a value for the specified AttributeKey
     type: list
+    elements: str
   event_category:
     description:
       - The optional event category to return. (e.g. 'insight')
