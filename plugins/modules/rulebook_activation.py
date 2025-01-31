@@ -418,14 +418,14 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-#    if not is_aap_24 and module.params.get("swap_single_source") is not None:
-#        activation_params["swap_single_source"] = module.params["swap_single_source"]
+    #    if not is_aap_24 and module.params.get("swap_single_source") is not None:
+    #        activation_params["swap_single_source"] = module.params["swap_single_source"]
 
     return activation_params
 
+
 def enable_or_disable(
-    activation: dict[str, Any],
-    activation_params: dict[str, Any]
+    activation: dict[str, Any], activation_params: dict[str, Any]
 ) -> str:
     """
     Check if the user wants to disable or enable an existing activation.
@@ -438,12 +438,12 @@ def enable_or_disable(
         String of the desired operation, either 'enable' or 'disable'.
     """
 
-    operation = {
-        (True, False): "disable",
-        (False, True): "enable"
-    }.get((activation["is_enabled"], activation_params["is_enabled"]), "")
+    operation = {(True, False): "disable", (False, True): "enable"}.get(
+        (activation["is_enabled"], activation_params["is_enabled"]), ""
+    )
 
     return operation if operation in ("enable", "disable") else ""
+
 
 def main() -> None:
     argument_spec = dict(
@@ -476,7 +476,7 @@ def main() -> None:
                 source_name=dict(type="str"),
             ),
         ),
-#        swap_single_source=dict(type="bool", default=True),
+        #        swap_single_source=dict(type="bool", default=True),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),
     )
@@ -562,7 +562,7 @@ def main() -> None:
                     activation,
                     activation_params,
                     endpoint="activations",
-                    item_type="activation"
+                    item_type="activation",
                 )
                 module.exit_json(**result)
             except EDAError as e:
