@@ -7,6 +7,97 @@ from typing import Any
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Receive events via a kafka topic.
+description:
+  - An ansible-rulebook event source plugin for receiving events via a kafka topic.
+version_added: '2.4.0'
+options:
+  host:
+    description:
+      - The host where the kafka topic is hosted.
+    type: str
+  port:
+    description:
+      - The port where the kafka server is listening.
+    type: str
+  cafile:
+    description:
+      - The optional certificate authority file path containing certificates
+        used to sign kafka broker certificates
+    type: str
+  certfile:
+    description:
+      - The optional client certificate file path containing the client
+        certificate, as well as CA certificates needed to establish
+        the certificate's authenticity.
+    type: str
+  keyfile:
+    description:
+      - The optional client key file path containing the client private key.
+    type: str
+  password:
+    description:
+      - The optional password to be used when loading the certificate chain.
+    type: str
+  check_hostname:
+    description:
+      - Enable SSL hostname verification.
+    type: bool
+    default: "true"
+    choices: ["true", "false"]
+  verify_mode:
+    description:
+      - Whether to try to verify other peers' certificates and how to
+        behave if verification fails. [CERT_NONE, CERT_OPTIONAL,
+        CERT_REQUIRED (default)].
+    type: str
+    default: "CERT_REQUIRED"
+    choices: ["CERT_NONE", "CERT_OPTIONAL", "CERT_REQUIRED"]
+  encoding:
+    description:
+      - Message encoding scheme.
+    type: str
+    default: "utf-8"
+  topic:
+    description:
+      - The kafka topic.
+    type: str
+  group_id:
+    description:
+      - A kafka group id.
+    type: int
+  offset:
+    description:
+      - Where to automatically reset the offset.
+    type: str
+    default: "latest"
+    choices: ["latest", "earliest"]
+  security_protocol:
+    description:
+      - Protocol used to communicate with brokers.
+    type: str
+    default: "PLAINTEXT"
+    choices: ["PLAINTEXT", "SSL", "SASL_PLAINTEXT", "SASL_SSL"]
+  sasl_mechanism:
+    description:
+      - Authentication mechanism when security_protocol is configured.
+    type: str
+    default: "PLAIN"
+    choices: ["PLAIN", "GSSAPI", "SCRAM-SHA-256", "SCRAM-SHA-512", "OAUTHBEARER"]
+  sasl_plain_username:
+    description:
+      - Username for SASL PLAIN authentication.
+    type: str
+  sasl_plain_password:
+    description:
+      - Password for SASL PLAIN authentication.
+    type: str
+"""
+
 
 async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],

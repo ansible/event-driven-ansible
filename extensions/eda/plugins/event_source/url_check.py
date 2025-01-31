@@ -3,6 +3,39 @@ from typing import Any
 
 import aiohttp
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Poll a set of URLs and sends events with their status.
+description:
+  - An ansible-rulebook event source plugin that polls a set of URLs and sends events with their status.
+version_added: '2.4.0'
+options:
+  urls:
+    description:
+      - A list of urls to poll.
+    type: list
+  delay:
+    description:
+      - The number of seconds to wait between polling.
+    type: int
+  verify_ssl:
+    description:
+      - Verify SSL certificate
+    type: bool
+    default: "true"
+    choices: ["true", "false"]
+"""
+
+EXAMPLES = r"""
+- name: check web server
+  ansible.eda.url_check:
+    urls:
+      - http://44.201.5.56:8000/docs
+    delay: 10
+"""
+
 OK = 200
 
 

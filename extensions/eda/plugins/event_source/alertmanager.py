@@ -5,6 +5,61 @@ from typing import Any
 from aiohttp import web
 from dpath import util
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Receive events via a webhook from alertmanager or alike system
+description:
+  - An ansible-rulebook event source module for receiving events via a webhook from alertmanager or alike system.
+version_added: '2.4.0'
+options:
+  host:
+    description:
+      - The webserver hostname to listen to. Set to 0.0.0.0 to listen on all
+        interfaces.
+    type: str
+    default: "localhost"
+  port:
+    description:
+      - The TCP port to listen to.
+    type: str
+    default: 5000
+  data_alerts_path:
+    description:
+      - The json path to find alert data.
+      - Use empty string "" to treat the whole payload data as one alert.
+    type: str
+    default: "alerts"
+  data_host_path:
+    description:
+      - The json path inside the alert data to find alerting host.
+      - Use empty string "" if there is no need to find host.
+    type: str
+    default: "labels.instance"
+  data_path_separator:
+    description:
+      - The separator to interpret data_host_path and data_alerts_path.
+    type: str
+    default: "."
+  skip_original_data:
+    description:
+      - 'true: put only alert data to the queue'
+      - 'false: put sequentially both the received original data and each parsed alert item to the queue.'
+    type: bool
+    default: "false"
+    choices: ["true", "false"]
+"""
+
+EXAMPLES = r"""
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 8000
+    data_alerts_path: alerts
+    data_host_path: labels.instance
+    data_path_separator: .
+"""
+
 routes = web.RouteTableDef()
 
 

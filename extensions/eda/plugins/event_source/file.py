@@ -6,6 +6,35 @@ import yaml
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Load facts from YAML files initially and when the file changes.
+description:
+  - An ansible-rulebook event source plugin for loading facts from YAML files
+    initially and when the file changes.
+version_added: '2.4.0'
+options:
+  files:
+    description:
+      - A list of YAML files.
+    type: str
+  ignore_regexes:
+    description:
+      - A list of regular expressions to ignore changes.
+    type: str
+  recursive:
+    description:
+      - Recursively watch the path if true.
+    type: bool
+"""
+
+EXAMPLES = r"""
+- ansible.eda.file:
+    files:
+      - fact.yml
+"""
 
 def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
     """Send facts to the queue."""

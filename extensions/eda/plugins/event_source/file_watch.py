@@ -5,6 +5,37 @@ from typing import Any
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Watch file system changes.
+description:
+  - An ansible-rulebook event source plugin for watching file system changes.
+version_added: '2.4.0'
+options:
+  path:
+    description:
+      - The directory to watch for changes.
+    type: str
+  ignore_regexes:
+    description:
+      - A list of regular expressions to ignore changes.
+    type: str
+  recursive:
+    description:
+      - Recursively watch the path if true.
+    type: bool
+"""
+
+EXAMPLES = r"""
+- name: file_watch
+  ansible.eda.file_watch:
+    path: "{{src_path}}"
+    recursive: true
+    ignore_regexes: ['.*\\.pytest.*', '.*__pycache__.*', '.*/.git.*']
+"""
+
 
 def watch(
     loop: asyncio.events.AbstractEventLoop,

@@ -2,6 +2,26 @@ import asyncio
 import itertools
 from typing import Any
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Generate events with an increasing index i that never ends.
+description:
+  - An ansible-rulebook event source plugin for generating events with an increasing index i that never ends.
+version_added: '2.4.0'
+options:
+  delay:
+    description:
+      - Time between ticks.
+    type: int
+"""
+
+EXAMPLES = r"""
+- ansible.eda.tick:
+    delay: 5
+"""
+
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Generate events with an increasing index i and a time between ticks."""

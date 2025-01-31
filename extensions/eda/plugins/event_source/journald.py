@@ -7,6 +7,34 @@ from typing import Any
 # pylint: disable=import-error
 from systemd import journal  # type: ignore
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Tail systemd journald logs.
+description:
+  - An ansible-rulebook event source plugin that tails systemd journald logs.
+version_added: '2.4.0'
+options:
+  match:
+    description:
+      - return messages that matches this field, see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html.
+    type: str
+"""
+
+EXAMPLES = r"""
+- name: Return severity 6 messages
+  ansible.eda.journald:
+    match: "PRIORITY=6"
+
+- name: Return messages when sudo is used
+  ansible.eda.journald:
+    match: "_EXE=/usr/bin/sudo"
+
+- name: Return all messages
+  ansible.eda.journald:
+    match: "ALL"
+"""
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:  # noqa: D417
     """Read journal entries and add them to the provided queue.

@@ -6,6 +6,54 @@ from typing import Any
 import botocore.exceptions
 from aiobotocore.session import get_session
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Receive events via an AWS SQS queue.
+description:
+  - An ansible-rulebook event source plugin for receiving events via an AWS SQS queue.
+version_added: '2.4.0'
+options:
+  access_key:
+    description:
+      - Optional AWS access key ID.
+    type: str
+  secret_key:
+    description:
+      - Optional AWS secret access key.
+    type: str
+  session_token:
+    description:
+      - Optional STS session token for use with temporary credentials.
+    type: str
+  endpoint_url:
+    description:
+      - Optional URL to connect to instead of the default AWS endpoints.
+    type: str
+  region:
+    description:
+      - Optional AWS region to use.
+    type: str
+  name:
+    description:
+      - Name of the queue.
+    type: str
+  delay_seconds:
+    description:
+      - The SQS long polling duration.
+      - Set to 0 to disable.
+    type: int
+    default: "2"
+"""
+
+EXAMPLES = r"""
+- ansible.eda.aws_sqs_queue:
+    region: us-east-1
+    name: eda
+    delay_seconds: 10
+"""
+
 
 # pylint: disable=too-many-locals
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:

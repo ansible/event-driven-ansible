@@ -6,6 +6,65 @@ from typing import Any, Awaitable, Dict, cast
 from aiobotocore.session import get_session
 from botocore.client import BaseClient
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Receive events from an AWS CloudTrail
+description:
+  - An ansible-rulebook event source module for getting events from an AWS CloudTrail.
+version_added: '2.4.0'
+options:
+  access_key:
+    description:
+      - Optional AWS access key ID.
+    type: str
+  secret_key:
+    description:
+      - Optional AWS secret access key.
+    type: str
+  session_token:
+    description:
+      - Optional STS session token for use with temporary credentials.
+    type: str
+  endpoint_url:
+    description:
+      - Optional URL to connect to instead of the default AWS endpoints.
+    type: str
+  region:
+    description:
+      - Optional AWS region to use.
+    type: str
+  delay_seconds:
+    description:
+      - The number of seconds to wait between polling.
+    type: int
+    default: "10"
+  lookup_attributes:
+    description:
+      - The optional list of lookup attributes.
+      - lookup attribute are dictionary with an AttributeKey (string),
+        which specifies an attribute on which to filter the events
+        returned and an AttributeValue (string) which specifies
+        a value for the specified AttributeKey
+    type: list
+  event_category:
+    description:
+      - The optional event category to return. (e.g. 'insight')
+    type: str
+"""
+
+EXAMPLES = r"""
+- ansible.eda.aws_cloudtrail:
+    region: us-east-1
+    lookup_attributes:
+      - AttributeKey: 'EventSource'
+        AttributeValue: 'ec2.amazonaws.com'
+      - AttributeKey: 'ReadOnly'
+        AttributeValue: 'true'
+    event_category: management
+"""
+
 
 def _cloudtrail_event_to_dict(event: dict[str, Any]) -> dict[str, Any]:
     event["EventTime"] = event["EventTime"].isoformat()

@@ -3,6 +3,27 @@ from __future__ import annotations
 import fnmatch
 from typing import Any, Optional
 
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Filter keys out of events.
+description:
+  - An event filter that filters keys out of events.
+    Includes override excludes.
+    This is useful to exclude information from events that is unneeded by the rule engine.
+version_added: '2.4.0'
+options:
+  exclude_keys:
+    description:
+      - A list of strings or patterns to remove.
+    type: list
+  include_keys:
+    description:
+      - A list of strings or patterns to keep even if it matches exclude_keys patterns.
+    type: list
+"""
+
 
 def _matches_include_keys(include_keys: list[str], string: str) -> bool:
     return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
