@@ -25,13 +25,33 @@ options:
     type: list
     elements: str
     default: null
+notes:
+  - The values in both parameters - include_keys and exclude_keys, must be a full path in 
+    top to bottom order to the keys to be filtered (or left to right order if it is given 
+    as a list), as shown in the examples below. 
 """
 
 EXAMPLES = r"""
-filters:
-  - ansible.eda.json_filter:
-      include_keys: ['clone_url']
-      exclude_keys: ['*_url', '_links', 'base', 'sender', 'owner', 'user']
+- name: 60 json filter
+  hosts: all
+  sources:
+    - ansible.eda.generic:
+        payload:
+          key1:
+            key2:
+              f_ignore_1: 1
+              f_ignore_2: 2
+          key3:
+            key4:
+              f_use_1: 42
+              f_use_2: 45
+      filters:
+        - ansible.eda.json_filter:
+            include_keys:  
+              - key3
+              - key4
+              - f_use*
+            exclude_keys: ['key1', 'key2', 'f_ignore_1']
 """
 
 

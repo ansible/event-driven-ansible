@@ -12,7 +12,7 @@ author:
 short_description: Extract hosts from the event data and insert them to the meta dict.
 description:
   - An ansible-rulebook event filter that extracts hosts from the event data and
-    inserts them to the meta dict. Ansible-rulebook will limit an ansible action
+    inserts them to the meta dict. In ansible-rulebook, this will limit an action
     running on hosts in the meta dict.
 options:
   host_path:
