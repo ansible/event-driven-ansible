@@ -1,3 +1,6 @@
+import multiprocessing as mp
+from typing import Any
+
 DOCUMENTATION = r"""
 ---
 author:
@@ -12,9 +15,6 @@ options:
     type: bool
     default: true
 """
-
-import multiprocessing as mp
-from typing import Any
 
 
 def main(

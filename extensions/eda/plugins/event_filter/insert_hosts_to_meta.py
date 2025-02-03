@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+import dpath
+
 DOCUMENTATION = r"""
 ---
 author:
@@ -55,13 +62,6 @@ filters:
       raise_error: true
       log_error: true
 """
-
-from __future__ import annotations
-
-import logging
-from typing import Any
-
-import dpath
 
 LOGGER = logging.getLogger(__name__)
 

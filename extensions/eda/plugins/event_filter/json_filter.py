@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import fnmatch
+from typing import Any, Optional
+
 DOCUMENTATION = r"""
 ---
 author:
@@ -21,11 +26,6 @@ options:
     elements: str
     default: null
 """
-
-from __future__ import annotations
-
-import fnmatch
-from typing import Any, Optional
 
 
 def _matches_include_keys(include_keys: list[str], string: str) -> bool:

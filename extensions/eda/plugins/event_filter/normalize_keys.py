@@ -1,3 +1,8 @@
+import logging
+import multiprocessing as mp
+import re
+from typing import Any
+
 DOCUMENTATION = r"""
 ---
 author:
@@ -36,11 +41,6 @@ EXAMPLES = r"""
         ansible.eda.normalize_keys:
           overwrite: false
 """
-
-import logging
-import multiprocessing as mp
-import re
-from typing import Any
 
 normalize_regex = re.compile("[^0-9a-zA-Z_]+")
 
