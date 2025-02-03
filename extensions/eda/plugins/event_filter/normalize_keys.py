@@ -28,18 +28,12 @@ options:
 """
 
 EXAMPLES = r"""
-- sources:
-    - my_source:
-        ....
-      filters:
-        ansible.eda.normalize_keys:
-- name: prevent overwriting of keys
-  sources:
-    - my_source:
-        ....
-      filters:
-        ansible.eda.normalize_keys:
-          overwrite: false
+filters:
+  ansible.eda.normalize_keys:
+
+filters:
+  ansible.eda.normalize_keys:
+    overwrite: false
 """
 
 normalize_regex = re.compile("[^0-9a-zA-Z_]+")

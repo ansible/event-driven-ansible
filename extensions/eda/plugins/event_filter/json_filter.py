@@ -32,26 +32,23 @@ notes:
 """
 
 EXAMPLES = r"""
-- name: 60 json filter
-  hosts: all
-  sources:
-    - ansible.eda.generic:
-        payload:
-          key1:
-            key2:
-              f_ignore_1: 1
-              f_ignore_2: 2
-          key3:
-            key4:
-              f_use_1: 42
-              f_use_2: 45
-      filters:
-        - ansible.eda.json_filter:
-            include_keys:
-              - key3
-              - key4
-              - f_use*
-            exclude_keys: ['key1', 'key2', 'f_ignore_1']
+- ansible.eda.generic:
+    payload:
+      key1:
+        key2:
+          f_ignore_1: 1
+          f_ignore_2: 2
+      key3:
+        key4:
+          f_use_1: 42
+          f_use_2: 45
+  filters:
+    - ansible.eda.json_filter:
+        include_keys:
+          - key3
+          - key4
+          - f_use*
+        exclude_keys: ['key1', 'key2', 'f_ignore_1']
 """
 
 
