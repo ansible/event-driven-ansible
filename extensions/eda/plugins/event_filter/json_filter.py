@@ -26,9 +26,9 @@ options:
     elements: str
     default: null
 notes:
-  - The values in both parameters - include_keys and exclude_keys, must be a full path in 
-    top to bottom order to the keys to be filtered (or left to right order if it is given 
-    as a list), as shown in the examples below. 
+  - The values in both parameters - include_keys and exclude_keys, must be a full path in
+    top to bottom order to the keys to be filtered (or left to right order if it is given
+    as a list), as shown in the examples below.
 """
 
 EXAMPLES = r"""
@@ -47,7 +47,7 @@ EXAMPLES = r"""
               f_use_2: 45
       filters:
         - ansible.eda.json_filter:
-            include_keys:  
+            include_keys:
               - key3
               - key4
               - f_use*
