@@ -1,16 +1,25 @@
-"""json_filter.py:   An event filter that filters keys out of events.
-
-Includes override excludes.
-
-This is useful to exclude information from events that is unneeded by the rule
-engine.
-
-Arguments:
----------
-    * exclude_keys = a list of strings or patterns to remove
-    * include_keys = a list of strings or patterns to keep even if it matches
-    exclude_keys patterns.
-
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Filter keys out of events.
+description:
+  - An event filter that filters keys out of events.
+    Includes override excludes.
+    This is useful to exclude information from events that is unneeded by the rule engine.
+options:
+  exclude_keys:
+    description:
+      - A list of strings or patterns to remove.
+    type: list
+    elements: str
+    default: null
+  include_keys:
+    description:
+      - A list of strings or patterns to keep even if it matches exclude_keys patterns.
+    type: list
+    elements: str
+    default: null
 """
 
 from __future__ import annotations

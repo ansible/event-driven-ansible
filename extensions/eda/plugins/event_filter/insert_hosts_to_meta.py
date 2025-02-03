@@ -1,38 +1,59 @@
-"""insert_hosts_to_meta.py.
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Extract hosts from the event data and insert them to the meta dict.
+description:
+  - An ansible-rulebook event filter that extracts hosts from the event data and
+    inserts them to the meta dict. Ansible-rulebook will limit an ansible action
+    running on hosts in the meta dict.
+options:
+  host_path:
+    description:
+      - The json path inside the event data to find hosts.
+      - Do nothing if the key is not present or does exist in event.
+    type: str
+    default: null
+  path_separator:
+    description:
+      - The separator to interpret host_path.
+    type: str
+    default: "."
+  host_separator:
+    description:
+      - The separator to interpret host string.
+      - host_path can point to a string or a list. If it is a single
+        string but contains multiple hosts, use this parameter to
+        delimits the hosts. Treat the value as a single host if the
+        parameter is not present.
+    type: str
+    default: null
+  raise_error:
+    description:
+      - Whether raise PathNotExistError if host_path does not
+        exist in the event.
+      - It is recommended to turn it on during the rulebook
+        development time. You can then turn it off for production.
+    type: bool
+    default: false
+  log_error:
+    description:
+      - Whether log an error message if host_path does not
+        exist in the event.
+      - You can turn if off if it is expected to have events not
+        having the host_path to avoid noises in the log.
+    type: bool
+    default: true
+"""
 
-An ansible-rulebook event filter that extract hosts from the event data and
-insert them to the meta dict. Ansible-rulebook will limit an ansible action
-running on hosts in the meta dict.
-
-Arguments:
----------
-    host_path:      The json path inside the event data to find hosts.
-                    Do nothing if the key is not present or does exist in event
-    path_separator: The separator to interpret host_path. Default to "."
-    host_separator: The separator to interpret host string.
-                    host_path can point to a string or a list. If it is a single
-                    string but contains multiple hosts, use this parameter to
-                    delimits the hosts. Treat the vale as a single host if the
-                    parameter is not present.
-    raise_error:    Whether raise PathNotExistError if host_path does not
-                    exist in the event. Default to false.
-                    It is recommended to turn it on during the rulebook
-                    development time. You can then turn it off for production.
-    log_error:      Whether log an error message if host_path does not
-                    exist in the event. Default to true.
-                    You can turn if off if it is expected to have events not
-                    having the host_path to avoid noises in the log.
-
-Example:
--------
-    filters:
-      - ansible.eda.insert_hosts_to_meta:
-          host_path: "app.target"
-          path_separator: "."
-          host_separator: ";"
-          raise_error: true
-          log_error: true
-
+EXAMPLES = r"""
+filters:
+  - ansible.eda.insert_hosts_to_meta:
+      host_path: "app.target"
+      path_separator: "."
+      host_separator: ";"
+      raise_error: true
+      log_error: true
 """
 
 from __future__ import annotations

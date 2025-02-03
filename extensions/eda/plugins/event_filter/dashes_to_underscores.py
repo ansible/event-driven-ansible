@@ -1,12 +1,16 @@
-"""dashes_to_underscores.py.
-
-    An event filter that changes dashes in keys to underscores.
-    For instance, the key X-Y becomes the new key X_Y.
-
-Arguments:
----------
-    * overwrite: Overwrite the values if there is a collision with a new key.
-
+DOCUMENTATION = r"""
+---
+author:
+  - Doston Toirov (@dtoirov)
+short_description: Change dashes to underscores.
+description:
+  - An event filter that changes dashes in keys to underscores. For instance, the key X-Y becomes the new key X_Y.
+options:
+  overwrite:
+    description:
+      - Overwrite the values if there is a collision with a new key.
+    type: bool
+    default: true
 """
 
 import multiprocessing as mp
