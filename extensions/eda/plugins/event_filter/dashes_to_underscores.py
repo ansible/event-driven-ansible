@@ -16,6 +16,12 @@ options:
     default: true
 """
 
+EXAMPLES = r"""
+filters:
+  - ansible.eda.dashes_to_underscores:
+      overwrite: false
+"""
+
 
 def main(
     event: dict[str, Any], overwrite: bool = True
