@@ -27,6 +27,13 @@ options:
     default: null
 """
 
+EXAMPLES = r"""
+filters:
+  - ansible.eda.json_filter:
+      include_keys: ['clone_url']
+      exclude_keys: ['*_url', '_links', 'base', 'sender', 'owner', 'user']
+"""
+
 
 def _matches_include_keys(include_keys: list[str], string: str) -> bool:
     return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
