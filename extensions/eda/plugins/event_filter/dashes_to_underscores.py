@@ -17,9 +17,12 @@ options:
 """
 
 EXAMPLES = r"""
-filters:
-  - ansible.eda.dashes_to_underscores:
-      overwrite: false
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 5050
+  filters:
+    - ansible.eda.dashes_to_underscores:
+        overwrite: false
 """
 
 

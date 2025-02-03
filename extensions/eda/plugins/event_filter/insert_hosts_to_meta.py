@@ -54,13 +54,16 @@ options:
 """
 
 EXAMPLES = r"""
-filters:
-  - ansible.eda.insert_hosts_to_meta:
-      host_path: "app.target"
-      path_separator: "."
-      host_separator: ";"
-      raise_error: true
-      log_error: true
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 5050
+  filters:
+    - ansible.eda.insert_hosts_to_meta:
+        host_path: "app.target"
+        path_separator: "."
+        host_separator: ";"
+        raise_error: true
+        log_error: true
 """
 
 LOGGER = logging.getLogger(__name__)

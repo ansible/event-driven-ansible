@@ -28,12 +28,18 @@ options:
 """
 
 EXAMPLES = r"""
-filters:
-  ansible.eda.normalize_keys:
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 5050
+  filters:
+    ansible.eda.normalize_keys:
 
-filters:
-  ansible.eda.normalize_keys:
-    overwrite: false
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 5050
+  filters:
+    ansible.eda.normalize_keys:
+      overwrite: false
 """
 
 normalize_regex = re.compile("[^0-9a-zA-Z_]+")
