@@ -5,6 +5,7 @@ AUTHS
 Abhijeet
 Alina
 Buzachis
+Doston
 EDAHTTP
 FQCN
 GSSAPI
@@ -13,6 +14,7 @@ Nikhil
 OAUTHBEARER
 PYTHONUNBUFFERED
 Passw
+Toirov
 akasurde
 alertmanager
 alinabuzachis
@@ -34,6 +36,7 @@ darglint
 deadsnakes
 digestmod
 docsite
+dtoirov
 dynatrace
 envlist
 extfile
