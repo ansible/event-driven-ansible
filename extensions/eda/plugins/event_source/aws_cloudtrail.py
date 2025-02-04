@@ -11,6 +11,8 @@ DOCUMENTATION = r"""
 short_description: Receive events from an AWS CloudTrail
 description:
   - An ansible-rulebook event source module for getting events from an AWS CloudTrail.
+  - This supports all the authentication methods supported by boto library:
+    https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
 options:
   access_key:
     description:
@@ -40,10 +42,9 @@ options:
   lookup_attributes:
     description:
       - The optional list of lookup attributes.
-      - lookup attribute are dictionary with an AttributeKey (string),
-        which specifies an attribute on which to filter the events
-        returned and an AttributeValue (string) which specifies
-        a value for the specified AttributeKey
+      - A lookup attribute is a dictionary containing an AttributeKey (string), 
+        which specifies the attribute used to filter returned events, and an 
+        AttributeValue (string), which defines the value for the specified AttributeKey.
     type: list
     elements: str
   event_category:

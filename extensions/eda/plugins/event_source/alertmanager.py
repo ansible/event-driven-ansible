@@ -7,9 +7,9 @@ from dpath import util
 
 DOCUMENTATION = r"""
 ---
-short_description: Receive events via a webhook from alertmanager or alike system
+short_description: Receive events via a webhook from alertmanager or a compatible alerting system.
 description:
-  - An ansible-rulebook event source module for receiving events via a webhook from alertmanager or alike system.
+  - An ansible-rulebook event source module for receiving events via a webhook from alertmanager or a compatible alerting system.
 options:
   host:
     description:
@@ -45,7 +45,6 @@ options:
       - false: put sequentially both the received original data and each parsed alert item to the queue.
     type: bool
     default: false
-    choices: [true, false]
 """
 
 EXAMPLES = r"""

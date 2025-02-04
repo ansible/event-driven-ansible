@@ -11,6 +11,8 @@ DOCUMENTATION = r"""
 short_description: Receive events via an AWS SQS queue.
 description:
   - An ansible-rulebook event source plugin for receiving events via an AWS SQS queue.
+  - This supports all the authentication methods supported by boto library:
+    https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
 options:
   access_key:
     description:
@@ -36,6 +38,7 @@ options:
     description:
       - Name of the queue.
     type: str
+    required: true
   delay_seconds:
     description:
       - The SQS long polling duration.
