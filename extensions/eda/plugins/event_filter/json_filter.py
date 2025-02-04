@@ -5,8 +5,6 @@ from typing import Any, Optional
 
 DOCUMENTATION = r"""
 ---
-author:
-  - Doston Toirov (@dtoirov)
 short_description: Filter keys out of events.
 description:
   - An event filter that filters keys out of events.
