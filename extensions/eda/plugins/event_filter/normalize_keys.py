@@ -5,8 +5,6 @@ from typing import Any
 
 DOCUMENTATION = r"""
 ---
-author:
-  - Doston Toirov (@dtoirov)
 short_description: Change keys that contain non-alpha numeric or underscore to underscores.
 description: |
   - An event filter that changes keys that contain non alpha numeric or

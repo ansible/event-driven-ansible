@@ -7,8 +7,6 @@ import dpath
 
 DOCUMENTATION = r"""
 ---
-author:
-  - Doston Toirov (@dtoirov)
 short_description: Extract hosts from the event data and insert them to the meta dict.
 description:
   - An ansible-rulebook event filter that extracts hosts from the event data and

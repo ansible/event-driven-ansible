@@ -3,8 +3,6 @@ from typing import Any
 
 DOCUMENTATION = r"""
 ---
-author:
-  - Doston Toirov (@dtoirov)
 short_description: Change dashes to underscores.
 description:
   - An event filter that changes dashes in keys to underscores. For instance, the key X-Y becomes the new key X_Y.
