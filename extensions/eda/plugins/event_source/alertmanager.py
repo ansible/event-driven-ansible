@@ -9,7 +9,7 @@ DOCUMENTATION = r"""
 ---
 short_description: Receive events via a webhook from alertmanager or a compatible alerting system.
 description:
-  - An ansible-rulebook event source module for receiving events via a webhook from alertmanager 
+  - An ansible-rulebook event source module for receiving events via a webhook from alertmanager
     or a compatible alerting system.
 options:
   host:
