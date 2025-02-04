@@ -47,6 +47,7 @@ jainnikhil
 keygen
 keypass
 keytool
+libpq
 libsystemd
 mydb
 myqueue
