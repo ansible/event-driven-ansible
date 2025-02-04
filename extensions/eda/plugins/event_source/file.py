@@ -1,20 +1,3 @@
-"""file.py.
-
-An ansible-rulebook event source plugin for loading facts from YAML files
-initially and when the file changes.
-
-Arguments:
----------
-    files - a list of YAML files
-
-Example:
--------
-    - ansible.eda.file:
-      files:
-        - fact.yml
-
-"""
-
 import pathlib
 from asyncio import Queue
 from typing import Any, Union
@@ -22,6 +5,26 @@ from typing import Any, Union
 import yaml
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
+
+DOCUMENTATION = r"""
+---
+short_description: Load facts from YAML files initially and when the file changes.
+description:
+  - An ansible-rulebook event source plugin for loading facts from YAML files
+    initially and when the file changes.
+options:
+  files:
+    description:
+      - A list of file paths pointing to YAML files.
+    type: list
+    elements: str
+"""
+
+EXAMPLES = r"""
+- ansible.eda.file:
+    files:
+      - /path/to/fact.yml
+"""
 
 
 def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
