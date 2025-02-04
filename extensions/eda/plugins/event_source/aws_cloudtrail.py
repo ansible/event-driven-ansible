@@ -42,8 +42,8 @@ options:
   lookup_attributes:
     description:
       - The optional list of lookup attributes.
-      - A lookup attribute is a dictionary containing an AttributeKey (string), 
-        which specifies the attribute used to filter returned events, and an 
+      - A lookup attribute is a dictionary containing an AttributeKey (string),
+        which specifies the attribute used to filter returned events, and an
         AttributeValue (string), which defines the value for the specified AttributeKey.
     type: list
     elements: str
