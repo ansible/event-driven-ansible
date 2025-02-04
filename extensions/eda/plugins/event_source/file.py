@@ -15,7 +15,7 @@ description:
 options:
   files:
     description:
-      - A list of YAML files.
+      - A list of file paths pointing to YAML files.
     type: list
     elements: str
 """
@@ -23,7 +23,7 @@ options:
 EXAMPLES = r"""
 - ansible.eda.file:
     files:
-      - fact.yml
+      - /path/to/fact.yml
 """
 
 

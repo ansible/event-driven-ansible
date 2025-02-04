@@ -7,15 +7,15 @@ from watchdog.observers import Observer
 
 DOCUMENTATION = r"""
 ---
-short_description: Load facts from YAML files initially and when the file changes.
+short_description: Watch file system changes.
 description:
-  - An ansible-rulebook event source plugin for loading facts from YAML files
-    initially and when the file changes.
+  - An ansible-rulebook event source plugin for watching file system changes.
 options:
   path:
     description:
       - The directory to watch for changes.
     type: str
+    required: true
   ignore_regexes:
     description:
       - A list of regular expressions to ignore changes.
@@ -25,11 +25,12 @@ options:
     description:
       - Recursively watch the path if true.
     type: bool
+    required: true
 """
 
 EXAMPLES = r"""
 - ansible.eda.file_watch:
-    path: "{{src_path}}"
+    path: "/directory/to/watch"
     recursive: true
     ignore_regexes: ['.*\\.pytest.*', '.*__pycache__.*', '.*/.git.*']
 """
