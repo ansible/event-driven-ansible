@@ -1,45 +1,3 @@
-"""A generic source plugin that allows you to insert custom data.
-
-The event data to insert into the queue is specified in the required
-parameter payload and is an array of events.
-
-Optional Parameters:
-payload_file A yaml with an array of events can be used instead of payload
-randomize    True|False Randomize the events in the payload, default False
-display      True|False Display the event data in stdout, default False
-timestamp    True|False Add an event timestamp, default False
-time_format   local|iso8601|epoch  The time format of event timestamp,
-              default local
-create_index str   The index to create for each event starts at 0
-startup_delay float  Number of seconds to wait before injecting events
-                   into the queue. Default 0
-event_delay float    Number of seconds to wait before injecting the next
-                   event from the payload. Default 0
-repeat_delay float   Number of seconds to wait before injecting a repeated
-                   event from the payload. Default 0
-loop_delay float     Number of seconds to wait before inserting the
-                   next set of events. Default 0
-shutdown_after float Number of seconds to wait before shutting down the
-                   plugin. Default 0
-loop_count int     Number of times the set of events in the payload
-                   should be repeated. Default 0
-repeat_count int   Number of times each individual event in the payload
-                   should be repeated. Default 1
-blob_size int      An arbitrary blob of blob_size bytes to be inserted
-                   into every event payload. Default is 0 don't create
-                   a blob
-final_payload dict After all the events have been sent we send the optional
-                   final payload which can be used to trigger a shutdown of
-                   the rulebook, especially when we are using rulebooks to
-                   forward messages to other running rulebooks.
-check_env_vars dict Optionally check if all the defined env vars are set
-                    before generating the events. If any of the env_var is missing
-                    or the value doesn't match the source plugin will end
-                    with an exception
-
-
-"""
-
 #  Copyright 2022 Red Hat, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,6 +24,129 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import yaml
+
+DOCUMENTATION = r"""
+---
+short_description: A generic source plugin that allows you to insert custom data.
+description:
+  - A generic source plugin that allows you to insert custom data.
+  - The event data to insert into the queue is specified in the required
+    parameter payload and is an array of events.
+options:
+  payload:
+    description:
+      - An array of events that can be used instead of payload.
+    required: true
+  payload_file:
+    description:
+      - A yaml with an array of events that can be used instead of payload.
+    type: str
+  randomize:
+    description:
+      - Randomize the events in the payload.
+    type: bool
+    default: false
+  display:
+    description:
+      - Display the event data in stdout.
+    type: bool
+    default: false
+  timestamp:
+    description:
+      - Add an event timestamp.
+    type: bool
+    default: false
+  time_format:
+    description:
+      - The format of event timestamp.
+    type: str
+    default: "local"
+    choices: ["local", "iso8601", "epoch"]
+  create_index:
+    description:
+      - The index to create for each event starts at 0.
+    type: str
+    default: ""
+  startup_delay:
+    description:
+      - The number of seconds to wait before injecting events into the queue.
+    type: float
+    default: 0
+  event_delay:
+    description:
+      - The number of seconds to wait before injecting the next event from the payload.
+    type: float
+    default: 0
+  repeat_delay:
+    description:
+      - The number of seconds to wait before injecting a repeated event from the payload.
+    type: float
+    default: 0
+  loop_delay:
+    description:
+      - The number of seconds to wait before inserting the next set of events.
+    type: float
+    default: 0
+  shutdown_after:
+    description:
+      - The number of seconds to wait before shutting down the plugin.
+    type: float
+    default: 0
+  loop_count:
+    description:
+      - The number of times the set of events in the payload should be repeated.
+    type: int
+    default: 1
+  repeat_count:
+    description:
+      - The number of times each individual event in the payload should be repeated.
+    type: int
+    default: 1
+  blob_size:
+    description:
+      - An arbitrary blob of blob_size bytes to be inserted into every event payload.
+      - Default is 0, which does not create a blob.
+    type: int
+    default: 0
+  final_payload:
+    description:
+      - After all the events have been sent we send the optional
+        final payload which can be used to trigger a shutdown of
+        the rulebook, especially when we are using rulebooks to
+        forward messages to other running rulebooks.
+    default: null
+  check_env_vars:
+    description:
+      - Optionally check if all the defined env vars are set
+        before generating the events. If any of the env_var is missing
+        or the value doesn't match the source plugin will end
+        with an exception.
+    type: dict
+    default: null
+"""
+
+EXAMPLES = r"""
+- ansible.eda.generic:
+    payload:
+      - message:
+          name: Fred
+      - message:
+          name: Barney
+    final_payload:
+      payload:
+        shutdown: true
+    randomize: true
+    display: true
+    timestamp: true
+    time_format: epoch
+    loop_count: 1
+    loop_delay: 1
+    shutdown_after: 5
+    create_index: i
+    check_env_vars:
+      MY_ENV1: abc
+      MY_ENV2: xyz
+"""
 
 
 class MissingEnvVarError(Exception):
