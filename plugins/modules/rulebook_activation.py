@@ -24,6 +24,15 @@ options:
       - The name of the rulebook activation.
     type: str
     required: true
+  new_name:
+    description:
+      - Setting this option will change the existing name.
+    type: str
+  copy_from:
+    description:
+      - Name to copy the rulebook activation from.
+      - This will copy an existing rulebook activation and change any parameters supplied.
+      - The new rulebook activation name will be the one provided in the name parameter.
   description:
     description:
       - The description of the rulebook activation.
@@ -56,7 +65,7 @@ options:
     description:
       - Whether the rulebook activation is enabled or not.
     type: bool
-    default: true
+    default: false
   decision_environment_name:
     description:
       - The name of the decision environment associated with the rulebook activation.
@@ -97,8 +106,8 @@ options:
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
-      - This parameter is supported in AAP 2.5 and onwards.
-        If specified for AAP 2.4, value will be ignored.
+      - This parameter is no longer used and is going to be ignored.
+      - This field will be removed in version 3.0.0.
     type: bool
     default: true
   event_streams:
@@ -137,7 +146,7 @@ options:
     description:
       - Desired state of the resource.
     default: "present"
-    choices: ["present", "absent"]
+    choices: ["present", "absent", "enabled", "disabled"]
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
@@ -207,6 +216,7 @@ from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
+NO_OP = "noop"
 
 def find_matching_source(
     event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
@@ -418,12 +428,12 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-#    if not is_aap_24 and module.params.get("swap_single_source") is not None:
-#        activation_params["swap_single_source"] = module.params["swap_single_source"]
+    if module.params.get("state"):
+        activation_params["state"] = module.params["state"]
 
     return activation_params
 
-def enable_or_disable(
+def check_operation(
     activation: dict[str, Any],
     activation_params: dict[str, Any]
 ) -> str:
@@ -439,15 +449,17 @@ def enable_or_disable(
     """
 
     operation = {
-        (True, False): "disable",
-        (False, True): "enable"
-    }.get((activation["is_enabled"], activation_params["is_enabled"]), "")
+        ("enabled", "disabled"): "disable",
+        ("disabled", "enabled"): "enable"
+    }.get((activation["state"], activation_params["state"]), NO_OP)
 
-    return operation if operation in ("enable", "disable") else ""
+    return operation
 
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
+        new_name=dict(type="str"),
+        copy_from=dict(type="str"),
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
@@ -461,7 +473,7 @@ def main() -> None:
                 "never",
             ],
         ),
-        enabled=dict(type="bool", default=True),
+        enabled=dict(type="bool", default=False),
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
@@ -476,9 +488,14 @@ def main() -> None:
                 source_name=dict(type="str"),
             ),
         ),
-#        swap_single_source=dict(type="bool", default=True),
+        swap_single_source=dict(
+            type="bool",
+            default=True,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
-        state=dict(choices=["present", "absent"], default="present"),
+        state=dict(choices=["present", "absent", "enabled", "disabled"], default="present"),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -509,6 +526,8 @@ def main() -> None:
     )
 
     name = module.params.get("name")
+    new_name = module.params.get("new_name")
+    copy_from = module.params.get("copy_from")
     state = module.params.get("state")
 
     controller = Controller(client, module)
@@ -541,23 +560,54 @@ def main() -> None:
 
     # Activation Data that will be sent for create/update
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
-    activation_params["name"] = name
+    activation_params["name"] = new_name if new_name else name
 
-    # Check activation exists and it's being changed
     if activation:
-        if controller.objects_could_be_different(activation, activation_params):
-            if module.check_mode:
-                module.exit_json(changed=True)
+        activation_id = activation["id"]
+
+        # Handle copies before anything else
+        if copy_from:
             try:
-                enable_disable_suffix = enable_or_disable(activation, activation_params)
+                copy_endpoint = f"activations/{activation_id}/copy"
+                params = {"name": name}
 
-                # First handle enable or disable an activation
-                if enable_disable_suffix:
-                    item_id = activation["id"]
-                    enable_disable = f"activations/{item_id}/{enable_disable_suffix}"
-                    controller.post_endpoint(endpoint=enable_disable)
+                result = controller.post_endpoint(
+                    endpoint=copy_endpoint,
+                    data=params
+                )
+                module.exit_json(**result)
+            except EDAError as e:
+                module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
 
-                # If not enable or disable, update other fields normally
+        # Define 'state' of existing activation, and remove 'enabled' from
+        # constructed parameters to avoid unnecessary updates.
+        activation["state"] = "enabled" if activation["is_enabled"] else "disabled"
+        activation_params.pop("is_enabled", None)
+        activation_params.pop("enabled", None)
+
+        # Change from list of credentials to a list of IDs in existing activation
+        if activation_params["eda_credentials"]:
+            cred_ids = {cred_id['id'] for cred_id in activation["eda_credentials"]}
+            if set(activation_params["eda_credentials"]) == cred_ids:
+                activation["eda_credentials"] = activation_params["eda_credentials"]
+
+        if controller.objects_could_be_different(activation, activation_params):
+            try:
+                op_type = check_operation(activation, activation_params)
+
+                # NOTE(kaiokmo): In order to avoid the user enabling/disabling, and
+                # also updating an activation altogether in one shot, first we handle
+                # performing the operation, then we exit. This is needed because, for now,
+                # we are not managing the state of an activation.
+                #
+                # This doesn't handle cases where the user tries to update an activation
+                # while it's still enabled. We simply honor the operation first before
+                # anything else.
+                if op_type != NO_OP:
+                    enable_disable_endpoint = f"activations/{activation_id}/{op_type}"
+                    controller.post_endpoint(endpoint=enable_disable_endpoint)
+                    module.exit_json(changed=True)
+
                 result = controller.update_if_needed(
                     activation,
                     activation_params,
@@ -566,10 +616,7 @@ def main() -> None:
                 )
                 module.exit_json(**result)
             except EDAError as e:
-                if "Received invalid JSON response" in str(e):
-                    module.exit_json(changed=True)
-                else:
-                    module.fail_json(msg=f"Failed to update rulebook activation: {e}")
+                module.fail_json(msg=f"Failed to update rulebook activation: {e}")
         else:
             module.exit_json(changed=False)
 
