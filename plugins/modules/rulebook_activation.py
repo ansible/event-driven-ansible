@@ -219,6 +219,7 @@ from ..module_utils.errors import EDAError
 
 NO_OP = "noop"
 
+
 def find_matching_source(
     event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
 ) -> Dict[str, Any]:
@@ -436,9 +437,9 @@ def create_params(
 
     return activation_params
 
+
 def check_operation(
-    activation: dict[str, Any],
-    activation_params: dict[str, Any]
+    activation: dict[str, Any], activation_params: dict[str, Any]
 ) -> str:
     """
     Check if the user wants to disable or enable an existing activation.
@@ -453,7 +454,7 @@ def check_operation(
 
     operation = {
         ("enabled", "disabled"): "disable",
-        ("disabled", "enabled"): "enable"
+        ("disabled", "enabled"): "enable",
     }.get((activation["state"], activation_params["state"]), NO_OP)
 
     return operation
@@ -504,7 +505,9 @@ def main() -> None:
             removed_from_collection="ansible.eda",
         ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
-        state=dict(choices=["present", "absent", "enabled", "disabled"], default="present"),
+        state=dict(
+            choices=["present", "absent", "enabled", "disabled"], default="present"
+        ),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -580,10 +583,7 @@ def main() -> None:
                 copy_endpoint = f"activations/{activation_id}/copy"
                 params = {"name": name}
 
-                result = controller.post_endpoint(
-                    endpoint=copy_endpoint,
-                    data=params
-                )
+                result = controller.post_endpoint(endpoint=copy_endpoint, data=params)
                 module.exit_json(**result)
             except EDAError as e:
                 module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
@@ -595,7 +595,7 @@ def main() -> None:
         activation_params.pop("enabled", None)
 
         # Change from list of credentials to a list of IDs in existing activation
-        cred_ids = {cred_id['id'] for cred_id in activation["eda_credentials"]}
+        cred_ids = {cred_id["id"] for cred_id in activation["eda_credentials"]}
         if set(activation_params["eda_credentials"]) == cred_ids:
             activation["eda_credentials"] = activation_params["eda_credentials"]
 
