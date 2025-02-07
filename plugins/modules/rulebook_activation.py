@@ -455,6 +455,7 @@ def check_operation(
 
     return operation
 
+
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
@@ -612,7 +613,7 @@ def main() -> None:
                     activation,
                     activation_params,
                     endpoint="activations",
-                    item_type="activation"
+                    item_type="activation",
                 )
                 module.exit_json(**result)
             except EDAError as e:
