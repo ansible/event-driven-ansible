@@ -64,6 +64,7 @@ options:
   enabled:
     description:
       - Whether the rulebook activation is enabled or not.
+      - This field will be removed in version 3.0.0.
     type: bool
     default: false
   decision_environment_name:
@@ -397,6 +398,8 @@ def create_params(
 
     if eda_credential_ids is not None:
         activation_params["eda_credentials"] = eda_credential_ids
+    else:
+        activation_params["eda_credentials"] = []
 
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
@@ -474,7 +477,12 @@ def main() -> None:
                 "never",
             ],
         ),
-        enabled=dict(type="bool", default=False),
+        enabled=dict(
+            type="bool",
+            default=False,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
@@ -587,10 +595,9 @@ def main() -> None:
         activation_params.pop("enabled", None)
 
         # Change from list of credentials to a list of IDs in existing activation
-        if activation_params["eda_credentials"]:
-            cred_ids = {cred_id['id'] for cred_id in activation["eda_credentials"]}
-            if set(activation_params["eda_credentials"]) == cred_ids:
-                activation["eda_credentials"] = activation_params["eda_credentials"]
+        cred_ids = {cred_id['id'] for cred_id in activation["eda_credentials"]}
+        if set(activation_params["eda_credentials"]) == cred_ids:
+            activation["eda_credentials"] = activation_params["eda_credentials"]
 
         if controller.objects_could_be_different(activation, activation_params):
             try:
