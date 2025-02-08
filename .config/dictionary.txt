@@ -32,6 +32,7 @@ conninfo
 containerd
 darglint
 deadsnakes
+devel
 digestmod
 docsite
 dynatrace
