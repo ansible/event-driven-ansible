@@ -556,7 +556,7 @@ def main() -> None:
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:
-        activation = controller.get_exactly_one("activations", name=name)
+        activation = controller.get_exactly_one("activations", name=copy_from if copy_from else name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
 
@@ -571,13 +571,13 @@ def main() -> None:
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
     activation_params["name"] = new_name if new_name else name
 
-    if activation:
-        activation_id = activation["id"]
-
-        # Handle copies before anything else
-        if copy_from:
+    # Handle copies before anything else
+    if copy_from:
+        if not activation:
+            module.fail_json(msg=f"Activation with name {copy_from} was not found.")
+        else:
             try:
-                copy_endpoint = f"activations/{activation_id}/copy"
+                copy_endpoint = f"activations/{activation["id"]}/copy"
                 params = {"name": name}
 
                 result = controller.post_endpoint(
@@ -587,6 +587,8 @@ def main() -> None:
                 module.exit_json(**result)
             except EDAError as e:
                 module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
+
+    if activation:
 
         # Define 'state' of existing activation, and remove 'enabled' from
         # constructed parameters to avoid unnecessary updates.
@@ -603,16 +605,16 @@ def main() -> None:
             try:
                 op_type = check_operation(activation, activation_params)
 
-                # NOTE(kaiokmo): In order to avoid the user enabling/disabling, and
+                # NOTE(kaiokmo): In order to avoid the user enabling/disabling and
                 # also updating an activation altogether in one shot, first we handle
-                # performing the operation, then we exit. This is needed because, for now,
-                # we are not managing the state of an activation.
+                # the operation enable/disable, then we exit. This is needed because, for now,
+                # we are not directly managing the state of an activation.
                 #
                 # This doesn't handle cases where the user tries to update an activation
                 # while it's still enabled. We simply honor the operation first before
                 # anything else.
                 if op_type != NO_OP:
-                    enable_disable_endpoint = f"activations/{activation_id}/{op_type}"
+                    enable_disable_endpoint = f"activations/{activation["id"]}/{op_type}"
                     controller.post_endpoint(endpoint=enable_disable_endpoint)
                     module.exit_json(changed=True)
 
