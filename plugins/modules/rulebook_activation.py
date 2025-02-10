@@ -559,7 +559,9 @@ def main() -> None:
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:
-        activation = controller.get_exactly_one("activations", name=copy_from if copy_from else name)
+        activation = controller.get_exactly_one(
+            "activations", name=copy_from if copy_from else name
+        )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
 
@@ -614,7 +616,9 @@ def main() -> None:
                 # while it's still enabled. We simply honor the operation first before
                 # anything else.
                 if op_type != NO_OP:
-                    enable_disable_endpoint = f"activations/{activation["id"]}/{op_type}"
+                    enable_disable_endpoint = (
+                        f"activations/{activation["id"]}/{op_type}"
+                    )
                     controller.post_endpoint(endpoint=enable_disable_endpoint)
                     module.exit_json(changed=True)
 
