@@ -586,7 +586,9 @@ def main() -> None:
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:
-        activation = controller.get_exactly_one("activations", name=copy_from if copy_from else name)
+        activation = controller.get_exactly_one(
+            "activations", name=copy_from if copy_from else name
+        )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
 
