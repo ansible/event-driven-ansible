@@ -627,7 +627,8 @@ def main() -> None:
             module.fail_json(msg=f"Activation with name {copy_from} was not found.")
         else:
             try:
-                copy_endpoint = f"activations/{activation["id"]}/copy"
+                activation_id = activation["id"]
+                copy_endpoint = f"activations/{activation_id}/copy"
                 params = {"name": name}
 
                 controller.post_endpoint(endpoint=copy_endpoint, data=params)
@@ -662,8 +663,9 @@ def main() -> None:
                 # while it's still enabled. We simply honor the operation first before
                 # anything else.
                 if op_type != NO_OP:
+                    activation_id = activation["id"]
                     enable_disable_endpoint = (
-                        f"activations/{activation["id"]}/{op_type}"
+                        f"activations/{activation_id}/{op_type}"
                     )
                     controller.post_endpoint(endpoint=enable_disable_endpoint)
                     module.exit_json(changed=True)
