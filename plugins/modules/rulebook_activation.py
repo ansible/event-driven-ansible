@@ -664,9 +664,7 @@ def main() -> None:
                 # anything else.
                 if op_type != NO_OP:
                     activation_id = activation["id"]
-                    enable_disable_endpoint = (
-                        f"activations/{activation_id}/{op_type}"
-                    )
+                    enable_disable_endpoint = f"activations/{activation_id}/{op_type}"
                     controller.post_endpoint(endpoint=enable_disable_endpoint)
                     module.exit_json(changed=True)
 
