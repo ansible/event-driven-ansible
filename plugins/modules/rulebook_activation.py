@@ -612,10 +612,7 @@ def main() -> None:
                 copy_endpoint = f"activations/{activation["id"]}/copy"
                 params = {"name": name}
 
-                controller.post_endpoint(
-                    endpoint=copy_endpoint,
-                    data=params
-                )
+                controller.post_endpoint(endpoint=copy_endpoint, data=params)
                 module.exit_json(changed=True)
             except EDAError as e:
                 module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
@@ -629,7 +626,9 @@ def main() -> None:
         activation_params.pop("enabled", None)
 
         # Change from list of credentials to a list of IDs in existing activation
-        credential_ids = [credential_id["id"] for credential_id in activation["eda_credentials"]]
+        credential_ids = [
+            credential_id["id"] for credential_id in activation["eda_credentials"]
+        ]
         activation["eda_credentials"] = credential_ids
 
         if controller.objects_could_be_different(activation, activation_params):
