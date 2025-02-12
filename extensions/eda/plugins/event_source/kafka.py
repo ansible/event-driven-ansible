@@ -1,39 +1,3 @@
-"""kafka.py.
-
-An ansible-rulebook event source plugin for receiving events via a kafka topic.
-
-Arguments:
----------
-    host:      The host where the kafka topic is hosted
-    port:      The port where the kafka server is listening
-    cafile:    The optional certificate authority file path containing certificates
-               used to sign kafka broker certificates
-    certfile:  The optional client certificate file path containing the client
-               certificate, as well as CA certificates needed to establish
-               the certificate's authenticity
-    keyfile:   The optional client key file path containing the client private key
-    password:  The optional password to be used when loading the certificate chain
-    check_hostname:  Enable SSL hostname verification. [True (default), False]
-    verify_mode: Whether to try to verify other peers' certificates and how to
-               behave if verification fails. [CERT_NONE, CERT_OPTIONAL,
-               CERT_REQUIRED (default)]
-    encoding:  Message encoding scheme. Default to utf-8
-    topic:     The kafka topic
-    group_id:  A kafka group id
-    offset:    Where to automatically reset the offset. [latest, earliest]
-               Default to latest
-    security_protocol: Protocol used to communicate with brokers. [PLAINTEXT, SSL,
-               SASL_PLAINTEXT, SASL_SSL]. Default to PLAINTEXT
-    sasl_mechanism: Authentication mechanism when security_protocol is configured.
-               [PLAIN, GSSAPI, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER].
-               Default to PLAIN.
-    sasl_plain_username: Username for SASL PLAIN authentication
-    sasl_plain_password: Password for SASL PLAIN authentication
-
-
-
-"""
-
 import asyncio
 import json
 import logging
@@ -42,6 +6,111 @@ from typing import Any
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
+
+DOCUMENTATION = r"""
+---
+short_description: Receive events via a kafka topic.
+description:
+  - An ansible-rulebook event source plugin for receiving events via a kafka topic.
+options:
+  host:
+    description:
+      - The host where the kafka topic is hosted.
+    type: str
+    required: true
+  port:
+    description:
+      - The port where the kafka server is listening.
+    type: str
+    required: true
+  cafile:
+    description:
+      - The optional certificate authority file path containing certificates
+        used to sign kafka broker certificates
+    type: str
+  certfile:
+    description:
+      - The optional client certificate file path containing the client
+        certificate, as well as CA certificates needed to establish
+        the certificate's authenticity.
+    type: str
+  keyfile:
+    description:
+      - The optional client key file path containing the client private key.
+    type: str
+  password:
+    description:
+      - The optional password to be used when loading the certificate chain.
+    type: str
+  check_hostname:
+    description:
+      - Enable SSL hostname verification.
+    type: bool
+    default: true
+  verify_mode:
+    description:
+      - Whether to try to verify other peers' certificates and how to
+        behave if verification fails.
+    type: str
+    default: "CERT_REQUIRED"
+    choices: ["CERT_NONE", "CERT_OPTIONAL", "CERT_REQUIRED"]
+  encoding:
+    description:
+      - Message encoding scheme.
+    type: str
+    default: "utf-8"
+  topic:
+    description:
+      - The kafka topic.
+    type: str
+  group_id:
+    description:
+      - A kafka group id.
+    type: str
+    default: null
+  offset:
+    description:
+      - Where to automatically reset the offset.
+    type: str
+    default: "latest"
+    choices: ["latest", "earliest"]
+  security_protocol:
+    description:
+      - Protocol used to communicate with brokers.
+    type: str
+    default: "PLAINTEXT"
+    choices: ["PLAINTEXT", "SSL", "SASL_PLAINTEXT", "SASL_SSL"]
+  sasl_mechanism:
+    description:
+      - Authentication mechanism when security_protocol is configured.
+    type: str
+    default: "PLAIN"
+    choices: ["PLAIN", "GSSAPI", "SCRAM-SHA-256", "SCRAM-SHA-512", "OAUTHBEARER"]
+  sasl_plain_username:
+    description:
+      - Username for SASL PLAIN authentication.
+    type: str
+  sasl_plain_password:
+    description:
+      - Password for SASL PLAIN authentication.
+    type: str
+"""
+
+EXAMPLES = r"""
+- ansible.eda.kafka:
+    host: "localhost"
+    port: "9092"
+    check_hostname: true
+    verify_mode: "CERT_OPTIONAL"
+    encoding: "utf-8"
+    topic: "demo"
+    group_id: "test"
+    offset: "earliest"
+    security_protocol: "SASL_PLAINTEXT"
+    sasl_mechanism: "GSSAPI"
+    sasl_plain_username: "admin"
+    sasl_plain_password: "test"
+"""
 
 
 async def main(  # pylint: disable=R0914

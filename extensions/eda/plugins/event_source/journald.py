@@ -1,28 +1,3 @@
-"""journald.py.
-
-An ansible-events event source plugin that tails systemd journald logs.
-
-Arguments:
----------
-    match - return messages that matches this field,
-    see https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
-
-Examples:
---------
-    - name: Return severity 6 messages
-      ansible.eda.journald:
-        match: "PRIORITY=6"
-
-    - name: Return messages when sudo is used
-      ansible.eda.journald:
-        match: "_EXE=/usr/bin/sudo"
-
-    - name: Return all messages
-      ansible.eda.journald:
-        match: "ALL"
-
-"""
-
 import asyncio
 from typing import Any
 
@@ -31,6 +6,39 @@ from typing import Any
 # No such file or directory: 'pkg-config'
 # pylint: disable=import-error
 from systemd import journal  # type: ignore
+
+DOCUMENTATION = r"""
+---
+short_description: Tail systemd journald logs.
+description:
+  - An ansible-rulebook event source plugin that tails systemd journald logs.
+options:
+  match:
+    description:
+      - A string used to match messages and return them, see
+        https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html.
+    type: str
+    required: true
+  delay:
+    description:
+      - The delay (in seconds) between messages.
+    type: int
+    default: 0
+"""
+
+EXAMPLES = r"""
+- name: Return severity 6 messages
+  ansible.eda.journald:
+    match: "PRIORITY=6"
+
+- name: Return messages when sudo is used
+  ansible.eda.journald:
+    match: "_EXE=/usr/bin/sudo"
+
+- name: Return all messages
+  ansible.eda.journald:
+    match: "ALL"
+"""
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:  # noqa: D417
@@ -41,8 +49,7 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:  # noqa
         queue (asyncio.Queue): The queue to which journal entries will be added.
         args (dict[str, Any]): Additional arguments:
             - delay (int): The delay in seconds. Defaults to 0.
-            - match (list[str]): A list of strings to match.
-              Defaults to empty list.
+            - match (str): A string to match.
 
     Returns:
     -------

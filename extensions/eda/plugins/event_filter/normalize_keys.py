@@ -1,46 +1,44 @@
-"""normalize_keys.py.
-
-    An event filter that changes keys that contain non alpha numeric or
-    underscore to underscores.
-    For instance, the key server-name becomes the new key server_name
-    If there are consecutive non alpa numeric or under score, they would
-    be coalesced into a single underscore
-    For instance the key server.com/&abc becomes server_com_abc
-    instead of server_com__abc.
-
-    If there is a existing key with the normalized name, it will get overwritten
-    by default. If you don't want to over write it you can pass in overwrite: False
-    The default value of overwrite is True.
-
-Arguments:
----------
-    * overwrite: Overwrite the values if there is a collision with a new key.
-
-Usage in a rulebook, a filter is usually attached to a source in the rulebook:
-    example1:
-    ....
-    sources:
-      - my_source:
-         ....
-        filters:
-          ansible.eda.normalize_keys:
-
-
-    example2: To prevent over writing of keys
-    ....
-    sources:
-      - my_source:
-         ....
-        filters:
-          ansible.eda.normalize_keys:
-            overwrite: False
-
-"""
-
 import logging
 import multiprocessing as mp
 import re
 from typing import Any
+
+DOCUMENTATION = r"""
+---
+short_description: Change keys that contain non-alpha numeric or underscore to underscores.
+description: |
+  - An event filter that changes keys that contain non alpha numeric or
+    underscore to underscores.
+  - For instance, the key server-name becomes the new key server_name.
+    If there are consecutive non alpha numeric or under score, they would
+    be coalesced into a single underscore.
+    For instance the key server.com/&abc becomes server_com_abc
+    instead of server_com__abc.
+  - If there is a existing key with the normalized name, it will get overwritten
+    by default. If you don't want to over write it you can pass in "overwrite: false"
+    The default value of overwrite is true.
+options:
+  overwrite:
+    description:
+      - Overwrite the values if there is a collision with a new key.
+    type: bool
+    default: true
+"""
+
+EXAMPLES = r"""
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 5050
+  filters:
+    ansible.eda.normalize_keys:
+
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 5050
+  filters:
+    ansible.eda.normalize_keys:
+      overwrite: false
+"""
 
 normalize_regex = re.compile("[^0-9a-zA-Z_]+")
 
