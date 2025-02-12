@@ -211,6 +211,24 @@ EXAMPLES = r"""
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
 
+- name: Enable activation
+  ansible.eda.rulebook_activation:
+    name: "Renamed Example Rulebook Activation"
+    state: enabled
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+
+- name: Disable activation
+  ansible.eda.rulebook_activation:
+    name: "Renamed Example Rulebook Activation"
+    state: disabled
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
