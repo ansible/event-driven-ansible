@@ -58,7 +58,6 @@ options:
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
-    default: "on-failure"
     choices: ["on-failure", "always", "never"]
     type: str
   enabled:
@@ -141,7 +140,6 @@ options:
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
-    default: "error"
     choices: ["debug", "info", "error"]
   state:
     description:
@@ -164,8 +162,9 @@ EXAMPLES = r"""
     project_name: "Example Project"
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
-    enabled: false
-    awx_token_name: "Example Token"
+    eda_credentials:
+        - My AAP Credentials
+    organization_name: "Default"
 
 - name: Create a rulebook activation with event_streams option
   ansible.eda.rulebook_activation:
@@ -174,12 +173,43 @@ EXAMPLES = r"""
     project_name: "Example Project"
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
-    enabled: false
-    awx_token_name: "Example Token"
     organization_name: "Default"
+    eda_credentials:
+        - My AAP Credentials
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
+
+- name: Update rulebook activation fields
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    eda_credentials:
+        - My AAP credential
+        - My other credential
+    log_level: debug
+    restart_policy: always
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+
+- name: Copy an existing rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation - copy"
+    copy_from: "Example Rulebook Activation"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+
+- name: Rename rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation - copy"
+    new_name: "Renamed Example Rulebook Activation"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
@@ -399,8 +429,6 @@ def create_params(
 
     if eda_credential_ids is not None:
         activation_params["eda_credentials"] = eda_credential_ids
-    else:
-        activation_params["eda_credentials"] = []
 
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
@@ -471,7 +499,6 @@ def main() -> None:
         extra_vars=dict(type="str"),
         restart_policy=dict(
             type="str",
-            default="on-failure",
             choices=[
                 "on-failure",
                 "always",
@@ -504,7 +531,7 @@ def main() -> None:
             removed_in_version="3.0.0",
             removed_from_collection="ansible.eda",
         ),
-        log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
+        log_level=dict(type="str", choices=["debug", "info", "error"]),
         state=dict(
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
@@ -583,8 +610,11 @@ def main() -> None:
                 copy_endpoint = f"activations/{activation["id"]}/copy"
                 params = {"name": name}
 
-                result = controller.post_endpoint(endpoint=copy_endpoint, data=params)
-                module.exit_json(**result)
+                controller.post_endpoint(
+                    endpoint=copy_endpoint,
+                    data=params
+                )
+                module.exit_json(changed=True)
             except EDAError as e:
                 module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
 
@@ -597,9 +627,8 @@ def main() -> None:
         activation_params.pop("enabled", None)
 
         # Change from list of credentials to a list of IDs in existing activation
-        cred_ids = {cred_id["id"] for cred_id in activation["eda_credentials"]}
-        if set(activation_params["eda_credentials"]) == cred_ids:
-            activation["eda_credentials"] = activation_params["eda_credentials"]
+        credential_ids = [credential_id["id"] for credential_id in activation["eda_credentials"]]
+        activation["eda_credentials"] = credential_ids
 
         if controller.objects_could_be_different(activation, activation_params):
             try:
@@ -614,7 +643,9 @@ def main() -> None:
                 # while it's still enabled. We simply honor the operation first before
                 # anything else.
                 if op_type != NO_OP:
-                    enable_disable_endpoint = f"activations/{activation["id"]}/{op_type}"
+                    enable_disable_endpoint = (
+                        f"activations/{activation["id"]}/{op_type}"
+                    )
                     controller.post_endpoint(endpoint=enable_disable_endpoint)
                     module.exit_json(changed=True)
 

@@ -34,6 +34,7 @@
         rulebook_name: "demo_controller_rulebook.yml"
         event_stream_name: "Test_EvenStream_{{ test_id }}"
         credential_name_basic: "Test_CredentialBasic_{{ test_id }}"
+        credential_name_aap: "Test_CredentialAAP_{{ test_id }}"
 
     - name: Create an AWX controller token
       ansible.eda.controller_token:
@@ -109,6 +110,36 @@
           - credential_creation is changed
           - credential_creation is success
 
+    - name: Create a credential for AAP controller
+      ansible.eda.credential:
+        name: "{{ credential_name_aap }}"
+        credential_type_name: Red Hat Ansible Automation Platform
+        organization_name: Default
+        inputs:
+          host: "{{ controller_host }}"
+          username: "{{ controller_username }}"
+          password: "{{ controller_password }}"
+          verify_ssl: "{{ controller_verify_ssl }}"
+      register: credential_creation
+
+    - name: Assert that the credential was created successfully
+      assert:
+        that:
+          - credential_creation is changed
+          - credential_creation is success
+
+    - name: Create a new credential for event streams
+      ansible.eda.credential:
+        state: present
+        name: "{{ credential_name_basic }}"
+        description: "This is a test credential"
+        credential_type_name: "Basic Event Stream"
+        inputs:
+          username: "test"
+          password: "test"
+        organization_name: Default
+      register: _result
+
     - name: Create a new project
       ansible.eda.project:
         name: "{{ project_name }}"
@@ -144,8 +175,6 @@
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
-        enabled: False
-        awx_token_name: "{{ awx_token_name }}"
         organization_name: Default
       check_mode: true
       register: _result
@@ -162,8 +191,8 @@
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
-        enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
       register: _result
 
@@ -172,6 +201,287 @@
         that:
           - _result.changed
 
+    - name: Copy rulebook activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}-copy"
+        copy_from: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Get information about rulebook activation
+      ansible.eda.rulebook_activation_info:
+      register: _result_activation_info
+
+    - name: Assert that copied rulebook activations are equal except name
+      ansible.builtin.assert:
+        that:
+          - _result_activation_info.activations[0].description  ==
+              _result_activation_info.activations[1].description
+          - _result_activation_info.activations[0].log_level  ==
+              _result_activation_info.activations[1].log_level
+          - _result_activation_info.activations[0].restart_policy  ==
+              _result_activation_info.activations[1].restart_policy
+          - _result_activation_info.activations[0].eda_credentials  ==
+              _result_activation_info.activations[1].eda_credentials
+          - _result_activation_info.activations[0].k8s_service_name  ==
+              _result_activation_info.activations[1].k8s_service_name
+          - _result_activation_info.activations[0].rulebook_id  ==
+              _result_activation_info.activations[1].rulebook_id
+          - _result_activation_info.activations[0].project_id  ==
+              _result_activation_info.activations[1].project_id
+          - _result_activation_info.activations[0].name !=
+              _result_activation_info.activations[1].name
+
+    - name: Enable copied rulebook activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}-copy"
+        state: enabled
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Update rulebook activation description
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        description: "Example Activation description - modified"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Update rulebook activation fields
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        log_level: debug
+        restart_policy: always
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Update rulebook activation credentials
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Update rulebook activation name
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        new_name: "{{ activation_name }}-suffix"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Get information about rulebook activation
+      ansible.eda.rulebook_activation_info:
+      register: _result_activation_info
+
+    - name: "Extract activation with name {{ activation_name }}-suffix"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name + '-suffix') | list | first }}"
+
+    - name: Assert that rulebook activation is updated
+      ansible.builtin.assert:
+        that:
+          - "'modified' in filtered_activation.description"
+          - filtered_activation.log_level == "debug"
+          - filtered_activation.restart_policy == "always"
+          - filtered_activation.eda_credentials | length == 2
+          - "'-suffix' in filtered_activation.name"
+
+    - name: Update rulebook activation name
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}-suffix"
+        new_name: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"        
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - _result.changed
+
+    - name: Get information about the rulebook activation
+      ansible.eda.rulebook_activation_info:
+      register: _result_activation_info
+
+    - name: "Extract activation with name {{ activation_name }}"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name) | list | first }}"
+
+    - name: Assert that rulebook activation is updated
+      ansible.builtin.assert:
+        that:
+          - "'modified' in filtered_activation.description"
+          - filtered_activation.log_level == "debug"
+          - filtered_activation.restart_policy == "always"
+          - filtered_activation.eda_credentials | length == 2
+          - filtered_activation.name == activation_name
+
+    - name: "Extract activation with name {{ activation_name }}"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name + '-copy') | list | first }}"
+
+    - name: Check rulebook activation update
+      assert:
+        that:
+          - filtered_activation.is_enabled
+
+    - name: Create a rulebook activation without RH AAP credentials
+      ansible.eda.rulebook_activation:
+        name: Invalid_activation
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_basic }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'The rulebook requires a RH AAP credential.' in _result.msg"
+
+    - name: Change name to existing activation with same name
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}-new"
+        new_name: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'activation with this name already exists' in _result.msg"
+
+    - name: Update activation in enabled state
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}-copy"
+        description: EnabledActivationCantBeUpdated
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'not in disabled mode or in stopped status' in _result.msg"
+
+    - name: Copy non-existing activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        copy_from: Invalid_activation
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'Activation with name Invalid_activation was not found.' in _result.msg"
+
+    - name: Copy activation and use existing name
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        copy_from: "{{ activation_name }}"
+        description: EnabledActivationCantBeUpdated
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check rulebook activation creation
+      assert:
+        that:
+          - _result.failed
+          - "'Activation with name ' + activation_name + ' already exists' in _result.msg"
+
     - name: Create a rulebook activation with missing project name
       ansible.eda.rulebook_activation:
         name: Invalid_activation
@@ -179,7 +489,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         project_name: Invalid_Project
       register: _result
@@ -198,7 +509,8 @@
         project_name: "{{ project_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         rulebook_name: Invalid_Rulebook
       register: _result
@@ -217,7 +529,8 @@
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         decision_environment_name: Invalid_Decision_Env
       register: _result
@@ -237,7 +550,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Invalid_Organization
       register: _result
       ignore_errors: true
@@ -248,33 +562,18 @@
           - _result.failed
           - "'Organization Invalid_Organization not found.' in _result.msg"
 
-    - name: Create a new rulebook activation again
-      ansible.eda.rulebook_activation:
-        name: "{{ activation_name }}"
-        description: "Example Activation description"
-        project_name: "{{ project_name }}"
-        rulebook_name: "{{ rulebook_name }}"
-        decision_environment_name: "{{ decision_env_name }}"
-        enabled: False
-        awx_token_name: "{{ awx_token_name }}"
-        organization_name: Default
-      register: _result
-
-    - name: Check rulebook activation creation
-      assert:
-        that:
-          - not _result.changed
-          - "'A rulebook activation with name: ' + activation_name + ' already exists. The module does not support modifying a rulebook activation.' in _result.msg"
-
     - name: Get information about the rulebook activation
       ansible.eda.rulebook_activation_info:
-        name: "{{ activation_name }}"
       register: _result_activation_info
+
+    - name: "Extract activation with name {{ activation_name }}"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name) | list | first }}"
 
     - name: Assert that rulebook activation is disabled
       ansible.builtin.assert:
         that:
-          - not _result_activation_info.activations[0].is_enabled
+          - not filtered_activation.is_enabled
 
     - name: List all the rulebook activations
       ansible.eda.rulebook_activation_info:
@@ -289,18 +588,6 @@
         name: "{{ activation_name }}"
 
     # Test event_streams option
-    - name: Create a new credential
-      ansible.eda.credential:
-        state: present
-        name: "{{ credential_name_basic }}"
-        description: "This is a test credential"
-        credential_type_name: "Basic Event Stream"
-        inputs:
-          username: "test"
-          password: "test"
-        organization_name: Default
-      register: _result
-
     - name: Create an event stream
       ansible.eda.event_stream:
         state: present
@@ -323,7 +610,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         event_streams:
           - event_stream: "{{ event_stream_name }}"
@@ -345,7 +633,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         event_streams:
           - event_stream: "{{ event_stream_name }}"
@@ -384,7 +673,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
-        awx_token_name: "{{ awx_token_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         swap_single_source: False
         event_streams:
@@ -462,6 +752,8 @@
         - "{{ activation_name_source_name }}"
         - "{{ activation_name_source_index }}"
         - "{{ activation_name_wrong_source }}"
+        - "{{ activation_name }}-copy"
+        - "{{ activation_name }}-suffix"
         - Invalid_activation
       ignore_errors: true
 
@@ -484,6 +776,7 @@
       loop:
         - "{{ credential_name }}"
         - "{{ credential_name_basic }}"
+        - "{{ credential_name_aap }}"
       ignore_errors: true
 
     - name: Delete credential type
