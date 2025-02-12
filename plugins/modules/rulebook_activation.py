@@ -33,6 +33,7 @@ options:
       - Name to copy the rulebook activation from.
       - This will copy an existing rulebook activation and change any parameters supplied.
       - The new rulebook activation name will be the one provided in the name parameter.
+    type: str
   description:
     description:
       - The description of the rulebook activation.
@@ -93,6 +94,7 @@ options:
       - A list of IDs for EDA credentials used by the rulebook activation.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
+      - Required when state is present.
     type: list
     elements: str
     aliases:
@@ -149,9 +151,6 @@ options:
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
-notes:
-  - Rulebook Activation API does not support PATCH method, due to this reason the module will
-    not perform any modification when an existing rulebook activation is found.
 """
 
 EXAMPLES = r"""
