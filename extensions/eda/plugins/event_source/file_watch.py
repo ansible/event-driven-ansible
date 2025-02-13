@@ -1,29 +1,39 @@
-r"""file_watch.py.
-
-An ansible-rulebook event source plugin for watching file system changes.
-
-Arguments:
----------
-    path: The directory to watch for changes.
-    ignore_regexes: A list of regular expressions to ignore changes
-    recursive: Recursively watch the path if true
-
-Example:
--------
-    - name: file_watch
-      file_watch:
-        path: "{{src_path}}"
-        recursive: true
-        ignore_regexes: ['.*\\.pytest.*', '.*__pycache__.*', '.*/.git.*']
-
-"""
-
 import asyncio
 import concurrent.futures
 from typing import Any
 
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
 from watchdog.observers import Observer
+
+DOCUMENTATION = r"""
+---
+short_description: Watch file system changes.
+description:
+  - An ansible-rulebook event source plugin for watching file system changes.
+options:
+  path:
+    description:
+      - The directory to watch for changes.
+    type: str
+    required: true
+  ignore_regexes:
+    description:
+      - A list of regular expressions to ignore changes.
+    type: list
+    elements: str
+  recursive:
+    description:
+      - Recursively watch the path if true.
+    type: bool
+    required: true
+"""
+
+EXAMPLES = r"""
+- ansible.eda.file_watch:
+    path: "/directory/to/watch"
+    recursive: true
+    ignore_regexes: ['.*\\.pytest.*', '.*__pycache__.*', '.*/.git.*']
+"""
 
 
 def watch(

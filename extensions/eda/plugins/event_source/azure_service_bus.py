@@ -1,21 +1,3 @@
-"""azure_service_bus.py.
-
-An ansible-rulebook event source module for receiving events from an Azure service bus
-
-Arguments:
----------
-    conn_str: The connection string to connect to the Azure service bus
-    queue_name: The name of the queue to pull messages from
-    logging_enable: Whether to turn on logging. Default to True
-
-Example:
--------
-    - ansible.eda.azure_service_bus:
-        conn_str: "{{connection_str}}"
-        queue_name: "{{queue_name}}"
-
-"""
-
 import asyncio
 import concurrent.futures
 import contextlib
@@ -23,6 +5,37 @@ import json
 from typing import Any
 
 from azure.servicebus import ServiceBusClient
+
+DOCUMENTATION = r"""
+---
+short_description: Receive events from an Azure service bus.
+description:
+  - An ansible-rulebook event source module for receiving events from an Azure service bus.
+  - In order to get the service bus and the connection string, refer to
+    https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-python-how-to-use-queues?tabs=passwordless
+options:
+  conn_str:
+    description:
+      - The connection string to connect to the Azure service bus.
+    type: str
+    required: true
+  queue_name:
+    description:
+      - The name of the queue to pull messages from.
+    type: str
+    required: true
+  logging_enable:
+    description:
+      - Whether to turn on logging.
+    type: bool
+    default: true
+"""
+
+EXAMPLES = r"""
+- ansible.eda.azure_service_bus:
+    conn_str: "{{connection_str}}"
+    queue_name: "{{queue_name}}"
+"""
 
 
 def receive_events(

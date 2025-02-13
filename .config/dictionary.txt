@@ -31,6 +31,7 @@ conftest
 conninfo
 containerd
 darglint
+dbname
 deadsnakes
 digestmod
 docsite
@@ -46,6 +47,7 @@ jainnikhil
 keygen
 keypass
 keytool
+libpq
 libsystemd
 mydb
 myqueue
