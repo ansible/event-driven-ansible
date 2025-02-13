@@ -33,6 +33,7 @@ containerd
 darglint
 dbname
 deadsnakes
+devel
 digestmod
 docsite
 dynatrace
