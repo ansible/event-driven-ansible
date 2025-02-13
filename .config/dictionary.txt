@@ -37,6 +37,7 @@ digestmod
 docsite
 dynatrace
 envlist
+equalto
 extfile
 finito
 hdrs
@@ -44,6 +45,7 @@ healthcheck
 httpapi
 jaas
 jainnikhil
+kaiokmo
 keygen
 keypass
 keytool
@@ -63,6 +65,7 @@ rulebook
 rulebooks
 ruleset
 rulesets
+selectattr
 servicebus
 skipsdist
 snakeoil
