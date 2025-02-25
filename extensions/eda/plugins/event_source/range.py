@@ -1,21 +1,23 @@
-"""range.py.
-
-An ansible-rulebook event source plugin for generating events with an
-increasing index i.
-
-Arguments:
----------
-    limit: The upper limit of the range of the index.
-
-Example:
--------
-    - ansible.eda.range:
-        limit: 5
-
-"""
-
 import asyncio
 from typing import Any
+
+DOCUMENTATION = r"""
+---
+short_description: Generate events with an increasing index i.
+description:
+  - An ansible-rulebook event source plugin for generating events with an increasing index i.
+options:
+  limit:
+    description:
+      - The upper limit of the range of the index.
+    type: int
+    default: 0
+"""
+
+EXAMPLES = r"""
+- ansible.eda.range:
+    limit: 5
+"""
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:

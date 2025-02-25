@@ -1,22 +1,24 @@
-"""tick.py.
-
-An ansible-rulebook event source plugin for generating events with an increasing index
-i that never ends.
-
-Arguments:
----------
-    delay: time between ticks
-
-Example:
--------
-    - ansible.eda.tick:
-        delay: 5
-
-"""
-
 import asyncio
 import itertools
 from typing import Any
+
+DOCUMENTATION = r"""
+---
+short_description: Generate events with an increasing index i that never ends.
+description:
+  - An ansible-rulebook event source plugin for generating events with an increasing index i that never ends.
+options:
+  delay:
+    description:
+      - The delay (in seconds) between ticks.
+    type: int
+    default: 1
+"""
+
+EXAMPLES = r"""
+- ansible.eda.tick:
+    delay: 5
+"""
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:

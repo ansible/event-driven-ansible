@@ -1,39 +1,3 @@
-"""webhook.py.
-
-An ansible-rulebook event source module for receiving events via a webhook.
-The message must be a valid JSON object.
-
-The body received from the webhook post is placed under the key payload in
-the data pushed to the event queue. Do not expect the host(s) in the path
-"payload.meta.limit" will be automatically used to limit an ansible action
-running on these hosts. Use insert_hosts_to_meta filter instead. See
-https://ansible.readthedocs.io/projects/rulebook/en/latest/host_limit.html
-for more details.
-
-Arguments:
----------
-    host:     The hostname to listen to. Defaults to 0.0.0.0 (all interfaces)
-    port:     The TCP port to listen to.  Defaults to 5000
-    token:    The optional authentication token expected from client
-    certfile: The optional path to a certificate file to enable TLS support
-    keyfile:  The optional path to a key file to be used together with certfile
-    password: The optional password to be used when loading the certificate chain
-    cafile:   The optional path to a file containing CA certificates used to validate
-              clients' certificates
-    capath:   The optional path to a directory containing CA certificates
-              Provide either cafile or capath to enable mTLS support
-    hmac_secret: The optional HMAC secret used to verify the payload from the client
-    hmac_algo: The optional HMAC algorithm used to calculate the payload hash.
-               See your python's hashlib.algorithms_available set for available options.
-               Defaults to sha256
-    hmac_header: The optional HMAC header sent by the client with the payload signature.
-                 Defaults to x-hub-signature-256
-    hmac_format: The optional HMAC signature format format.
-                 Supported formats: hex, base64
-                 Defaults to hex
-
-"""
-
 from __future__ import annotations
 
 import asyncio
@@ -47,6 +11,87 @@ import typing
 from typing import Any, Awaitable
 
 from aiohttp import web
+
+DOCUMENTATION = r"""
+---
+short_description: Receive events via a webhook.
+description:
+  - An ansible-rulebook event source module for receiving events via a webhook.
+    The message must be a valid JSON object.
+  - The body received from the webhook post is placed under the key payload in
+    the data pushed to the event queue. Do not expect the host(s) in the path,
+    "payload.meta.limit" will be automatically used to limit an ansible action
+    running on these hosts. Use insert_hosts_to_meta filter instead. See
+    https://ansible.readthedocs.io/projects/rulebook/en/latest/host_limit.html
+    for more details.
+options:
+  host:
+    description:
+      - The hostname to listen to.
+    type: str
+    default: "0.0.0.0"
+  port:
+    description:
+      - The TCP port to listen to..
+    type: str
+    required: true
+  token:
+    description:
+      - The optional authentication token expected from client.
+    type: str
+  certfile:
+    description:
+      - The optional path to a certificate file to enable TLS support.
+    type: str
+  keyfile:
+    description:
+      - The optional path to a key file to be used together with certfile.
+    type: str
+  password:
+    description:
+      - The optional password to be used when loading the certificate chain.
+    type: str
+  cafile:
+    description:
+      - The optional path to a file containing CA certificates used to validate clients' certificates.
+    type: str
+  capath:
+    description:
+      - The optional path to a directory containing CA certificates.
+      - Provide either cafile or capath to enable mTLS support.
+    type: str
+  hmac_secret:
+    description:
+      - The optional HMAC secret used to verify the payload from the client.
+    type: str
+  hmac_algo:
+    description:
+      - The optional HMAC algorithm used to calculate the payload hash.
+      - See your python's hashlib.algorithms_available set for available options.
+    type: str
+    default: "sha256"
+  hmac_header:
+    description:
+      - The optional HMAC header sent by the client with the payload signature.
+    type: str
+    default: "x-hub-signature-256"
+  hmac_format:
+    description:
+      -The optional HMAC signature format format.
+    type: str
+    default: "hex"
+    choices: ["hex", "base64"]
+"""
+
+EXAMPLES = r"""
+- ansible.eda.webhook:
+    port: 6666
+    host: 0.0.0.0
+    hmac_secret: "secret"
+    hmac_algo: "sha256"
+    hmac_header: "x-hub-signature-256"
+    hmac_format: "base64"
+"""
 
 if typing.TYPE_CHECKING:
     from collections.abc import Callable
