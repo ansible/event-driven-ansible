@@ -36,6 +36,7 @@ options:
       - If set, copies the specified credential.
       - The new credential will be created with the name given in the C(name) parameter.
     type: str
+    version_added: '3.0.0'
   inputs:
     description:
       - Credential inputs where the keys are var names used in templating.
@@ -192,7 +193,6 @@ def main() -> None:
 
     name = module.params.get("name")
     new_name = module.params.get("new_name")
-    copy_from = module.params.get("copy_from")
     state = module.params.get("state")
 
     # Attempt to look up credential based on the provided name
@@ -221,19 +221,22 @@ def main() -> None:
         else (controller.get_item_name(credential) if credential else name)
     )
 
+    # we attempt to copy only when copy_from is passed
     if copy_from:
-        if not credential:
-            module.fail_json(msg=f"Credential with name {copy_from} was not found.")
-        else:
-            try:
-                credential_id = credential["id"]
-                copy_endpoint = f"eda-credentials/{credential_id}/copy"
-                params = {"name": name}
-
-                controller.post_endpoint(endpoint=copy_endpoint, data=params)
-                module.exit_json(changed=True)
-            except EDAError as e:
-                module.fail_json(msg=f"Failed to copy credential: {e}")
+        try:
+            result = controller.copy_if_needed(
+                name,
+                copy_from,
+                endpoint=f"eda-credentials/{credential['id']}/copy",
+                item_type="credential",
+            )
+            module.exit_json(changed=True)
+        except KeyError as e:
+            module.fail_json(
+                msg=f"Unable to access {e} of the credential to copy from."
+            )
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to copy credential: {e}")
 
     # If the state was present and we can let the module build or update the
     # existing credential, this will return on its own
