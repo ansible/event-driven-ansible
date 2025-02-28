@@ -2,7 +2,7 @@ ansible-core>=2.15
 pyyaml>=6.0.1
 aiobotocore
 aiohttp
-aiokafka
+aiokafka[gssapi]
 azure-servicebus
 dpath
 # https://github.com/dpkp/kafka-python/issues/2412#issuecomment-2030459360
