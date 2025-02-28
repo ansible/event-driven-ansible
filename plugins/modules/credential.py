@@ -158,7 +158,7 @@ def main() -> None:
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    module = AnsibleModule(argument_spec=argument_spec)
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     copy_from = module.params.get("copy_from", None)
 
     required_if = []
