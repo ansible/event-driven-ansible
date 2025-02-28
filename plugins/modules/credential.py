@@ -30,6 +30,13 @@ options:
     description:
       - Setting this option will change the existing name (lookup via name).
     type: str
+  copy_from:
+    description:
+      - Name of the existing credential to copy.
+      - If set, copies the specified credential.
+      - The new credential will be created with the name given in the C(name) parameter.
+    type: str
+    version_added: '3.0.0'
   inputs:
     description:
       - Credential inputs where the keys are var names used in templating.
@@ -75,6 +82,11 @@ EXAMPLES = r"""
   ansible.eda.credential:
     name: "Example Credential"
     state: absent
+
+- name: Copy an existing EDA Credential
+  ansible.eda.credential:
+    name: "New Copied Credential"
+    copy_from: "Existing Credential"
 """
 
 
@@ -136,6 +148,7 @@ def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),
+        copy_from=dict(type="str"),
         description=dict(type="str"),
         inputs=dict(type="dict"),
         credential_type_name=dict(type="str"),
@@ -145,13 +158,18 @@ def main() -> None:
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    required_if = [
-        (
-            "state",
-            "present",
-            ("name", "credential_type_name", "inputs", "organization_name"),
-        )
-    ]
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    copy_from = module.params.get("copy_from", None)
+
+    required_if = []
+    if not copy_from:
+        required_if = [
+            (
+                "state",
+                "present",
+                ("name", "credential_type_name", "inputs", "organization_name"),
+            )
+        ]
 
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
@@ -179,7 +197,9 @@ def main() -> None:
 
     # Attempt to look up credential based on the provided name
     try:
-        credential = controller.get_exactly_one(credential_endpoint, name=name)
+        credential = controller.get_exactly_one(
+            credential_endpoint, name=copy_from if copy_from else name
+        )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
 
@@ -200,6 +220,23 @@ def main() -> None:
         if new_name
         else (controller.get_item_name(credential) if credential else name)
     )
+
+    # we attempt to copy only when copy_from is passed
+    if copy_from:
+        try:
+            result = controller.copy_if_needed(
+                name,
+                copy_from,
+                endpoint=f"eda-credentials/{credential['id']}/copy",
+                item_type="credential",
+            )
+            module.exit_json(changed=True)
+        except KeyError as e:
+            module.fail_json(
+                msg=f"Unable to access {e} of the credential to copy from."
+            )
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to copy credential: {e}")
 
     # If the state was present and we can let the module build or update the
     # existing credential, this will return on its own
