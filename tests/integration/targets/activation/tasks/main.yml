@@ -7,6 +7,10 @@
       aap_password: "{{ aap_password }}"
       aap_verify_ssl: "{{ aap_verify_ssl }}"
   block:
+    - name: Run Lifecycle tests
+      ansible.builtin.include_tasks:
+        file: ./activation_lifecycle.yml
+    
     - name: Generate a random_string for the test
       set_fact:
         random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
