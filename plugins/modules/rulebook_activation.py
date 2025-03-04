@@ -30,7 +30,7 @@ options:
       - If set, copies the specified rulebook activation.
       - The new rulebook activation will be created with the name given in the C(name) parameter.
     type: str
-    version_added: 3.0.0
+    version_added: 2.6.0
   description:
     description:
       - The description of the rulebook activation.
