@@ -53,6 +53,26 @@ options:
     description:
       - The extra variables for the rulebook activation.
     type: str
+  restart_activation:
+    description:
+      - Whether or not the activation should be restarted.
+    type: bool
+    default: false
+  wait:
+    description:
+      - Whether the system should wait after an activation restart.
+        Number of seconds the activation will wait after a restart.
+    type: bool
+  timeout: 
+    description:
+      - Represents the total number of seconds that the system waits, 
+        after an activation restart, before it returns an error, 
+        if the activation is not 'running'.
+    type: int
+  interval: 
+    description:
+      - Number of seconds between each Activation status check after restart.
+    type: int
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
@@ -445,6 +465,10 @@ def main() -> None:
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
         extra_vars=dict(type="str"),
+        restart_activation=dict(type="bool", default=False),
+        wait=dict(type="bool"),
+        timeout=dict(type="int"),
+        interval=dict(type="int"),
         restart_policy=dict(
             type="str",
             default="on-failure",
