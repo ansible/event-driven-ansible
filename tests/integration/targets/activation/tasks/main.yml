@@ -35,7 +35,7 @@
         event_stream_name: "Test_EvenStream_{{ test_id }}"
         credential_name_basic: "Test_CredentialBasic_{{ test_id }}"
         credential_name_aap: "Test_CredentialAAP_{{ test_id }}"
-        credential_name_container_registry: "Test_CredentialContainer_Registry{{ test_id }}"
+        credential_name_container_registry: "Test_CredentialContainer_Registry_{{ test_id }}"
 
     - name: Create a new credential type
       ansible.eda.credential_type:
