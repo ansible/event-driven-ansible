@@ -588,6 +588,7 @@
         - "{{ credential_name }}"
         - "{{ credential_name_basic }}"
         - "{{ credential_name_aap }}"
+        - "{{ credential_name_container_registry }}"
       ignore_errors: true
 
     - name: Delete credential type
