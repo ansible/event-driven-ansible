@@ -2,11 +2,35 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+- name: Create a container registry credential
+  ansible.eda.credential:
+    state: present
+    name: "{{ credential_name }}"
+    description: "This is a container registry credential"
+    credential_type_name: "{{ credential_type_name }}"
+    inputs:
+      host: "quay.io"
+      username: "test"
+      password: "test"
+    organization_name: Default
+  register: _result
+
+- name: Check credential creation
+  assert:
+    that:
+      - _result.changed
+
+- name: Get information about the credential
+  ansible.eda.credential_info:
+    name: "{{ credential_name }}"
+  register: _result_credential
+
 - name: Create decision environment in check mode
   ansible.eda.decision_environment:
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
+    credential: "{{ credential_name }}"
     organization_name: Default
     state: present
   check_mode: true
@@ -22,6 +46,7 @@
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
+    credential: "{{ credential_name }}"
     organization_name: Default
     state: present
   register: r
@@ -31,11 +56,27 @@
     that:
       - r.changed
 
+- name: Get information about the decision environment
+  ansible.eda.decision_environment_info:
+    name: "{{ decision_env_name }}"
+  register: _result_de
+
+- name: Get credential and DE from above results
+  set_fact:
+    _created_de: "{{ _result_de.decision_environments | list | first }}"
+    _created_credential: "{{ _result_credential.credentials | list | first }}"
+
+- name: Assert created decision environment has the correct credential
+  ansible.builtin.assert:
+    that:
+      - _created_de["eda_credential_id"] == _created_credential["id"]
+
 - name: Create decision environment again
   ansible.eda.decision_environment:
     name: "{{ decision_env_name }}"
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
+    credential: "{{ credential_name }}"
     organization_name: Default
     state: present
   register: r

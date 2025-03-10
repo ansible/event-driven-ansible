@@ -35,6 +35,7 @@
         event_stream_name: "Test_EvenStream_{{ test_id }}"
         credential_name_basic: "Test_CredentialBasic_{{ test_id }}"
         credential_name_aap: "Test_CredentialAAP_{{ test_id }}"
+        credential_name_container_registry: "Test_CredentialContainer_Registry_{{ test_id }}"
 
     - name: Create a new credential type
       ansible.eda.credential_type:
@@ -133,6 +134,24 @@
         organization_name: Default
       register: _result
 
+    - name: Create a new credential for DE
+      ansible.eda.credential:
+        state: present
+        name: "{{ credential_name_container_registry }}"
+        description: "This is a container registry credential"
+        credential_type_name: "Container Registry"
+        inputs:
+          host: "quay.io"
+          username: "test"
+          password: "test"
+        organization_name: Default
+      register: _result
+
+    - name: Check credential creation
+      assert:
+        that:
+          - _result.changed
+
     - name: Create a new project
       ansible.eda.project:
         name: "{{ project_name }}"
@@ -156,7 +175,7 @@
       ansible.eda.decision_environment:
         name: "{{ decision_env_name }}"
         description: "Test Decision Environment Description"
-        credential: "{{ credential_name }}"
+        credential: "{{ credential_name_container_registry }}"
         image_url: "{{ image_url }}"
         organization_name: Default
       register: decision_environment_creation
@@ -569,6 +588,7 @@
         - "{{ credential_name }}"
         - "{{ credential_name_basic }}"
         - "{{ credential_name_aap }}"
+        - "{{ credential_name_container_registry }}"
       ignore_errors: true
 
     - name: Delete credential type
