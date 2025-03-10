@@ -23,6 +23,12 @@ options:
       - The name of the rulebook activation.
     type: str
     required: true
+  new_name:
+    description:
+      - Renames an existing rulebook activation.
+      - If set, the rulebook activation will be updated with the new name.
+    type: str
+    version_added: 2.6.0
   copy_from:
     description:
       - Name of the existing rulebook activation to copy.
@@ -110,10 +116,11 @@ options:
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
-      - This parameter is supported in AAP 2.5 and onwards.
-        If specified for AAP 2.4, value will be ignored.
+      - This parameter is no longer used and is going to be ignored.
+      - This field will be removed in version 3.0.0.
     type: bool
     default: true
+    removed_in: 3.0.0
   event_streams:
     description:
       - A list of event stream names that this rulebook activation listens to.
@@ -189,6 +196,13 @@ EXAMPLES = r"""
     name: "Example Rulebook Activation - copy"
     copy_from: "Example Rulebook Activation"
     organization_name: "Default"
+
+- name: Update a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    new_name: "Example Rulebook Activation New Name"
+    log_level: debug
+    restart_policy: always
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
@@ -441,15 +455,13 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    if not is_aap_24 and module.params.get("swap_single_source") is not None:
-        activation_params["swap_single_source"] = module.params["swap_single_source"]
-
     return activation_params
 
 
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
+        new_name=dict(type="str"),
         copy_from=dict(type="str"),
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
@@ -480,7 +492,12 @@ def main() -> None:
                 source_name=dict(type="str"),
             ),
         ),
-        swap_single_source=dict(type="bool", default=True),
+        swap_single_source=dict(
+            type="bool",
+            default=True,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
         state=dict(choices=["present", "absent"], default="present"),
     )
@@ -519,6 +536,7 @@ def main() -> None:
     )
 
     name = module.params.get("name")
+    new_name = module.params.get("new_name")
     state = module.params.get("state")
 
     controller = Controller(client, module)
@@ -577,22 +595,26 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
 
+    # Parse credential IDs in existing activation
     if activation:
-        module.exit_json(
-            msg=f"A rulebook activation with name: {name} already exists. "
-            "The module does not support modifying a rulebook activation.",
-            changed=False,
-            id=activation["id"],
-        )
+        credential_ids = [
+            credential_id["id"] for credential_id in activation["eda_credentials"]
+        ]
+        activation["eda_credentials"] = credential_ids
 
     # Activation Data that will be sent for create/update
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
-    activation_params["name"] = name
+    activation_params["name"] = (
+        new_name
+        if new_name
+        else (controller.get_item_name(activation) if activation else name)
+    )
 
     # If the state was present and we can let the module build or update the
     # existing activation, this will return on its own
     try:
-        result = controller.create_if_needed(
+        result = controller.create_or_update_if_needed(
+            activation,
             activation_params,
             endpoint="activations",
             item_type="activation",

@@ -28,6 +28,7 @@
         decision_env_name: "Test_Decision_Env_{{ test_id }}"
         activation_name: "Test_Activation_{{ test_id }}"
         activation_name_copy: "Test_Activation_{{ test_id }}_Copy"
+        activation_name_modified: "Test_Activation_{{ test_id }}_Modified"
         activation_name_source_name: "Test_ActivationSourceName_{{ test_id }}"
         activation_name_source_index: "Test_ActivationSourceIndex_{{ test_id }}"
         activation_name_wrong_source: "Test_ActivationWrongSource_{{ test_id }}"
@@ -184,6 +185,10 @@
         organization_name: Default
       register: decision_environment_creation
 
+    - name: Pause
+      ansible.builtin.pause:
+        seconds: 20
+
     - name: Create a new rulebook activation in check mode
       ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
@@ -192,6 +197,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
       check_mode: true
       register: _result
@@ -295,6 +302,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         project_name: Invalid_Project
       register: _result
@@ -313,6 +322,8 @@
         project_name: "{{ project_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         rulebook_name: Invalid_Rulebook
       register: _result
@@ -331,6 +342,8 @@
         project_name: "{{ project_name }}"
         rulebook_name: "{{ rulebook_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         decision_environment_name: Invalid_Decision_Env
       register: _result
@@ -350,6 +363,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Invalid_Organization
       register: _result
       ignore_errors: true
@@ -360,7 +375,7 @@
           - _result.failed
           - "'Organization Invalid_Organization not found.' in _result.msg"
 
-    - name: Create a new rulebook activation again
+    - name: Create a new rulebook activation again (no updates)
       ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         description: "Example Activation description"
@@ -368,24 +383,61 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
       register: _result
-
-    - name: Check rulebook activation creation
-      assert:
-        that:
-          - not _result.changed
-          - "'A rulebook activation with name: ' + activation_name + ' already exists. The module does not support modifying a rulebook activation.' in _result.msg"
 
     - name: Get information about the rulebook activation
       ansible.eda.rulebook_activation_info:
         name: "{{ activation_name }}"
       register: _result_activation_info
 
+    - name: Check rulebook activation not updated
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Update rulebook activation name and fields
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        new_name: "{{ activation_name_modified }}"
+        description: "Modified Example Activation description"
+        log_level: debug
+        restart_policy: always
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        organization_name: Default
+      register: _result
+
+    - name: Get information about the rulebook activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name_modified }}"
+      register: _result_activation_info
+
     - name: Assert that rulebook activation is disabled
       ansible.builtin.assert:
         that:
           - not _result_activation_info.activations[0].is_enabled
+
+    - name: "Filter existing activation by name"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name_modified) | list | first }}"
+
+    - name: Assert that rulebook activation is updated and no other activation was created
+      ansible.builtin.assert:
+        that:
+          - _result_activation_info.activations | length == 1
+          - "'Modified' in filtered_activation.description"
+          - "'Modified' in filtered_activation.name"
+          - filtered_activation.log_level == "debug"
+          - filtered_activation.restart_policy == "always"
+          - filtered_activation.eda_credentials | length == 2
 
     - name: List all the rulebook activations
       ansible.eda.rulebook_activation_info:
@@ -434,6 +486,8 @@
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ decision_env_name }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
         event_streams:
           - event_stream: "{{ event_stream_name }}"
@@ -497,8 +551,9 @@
         eda_credentials:
           - "{{ credential_name_aap }}"
         enabled: False
+        eda_credentials:
+          - "{{ credential_name_aap }}"
         organization_name: Default
-        swap_single_source: False
         event_streams:
           - event_stream: "{{ event_stream_name }}"
             source_name: "{{ _result_rulebook_info.rulebooks[0].sources[0].name }}"
@@ -553,7 +608,6 @@
         state: absent
 
   always:
-
     - name: Delete project
       ansible.eda.project:
         name: "{{ project_name }}"
@@ -566,6 +620,7 @@
         state: absent
       loop:
         - "{{ activation_name }}"
+        - "{{ activation_name_modified }}"
         - "{{ activation_name_source_name }}"
         - "{{ activation_name_source_index }}"
         - "{{ activation_name_wrong_source }}"
