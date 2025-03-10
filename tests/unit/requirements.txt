@@ -1,6 +1,6 @@
 aiobotocore
 aiohttp
-aiokafka
+aiokafka[gssapi]
 asyncio
 asyncmock
 azure-servicebus
