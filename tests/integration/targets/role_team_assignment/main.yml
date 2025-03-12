@@ -9,7 +9,7 @@
   block:
     - name: Set the team to use for the test
       set_fact:
-        team_name: "TBC"  # A team will need to exist in the Platform instance for this to work. 
+        team_name: "TBC"  # A team will need to exist in the Platform instance for this to work.
 
     # CREATE
     - name: Create role_team_assignment in check mode
