@@ -28,14 +28,14 @@ options:
       - Renames an existing rulebook activation.
       - If set, the rulebook activation will be updated with the new name.
     type: str
-    version_added: 2.6.0
+    version_added: 2.7.0
   copy_from:
     description:
       - Name of the existing rulebook activation to copy.
       - If set, copies the specified rulebook activation.
       - The new rulebook activation will be created with the name given in the C(name) parameter.
     type: str
-    version_added: 2.6.0
+    version_added: 2.7.0
   description:
     description:
       - The description of the rulebook activation.
@@ -74,6 +74,9 @@ options:
   enabled:
     description:
       - Whether the rulebook activation is enabled or not.
+      - This field will be removed in version 3.0.0.
+      - The logic of controlling the state of an activation is going to be controlled
+        by the C(state) parameter itself.
     type: bool
     default: true
   decision_environment_name:
@@ -120,7 +123,6 @@ options:
       - This field will be removed in version 3.0.0.
     type: bool
     default: true
-    removed_in: 3.0.0
   event_streams:
     description:
       - A list of event stream names that this rulebook activation listens to.
@@ -156,14 +158,19 @@ options:
   state:
     description:
       - Desired state of the resource.
+      - The state of an activation itself is controlled by this parameter, whether I(enabled) or
+        I(disabled).
+      - When an activation is created, it is I(enabled) by default. Thus, I(present) is equivalent to
+        I(enabled).
+      - Whether I(present), I(enabled), or I(disabled) is specified, an activation will be created if it
+        doesn't exist already.
+      - To create a disabled activation, specify C(state) as I(disabled).
+      - Essentially, this parameter deprecates the usage of C(enabled).
     default: "present"
-    choices: ["present", "absent"]
+    choices: ["present", "absent", "disabled", "enabled"]
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
-notes:
-  - Rulebook Activation API does not support PATCH method, due to this reason the module will
-    not perform any modification when an existing rulebook activation is found.
 """
 
 EXAMPLES = r"""
@@ -174,8 +181,7 @@ EXAMPLES = r"""
     project_name: "Example Project"
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
-    enabled: false
-    awx_token_name: "Example Token"
+    state: disabled
 
 - name: Create a rulebook activation with event_streams option
   ansible.eda.rulebook_activation:
@@ -184,8 +190,7 @@ EXAMPLES = r"""
     project_name: "Example Project"
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
-    enabled: false
-    awx_token_name: "Example Token"
+    state: disabled
     organization_name: "Default"
     event_streams:
       - event_stream: "Example Event Stream"
@@ -195,24 +200,46 @@ EXAMPLES = r"""
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - copy"
     copy_from: "Example Rulebook Activation"
+
+- name: Rename a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    new_name: "Example Rulebook Activation New Name"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
 
 - name: Update a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
-    new_name: "Example Rulebook Activation New Name"
     log_level: debug
     restart_policy: always
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
 
-- name: Delete a rulebook activation
+- name: Enable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
-    state: absent
+    state: enabled
+
+- name: Disable a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    new_name: "Example Rulebook Activation New Name"
+    state: disabled
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - Restart"
     restart: true
+
+- name: Delete a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    state: absent
 """
 
 
@@ -449,8 +476,10 @@ def create_params(
     if module.params.get("restart_policy"):
         activation_params["restart_policy"] = module.params["restart_policy"]
 
-    if module.params.get("enabled") is not None:
-        activation_params["is_enabled"] = module.params["enabled"]
+    if module.params.get("state") == "disabled":
+        activation_params["is_enabled"] = False
+    else:
+        activation_params["is_enabled"] = True
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -477,7 +506,12 @@ def main() -> None:
                 "never",
             ],
         ),
-        enabled=dict(type="bool", default=True),
+        enabled=dict(
+            type="bool",
+            default=True,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
@@ -499,28 +533,24 @@ def main() -> None:
             removed_from_collection="ansible.eda",
         ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
-        state=dict(choices=["present", "absent"], default="present"),
+        state=dict(
+            choices=["present", "absent", "enabled", "disabled"], default="present"
+        ),
     )
+
+    # Define the state the activation is transitioning to, and uses
+    # this in the call to the according post endpoint.
+    # Returns an empty string in case the state is not changing.
+    def endpoint_state(activation: Dict[str, Any], state: str) -> str:
+        return {(False, "enabled"): "enable", (True, "disabled"): "disable"}.get(
+            (activation["is_enabled"], state), ""
+        )
 
     argument_spec.update(AUTH_ARGSPEC)
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     copy_from = module.params.get("copy_from", None)
     restart = module.params.get("restart", None)
-
-    required_if = []
-    if not (copy_from or restart):
-        required_if = [
-            (
-                "state",
-                "present",
-                ("name", "rulebook_name", "decision_environment_name", "project_name"),
-            )
-        ]
-
-    module = AnsibleModule(
-        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
-    )
 
     if not HAS_YAML:
         module.fail_json(
@@ -602,6 +632,22 @@ def main() -> None:
         ]
         activation["eda_credentials"] = credential_ids
 
+    if state and state in ("enabled", "disabled") and activation:
+        change_state = endpoint_state(activation=activation, state=state)
+
+        if change_state:
+            try:
+                # Call disable or enable endpoint
+                endpoint = f"activations/{activation['id']}/{change_state}"
+                controller.post_endpoint(endpoint=endpoint)
+                module.exit_json(changed=True)
+            except EDAError as e:
+                module.fail_json(
+                    msg=f"Failed to enable/disable rulebook activation: {e}"
+                )
+
+        module.exit_json(changed=False)
+
     # Activation Data that will be sent for create/update
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
     activation_params["name"] = (
@@ -610,8 +656,8 @@ def main() -> None:
         else (controller.get_item_name(activation) if activation else name)
     )
 
-    # If the state was present and we can let the module build or update the
-    # existing activation, this will return on its own
+    # If the state was one of (present, enabled or disabled), and we can let the module
+    # build or update the existing activation, this will return on its own
     try:
         result = controller.create_or_update_if_needed(
             activation,
