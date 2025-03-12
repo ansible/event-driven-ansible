@@ -1,0 +1,101 @@
+---
+- name: role_team_assignment integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      controller_host: "{{ controller_host }}"
+      controller_username: "{{ controller_username }}"
+      controller_password: "{{ controller_password }}"
+      validate_certs: "{{ controller_verify_ssl }}"
+  block:
+    - name: Set the team to use for the test
+      set_fact:
+        team_name: "TBC"  # A team will need to exist in the Platform instance for this to work. 
+
+    # CREATE
+    - name: Create role_team_assignment in check mode
+      ansible.eda.role_team_assignment:
+        state: present
+        team: "{{ team_name }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+      check_mode: true
+      register: _result
+
+    - name: Check role_team_assignment creation in check mode
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create role_team_assignment
+      ansible.eda.role_team_assignment:
+        state: present
+        team: "{{ team_name }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+      register: _result
+
+    - name: Check role_team_assignment creation
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create role_team_assignment again
+      ansible.eda.role_team_assignment:
+        state: present
+        team: "{{ team_name }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+      register: _result
+
+    - name: Check role_team_assignment is not created again
+      assert:
+        that:
+          - not _result.changed
+
+    # DELETE
+    - name: Delete operation type without required parameter
+      ansible.eda.role_team_assignment:
+        state: absent
+      ignore_errors: true
+      register: _result
+
+    - name: Check if role_team_assignment name is required
+      assert:
+        that:
+          - _result.failed
+          - "'missing required arguments: role_definition' in _result.msg"
+
+    - name: Delete non-existing role_team_assignment in check mode
+      ansible.eda.role_team_assignment:
+        team: "{{ team_name }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 2
+        state: absent
+      check_mode: true
+      register: _result
+
+    - name: Check if delete non-existing role_team_assignment in check mode
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Delete role_team_assignment
+      ansible.eda.role_team_assignment:
+        team: "{{ team_name }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+        state: absent
+      register: _result
+
+    - name: Check if delete non-existing role_team_assignment
+      assert:
+        that:
+          - _result.changed
+  always:
+    - name: Clean up - role_team_assignment
+      ansible.eda.role_team_assignment:
+        team: "{{ team_name }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 2
+        state: absent
+      ignore_errors: true

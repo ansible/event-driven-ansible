@@ -17,7 +17,11 @@ from .errors import EDAError
 
 
 class Controller:
-    IDENTITY_FIELDS = {"users": "username"}
+    IDENTITY_FIELDS = {
+                        "users": "username",
+                        "role_user_assignments": "role_definition",
+                        "role_team_assignments": "role_definition"
+                    }
     ENCRYPTED_STRING = "$encrypted$"
 
     def __init__(self, client: Client, module: AnsibleModule) -> None:
