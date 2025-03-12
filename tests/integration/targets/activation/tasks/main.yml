@@ -434,6 +434,96 @@
           - filtered_activation.restart_policy == "always"
           - filtered_activation.eda_credentials | length == 2
 
+    - name: Enable rulebook activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name_modified }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        state: enabled
+        organization_name: Default
+      register: _result
+
+    - name: Get information about the rulebook activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name_modified }}"
+      register: _result_activation_info
+
+    - name: "Filter existing activation by name"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name_modified) | list | first }}"
+
+    - name: Assert that rulebook activation is enabled
+      ansible.builtin.assert:
+        that:
+          - filtered_activation.is_enabled
+
+    - name: Enable rulebook activation again
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name_modified }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        state: enabled
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation not updated
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Disable rulebook activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name_modified }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        state: disabled
+        organization_name: Default
+      register: _result
+
+    - name: Get information about the rulebook activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name_modified }}"
+      register: _result_activation_info
+
+    - name: "Filter existing activation by name"
+      set_fact:
+        filtered_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name_modified) | list | first }}"
+
+    - name: Assert that rulebook activation is disabled
+      ansible.builtin.assert:
+        that:
+          - not filtered_activation.is_enabled
+
+    - name: Disable rulebook activation again
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name_modified }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+          - "{{ credential_name_basic }}"
+        state: disabled
+        organization_name: Default
+      register: _result
+
+    - name: Check rulebook activation not updated
+      assert:
+        that:
+          - not _result.changed
+
     - name: List all the rulebook activations
       ansible.eda.rulebook_activation_info:
 

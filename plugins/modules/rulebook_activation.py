@@ -68,8 +68,12 @@ options:
   enabled:
     description:
       - Whether the rulebook activation is enabled or not.
+      - This field will be removed in version 3.0.0.
+      - The logic of controlling the state of an activation is going to be controlled
+        by the O(state) parameter itself.
     type: bool
     default: true
+    removed_in: 3.0.0
   decision_environment_name:
     description:
       - The name of the decision environment associated with the rulebook activation.
@@ -150,14 +154,18 @@ options:
   state:
     description:
       - Desired state of the resource.
+      - The state of an activation itself is controlled by this parameter, whether enabled or
+        disabled.
+      - When an activation is created, it is enabled by default. Thus, present is equivalent to
+        enabled.
+      - Whether present, enabled, or disabled is specified, an activation will be created if it
+        not exists already.
+      - Essentially, this parameter deprecates the usage of O(enabled).
     default: "present"
-    choices: ["present", "absent"]
+    choices: ["present", "absent", "disabled", "enabled"]
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
-notes:
-  - Rulebook Activation API does not support PATCH method, due to this reason the module will
-    not perform any modification when an existing rulebook activation is found.
 """
 
 EXAMPLES = r"""
@@ -197,6 +205,19 @@ EXAMPLES = r"""
     new_name: "Example Rulebook Activation New Name"
     log_level: debug
     restart_policy: always
+
+- name: Enable a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    state: enabled
+    organization_name: "Default"
+
+- name: Disable a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    new_name: "Example Rulebook Activation New Name"
+    state: disabled
+    organization_name: "Default"
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
@@ -466,7 +487,12 @@ def main() -> None:
                 "never",
             ],
         ),
-        enabled=dict(type="bool", default=True),
+        enabled=dict(
+            type="bool",
+            default=True,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
@@ -488,7 +514,9 @@ def main() -> None:
             removed_from_collection="ansible.eda",
         ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
-        state=dict(choices=["present", "absent"], default="present"),
+        state=dict(
+            choices=["present", "absent", "enabled", "disabled"], default="present"
+        ),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -588,8 +616,21 @@ def main() -> None:
         else (controller.get_item_name(activation) if activation else name)
     )
 
-    # If the state was present and we can let the module build or update the
-    # existing activation, this will return on its own
+    if state in ("enabled", "disabled") and activation:
+        activation_params["is_enabled"] = True if state == "enabled" else False
+
+        # Handle disable separately, as enable is treated by the backend.
+        try:
+            if activation["is_enabled"] and not activation_params["is_enabled"]:
+                controller.post_endpoint(
+                    endpoint=f"activations/{activation['id']}/disable"
+                )
+                module.exit_json(changed=True)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to disable rulebook activation: {e}")
+
+    # If the state was one of (present, enabled or disabled), and we can let the module
+    # build or update the existing activation, this will return on its own
     try:
         result = controller.create_or_update_if_needed(
             activation,
