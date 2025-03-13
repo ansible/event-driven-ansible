@@ -82,10 +82,10 @@
       ansible.eda.rulebook_activation_info:
         name: "{{ activation_name }}"
 
-    - name: check if activation was restarted
+    - name: Check if activation was restarted
       ansible.builtin.assert:
         - activation_status.activations[0].restart_count = 1
-        - activation_status.activations[0].state = "running"
+        - activation_status.activations[0].status = "running"
 
   always:
     - name: Delete project
