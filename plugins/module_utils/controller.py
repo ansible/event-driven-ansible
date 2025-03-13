@@ -383,3 +383,31 @@ class Controller:
             raise EDAError(msg)
         msg = f"Unable to delete {item_name}: {response.status}"
         raise EDAError(msg)
+
+    def copy_if_needed(
+        self,
+        name: str,
+        copy_from: str,
+        endpoint: str,
+        item_type: str = "unknown",
+    ) -> dict[str, bool]:
+        response = None
+        if not copy_from:
+            msg = f"Unable to copy {item_type}, missing copy_from parameter"
+            raise EDAError(msg)
+        if not endpoint:
+            msg = f"Unable to copy {item_type}, missing endpoint"
+            raise EDAError(msg)
+
+        if self.module.check_mode:
+            return {"changed": True}
+
+        response = self.post_endpoint(endpoint, data={"name": name})
+        if response.status in [200, 201]:
+            self.result["id"] = response.json["id"]
+            self.result["changed"] = True
+            return self.result
+        if response.json and "__all__" in response.json:
+            raise EDAError(response.json["__all__"])
+        msg = f"Unable to copy from {item_type} {copy_from}: {response.status}"
+        raise EDAError(msg)

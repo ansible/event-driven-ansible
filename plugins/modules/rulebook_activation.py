@@ -24,6 +24,13 @@ options:
       - The name of the rulebook activation.
     type: str
     required: true
+  copy_from:
+    description:
+      - Name of the existing rulebook activation to copy.
+      - If set, copies the specified rulebook activation.
+      - The new rulebook activation will be created with the name given in the C(name) parameter.
+    type: str
+    version_added: 2.6.0
   description:
     description:
       - The description of the rulebook activation.
@@ -170,6 +177,12 @@ EXAMPLES = r"""
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
+
+- name: Copy an existing rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation - copy"
+    copy_from: "Example Rulebook Activation"
+    organization_name: "Default"
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
@@ -427,6 +440,7 @@ def create_params(
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
+        copy_from=dict(type="str"),
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
@@ -462,13 +476,18 @@ def main() -> None:
 
     argument_spec.update(AUTH_ARGSPEC)
 
-    required_if = [
-        (
-            "state",
-            "present",
-            ("name", "rulebook_name", "decision_environment_name", "project_name"),
-        )
-    ]
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    copy_from = module.params.get("copy_from", None)
+
+    required_if = []
+    if not copy_from:
+        required_if = [
+            (
+                "state",
+                "present",
+                ("name", "rulebook_name", "decision_environment_name", "project_name"),
+            )
+        ]
 
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
@@ -507,7 +526,9 @@ def main() -> None:
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:
-        activation = controller.get_exactly_one("activations", name=name)
+        activation = controller.get_exactly_one(
+            "activations", name=copy_from if copy_from else name
+        )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
 
@@ -517,6 +538,22 @@ def main() -> None:
             module.exit_json(**result)
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
+
+    if copy_from:
+        try:
+            result = controller.copy_if_needed(
+                name,
+                copy_from,
+                endpoint=f"activations/{activation['id']}/copy",
+                item_type="activation",
+            )
+            module.exit_json(changed=True)
+        except KeyError as e:
+            module.fail_json(
+                msg=f"Unable to access {e} of the activation to copy from."
+            )
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
 
     if activation:
         module.exit_json(
