@@ -98,6 +98,10 @@ def main():
             ("team", "team_ansible_id"),
             ("object_id", "object_ansible_id"),
         ],
+        required_one_of=[
+            ("team", "team_ansible_id"),
+            ("object_id", "object_ansible_id"),
+        ],
     )
 
     client = Client(
@@ -118,16 +122,16 @@ def main():
     controller = Controller(client, module)
 
     role_definition = controller.get_exactly_one(
-        "role_definitions", allow_none=False, name=role_definition_str
+        "role_definitions", name=role_definition_str
     )
-    team = controller.get_exactly_one("teams", allow_none=True, name=team_param)
+    team = controller.get_exactly_one("teams", name=team_param)
 
     new_item = {"role_definition": role_definition["id"]}
 
     if object_id is not None:
         new_item["object_id"] = object_id
     if team is not None:
-        new_item["team"] = team["id"]
+        new_item["team"] = team["id"] if team else None
     if object_ansible_id is not None:
         new_item["object_ansible_id"] = object_ansible_id
     if team_ansible_id is not None:
