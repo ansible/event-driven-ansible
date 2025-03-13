@@ -86,15 +86,14 @@ options:
   restart_wait_time: 
     description:
       - Represents the total number of seconds that the system waits, 
-        after an activation restart, before it returns an error, 
-        if the activation is not 'running'.
+        after an activation restart, before it returns.
     type: int
-    default: 600
+    default: 200
   restart_interval: 
     description:
       - Number of seconds between each Activation status check after restart.
     type: int
-    defalt: 300
+    defalt: 10
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
@@ -230,6 +229,14 @@ EXAMPLES = r"""
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
+
+- name: Restart activation with wait
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation - Restart"
+    restart: true
+    restart_wait: true
+    restart_wait_time: 120
+    restart_interval: 2
 """
 
 
@@ -467,8 +474,8 @@ def main() -> None:
         extra_vars=dict(type="str"),
         restart=dict(type="bool", default=False),
         restart_wait=dict(type="bool", default=False),
-        restart_wait_time=dict(type="int", default=600),
-        restart_interval=dict(type="int", default=300),
+        restart_wait_time=dict(type="int", default=200),
+        restart_interval=dict(type="int", default=10),
         restart_policy=dict(
             type="str",
             default="on-failure",
@@ -563,46 +570,46 @@ def main() -> None:
             module.exit_json(**result)
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
-    
-    ### >>> RESTART >>> TEMP - REMOVE
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+    def restart_activation(item):
+      try:
+          result = controller.restart_if_needed(
+              item,
+              endpoint=f"activations/{item['id']}/restart",
+          )
+          return result
+      except EDAError as e:
+          module.fail_json(msg=f"Failed to restart rulebook activation: {e} Current Activation Status: {item['status']}")
+
+    def update_activation(item):
+      try:
+        updated_activation = controller.get_exactly_one(
+          "activations", item["name"]
+        )
+        return updated_activation
+      except EDAError as e:
+        module.fail_json(msg=f"Failed to get rulebook activation: {e}")
+
     if restart:
-      # restart_interval = module.params.get("restart_interval")
-      # restart_wait_time = module.params.get("restart_wait_time")
-      restart_interval = 200 # testing
-      restart_wait_time = 400 # testing
-
-      def restart_activation(item):
-        try:
-            result = controller.restart_if_needed(
-                item,
-                endpoint=f"activations/{item['id']}/restart",
-            )
-            return result
-        except EDAError as e:
-            module.fail_json(msg=f"Failed to restart rulebook activation: {e}")
-        
-      print(f"TEST TEST >>> Print activation status: {activation['status']}") # TEST TEST >>> TO BE REMOVED
-      print(f"TEST TEST >>> Print activation restart_count: {activation['restart_count']}") # TEST TEST >>> TO BE REMOVED
-      print(f"TEST TEST >>> Print ALL activation details: {activation}") # TEST TEST >>> TO BE REMOVED
-
+      restart_interval = module.params.get("restart_interval")
+      restart_wait_time = module.params.get("restart_wait_time")
       if module.params.get("restart_wait"):
-          end_time = time.time() + restart_wait_time
-          while time.time() < end_time:
-            result = restart_activation(activation)
-            time.sleep(restart_interval)
-            if activation['status']=='running' or activation["status"]=="completed":
-                print(f"TEST TEST >>> Activation Status is RUNNING or COMPLETED: {activation['status']}") # TEST TEST >>> TO BE REMOVED
-                break
-          module.exit_json(**result)
+        end_time = time.time() + restart_wait_time
+        result = restart_activation(activation)
+        time.sleep(10)
+        while time.time() < end_time:
+          activation = update_activation(activation)
+          if activation['status']=='running' or activation["status"]=="completed":
+              break
+              # module.exit_json(msg=f"Activation details if Running or Completed: {activation}") # TEST -- To be REMOVED
+          time.sleep(restart_interval)
+        result['msg'] = f"Current Activation details: {activation}"
+        module.exit_json(**result)
+        # module.exit_json(msg=f"Current Activation details: {activation}") # TEST -- To be REMOVED
       else:
-          result = restart_activation(activation)
-          # module.exit_json(changed=True)
-          module.exit_json(**result)
-      
-      print(f"TEST TEST >>> Print activation restart_count: {activation['restart_count']}") # TEST TEST >>> TO BE REMOVED
+        result = restart_activation(activation)
+        module.exit_json(**result)
 
- # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if copy_from:
         try:
             result = controller.copy_if_needed(

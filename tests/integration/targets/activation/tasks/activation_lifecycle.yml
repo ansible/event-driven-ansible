@@ -73,9 +73,9 @@
       ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
         restart: true
-        wait: true
-        timeout: 120
-        interval: 2
+        restart_wait: true
+        restart_wait_time: 120
+        restart_interval: 2
 
     - name: Get activation status after restart
       register: activation_status
