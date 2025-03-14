@@ -24,6 +24,12 @@ options:
       - The name of the rulebook activation.
     type: str
     required: true
+  new_name:
+    description:
+      - Renames an existing rulebook activation.
+      - If set, the rulebook activation will be updated with the new name.
+    type: str
+    version_added: 2.6.0
   copy_from:
     description:
       - Name of the existing rulebook activation to copy.
@@ -62,8 +68,12 @@ options:
   enabled:
     description:
       - Whether the rulebook activation is enabled or not.
+      - This field will be removed in version 3.0.0.
+      - The logic of controlling the state of an activation is going to be controlled
+        by the O(state) parameter itself.
     type: bool
     default: true
+    removed_in: 3.0.0
   decision_environment_name:
     description:
       - The name of the decision environment associated with the rulebook activation.
@@ -104,10 +114,11 @@ options:
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
-      - This parameter is supported in AAP 2.5 and onwards.
-        If specified for AAP 2.4, value will be ignored.
+      - This parameter is no longer used and is going to be ignored.
+      - This field will be removed in version 3.0.0.
     type: bool
     default: true
+    removed_in: 3.0.0
   event_streams:
     description:
       - A list of event stream names that this rulebook activation listens to.
@@ -143,14 +154,18 @@ options:
   state:
     description:
       - Desired state of the resource.
+      - The state of an activation itself is controlled by this parameter, whether enabled or
+        disabled.
+      - When an activation is created, it is enabled by default. Thus, present is equivalent to
+        enabled.
+      - Whether present, enabled, or disabled is specified, an activation will be created if it
+        not exists already.
+      - Essentially, this parameter deprecates the usage of O(enabled).
     default: "present"
-    choices: ["present", "absent"]
+    choices: ["present", "absent", "disabled", "enabled"]
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
-notes:
-  - Rulebook Activation API does not support PATCH method, due to this reason the module will
-    not perform any modification when an existing rulebook activation is found.
 """
 
 EXAMPLES = r"""
@@ -182,6 +197,26 @@ EXAMPLES = r"""
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - copy"
     copy_from: "Example Rulebook Activation"
+    organization_name: "Default"
+
+- name: Update a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    new_name: "Example Rulebook Activation New Name"
+    log_level: debug
+    restart_policy: always
+
+- name: Enable a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    state: enabled
+    organization_name: "Default"
+
+- name: Disable a rulebook activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    new_name: "Example Rulebook Activation New Name"
+    state: disabled
     organization_name: "Default"
 
 - name: Delete a rulebook activation
@@ -431,15 +466,13 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    if not is_aap_24 and module.params.get("swap_single_source") is not None:
-        activation_params["swap_single_source"] = module.params["swap_single_source"]
-
     return activation_params
 
 
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
+        new_name=dict(type="str"),
         copy_from=dict(type="str"),
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
@@ -454,7 +487,12 @@ def main() -> None:
                 "never",
             ],
         ),
-        enabled=dict(type="bool", default=True),
+        enabled=dict(
+            type="bool",
+            default=True,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         decision_environment_name=dict(type="str", aliases=["decision_environment"]),
         awx_token_name=dict(type="str", aliases=["awx_token", "token"]),
         organization_name=dict(type="str", aliases=["organization"]),
@@ -469,9 +507,16 @@ def main() -> None:
                 source_name=dict(type="str"),
             ),
         ),
-        swap_single_source=dict(type="bool", default=True),
+        swap_single_source=dict(
+            type="bool",
+            default=True,
+            removed_in_version="3.0.0",
+            removed_from_collection="ansible.eda",
+        ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
-        state=dict(choices=["present", "absent"], default="present"),
+        state=dict(
+            choices=["present", "absent", "enabled", "disabled"], default="present"
+        ),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -507,6 +552,7 @@ def main() -> None:
     )
 
     name = module.params.get("name")
+    new_name = module.params.get("new_name")
     state = module.params.get("state")
 
     controller = Controller(client, module)
@@ -555,22 +601,39 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
 
+    # Parse credential IDs in existing activation
     if activation:
-        module.exit_json(
-            msg=f"A rulebook activation with name: {name} already exists. "
-            "The module does not support modifying a rulebook activation.",
-            changed=False,
-            id=activation["id"],
-        )
+        credential_ids = [
+            credential_id["id"] for credential_id in activation["eda_credentials"]
+        ]
+        activation["eda_credentials"] = credential_ids
 
     # Activation Data that will be sent for create/update
     activation_params = create_params(module, controller, is_aap_24=is_aap_24)
-    activation_params["name"] = name
+    activation_params["name"] = (
+        new_name
+        if new_name
+        else (controller.get_item_name(activation) if activation else name)
+    )
 
-    # If the state was present and we can let the module build or update the
-    # existing activation, this will return on its own
+    if state in ("enabled", "disabled") and activation:
+        activation_params["is_enabled"] = True if state == "enabled" else False
+
+        # Handle disable separately, as enable is treated by the backend.
+        try:
+            if activation["is_enabled"] and not activation_params["is_enabled"]:
+                controller.post_endpoint(
+                    endpoint=f"activations/{activation['id']}/disable"
+                )
+                module.exit_json(changed=True)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to disable rulebook activation: {e}")
+
+    # If the state was one of (present, enabled or disabled), and we can let the module
+    # build or update the existing activation, this will return on its own
     try:
-        result = controller.create_if_needed(
+        result = controller.create_or_update_if_needed(
+            activation,
             activation_params,
             endpoint="activations",
             item_type="activation",
