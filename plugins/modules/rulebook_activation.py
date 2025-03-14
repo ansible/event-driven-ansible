@@ -8,6 +8,26 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import time
+import traceback
+from typing import Any, Dict, List
+
+try:
+    import yaml
+except ImportError:
+    HAS_YAML = False
+    YAML_IMPORT_ERROR = traceback.format_exc()
+else:
+    HAS_YAML = True
+    YAML_IMPORT_ERROR = ""
+
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+
+from ..module_utils.arguments import AUTH_ARGSPEC
+from ..module_utils.client import Client
+from ..module_utils.common import lookup_resource_id
+from ..module_utils.controller import Controller
+from ..module_utils.errors import EDAError
 
 DOCUMENTATION = r"""
 ---
@@ -53,6 +73,27 @@ options:
     description:
       - The extra variables for the rulebook activation.
     type: str
+  restart:
+    description:
+      - Whether or not the activation should be restarted.
+    type: bool
+    default: false
+  restart_wait:
+    description:
+      - Whether the system should wait after an activation restart.
+    type: bool
+    default: false
+  restart_wait_time:
+    description:
+      - Represents the total number of seconds that the system waits,
+        after an activation restart, before it returns.
+    type: int
+    default: 200
+  restart_interval:
+    description:
+      - Number of seconds between each Activation status check after restart.
+    type: int
+    default: 10
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
@@ -188,6 +229,14 @@ EXAMPLES = r"""
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
+
+- name: Restart activation with wait
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation - Restart"
+    restart: true
+    restart_wait: true
+    restart_wait_time: 120
+    restart_interval: 2
 """
 
 
@@ -198,27 +247,6 @@ id:
   type: int
   sample: 37
 """
-
-
-import traceback
-from typing import Any, Dict, List
-
-try:
-    import yaml
-except ImportError:
-    HAS_YAML = False
-    YAML_IMPORT_ERROR = traceback.format_exc()
-else:
-    HAS_YAML = True
-    YAML_IMPORT_ERROR = ""
-
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-
-from ..module_utils.arguments import AUTH_ARGSPEC
-from ..module_utils.client import Client
-from ..module_utils.common import lookup_resource_id
-from ..module_utils.controller import Controller
-from ..module_utils.errors import EDAError
 
 
 def find_matching_source(
@@ -437,6 +465,31 @@ def create_params(
     return activation_params
 
 
+def restart_activation(
+    item: dict[str, Any], module: AnsibleModule, controller: Controller
+) -> dict[str, bool]:
+    try:
+        result = controller.restart_if_needed(
+            item,
+            endpoint=f"activations/{item['id']}/restart",
+        )
+    except EDAError as e:
+        module.fail_json(
+            msg=f"Failed to restart rulebook activation: {e} Current Activation restart_count: {item['restart_count']}"
+        )
+    return result
+
+
+def update_activation(
+    item: dict[str, Any], module: AnsibleModule, controller: Controller
+) -> dict[str, bool]:
+    try:
+        updated_activation = controller.get_exactly_one("activations", item["name"])
+    except EDAError as e:
+        module.fail_json(msg=f"Failed to get rulebook activation: {e}")
+    return updated_activation
+
+
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
@@ -445,6 +498,10 @@ def main() -> None:
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
         extra_vars=dict(type="str"),
+        restart=dict(type="bool", default=False),
+        restart_wait=dict(type="bool", default=False),
+        restart_wait_time=dict(type="int", default=200),
+        restart_interval=dict(type="int", default=10),
         restart_policy=dict(
             type="str",
             default="on-failure",
@@ -478,9 +535,10 @@ def main() -> None:
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     copy_from = module.params.get("copy_from", None)
+    restart = module.params.get("restart", None)
 
     required_if = []
-    if not copy_from:
+    if not (copy_from or restart):
         required_if = [
             (
                 "state",
@@ -538,6 +596,27 @@ def main() -> None:
             module.exit_json(**result)
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
+
+    if restart:
+        restart_interval = module.params.get("restart_interval")
+        restart_wait_time = module.params.get("restart_wait_time")
+        if module.params.get("restart_wait"):
+            end_time = time.time() + restart_wait_time
+            result = restart_activation(activation, module, controller)
+            time.sleep(10)
+            while time.time() < end_time:
+                activation = update_activation(activation, module, controller)
+                if (
+                    activation["status"] == "running"
+                    or activation["status"] == "completed"
+                ):
+                    break
+                time.sleep(restart_interval)
+            result["msg"] = f"Current Activation details: {activation}"
+            module.exit_json(**result)
+        else:
+            result = restart_activation(activation, module, controller)
+            module.exit_json(**result)
 
     if copy_from:
         try:

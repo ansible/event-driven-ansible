@@ -3,6 +3,7 @@
 
 # venv
 venv
+.venv/
 
 # tests
 tests/output
@@ -30,8 +31,10 @@ tests/integration/integration_config.yml
 docs/build/
 docs/rst/*.rst
 docs/temp-rst
+
 # Other
 tests/integration/inventory
+**/.DS_Store
 
 # Collection specific
 importer_result.json
