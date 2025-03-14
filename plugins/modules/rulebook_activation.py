@@ -8,9 +8,9 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import time
 import traceback
 from typing import Any, Dict, List
-import time
 
 try:
     import yaml
@@ -83,17 +83,17 @@ options:
       - Whether the system should wait after an activation restart.
     type: bool
     default: false
-  restart_wait_time: 
+  restart_wait_time:
     description:
-      - Represents the total number of seconds that the system waits, 
+      - Represents the total number of seconds that the system waits,
         after an activation restart, before it returns.
     type: int
     default: 200
-  restart_interval: 
+  restart_interval:
     description:
       - Number of seconds between each Activation status check after restart.
     type: int
-    defalt: 10
+    default: 10
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
@@ -247,6 +247,7 @@ id:
   type: int
   sample: 37
 """
+
 
 def find_matching_source(
     event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
@@ -464,6 +465,31 @@ def create_params(
     return activation_params
 
 
+def restart_activation(
+    item: dict[str, Any], module: AnsibleModule, controller: Controller
+) -> dict[str, bool]:
+    try:
+        result = controller.restart_if_needed(
+            item,
+            endpoint=f"activations/{item['id']}/restart",
+        )
+    except EDAError as e:
+        module.fail_json(
+            msg=f"Failed to restart rulebook activation: {e} Current Activation Status: {item['status']}"
+        )
+    return result
+
+
+def update_activation(
+    item: dict[str, Any], module: AnsibleModule, controller: Controller
+) -> dict[str, bool]:
+    try:
+        updated_activation = controller.get_exactly_one("activations", item["name"])
+    except EDAError as e:
+        module.fail_json(msg=f"Failed to get rulebook activation: {e}")
+    return updated_activation
+
+
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
@@ -512,7 +538,7 @@ def main() -> None:
     restart = module.params.get("restart", None)
 
     required_if = []
-    if not copy_from:
+    if not (copy_from or restart):
         required_if = [
             (
                 "state",
@@ -571,44 +597,26 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
 
-    def restart_activation(item):
-      try:
-          result = controller.restart_if_needed(
-              item,
-              endpoint=f"activations/{item['id']}/restart",
-          )
-          return result
-      except EDAError as e:
-          module.fail_json(msg=f"Failed to restart rulebook activation: {e} Current Activation Status: {item['status']}")
-
-    def update_activation(item):
-      try:
-        updated_activation = controller.get_exactly_one(
-          "activations", item["name"]
-        )
-        return updated_activation
-      except EDAError as e:
-        module.fail_json(msg=f"Failed to get rulebook activation: {e}")
-
     if restart:
-      restart_interval = module.params.get("restart_interval")
-      restart_wait_time = module.params.get("restart_wait_time")
-      if module.params.get("restart_wait"):
-        end_time = time.time() + restart_wait_time
-        result = restart_activation(activation)
-        time.sleep(10)
-        while time.time() < end_time:
-          activation = update_activation(activation)
-          if activation['status']=='running' or activation["status"]=="completed":
-              break
-              # module.exit_json(msg=f"Activation details if Running or Completed: {activation}") # TEST -- To be REMOVED
-          time.sleep(restart_interval)
-        result['msg'] = f"Current Activation details: {activation}"
-        module.exit_json(**result)
-        # module.exit_json(msg=f"Current Activation details: {activation}") # TEST -- To be REMOVED
-      else:
-        result = restart_activation(activation)
-        module.exit_json(**result)
+        restart_interval = module.params.get("restart_interval")
+        restart_wait_time = module.params.get("restart_wait_time")
+        if module.params.get("restart_wait"):
+            end_time = time.time() + restart_wait_time
+            result = restart_activation(activation, module, controller)
+            time.sleep(10)
+            while time.time() < end_time:
+                activation = update_activation(activation, module, controller)
+                if (
+                    activation["status"] == "running"
+                    or activation["status"] == "completed"
+                ):
+                    break
+                time.sleep(restart_interval)
+            result["msg"] = f"Current Activation details: {activation}"
+            module.exit_json(**result)
+        else:
+            result = restart_activation(activation, module, controller)
+            module.exit_json(**result)
 
     if copy_from:
         try:

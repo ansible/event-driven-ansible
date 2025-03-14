@@ -1,8 +1,12 @@
 ---
-- name: Rulebook activation integration tests for livecycle operations
+- name: Rulebook activation integration tests for lifecycle operations
   module_defaults:
     group/ansible.eda.eda:
-      controller_host: "{{ controller_host }}"
+      # controller_host: "https://aap.local:8443"
+      # controller_username: "admin"
+      # controller_password: "testpass"
+      # validate_certs: False
+      controller_host: "https://localhost:8443"
       controller_username: "{{ controller_username }}"
       controller_password: "{{ controller_password }}"
       validate_certs: "{{ controller_verify_ssl }}"
@@ -26,8 +30,9 @@
         de_image_url: "quay.io/ansible/ansible-rulebook:main"
         scm_url: https://github.com/ansible/eda-sample-project.git
         rulebook_name: "range_long_running.yml"
-    
+
     - name: Create a new project
+      debugger: on_failed
       ansible.eda.project:
         name: "{{ project_name }}"
         description: "Test Project Description"
@@ -50,7 +55,7 @@
         description: "Test Decision Environment Description"
         image_url: "{{ de_image_url }}"
         organization_name: "{{ organization_name}}"
-    
+
     - name: Create the activation
       ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
@@ -68,10 +73,11 @@
       delay: 2
       ansible.eda.rulebook_activation_info:
         name: "{{ activation_name }}"
-        
+
     - name: Restart activation with wait
       ansible.eda.rulebook_activation:
         name: "{{ activation_name }}"
+        organization_name: "{{ organization_name}}"
         restart: true
         restart_wait: true
         restart_wait_time: 120
@@ -84,8 +90,26 @@
 
     - name: Check if activation was restarted
       ansible.builtin.assert:
-        - activation_status.activations[0].restart_count = 1
-        - activation_status.activations[0].status = "running"
+        that:
+          - activation_status.activations[0].restart_count == 1
+          - activation_status.activations[0].status == "running"
+
+    # - name: Restart activation without wait
+    #   ansible.eda.rulebook_activation:
+    #     name: "{{ activation_name }}"
+    #     organization_name: "{{ organization_name}}"
+    #     restart: false
+
+    # - name: Get activation status after restart without wait
+    #   register: activation_status
+    #   ansible.eda.rulebook_activation_info:
+    #     name: "{{ activation_name }}"
+
+    # - name: Check if activation was restarted without wait
+    #   ansible.builtin.assert:
+    #     that:
+    #       - activation_status.activations[0].restart_count == 2
+    #       - activation_status.activations[0].status == "running"
 
   always:
     - name: Delete project
