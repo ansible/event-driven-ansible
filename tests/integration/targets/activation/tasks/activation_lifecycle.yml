@@ -2,11 +2,7 @@
 - name: Rulebook activation integration tests for lifecycle operations
   module_defaults:
     group/ansible.eda.eda:
-      # controller_host: "https://aap.local:8443"
-      # controller_username: "admin"
-      # controller_password: "testpass"
-      # validate_certs: False
-      controller_host: "https://localhost:8443"
+      controller_host: "{{ controller_host }}"
       controller_username: "{{ controller_username }}"
       controller_password: "{{ controller_password }}"
       validate_certs: "{{ controller_verify_ssl }}"
@@ -93,23 +89,6 @@
         that:
           - activation_status.activations[0].restart_count == 1
           - activation_status.activations[0].status == "running"
-
-    # - name: Restart activation without wait
-    #   ansible.eda.rulebook_activation:
-    #     name: "{{ activation_name }}"
-    #     organization_name: "{{ organization_name}}"
-    #     restart: false
-
-    # - name: Get activation status after restart without wait
-    #   register: activation_status
-    #   ansible.eda.rulebook_activation_info:
-    #     name: "{{ activation_name }}"
-
-    # - name: Check if activation was restarted without wait
-    #   ansible.builtin.assert:
-    #     that:
-    #       - activation_status.activations[0].restart_count == 2
-    #       - activation_status.activations[0].status == "running"
 
   always:
     - name: Delete project

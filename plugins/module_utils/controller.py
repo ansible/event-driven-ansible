@@ -433,6 +433,7 @@ class Controller:
         response = self.post_endpoint(endpoint, data={"id": item_id})
         if response.status in [200, 201, 204]:
             self.result["changed"] = True
+            return self.result
         if response.json and "__all__" in response.json:
             raise EDAError(response.json["__all__"])
-        return self.result
+        

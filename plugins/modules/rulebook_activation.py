@@ -475,7 +475,7 @@ def restart_activation(
         )
     except EDAError as e:
         module.fail_json(
-            msg=f"Failed to restart rulebook activation: {e} Current Activation Status: {item['status']}"
+            msg=f"Failed to restart rulebook activation: {e} Current Activation restart_count: {item['restart_count']}"
         )
     return result
 
