@@ -436,4 +436,3 @@ class Controller:
             return self.result
         if response.json and "__all__" in response.json:
             raise EDAError(response.json["__all__"])
-        
