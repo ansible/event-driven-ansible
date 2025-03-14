@@ -1,6 +1,6 @@
 # Collection for Event-Driven Ansible
 
-This collection contains event source plugins, event filters and example rulebooks to be used with [ansible-rulebook](https://ansible-rulebook.readthedocs.io/en/stable/).
+This collection contains event source plugins, event filters and example rulebooks to be used with [ansible-rulebook](https://ansible.readthedocs.io/projects/rulebook/en/latest/).
 
 [![galaxy](https://img.shields.io/badge/galaxy-ansible.eda-5bbdbf?style=flat&logo=ansible&cacheSeconds=3600)](<(https://img.shields.io/badge/galaxy-ansible.eda-green?style=flat)(https://galaxy.ansible.com/ui/repo/published/ansible/eda/)>)
 [![tox](https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml/badge.svg?event=push)](https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml)
