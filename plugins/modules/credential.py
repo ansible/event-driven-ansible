@@ -36,7 +36,7 @@ options:
       - If set, copies the specified credential.
       - The new credential will be created with the name given in the C(name) parameter.
     type: str
-    version_added: '3.0.0'
+    version_added: '2.6.0'
   inputs:
     description:
       - Credential inputs where the keys are var names used in templating.

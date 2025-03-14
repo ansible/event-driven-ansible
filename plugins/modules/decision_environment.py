@@ -156,7 +156,7 @@ def main() -> None:
     ret = {}
 
     try:
-        decision_environment_type = controller.get_exactly_one(
+        decision_environment = controller.get_exactly_one(
             decision_environment_endpoint, name=decision_environment_name
         )
     except EDAError as eda_err:
@@ -166,28 +166,28 @@ def main() -> None:
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
             ret = controller.delete_if_needed(
-                decision_environment_type, endpoint=decision_environment_endpoint
+                decision_environment, endpoint=decision_environment_endpoint
             )
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
-    decision_environment_type_params = {}
+    decision_environment_params = {}
     if description:
-        decision_environment_type_params["description"] = description
+        decision_environment_params["description"] = description
     if image_url:
-        decision_environment_type_params["image_url"] = image_url
+        decision_environment_params["image_url"] = image_url
 
-    credential_type_id = None
+    credential_id = None
     if config_endpoint_avail.status not in (404,) and credential:
-        credential_type_id = lookup_resource_id(
+        credential_id = lookup_resource_id(
             module, controller, "eda-credentials", name=credential
         )
 
-    if credential_type_id is not None:
+    if credential_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
-        decision_environment_type_params["credential"] = credential_type_id
+        decision_environment_params["eda_credential_id"] = credential_id
 
     organization_id = None
     if config_endpoint_avail.status not in (404,) and organization_name:
@@ -196,26 +196,26 @@ def main() -> None:
         )
 
     if organization_id:
-        decision_environment_type_params["organization_id"] = organization_id
+        decision_environment_params["organization_id"] = organization_id
 
     if new_name:
-        decision_environment_type_params["name"] = new_name
-    elif decision_environment_type:
-        decision_environment_type_params["name"] = controller.get_item_name(
-            decision_environment_type
+        decision_environment_params["name"] = new_name
+    elif decision_environment:
+        decision_environment_params["name"] = controller.get_item_name(
+            decision_environment
         )
     else:
-        decision_environment_type_params["name"] = decision_environment_name
+        decision_environment_params["name"] = decision_environment_name
 
     # If the state was present and we can let the module build or update
-    # the existing decision environment type,
+    # the existing decision environment,
     # this will return on its own
     try:
         ret = controller.create_or_update_if_needed(
-            decision_environment_type,
-            decision_environment_type_params,
+            decision_environment,
+            decision_environment_params,
             endpoint=decision_environment_endpoint,
-            item_type="decision environment type",
+            item_type="decision environment",
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))

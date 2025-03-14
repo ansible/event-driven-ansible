@@ -7,9 +7,11 @@ New source plugins or source filters will be evaluated for inclusion in the coll
 If you are new here, read the [Quick-start development guide first](https://docs.ansible.com/ansible/devel/community/create_pr_quick_start.html).
 
 ## Code of Conduct
+
 The ansible.eda collection follows the Ansible project's [Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html). Please read and familiarize yourself with this document.
 
 ## Submitting Issues
+
 All software has bugs, and the amazon.aws collection is no exception. When you find a bug, you can help tremendously by telling us [about it](https://github.com/ansible/event-driven-ansible/issues/new/choose).
 
 If you should discover that the bug you're trying to file already exists in an issue, you can help by verifying the behavior of the reported bug with a comment in that issue, or by reporting any additional information
@@ -51,11 +53,12 @@ When fixing a bug, first reproduce it by adding a task as reported to a suitable
 It is not necessary but if you want you can also add unit tests to a suitable file under the tests/units/ directory and run them as described below.
 
 # Checking your code locally
+
 It will make your and other people's life a bit easier if you run the tests locally and fix all failures before pushing. If you're unable to run the tests locally, please create your PR as a draft to avoid reviewers being added automatically.
 
 ## Running tests for source plugins
 
-Running the tests requires `ansible-rulebook` to be installed. Please review the [ansible-rulebook requirements](https://ansible-rulebook.readthedocs.io/en/stable/installation.html#requirements), but do not install `ansible-rulebook` manually. It will be installed via the test requirements.
+Running the tests requires `ansible-rulebook` to be installed. Please review the [ansible-rulebook requirements](https://ansible.readthedocs.io/projects/rulebook/en/latest/installation.html#requirements), but do not install `ansible-rulebook` manually. It will be installed via the test requirements.
 
 We recommend setting up a Python virtual environment to install the test dependencies into:
 
