@@ -244,6 +244,7 @@
           - created_at
           - updated_at
           - modified_at
+          - log_tracking_id
 
     - name: Check rulebook activation creation
       assert:
