@@ -50,9 +50,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create AWX token
   ansible.eda.controller_token:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example AWX token"
     description: "Example AWX token description"
     token: "<TOKEN_VALUE>"
@@ -61,9 +61,9 @@ EXAMPLES = r"""
 
 - name: Delete AWX token
   ansible.eda.controller_token:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example AWX token"
     state: absent
 """

@@ -60,9 +60,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create EDA Decision Environment
   ansible.eda.decision_environment:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Decision Environment"
     description: "Example Decision Environment description"
     image_url: "quay.io/test"
@@ -72,9 +72,9 @@ EXAMPLES = r"""
 
 - name: Update the name of the Decision Environment
   ansible.eda.decision_environment:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Decision Environment"
     new_name: "Latest Example Decision Environment"
     organization_name: Default
@@ -82,9 +82,9 @@ EXAMPLES = r"""
 
 - name: Delete the the Decision Environment
   ansible.eda.decision_environment:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Decision Environment"
     state: absent
 """

@@ -67,9 +67,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create EDA Projects
   ansible.eda.project:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
@@ -78,9 +78,9 @@ EXAMPLES = r"""
 
 - name: Update the name of the project
   ansible.eda.project:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     new_name: "Latest Example Project"
     description: "Example project description"
@@ -90,9 +90,9 @@ EXAMPLES = r"""
 
 - name: Delete the project
   ansible.eda.project:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     state: absent
 """
