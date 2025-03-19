@@ -2,10 +2,10 @@
 - name: Rulebook activation integration tests
   module_defaults:
     group/ansible.eda.eda:
-      controller_host: "{{ controller_host }}"
-      controller_username: "{{ controller_username }}"
-      controller_password: "{{ controller_password }}"
-      validate_certs: "{{ controller_verify_ssl }}"
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_verify_ssl: "{{ aap_verify_ssl }}"
   block:
     - name: Generate a random_string for the test
       set_fact:
@@ -110,10 +110,10 @@
         credential_type_name: Red Hat Ansible Automation Platform
         organization_name: Default
         inputs:
-          host: "{{ controller_host }}"
-          username: "{{ controller_username }}"
-          password: "{{ controller_password }}"
-          verify_ssl: "{{ controller_verify_ssl }}"
+          host: "{{ aap_hostname }}"
+          username: "{{ aap_username }}"
+          password: "{{ aap_password }}"
+          verify_ssl: "{{ aap_verify_ssl }}"
       register: credential_creation
 
     - name: Assert that the credential was created successfully
@@ -244,6 +244,7 @@
           - created_at
           - updated_at
           - modified_at
+          - log_tracking_id
 
     - name: Check rulebook activation creation
       assert:

@@ -80,9 +80,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create EDA user
   ansible.eda.user:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     username: "test_collection_user"
     first_name: "Test Collection User"
     last_name: "Test Collection User"
@@ -94,9 +94,9 @@ EXAMPLES = r"""
 
 - name: Delete user
   ansible.eda.user:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     username: "test_collection_user"
     state: absent
 
