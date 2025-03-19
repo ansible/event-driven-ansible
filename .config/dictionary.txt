@@ -51,6 +51,8 @@ kaiokmo
 keygen
 keypass
 keytool
+krb5-user
+libkrb5-dev
 libpq
 libsystemd
 mydb

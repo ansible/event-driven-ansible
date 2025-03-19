@@ -30,17 +30,17 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: List a particular project
   ansible.eda.project_info:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example"
     register: r
 
 - name: List all projects
   ansible.eda.project_info:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     register: r
 """
 
