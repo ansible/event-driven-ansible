@@ -1,0 +1,138 @@
+---
+- name: Rulebook activation integration tests for lifecycle operations
+  module_defaults:
+    group/ansible.eda.eda:
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_verify_ssl: "{{ aap_verify_ssl }}"
+  block:
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
+
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
+
+    - name: Define variables for credential and project
+      set_fact:
+        organization_name: "Default"
+        decision_env_name: "Test_Decision_Env_{{ test_id }}"
+        activation_name: "Test_Activation_{{ test_id }}"
+        project_name: "Test_Project_{{ test_id }}"
+        de_image_url: "quay.io/ansible/ansible-rulebook:main"
+        scm_url: https://github.com/ansible/eda-sample-project.git
+        rulebook_name: "range_long_running.yml"
+
+    - name: Create a new project
+      debugger: on_failed
+      ansible.eda.project:
+        name: "{{ project_name }}"
+        description: "Test Project Description"
+        url: "{{ scm_url }}"
+        organization_name: "{{ organization_name}}"
+        state: present
+      register: project_creation
+
+    - name: Wait for the project to be imported
+      register: project_status
+      until: project_status.projects[0].import_state == "completed"
+      retries: 30
+      delay: 2
+      ansible.eda.project_info:
+        name: "{{ project_name }}"
+
+    - name: Create a new decision environment
+      ansible.eda.decision_environment:
+        name: "{{ decision_env_name }}"
+        description: "Test Decision Environment Description"
+        image_url: "{{ de_image_url }}"
+        organization_name: "{{ organization_name}}"
+
+    - name: Create the activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: True
+        organization_name: "{{ organization_name}}"
+
+    - name: wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Restart activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        organization_name: "{{ organization_name}}"
+        restart: true
+
+    - name: wait for the activation to restart
+      register: activation_status
+      until: activation_status.activations[0].restart_count == 1
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Check if activation was restarted
+      ansible.builtin.assert:
+        that:
+          - activation_status.activations[0].restart_count == 1
+          - activation_status.activations[0].status in ["running", "starting"]
+
+    - name: Restart activation without activation name
+      register: result
+      ansible.eda.rulebook_activation:
+        name: ""
+        organization_name: "{{ organization_name}}"
+        restart: true
+      ignore_errors: true
+
+    - name: Verify Restart Failed without Activation name
+      ansible.builtin.assert:
+        that:
+          - result.failed
+        fail_msg: "Restart operation did not fail as expected without necessary name parameter"
+        success_msg: "Restart operation failed as expected without necessary name parameter"
+
+    - name: Restart activation in check_mode
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        organization_name: "{{ organization_name}}"
+        restart: true
+      check_mode: true
+      register: result
+
+    - name: Verify Restart activation in check_mode
+      assert:
+        that:
+          - result.changed
+
+  always:
+    - name: Delete project
+      ansible.eda.project:
+        name: "{{ project_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete rulebook activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete decision environment
+      ansible.eda.decision_environment:
+        name: "{{ decision_env_name }}"
+        state: absent
+      ignore_errors: true

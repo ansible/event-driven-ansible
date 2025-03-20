@@ -411,3 +411,27 @@ class Controller:
             raise EDAError(response.json["__all__"])
         msg = f"Unable to copy from {item_type} {copy_from}: {response.status}"
         raise EDAError(msg)
+
+    def restart_if_needed(
+        self,
+        existing_item: dict[str, Any],
+        endpoint: str,
+    ) -> dict[str, bool]:
+        if not endpoint:
+            msg = "Unable to restart activation, missing endpoint"
+            raise EDAError(msg)
+        if not existing_item:
+            msg = "Unable to restart activation, missing activation parameter"
+            raise EDAError(msg)
+        if self.module.check_mode:
+            return {"changed": True}
+
+        item_id = existing_item["id"]
+        response = self.post_endpoint(endpoint, data={"id": item_id})
+        if response.status in [200, 201, 204]:
+            self.result["changed"] = True
+            return self.result
+        if response.json and "__all__" in response.json:
+            raise EDAError(response.json["__all__"])
+        msg = f"Error restarting activation with ID: {existing_item['id']}"
+        raise EDAError(msg)

@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-
 DOCUMENTATION = r"""
 ---
 module: rulebook_activation
@@ -53,6 +52,13 @@ options:
     description:
       - The extra variables for the rulebook activation.
     type: str
+  restart:
+    description:
+      - Performs a restart of the activation. This is a non idempotent operation.
+      - If enabled the rest of parameters will be ignored.
+    type: bool
+    default: false
+    version_added: 2.7.0
   restart_policy:
     description:
       - The restart policy for the rulebook activation.
@@ -188,6 +194,11 @@ EXAMPLES = r"""
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
+
+- name: Restart activation
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation - Restart"
+    restart: true
 """
 
 
@@ -198,7 +209,6 @@ id:
   type: int
   sample: 37
 """
-
 
 import traceback
 from typing import Any, Dict, List
@@ -445,6 +455,7 @@ def main() -> None:
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
         extra_vars=dict(type="str"),
+        restart=dict(type="bool", default=False),
         restart_policy=dict(
             type="str",
             default="on-failure",
@@ -478,9 +489,10 @@ def main() -> None:
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     copy_from = module.params.get("copy_from", None)
+    restart = module.params.get("restart", None)
 
     required_if = []
-    if not copy_from:
+    if not (copy_from or restart):
         required_if = [
             (
                 "state",
@@ -538,6 +550,16 @@ def main() -> None:
             module.exit_json(**result)
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
+
+    if restart:
+        try:
+            result = controller.restart_if_needed(
+                activation,
+                endpoint=f"activations/{activation['id']}/restart",
+            )
+            module.exit_json(**result)
+        except EDAError as e:
+            module.fail_json(msg=(f"Failed to restart rulebook activation: {e}."))
 
     if copy_from:
         try:
