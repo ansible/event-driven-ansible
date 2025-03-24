@@ -119,21 +119,21 @@ def main() -> None:
     ret = {}
 
     try:
-        token_type = controller.get_exactly_one(token_endpoint, name=token_name)
+        token_obj = controller.get_exactly_one(token_endpoint, name=token_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
-            ret = controller.delete_if_needed(token_type, endpoint=token_endpoint)
+            ret = controller.delete_if_needed(token_obj, endpoint=token_endpoint)
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
     # Method 'PATCH' is not allowed, so delete and re-create the token
-    if token_type:
-        controller.delete_if_needed(token_type, endpoint=token_endpoint)
+    if token_obj:
+        controller.delete_if_needed(token_obj, endpoint=token_endpoint)
 
     token_param = {
         "name": token_name,
@@ -144,7 +144,7 @@ def main() -> None:
     ret = controller.create_if_needed(
         new_item=token_param,
         endpoint=token_endpoint,
-        item_type="controller token type",
+        item_type="controller token",
     )
     module.exit_json(**ret)
 

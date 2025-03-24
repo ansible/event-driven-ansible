@@ -160,22 +160,22 @@ def main() -> None:
     url = module.params.get("url")
     proxy = module.params.get("proxy")
     sync_enabled = module.params.get("sync")
-    project_type = {}
+    project = {}
 
     try:
-        project_type = controller.get_exactly_one(project_endpoint, name=project_name)
+        project = controller.get_exactly_one(project_endpoint, name=project_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
     if state == "present":
-        if not project_type and not url:
+        if not project and not url:
             module.fail_json(
                 msg="Parameter url is required when state is present and project does not exist"
             )
         if (
             config_endpoint_avail.status not in (404,)
             and organization_name is None
-            and not project_type
+            and not project
         ):
             module.fail_json(
                 msg="Parameter organization_name is required when state is present and project does not exist"
@@ -189,18 +189,18 @@ def main() -> None:
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
-            ret = controller.delete_if_needed(project_type, endpoint=project_endpoint)
+            ret = controller.delete_if_needed(project, endpoint=project_endpoint)
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
-    project_type_params: dict[str, Any] = {}
+    project_params: dict[str, Any] = {}
     if description:
-        project_type_params["description"] = description
+        project_params["description"] = description
     if url:
-        project_type_params["url"] = url
+        project_params["url"] = url
     if proxy:
-        project_type_params["proxy"] = proxy
+        project_params["proxy"] = proxy
 
     credential_id = None
     if credential:
@@ -211,7 +211,7 @@ def main() -> None:
     if credential_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
-        project_type_params["eda_credential_id"] = credential_id
+        project_params["eda_credential_id"] = credential_id
 
     organization_id = None
 
@@ -221,32 +221,32 @@ def main() -> None:
         )
 
     if organization_id:
-        project_type_params["organization_id"] = organization_id
+        project_params["organization_id"] = organization_id
 
     if new_name:
-        project_type_params["name"] = new_name
-    elif project_type:
-        project_type_params["name"] = controller.get_item_name(project_type)
+        project_params["name"] = new_name
+    elif project:
+        project_params["name"] = controller.get_item_name(project)
     else:
-        project_type_params["name"] = project_name
+        project_params["name"] = project_name
 
-    # If the state was present and we can let the module build or update the existing project type,
+    # If the state was present and we can let the module build or update the existing project,
     # this will return on its own
     try:
         ret = controller.create_or_update_if_needed(
-            project_type,
-            project_type_params,
+            project,
+            project_params,
             endpoint=project_endpoint,
-            item_type="project type",
+            item_type="project",
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
-    if sync_enabled and project_type:
+    if sync_enabled and project:
         sync_endpoint = f"{project_endpoint}/{ret['id']}/sync"
         try:
             controller.create(
-                {"name": project_type_params["name"]},
+                {"name": project_params["name"]},
                 endpoint=sync_endpoint,
                 item_type="sync",
             )
