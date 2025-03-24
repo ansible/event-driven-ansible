@@ -23,6 +23,7 @@
       set_fact:
         project_name: "test_project_{{ test_id }}"
         url: "https://github.com/ansible/eda-sample-project"
+        proxy: "http://eda:testpass@host.docker.internal:3128"
 
     - include_tasks: create.yml
     - include_tasks: delete.yml

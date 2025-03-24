@@ -36,6 +36,11 @@ options:
       description:
         - The git URL of the project.
       type: str
+    proxy:
+      description:
+        - Proxy used to access HTTP or HTTPS servers.
+      type: str
+      version_added: '2.7.0'
     credential:
       description:
         - The name of the credential to associate with the project.
@@ -73,6 +78,7 @@ EXAMPLES = r"""
     name: "Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
+    proxy: "https://example.com"
     organization_name: Default
     state: present
 
@@ -123,6 +129,7 @@ def main() -> None:
         new_name=dict(),
         description=dict(),
         url=dict(),
+        proxy=dict(),
         credential=dict(),
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
@@ -151,6 +158,7 @@ def main() -> None:
     organization_name = module.params.get("organization_name")
     project_name = module.params.get("name")
     url = module.params.get("url")
+    proxy = module.params.get("proxy")
     sync_enabled = module.params.get("sync")
     project_type = {}
 
@@ -191,6 +199,8 @@ def main() -> None:
         project_type_params["description"] = description
     if url:
         project_type_params["url"] = url
+    if proxy:
+        project_type_params["proxy"] = proxy
 
     credential_id = None
     if credential:

@@ -11,7 +11,7 @@ fi
 # Start EDA API Server
 bash -c 'cd ${TOX_WORK_DIR}/eda-server/tools/docker && \
 docker compose -p eda -f docker-compose-stage.yaml pull -q && \
-docker compose -p eda -f docker-compose-stage.yaml up -d && \
+docker compose -p eda -f docker-compose-stage.yaml --profile proxy up -d && \
 until curl -s http://localhost:8000/_healthz | grep -q "OK"; do \
 echo "Waiting for API to be ready..."; sleep 1; done'
 
