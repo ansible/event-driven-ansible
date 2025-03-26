@@ -16,7 +16,7 @@ author:
   - "Alina Buzachis (@alinabuzachis)"
 short_description: Manage rulebook activations in the EDA Controller
 description:
-  - This module allows the user to create or delete rulebook activations in the EDA Controller.
+  - This module allows the user to create, delete, or restart rulebook activations in the EDA Controller.
 options:
   name:
     description:
@@ -196,12 +196,7 @@ EXAMPLES = r"""
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
 
-- name: Copy an existing rulebook activation
-  ansible.eda.rulebook_activation:
-    name: "Example Rulebook Activation - copy"
-    copy_from: "Example Rulebook Activation"
-
-- name: Rename a rulebook activation
+- name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     new_name: "Example Rulebook Activation New Name"
@@ -234,6 +229,7 @@ EXAMPLES = r"""
 - name: Restart activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - Restart"
+    organization_name: "Default"
     restart: true
 
 - name: Delete a rulebook activation
@@ -490,8 +486,6 @@ def create_params(
 def main() -> None:
     argument_spec = dict(
         name=dict(type="str", required=True),
-        new_name=dict(type="str"),
-        copy_from=dict(type="str"),
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
@@ -552,6 +546,20 @@ def main() -> None:
     copy_from = module.params.get("copy_from", None)
     restart = module.params.get("restart", None)
 
+    required_if = []
+    if not restart:
+        required_if = [
+            (
+                "state",
+                "present",
+                ("name", "rulebook_name", "decision_environment_name", "project_name"),
+            )
+        ]
+
+    module = AnsibleModule(
+        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
+    )
+
     if not HAS_YAML:
         module.fail_json(
             msg=missing_required_lib("pyyaml"), exception=YAML_IMPORT_ERROR
@@ -607,25 +615,8 @@ def main() -> None:
             )
             module.exit_json(**result)
         except EDAError as e:
-            module.fail_json(msg=(f"Failed to restart rulebook activation: {e}."))
+            module.fail_json(msg=f"Failed to restart rulebook activation: {e}.")
 
-    if copy_from:
-        try:
-            result = controller.copy_if_needed(
-                name,
-                copy_from,
-                endpoint=f"activations/{activation['id']}/copy",
-                item_type="activation",
-            )
-            module.exit_json(changed=True)
-        except KeyError as e:
-            module.fail_json(
-                msg=f"Unable to access {e} of the activation to copy from."
-            )
-        except EDAError as e:
-            module.fail_json(msg=f"Failed to copy rulebook activation: {e}")
-
-    # Parse credential IDs in existing activation
     if activation:
         credential_ids = [
             credential_id["id"] for credential_id in activation["eda_credentials"]

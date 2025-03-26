@@ -42,6 +42,7 @@
         credential_name_basic: "Test_CredentialBasic_{{ test_id }}"
         credential_name_aap: "Test_CredentialAAP_{{ test_id }}"
         credential_name_container_registry: "Test_CredentialContainer_Registry_{{ test_id }}"
+        organization_name: "Default"
 
     - name: Create a new credential type
       ansible.eda.credential_type:
@@ -101,7 +102,7 @@
           password: secret
           ssh_key_data: "{{ ssh_key_data }}"
           ssh_key_unlock: "passphrase"
-        organization_name: Default
+        organization_name: "{{ organization_name}}"
       register: credential_creation
 
     - name: Assert that the credential was created successfully
@@ -114,7 +115,7 @@
       ansible.eda.credential:
         name: "{{ credential_name_aap }}"
         credential_type_name: Red Hat Ansible Automation Platform
-        organization_name: Default
+        organization_name: "{{ organization_name }}"
         inputs:
           host: "{{ aap_hostname }}"
           username: "{{ aap_username }}"
@@ -191,7 +192,7 @@
         description: "Test Decision Environment Description"
         credential: "{{ credential_name_container_registry }}"
         image_url: "{{ image_url }}"
-        organization_name: Default
+        organization_name: "{{ organization_name}}"
       register: decision_environment_creation
 
     - name: Create a new rulebook activation in check mode
@@ -204,7 +205,7 @@
         state: disabled
         eda_credentials:
           - "{{ credential_name_aap }}"
-        organization_name: Default
+        organization_name: "{{ organization_name}}"
       check_mode: true
       register: _result
 
@@ -222,14 +223,13 @@
         decision_environment_name: "{{ decision_env_name }}"
         eda_credentials:
           - "{{ credential_name_aap }}"
-        organization_name: Default
+        organization_name: "{{ organization_name}}"
       register: _result
 
     - name: Copy rulebook activation
-      ansible.eda.rulebook_activation:
+      ansible.eda.rulebook_activation_copy:
         name: "{{ activation_name_copy }}"
         copy_from: "{{ activation_name }}"
-        organization_name: Default
       register: _result
 
     - name: Check rulebook activation update
@@ -272,10 +272,9 @@
           - _result.changed
 
     - name: Copy non-existing activation
-      ansible.eda.rulebook_activation:
+      ansible.eda.rulebook_activation_copy:
         name: "{{ activation_name_copy }}"
         copy_from: Invalid_activation
-        organization_name: Default
       register: _result
       ignore_errors: true
 
@@ -286,15 +285,9 @@
           - "\"Unable to access 'id' of the activation to copy from.\" in _result.msg"
 
     - name: Copy activation and use existing name
-      ansible.eda.rulebook_activation:
+      ansible.eda.rulebook_activation_copy:
         name: "{{ activation_name_copy }}"
         copy_from: "{{ activation_name }}"
-        project_name: "{{ project_name }}"
-        rulebook_name: "{{ rulebook_name }}"
-        decision_environment_name: "{{ decision_env_name }}"
-        eda_credentials:
-          - "{{ credential_name_aap }}"
-        organization_name: Default
       register: _result
       ignore_errors: true
 
@@ -313,7 +306,7 @@
         state: disabled
         eda_credentials:
           - "{{ credential_name_aap }}"
-        organization_name: Default
+        organization_name: "{{ organization_name}}"
         project_name: Invalid_Project
       register: _result
       ignore_errors: true
