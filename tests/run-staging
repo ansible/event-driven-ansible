@@ -25,4 +25,4 @@ ansible-test coverage report --requirements --omit '.tox/*,tests/*' --color --al
 ansible-test coverage combine "--export=${TOX_ENV_DIR:-.}"
 
 # Clean up containers
-bash -c 'cd ${TOX_WORK_DIR}/eda-server/tools/docker && docker compose -p eda -f docker-compose-stage.yaml down'
+bash -c 'cd ${TOX_WORK_DIR}/eda-server/tools/docker && docker compose -p eda -f docker-compose-stage.yaml --profile proxy down'
