@@ -26,6 +26,8 @@ options:
     type: str
     required: true
     version_added: 2.6.0
+extends_documentation_fragment:
+  - ansible.eda.eda_controller.auths
 """
 
 EXAMPLES = r"""
