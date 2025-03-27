@@ -11,6 +11,9 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 ---
 module: rulebook_activation_copy
+author:
+  - "Kaio Oliveira (@kaiokmo)"
+  - "Brandon W (@b-whitt)"
 short_description: Copy rulebook activations in the EDA Controller
 description:
   - This module allows the user to copy rulebook activations in the EDA Controller.
