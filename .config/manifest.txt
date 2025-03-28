@@ -86,6 +86,7 @@ plugins/modules/event_stream_info.py
 plugins/modules/project.py
 plugins/modules/project_info.py
 plugins/modules/rulebook_activation.py
+plugins/modules/rulebook_activation_copy.py
 plugins/modules/rulebook_activation_info.py
 plugins/modules/rulebook_info.py
 plugins/modules/user.py

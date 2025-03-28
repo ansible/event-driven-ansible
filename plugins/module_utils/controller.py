@@ -417,6 +417,7 @@ class Controller:
         existing_item: dict[str, Any],
         endpoint: str,
     ) -> dict[str, bool]:
+        response = None
         if not endpoint:
             msg = "Unable to restart activation, missing endpoint"
             raise EDAError(msg)
@@ -429,6 +430,7 @@ class Controller:
         item_id = existing_item["id"]
         response = self.post_endpoint(endpoint, data={"id": item_id})
         if response.status in [200, 201, 204]:
+            self.result["id"] = item_id
             self.result["changed"] = True
             return self.result
         if response.json and "__all__" in response.json:
