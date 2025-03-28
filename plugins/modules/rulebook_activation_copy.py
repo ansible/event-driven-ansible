@@ -17,6 +17,7 @@ author:
 short_description: Copy rulebook activations in the EDA Controller
 description:
   - This module allows the user to copy rulebook activations in the EDA Controller.
+version_added: 2.7.0
 options:
   name:
     description:
@@ -28,7 +29,6 @@ options:
       - Name of the existing rulebook activation to copy.
     type: str
     required: true
-    version_added: 2.6.0
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
 """

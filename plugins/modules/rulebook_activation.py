@@ -537,19 +537,6 @@ def main() -> None:
     argument_spec.update(AUTH_ARGSPEC)
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     restart = module.params.get("restart", None)
-    required_if = []
-    if not restart:
-        required_if = [
-            (
-                "state",
-                "present",
-                ("name", "rulebook_name", "decision_environment_name", "project_name"),
-            )
-        ]
-
-    module = AnsibleModule(
-        argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
-    )
 
     if not HAS_YAML:
         module.fail_json(
