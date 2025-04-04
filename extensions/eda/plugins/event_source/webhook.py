@@ -77,7 +77,7 @@ options:
     default: "x-hub-signature-256"
   hmac_format:
     description:
-      -The optional HMAC signature format format.
+      - The optional HMAC signature format format.
     type: str
     default: "hex"
     choices: ["hex", "base64"]
