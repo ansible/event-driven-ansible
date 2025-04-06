@@ -10,6 +10,7 @@ from typing import Any, Optional
 __metaclass__ = type
 
 import json
+import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import ParseResult, urlencode, urlparse
 
@@ -50,17 +51,16 @@ class Client:
         timeout: Optional[Any] = None,
         validate_certs: Optional[Any] = None,
     ) -> None:
-        if not (host or "").startswith(("https://", "http://")):
-            raise EDAHTTPError(
-                f"Invalid instance host value: '{host}'. "
-                "Value must start with 'https://' or 'http://'"
-            )
 
         self.host = host
         self.username = username
         self.password = password
         self.timeout = timeout
         self.validate_certs = validate_certs
+
+        # Perform some basic validation
+        if not re.match("^https{0,1}://", self.host):
+            self.host = f"https://{0}"
 
         # Try to parse the hostname as a url
         try:
