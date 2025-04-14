@@ -8,13 +8,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {
-    "metadata_version": "1.1",
-    "status": ["preview"],
-    "supported_by": "community",
-}
-
-
 DOCUMENTATION = """
 ---
 module: role_team_assignment
@@ -23,6 +16,7 @@ short_description: Gives a team permission to a resource or an organization.
 description:
     - Use this endpoint to give a team permission to a resource or an organization.
     - After creation, the assignment cannot be edited, but can be deleted to remove those permissions.
+version_added: 2.7.0
 options:
     role_definition:
         description:
@@ -52,11 +46,11 @@ options:
     state:
       description:
         - Desired state of the resource.
-      choices: ["present", "absent", "exists"]
+      choices: ["present", "absent"]
       default: "present"
       type: str
 extends_documentation_fragment:
-- ansible.platform.auth
+  - ansible.eda.eda_controller.auths
 """
 
 
@@ -86,7 +80,7 @@ def main():
         role_definition=dict(required=True, type="str"),
         object_ansible_id=dict(required=False, type="str"),
         team_ansible_id=dict(required=False, type="str"),
-        state=dict(default="present", choices=["present", "absent", "exists"]),
+        state=dict(default="present", choices=["present", "absent"]),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
