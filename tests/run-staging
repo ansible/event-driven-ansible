@@ -11,12 +11,12 @@ fi
 # Start EDA API Server
 bash -c 'cd ${TOX_WORK_DIR}/eda-server/tools/docker && \
 docker compose -p eda -f docker-compose-stage.yaml pull -q && \
-docker compose -p eda -f docker-compose-stage.yaml up -d && \
+docker compose -p eda -f docker-compose-stage.yaml --profile proxy up -d && \
 until curl -s http://localhost:8000/_healthz | grep -q "OK"; do \
 echo "Waiting for API to be ready..."; sleep 1; done'
 
 # Create integration_config.yml
-python -c "import os; config = 'controller_host: \"{}\"\ncontroller_username: \"{}\"\ncontroller_password: \"{}\"\ncontroller_verify_ssl: {}'.format(os.getenv('EDA_CONTROLLER_HOST'), os.getenv('EDA_CONTROLLER_USERNAME'), os.getenv('EDA_CONTROLLER_PASSWORD'), os.getenv('EDA_CONTROLLER_VERIFY_SSL').lower()); open('tests/integration/integration_config.yml', 'w').write(config)"
+python -c "import os; config = 'aap_hostname: \"{}\"\naap_username: \"{}\"\naap_password: \"{}\"\naap_verify_ssl: {}'.format(os.getenv('EDA_CONTROLLER_HOST'), os.getenv('EDA_CONTROLLER_USERNAME'), os.getenv('EDA_CONTROLLER_PASSWORD'), os.getenv('EDA_CONTROLLER_VERIFY_SSL').lower()); open('tests/integration/integration_config.yml', 'w').write(config)"
 
 # Run ansible integration tests while passing tox {posargs}
 ansible-test integration -v --requirements --color --coverage --truncate 0 "$@"
@@ -25,4 +25,4 @@ ansible-test coverage report --requirements --omit '.tox/*,tests/*' --color --al
 ansible-test coverage combine "--export=${TOX_ENV_DIR:-.}"
 
 # Clean up containers
-bash -c 'cd ${TOX_WORK_DIR}/eda-server/tools/docker && docker compose -p eda -f docker-compose-stage.yaml down'
+bash -c 'cd ${TOX_WORK_DIR}/eda-server/tools/docker && docker compose -p eda -f docker-compose-stage.yaml --profile proxy down'

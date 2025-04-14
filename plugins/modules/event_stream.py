@@ -242,7 +242,7 @@ def main() -> None:
             event_stream,
             event_stream_params,
             endpoint=event_stream_endpoint,
-            item_type="event stream type",
+            item_type="event stream",
         )
         module.exit_json(**result)
     except EDAError as e:

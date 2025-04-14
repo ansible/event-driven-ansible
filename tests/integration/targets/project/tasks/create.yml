@@ -20,8 +20,9 @@
 - name: Create project
   ansible.eda.project:
     name: "{{ project_name }}"
-    url: "{{ url }}"
     description: "Example project description"
+    url: "{{ url }}"
+    proxy: "{{ proxy }}"
     organization_name: Default
     state: present
   register: r
@@ -34,8 +35,9 @@
 - name: Create project again
   ansible.eda.project:
     name: "{{ project_name }}"
-    url: "{{ url }}"
     description: "Example project description"
+    url: "{{ url }}"
+    proxy: "{{ proxy }}"
     organization_name: Default
     state: present
   register: r
