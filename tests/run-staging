@@ -16,7 +16,7 @@ until curl -s http://localhost:8000/_healthz | grep -q "OK"; do \
 echo "Waiting for API to be ready..."; sleep 1; done'
 
 # Create integration_config.yml
-python -c "import os; config = 'aap_hostname: \"{}\"\naap_username: \"{}\"\naap_password: \"{}\"\naap_verify_ssl: {}'.format(os.getenv('EDA_CONTROLLER_HOST'), os.getenv('EDA_CONTROLLER_USERNAME'), os.getenv('EDA_CONTROLLER_PASSWORD'), os.getenv('EDA_CONTROLLER_VERIFY_SSL').lower()); open('tests/integration/integration_config.yml', 'w').write(config)"
+python -c "import os; config = 'aap_hostname: \"{}\"\naap_username: \"{}\"\naap_password: \"{}\"\naap_validate_certs: {}'.format(os.getenv('EDA_CONTROLLER_HOST'), os.getenv('EDA_CONTROLLER_USERNAME'), os.getenv('EDA_CONTROLLER_PASSWORD'), os.getenv('EDA_CONTROLLER_VERIFY_SSL').lower()); open('tests/integration/integration_config.yml', 'w').write(config)"
 
 # Run ansible integration tests while passing tox {posargs}
 ansible-test integration -v --requirements --color --coverage --truncate 0 "$@"

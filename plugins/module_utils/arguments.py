@@ -30,8 +30,8 @@ AUTH_ARGSPEC: dict[str, dict[str, object]] = {
         "type": "bool",
         "default": True,
         "required": False,
-        "fallback": (env_fallback, ["CONTROLLER_VERIFY_SSL", "AAP_VERIFY_SSL"]),
-        "aliases": ["aap_verify_ssl"],
+        "fallback": (env_fallback, ["CONTROLLER_VERIFY_SSL", "AAP_VALIDATE_CERTS"]),
+        "aliases": ["aap_validate_certs"],
     },
     "request_timeout": {
         "type": "float",

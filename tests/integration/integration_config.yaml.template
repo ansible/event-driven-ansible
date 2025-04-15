@@ -1,4 +1,4 @@
 aap_hostname: "https://localhost:8443"
 aap_username: "admin"
 aap_password: "testpass"
-aap_verify_ssl: false
+aap_validate_certs: false
