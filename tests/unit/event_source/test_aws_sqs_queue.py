@@ -36,13 +36,18 @@ async def test_receive_from_sqs(eda_queue: ListQueue) -> None:
             "ReceiptHandle": "xyz123",
             "Code": "405",
             "Message": "Failed to delete Message",
-            "SenderFault": True
+            "SenderFault": True,
         }
 
         response = {"Messages": [message1, message2]}
-        delete_response = {"Successful": [delete_response1], "Failed": [delete_response2]}
+        delete_response = {
+            "Successful": [delete_response1],
+            "Failed": [delete_response2],
+        }
         client.receive_message = AsyncMock(side_effect=[response, ValueError()])
-        client.delete_message_batch = AsyncMock(side_effect=[delete_response, ValueError()])
+        client.delete_message_batch = AsyncMock(
+            side_effect=[delete_response, ValueError()]
+        )
 
         session.create_client.return_value = client
         session.create_client.not_async = True
