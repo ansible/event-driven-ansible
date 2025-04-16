@@ -16,13 +16,13 @@
     quay_password: your quay.io password
 
     organization_name: Default
-    aap_verify_ssl: false
+    aap_validate_certs: false
   module_defaults:
     group/ansible.eda.eda:
       aap_hostname: "{{ aap_hostname }}"
       aap_username: "{{ aap_username }}"
       aap_password: "{{ aap_password }}"
-      aap_verify_ssl: "{{ aap_verify_ssl }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
   tasks:
     - name: Create a credential for AAP controller
       ansible.eda.credential:
@@ -33,7 +33,7 @@
           host: "{{ aap_hostname }}"
           username: "{{ aap_username }}"
           password: "{{ aap_password }}"
-          verify_ssl: "{{ aap_verify_ssl }}"
+          verify_ssl: "{{ aap_validate_certs }}"
 
     - name: Create a credential for github
       ansible.eda.credential:

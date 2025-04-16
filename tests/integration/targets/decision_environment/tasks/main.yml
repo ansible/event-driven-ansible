@@ -8,7 +8,7 @@
       aap_hostname: "{{ aap_hostname }}"
       aap_username: "{{ aap_username }}"
       aap_password: "{{ aap_password }}"
-      aap_verify_ssl: "{{ aap_verify_ssl }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
   block:
     - name: Generate a random_string for the test
       set_fact:

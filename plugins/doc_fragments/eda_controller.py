@@ -48,10 +48,10 @@ options:
             Controller instance.
           - If C(no), SSL certificates will not be validated.
           - This should only be used on personally controlled sites using self-signed certificates.
-          - If value not set, will try environment variable C(CONTROLLER_VERIFY_SSL), or E(AAP_VERIFY_SSL).
-          - Support for E(AAP_VERIFY_SSL) has been added in version 2.7.
+          - If value not set, will try environment variable C(CONTROLLER_VERIFY_SSL), or E(AAP_VALIDATE_CERTS).
+          - Support for E(AAP_VALIDATE_CERTS) has been added in version 2.7.
         default: True
         type: bool
         version_added: '2.0.0'
-        aliases: [ aap_verify_ssl ]
+        aliases: [ aap_validate_certs ]
 """
