@@ -33,7 +33,7 @@ babel==2.16.0
 backports-tarfile==1.2.0
 bindep==2.11.0
 black==24.8.0
-bleach==3.3.1
+bleach==6.2.0
 bleach-allowlist==1.0.3
 botocore==1.35.7
 bracex==2.5
