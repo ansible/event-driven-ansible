@@ -212,7 +212,6 @@ def main() -> None:
     if proxy:
         project_params["proxy"] = proxy
 
-
     credential_id = None
     if credential:
         credential_id = lookup_resource_id(
