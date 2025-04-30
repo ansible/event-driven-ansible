@@ -5,7 +5,7 @@
       aap_hostname: "{{ aap_hostname }}"
       aap_username: "{{ aap_username }}"
       aap_password: "{{ aap_password }}"
-      aap_verify_ssl: "{{ aap_verify_ssl }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
   block:
     - name: Run Lifecycle tests
       ansible.builtin.include_tasks:
@@ -120,7 +120,7 @@
           host: "{{ aap_hostname }}"
           username: "{{ aap_username }}"
           password: "{{ aap_password }}"
-          verify_ssl: "{{ aap_verify_ssl }}"
+          verify_ssl: "{{ aap_validate_certs }}"
       register: credential_creation
 
     - name: Assert that the credential was created successfully
