@@ -23,7 +23,7 @@
       set_fact:
         project_name: "test_project_{{ test_id }}"
         url: "https://github.com/ansible/eda-sample-project"
-        scm_branch:: stable-1.1
+        scm_branch: "stable-1.1"
         proxy: "http://eda:testpass@host.docker.internal:3128"
 
 
