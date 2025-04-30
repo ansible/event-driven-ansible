@@ -352,7 +352,7 @@ class Controller:
         )
 
     def delete_if_needed(
-        self, existing_item: dict[str, Any], endpoint: str
+        self, existing_item: Optional[dict[str, Any]], endpoint: str
     ) -> dict[str, Any]:
         if not existing_item:
             return self.result
