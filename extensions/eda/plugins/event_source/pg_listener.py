@@ -36,7 +36,8 @@ notes:
     special to enable chunking. The sender, which is the pg_notify
     action from ansible-rulebook, will decide if chunking needs to
     happen based on the size of the payload.
-  - If the messages are over 7KB the sender will chunk the messages
+  - |
+    If the messages are over 7KB the sender will chunk the messages
     into separate payloads with each payload having the following
     keys:
     * _message_chunked_uuid   The unique message uuid

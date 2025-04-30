@@ -1,8 +1,8 @@
 # Collection for Event-Driven Ansible
 
-This collection contains event source plugins, event filters and example rulebooks to be used with [ansible-rulebook](https://ansible-rulebook.readthedocs.io/en/stable/).
+This collection contains event source plugins, event filters and example rulebooks to be used with [ansible-rulebook](https://ansible.readthedocs.io/projects/rulebook/en/latest/).
 
-[![galaxy](https://img.shields.io/badge/galaxy-ansible.eda-5bbdbf?style=flat&logo=ansible&cacheSeconds=3600)](<(https://img.shields.io/badge/galaxy-ansible.eda-green?style=flat)(https://galaxy.ansible.com/ui/repo/published/ansible/eda/)>)
+[![galaxy](https://img.shields.io/badge/galaxy-ansible.eda-5bbdbf?style=flat&logo=ansible&cacheSeconds=3600)](https://galaxy.ansible.com/ui/repo/published/ansible/eda/)
 [![tox](https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml/badge.svg?event=push)](https://github.com/ansible/event-driven-ansible/actions/workflows/tox.yml)
 [![codecov](https://codecov.io/github/ansible/event-driven-ansible/graph/badge.svg?token=XvFwDpezAH)](https://codecov.io/github/ansible/event-driven-ansible)
 
@@ -101,7 +101,7 @@ You can either call modules, rulebooks and playbooks by their Fully Qualified Co
 ## Contributing
 
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Event-Driven Ansible collection repository](https://github.com/ansible/event-driven-ansible).
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
+See [CONTRIBUTING.md](https://github.com/ansible/event-driven-ansible/blob/main/CONTRIBUTING.md) for more details.
 
 ### More information about contributing
 
@@ -110,7 +110,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
 ## Release notes
 
-See the [raw generated changelog](./CHANGELOG.md).
+See Documentation tab on Automation Hub.
 
 ## Related Information
 
@@ -122,4 +122,4 @@ See the [raw generated changelog](./CHANGELOG.md).
 
 ## License Information
 
-See [LICENSE](./LICENSE) to see the full text.
+See [LICENSE](https://github.com/ansible/event-driven-ansible/blob/main/LICENSE) to see the full text.

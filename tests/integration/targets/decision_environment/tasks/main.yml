@@ -5,10 +5,10 @@
 - name: Decision environment integration tests
   module_defaults:
     group/ansible.eda.eda:
-      controller_host: "{{ controller_host }}"
-      controller_username: "{{ controller_username }}"
-      controller_password: "{{ controller_password }}"
-      validate_certs: "{{ controller_verify_ssl }}"
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
   block:
     - name: Generate a random_string for the test
       set_fact:
@@ -24,6 +24,8 @@
       set_fact:
         decision_env_name: "Test_Decision_Env_{{ test_id }}"
         image_url: "quay.io/ansible/ansible-rulebook:main"
+        credential_type_name: "Container Registry"
+        credential_name: "Test_Container_Registry_Credential_{{ test_id }}"
 
     - include_tasks: create.yml
     - include_tasks: delete.yml
@@ -36,4 +38,10 @@
       loop:
         - "{{ decision_env_name }}"
         - "{{ decision_env_name }}_new"
+      ignore_errors: true
+
+    - name: Clean up - credential
+      ansible.eda.credential:
+        name: "{{ credential_name }}"
+        state: absent
       ignore_errors: true
