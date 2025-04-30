@@ -85,6 +85,8 @@ plugins/modules/event_stream.py
 plugins/modules/event_stream_info.py
 plugins/modules/project.py
 plugins/modules/project_info.py
+plugins/modules/role_team_assignment.py
+plugins/modules/role_user_assignment.py
 plugins/modules/rulebook_activation.py
 plugins/modules/rulebook_activation_copy.py
 plugins/modules/rulebook_activation_info.py

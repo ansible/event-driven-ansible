@@ -72,7 +72,7 @@ from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
 
-def main():
+def main() -> None:
     # Any additional arguments that are not fields of the item can be added here
     argument_spec = dict(
         user=dict(required=False, type="str"),
@@ -132,10 +132,10 @@ def main():
         new_item["user_ansible_id"] = user_ansible_id
 
     try:
-        assignment = controller.get_one_or_many(
-            "role_user_assignments", **{"data": new_item}
+        assignment_list = controller.get_one_or_many(
+            "role_user_assignments", None, **{"data": new_item}
         )
-        assignment = assignment[0] if len(assignment) == 1 else None
+        assignment = assignment_list[0] if len(assignment_list) == 1 else None
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
