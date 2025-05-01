@@ -8,41 +8,37 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: role_user_assignment
 author: "Tom Page (@Tompage1994)"
 short_description: Gives a user permission to a resource or an organization.
 description:
-    - Use this endpoint to give a user permission to a resource or an organization.
+    - This module allows the user to give a user permission to a resource or an organization.
     - After creation, the assignment cannot be edited, but can be deleted to remove those permissions.
 version_added: 2.7.0
 options:
     role_definition:
-        description:
-            - The name of the role definition to assign to the user.
-        required: True
-        type: str
+      description:
+          - The name of the role definition to assign to the user.
+      required: True
+      type: str
     object_id:
-        description:
-            - Primary key of the object this assignment applies to.
-        required: False
-        type: int
+      description:
+          - Primary key of the object this assignment applies to.
+      type: int
     user:
-        description:
-            - The name of the user to assign to the object.
-        required: False
-        type: str
+      description:
+          - The name of the user to assign to the object.
+      type: str
     object_ansible_id:
-        description:
-            - Resource id of the object this role applies to. Alternative to the object_id field.
-        required: False
-        type: str
+      description:
+          - Resource id of the object this role applies to. Alternative to the object_id field.
+      type: str
     user_ansible_id:
-        description:
-            - Resource id of the user who will receive permissions from this assignment. Alternative to user field.
-        required: False
-        type: str
+      description:
+          - Resource id of the user who will receive permissions from this assignment. Alternative to user field.
+      type: str
     state:
       description:
         - Desired state of the resource.
@@ -54,9 +50,9 @@ extends_documentation_fragment:
 """
 
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Give Administrators organization admin role for org 1
-  ansible.platform.role_user_assignment:
+  ansible.eda.role_user_assignment:
     role_definition: Organization Admin
     object_id: 1
     user: Administrators
@@ -115,10 +111,13 @@ def main() -> None:
 
     controller = Controller(client, module)
 
-    role_definition = controller.get_exactly_one(
-        "role_definitions", name=role_definition_str
-    )
-    user = controller.get_exactly_one("users", name=user_param)
+    try:
+        role_definition = controller.get_exactly_one(
+            "role_definitions", name=role_definition_str
+        )
+        user = controller.get_exactly_one("users", name=user_param)
+    except EDAError as eda_err:
+        module.fail_json(msg=str(eda_err))
 
     new_item = {"role_definition": role_definition["id"]}
 

@@ -8,41 +8,37 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
 ---
 module: role_team_assignment
 author: "Tom Page (@Tompage1994)"
 short_description: Gives a team permission to a resource or an organization.
 description:
-    - Use this endpoint to give a team permission to a resource or an organization.
+    - This module allows the user to give a team permission to a resource or an organization.
     - After creation, the assignment cannot be edited, but can be deleted to remove those permissions.
 version_added: 2.7.0
 options:
     role_definition:
-        description:
-            - The name of the role definition to assign to the team.
-        required: True
-        type: str
+      description:
+          - The name of the role definition to assign to the team.
+      required: True
+      type: str
     object_id:
-        description:
-            - Primary key of the object this assignment applies to.
-        required: False
-        type: int
+      description:
+          - Primary key of the object this assignment applies to.
+      type: int
     team:
-        description:
-            - The name of the team to assign to the object.
-        required: False
-        type: str
+      description:
+          - The name of the team to assign to the object.
+      type: str
     object_ansible_id:
-        description:
-            - Resource id of the object this role applies to. Alternative to the object_id field.
-        required: False
-        type: str
+      description:
+          - Resource id of the object this role applies to. Alternative to the object_id field.
+      type: str
     team_ansible_id:
-        description:
-            - Resource id of the team who will receive permissions from this assignment. Alternative to team field.
-        required: False
-        type: str
+      description:
+        - Resource id of the team who will receive permissions from this assignment. Alternative to team field.
+      type: str
     state:
       description:
         - Desired state of the resource.
@@ -54,9 +50,9 @@ extends_documentation_fragment:
 """
 
 
-EXAMPLES = """
+EXAMPLES = r"""
 - name: Give Administrators organization admin role for org 1
-  ansible.platform.role_team_assignment:
+  ansible.eda.role_team_assignment:
     role_definition: Organization Admin
     object_id: 1
     team: Administrators
@@ -115,10 +111,13 @@ def main() -> None:
 
     controller = Controller(client, module)
 
-    role_definition = controller.get_exactly_one(
-        "role_definitions", name=role_definition_str
-    )
-    team = controller.get_exactly_one("teams", name=team_param)
+    try:
+        role_definition = controller.get_exactly_one(
+            "role_definitions", name=role_definition_str
+        )
+        team = controller.get_exactly_one("teams", name=team_param)
+    except EDAError as eda_err:
+        module.fail_json(msg=str(eda_err))
 
     new_item = {"role_definition": role_definition["id"]}
 
