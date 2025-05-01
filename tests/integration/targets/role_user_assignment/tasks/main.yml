@@ -11,7 +11,7 @@
     - name: Create role_user_assignment in check mode
       ansible.eda.role_user_assignment:
         state: present
-        user: "{{ controller_username }}"
+        user: "{{ aap_username }}"
         role_definition: Organization Eda Credential Admin
         object_id: 1
       check_mode: true
@@ -25,7 +25,7 @@
     - name: Create role_user_assignment
       ansible.eda.role_user_assignment:
         state: present
-        user: "{{ controller_username }}"
+        user: "{{ aap_username }}"
         role_definition: Organization Eda Credential Admin
         object_id: 1
       register: _result
@@ -38,7 +38,7 @@
     - name: Create role_user_assignment again
       ansible.eda.role_user_assignment:
         state: present
-        user: "{{ controller_username }}"
+        user: "{{ aap_username }}"
         role_definition: Organization Eda Credential Admin
         object_id: 1
       register: _result
@@ -63,7 +63,7 @@
 
     - name: Delete non-existing role_user_assignment in check mode
       ansible.eda.role_user_assignment:
-        user: "{{ controller_username }}"
+        user: "{{ aap_username }}"
         role_definition: Organization Eda Credential Admin
         object_id: 2
         state: absent
@@ -77,7 +77,7 @@
 
     - name: Delete role_user_assignment
       ansible.eda.role_user_assignment:
-        user: "{{ controller_username }}"
+        user: "{{ aap_username }}"
         role_definition: Organization Eda Credential Admin
         object_id: 1
         state: absent
@@ -90,7 +90,7 @@
   always:
     - name: Clean up - role_user_assignment
       ansible.eda.role_user_assignment:
-        user: "{{ controller_username }}"
+        user: "{{ aap_username }}"
         role_definition: Organization Eda Credential Admin
         object_id: 2
         state: absent
