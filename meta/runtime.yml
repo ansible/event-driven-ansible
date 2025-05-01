@@ -17,6 +17,8 @@ action_groups:
     - event_stream_info
     - project
     - project_info
+    - role_team_assignment
+    - role_user_assignment
     - rulebook_info
     - rulebook_activation
     - rulebook_activation_copy
