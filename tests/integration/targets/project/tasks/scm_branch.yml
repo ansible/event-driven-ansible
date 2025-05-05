@@ -46,8 +46,8 @@
         name: "{{ project_name }}_test_branch"
       register: r_info
       until:
-        - re_info.projects[0].modified_at != re_info.projects[0].created_at
-        - re_info.projects[0].scm_branch == "main"
+        - re.projects[0].modified_at != re.projects[0].created_at
+        - re.projects[0].scm_branch == "main"
       retries: 30
       delay: 1
 
