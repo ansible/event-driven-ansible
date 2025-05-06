@@ -35,6 +35,7 @@ containerd
 darglint
 dbname
 deadsnakes
+devel
 dict2items
 digestmod
 docsite

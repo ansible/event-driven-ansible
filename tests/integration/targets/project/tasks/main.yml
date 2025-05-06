@@ -23,12 +23,15 @@
       set_fact:
         project_name: "test_project_{{ test_id }}"
         url: "https://github.com/ansible/eda-sample-project"
+        scm_branch: "stable-1.1"
         proxy: "http://eda:testpass@host.docker.internal:3128"
+
 
     - include_tasks: create.yml
     - include_tasks: delete.yml
     - include_tasks: update.yml
     - include_tasks: sync.yml
+    - include_tasks: scm_branch.yml
   always:
     - name: Clean up - project
       ansible.eda.project:
