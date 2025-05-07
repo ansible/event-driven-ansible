@@ -49,10 +49,10 @@ jobs:
             py39:tox -e py39-unit;tox -e py39-integration;tox -e coverage
             py310:tox -e py310-unit; tox -e py310-integration;tox -e coverage
             py311:tox -e py311-unit; tox -e py311-integration;tox -e coverage
-            py312:tox -e py312-unit;tox -e py312-unit; tox -e py312-integration;tox -e coverage
+            py312:tox -e py312-unit; tox -e py312-integration;tox -e coverage
             py39-macos:tox -e py39-docs;tox -e py39-unit;tox -e py39-integration;tox -e coverage
             py312-macos:tox -e py312-docs;tox -e py312-unit;tox -e py312-integration;tox -e coverage
-            py311-linux-arm64:tox -e py312-unit;tox -e py312-integration;tox -e coverage
+            py311-linux-arm64:tox -e py311-unit;tox -e py311-integration;tox -e coverage
             staging: tox -e py311-staging
           # ^ arm64 runner is using py311 for matching python version used in AAP 2.5
           # building docs on macos is needed to avoid diverging behavior
