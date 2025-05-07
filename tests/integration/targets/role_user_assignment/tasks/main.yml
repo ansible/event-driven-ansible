@@ -1,0 +1,97 @@
+---
+- name: role_team_assignment integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
+  block:
+    # CREATE
+    - name: Create role_user_assignment in check mode
+      ansible.eda.role_user_assignment:
+        state: present
+        user: "{{ aap_username }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+      check_mode: true
+      register: _result
+
+    - name: Check role_user_assignment creation in check mode
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create role_user_assignment
+      ansible.eda.role_user_assignment:
+        state: present
+        user: "{{ aap_username }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+      register: _result
+
+    - name: Check role_user_assignment creation
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create role_user_assignment again
+      ansible.eda.role_user_assignment:
+        state: present
+        user: "{{ aap_username }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+      register: _result
+
+    - name: Check role_user_assignment is not created again
+      assert:
+        that:
+          - not _result.changed
+
+    # DELETE
+    - name: Delete operation type without required parameter
+      ansible.eda.role_user_assignment:
+        state: absent
+      ignore_errors: true
+      register: _result
+
+    - name: Check if role_user_assignment name is required
+      assert:
+        that:
+          - _result.failed
+          - "'missing required arguments: role_definition' in _result.msg"
+
+    - name: Delete non-existing role_user_assignment in check mode
+      ansible.eda.role_user_assignment:
+        user: "{{ aap_username }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 2
+        state: absent
+      check_mode: true
+      register: _result
+
+    - name: Check if delete non-existing role_user_assignment in check mode
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Delete role_user_assignment
+      ansible.eda.role_user_assignment:
+        user: "{{ aap_username }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 1
+        state: absent
+      register: _result
+
+    - name: Check if delete non-existing role_user_assignment
+      assert:
+        that:
+          - _result.changed
+  always:
+    - name: Clean up - role_user_assignment
+      ansible.eda.role_user_assignment:
+        user: "{{ aap_username }}"
+        role_definition: Organization Eda Credential Admin
+        object_id: 2
+        state: absent
+      ignore_errors: true
