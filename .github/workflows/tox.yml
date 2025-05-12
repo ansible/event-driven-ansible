@@ -45,7 +45,8 @@ jobs:
           # can be different. Each of them is testing with all supported
           # python versions, regardless the tox pyXY name.
           other_names: |
-            lint-docs-sanity:tox -e lint;tox -e docs;tox -e py39-sanity-ansible2.15;tox -e py310-sanity-ansible2.16;tox -e py311-sanity-ansible2.17
+            lint:tox -e lint;tox -e ruff
+            docs-sanity:tox -e docs;tox -e py39-sanity-ansible2.15;tox -e py310-sanity-ansible2.16;tox -e py311-sanity-ansible2.17
             py39:tox -e py39-unit;tox -e py39-integration;tox -e coverage
             py310:tox -e py310-unit; tox -e py310-integration;tox -e coverage
             py311:tox -e py311-unit; tox -e py311-integration;tox -e coverage
@@ -149,7 +150,7 @@ jobs:
       - name: Archive collection archive
         uses: actions/upload-artifact@v4
         # we need to do for only one job, 'tox -e docs' when run on linux:
-        if: ${{ matrix.name == 'lint-docs-sanity' }}
+        if: ${{ matrix.name == 'docs-sanity' }}
         with:
           name: collection-artifact
           if-no-files-found: error
