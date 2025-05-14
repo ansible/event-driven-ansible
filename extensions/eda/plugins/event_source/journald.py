@@ -5,7 +5,7 @@ from typing import Any
 # Also systemd-python fails to install on pre-commit.ci due to:
 # No such file or directory: 'pkg-config'
 # pylint: disable=import-error
-from systemd import journal  # type: ignore
+from systemd import journal  # type: ignore # noqa: PGH003
 
 DOCUMENTATION = r"""
 ---
@@ -41,7 +41,7 @@ EXAMPLES = r"""
 """
 
 
-async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:  # noqa: D417
+async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Read journal entries and add them to the provided queue.
 
     Args:
@@ -54,6 +54,7 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:  # noqa
     Returns:
     -------
         None
+
     """
     delay = args.get("delay", 0)
     match = args.get("match", [])

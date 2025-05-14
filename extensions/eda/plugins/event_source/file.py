@@ -37,7 +37,7 @@ def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
             return
         if isinstance(data, dict):
             # pylint: disable=unused-variable
-            coroutine = queue.put(data)  # noqa: F841
+            coroutine = queue.put(data)
         else:
             if not isinstance(data, list):
                 msg = (
@@ -69,7 +69,7 @@ def _observe_files(queue: Queue[Any], files: list[str]) -> None:
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 
-        def __init__(self, **kwargs: Any) -> None:
+        def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self, event: FileSystemEvent) -> None:
