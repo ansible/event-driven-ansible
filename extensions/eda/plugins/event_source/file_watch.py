@@ -47,7 +47,7 @@ def watch(
     class Handler(RegexMatchingEventHandler):
         """A handler for file system events."""
 
-        def __init__(self: "Handler", **kwargs: Any) -> None:
+        def __init__(self: "Handler", **kwargs: Any) -> None:  # noqa: ANN401
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self: "Handler", event: FileSystemEvent) -> None:

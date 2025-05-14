@@ -21,7 +21,7 @@ import time
 from dataclasses import dataclass, fields
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -152,7 +152,7 @@ EXAMPLES = r"""
 class MissingEnvVarError(Exception):
     """Exception class for missing env var."""
 
-    def __init__(self: "MissingEnvVarError", env_var: str) -> None:
+    def __init__(self: MissingEnvVarError, env_var: str) -> None:
         """Class constructor with the missing env_var."""
         super().__init__(f"Env Var {env_var} is required")
 
@@ -161,7 +161,10 @@ class EnvVarMismatchError(Exception):
     """Exception class for mismatch in the env var value."""
 
     def __init__(
-        self: "EnvVarMismatchError", env_var: str, value: str, expected: str
+        self: EnvVarMismatchError,
+        env_var: str,
+        value: str,
+        expected: str,
     ) -> None:
         """Class constructor with mismatch in env_var value."""
         super().__init__(f"Env Var {env_var} expected: {expected} passed in: {value}")
@@ -188,7 +191,7 @@ class ControlArgs:
     loop_count: int = 1
     repeat_count: int = 1
     timestamp: bool = False
-    check_env_vars: Optional[Dict[str, str]] = None
+    check_env_vars: Optional[dict[str, str]] = None  # noqa: UP007
 
 
 @dataclass
@@ -206,7 +209,9 @@ class Generic:
     """Generic source plugin to generate different events."""
 
     def __init__(
-        self: Generic, queue: asyncio.Queue[Any], args: dict[str, Any]
+        self: Generic,
+        queue: asyncio.Queue[Any],
+        args: dict[str, Any],
     ) -> None:
         """Insert event data into the queue."""
         self.queue = queue
@@ -295,7 +300,7 @@ class Generic:
         if not path.is_file():
             msg = f"File {self.my_args.payload_file} not found"
             raise ValueError(msg)
-        with path.open(mode="r", encoding="utf-8") as file:
+        with path.open(mode="r", encoding="utf-8") as file:  # noqa: ASYNC230
             try:
                 self.my_args.payload = yaml.safe_load(file)
             except yaml.YAMLError as exc:
