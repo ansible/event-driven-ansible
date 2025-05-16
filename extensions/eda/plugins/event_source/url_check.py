@@ -47,9 +47,9 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
         return
 
     while True:
-        try:
-            async with aiohttp.ClientSession() as session:
-                for url in urls:
+        for url in urls:
+            try:
+                async with aiohttp.ClientSession() as session:
                     async with session.get(url, verify_ssl=verify_ssl) as resp:
                         await queue.put(
                             {
@@ -61,17 +61,17 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
                             },
                         )
 
-        except aiohttp.ClientError as exc:
-            client_error = str(exc)
-            await queue.put(
-                {
-                    "url_check": {
-                        "url": url,
-                        "status": "down",
-                        "error_msg": client_error,
+            except aiohttp.ClientError as exc:
+                client_error = str(exc)
+                await queue.put(
+                    {
+                        "url_check": {
+                            "url": url,
+                            "status": "down",
+                            "error_msg": client_error,
+                        },
                     },
-                },
-            )
+                )
 
         await asyncio.sleep(delay)
 

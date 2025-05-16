@@ -1,0 +1,34 @@
+---
+- name: Ruleset for multiple URLs check source test
+  hosts: all
+  sources:
+    - name: check sites
+      ansible.eda.url_check:
+        # big enough so only one check is performed in a test
+        delay: 3600
+        urls:
+          - http://localhost:8000/
+          - http://not-really-localhost:8000/
+          - http://localhost:8000/non-existing
+  rules:
+    - name: Endpoint is up
+      condition: event.url_check.status == "up" and event.url_check.status_code == 200
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: "Endpoint available"
+    - name: Endpoint is unavailable
+      condition: event.url_check.status == "down" and event.url_check.status_code == 404
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: "Endpoint unavailable"
+    - name: Host offline
+      condition: event.url_check.status == "down"
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: "Endpoint down"
