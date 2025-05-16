@@ -1,6 +1,7 @@
 import http.server
 import os
 import threading
+import time
 from typing import Any, Callable, Generator
 
 import pytest
@@ -88,3 +89,30 @@ def test_url_check_source_error_handling(
         if "msg" in line:
             assert "Endpoint down" in line
             break
+
+
+@pytest.mark.timeout(timeout=DEFAULT_TEST_TIMEOUT, method="signal")
+def test_url_check_source_urls(
+    init_webserver: None,
+) -> None:
+    """
+    Ensure the url check source plugin reports correctly the status
+    of all the urls, and not only until the first failure
+    """
+
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_url_check", "test_url_check_rules_urls.yml"
+    )
+
+    runner = CLIRunner(rules=ruleset).run_in_background()
+    # enough time to checks all the URLs
+    time.sleep(10)
+    runner.terminate()
+
+    (stdout, stderr) = runner.communicate()
+    assert stdout is not None
+    msgs = [line for line in stdout.decode().splitlines() if "msg" in line]
+    assert len(msgs) == 3
+    assert len([line for line in msgs if "Endpoint available" in line]) == 1
+    assert len([line for line in msgs if "Endpoint unavailable" in line]) == 1
+    assert len([line for line in msgs if "Endpoint down" in line]) == 1
