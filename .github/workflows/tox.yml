@@ -84,7 +84,7 @@ jobs:
         run: |
           sudo apt-get -qq -o Dpkg::Use-Pty=0 remove -y docker-compose
           sudo apt-get -qq -o Dpkg::Use-Pty=0 update -y --fix-missing
-          sudo apt-get -qq -o Dpkg::Use-Pty=0 --assume-yes --no-install-recommends install -y apt-transport-https curl libsystemd0 libsystemd-dev pkg-config libkrb5-dev krb5-user
+          sudo apt-get -qq -o Dpkg::Use-Pty=0 --assume-yes --no-install-recommends install -y apt-transport-https curl libsystemd0 libsystemd-dev pkg-config libkrb5-dev krb5-user sscg
           sudo add-apt-repository ppa:deadsnakes/ppa
           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
