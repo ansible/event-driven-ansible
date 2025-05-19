@@ -36,6 +36,11 @@ options:
       description:
         - The git URL of the project.
       type: str
+    proxy:
+      description:
+        - Proxy used to access HTTP or HTTPS servers.
+      type: str
+      version_added: '2.7.0'
     credential:
       description:
         - The name of the credential to associate with the project.
@@ -47,6 +52,11 @@ options:
       type: str
       aliases:
         - organization
+    scm_branch:
+      description:
+        - The scm branch of the git project.
+      type: str
+      version_added: 2.8.0
     state:
       description:
         - Desired state of the resource.
@@ -67,32 +77,34 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Create EDA Projects
   ansible.eda.project:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
+    proxy: "https://example.com"
     organization_name: Default
     state: present
 
 - name: Update the name of the project
   ansible.eda.project:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     new_name: "Latest Example Project"
     description: "Example project description"
     url: "https://example.com/project1"
+    scm_branch: "devel"
     organization_name: Default
     state: present
 
 - name: Delete the project
   ansible.eda.project:
-    controller_host: https://my_eda_host/
-    controller_username: admin
-    controller_password: MySuperSecretPassw0rd
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     state: absent
 """
@@ -123,7 +135,9 @@ def main() -> None:
         new_name=dict(),
         description=dict(),
         url=dict(),
+        proxy=dict(),
         credential=dict(),
+        scm_branch=dict(),
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
         sync=dict(type="bool", default=False),
@@ -151,23 +165,24 @@ def main() -> None:
     organization_name = module.params.get("organization_name")
     project_name = module.params.get("name")
     url = module.params.get("url")
+    proxy = module.params.get("proxy")
     sync_enabled = module.params.get("sync")
-    project_type = {}
+    project = {}
 
     try:
-        project_type = controller.get_exactly_one(project_endpoint, name=project_name)
+        project = controller.get_exactly_one(project_endpoint, name=project_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
     if state == "present":
-        if not project_type and not url:
+        if not project and not url:
             module.fail_json(
                 msg="Parameter url is required when state is present and project does not exist"
             )
         if (
             config_endpoint_avail.status not in (404,)
             and organization_name is None
-            and not project_type
+            and not project
         ):
             module.fail_json(
                 msg="Parameter organization_name is required when state is present and project does not exist"
@@ -175,22 +190,27 @@ def main() -> None:
 
     new_name = module.params.get("new_name")
     description = module.params.get("description")
+    scm_branch = module.params.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
-            ret = controller.delete_if_needed(project_type, endpoint=project_endpoint)
+            ret = controller.delete_if_needed(project, endpoint=project_endpoint)
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
-    project_type_params: dict[str, Any] = {}
+    project_params: dict[str, Any] = {}
     if description:
-        project_type_params["description"] = description
+        project_params["description"] = description
     if url:
-        project_type_params["url"] = url
+        project_params["url"] = url
+    if scm_branch:
+        project_params["scm_branch"] = scm_branch
+    if proxy:
+        project_params["proxy"] = proxy
 
     credential_id = None
     if credential:
@@ -201,7 +221,7 @@ def main() -> None:
     if credential_id is not None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
-        project_type_params["eda_credential_id"] = credential_id
+        project_params["eda_credential_id"] = credential_id
 
     organization_id = None
 
@@ -211,32 +231,32 @@ def main() -> None:
         )
 
     if organization_id:
-        project_type_params["organization_id"] = organization_id
+        project_params["organization_id"] = organization_id
 
     if new_name:
-        project_type_params["name"] = new_name
-    elif project_type:
-        project_type_params["name"] = controller.get_item_name(project_type)
+        project_params["name"] = new_name
+    elif project:
+        project_params["name"] = controller.get_item_name(project)
     else:
-        project_type_params["name"] = project_name
+        project_params["name"] = project_name
 
-    # If the state was present and we can let the module build or update the existing project type,
+    # If the state was present and we can let the module build or update the existing project,
     # this will return on its own
     try:
         ret = controller.create_or_update_if_needed(
-            project_type,
-            project_type_params,
+            project,
+            project_params,
             endpoint=project_endpoint,
-            item_type="project type",
+            item_type="project",
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
-    if sync_enabled and project_type:
+    if sync_enabled and project:
         sync_endpoint = f"{project_endpoint}/{ret['id']}/sync"
         try:
             controller.create(
-                {"name": project_type_params["name"]},
+                {"name": project_params["name"]},
                 endpoint=sync_endpoint,
                 item_type="sync",
             )

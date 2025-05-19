@@ -5,9 +5,9 @@
   connection: local
   gather_facts: false
   vars:
-    controller_host: your eda controller url, e.g. https://eda-controller.example.com
-    controller_username: your eda controller username
-    controller_password: your eda controller password
+    aap_hostname: your eda controller url, e.g. https://eda-controller.example.com
+    aap_username: your eda controller username
+    aap_password: your eda controller password
 
     github_username: your github username
     github_token: your github token
@@ -16,13 +16,13 @@
     quay_password: your quay.io password
 
     organization_name: Default
-    validate_certs: false
+    aap_validate_certs: false
   module_defaults:
     group/ansible.eda.eda:
-      controller_host: "{{ controller_host }}"
-      controller_username: "{{ controller_username }}"
-      controller_password: "{{ controller_password }}"
-      validate_certs: "{{ validate_certs }}"
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
   tasks:
     - name: Create a credential for AAP controller
       ansible.eda.credential:
@@ -30,10 +30,10 @@
         name: My AAP controller credential
         credential_type_name: Red Hat Ansible Automation Platform
         inputs:
-          host: "{{ controller_host }}"
-          username: "{{ controller_username }}"
-          password: "{{ controller_password }}"
-          verify_ssl: "{{ validate_certs }}"
+          host: "{{ aap_hostname }}"
+          username: "{{ aap_username }}"
+          password: "{{ aap_password }}"
+          verify_ssl: "{{ aap_validate_certs }}"
 
     - name: Create a credential for github
       ansible.eda.credential:

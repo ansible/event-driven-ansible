@@ -8,7 +8,7 @@ namespace: ansible
 name: eda
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 2.5.0
+version: 2.8.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -52,7 +52,7 @@ repository: https://github.com/ansible/event-driven-ansible
 documentation: https://ansible.readthedocs.io/projects/ansible-eda/
 
 # The URL to the homepage of the collection/project
-homepage: http://ansible.com/event-driven
+homepage: https://www.redhat.com/en/technologies/management/ansible/event-driven-ansible
 
 # The URL to the collection issue tracker
 issues: https://github.com/ansible/event-driven-ansible/issues

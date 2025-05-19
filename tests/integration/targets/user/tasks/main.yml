@@ -5,10 +5,10 @@
 - name: User integration tests
   module_defaults:
     group/ansible.eda.eda:
-      controller_host: "{{ controller_host }}"
-      controller_username: "{{ controller_username }}"
-      controller_password: "{{ controller_password }}"
-      validate_certs: "{{ controller_verify_ssl }}"
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
   block:
     - name: Generate a random_string for the test
       set_fact:

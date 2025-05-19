@@ -42,8 +42,10 @@ options:
     default: "."
   skip_original_data:
     description:
-      - true: put only alert data to the queue
-      - false: put sequentially both the received original data and each parsed alert item to the queue.
+      - >
+        true: put only alert data to the queue
+      - >
+        false: put sequentially both the received original data and each parsed alert item to the queue.
     type: bool
     default: false
 """

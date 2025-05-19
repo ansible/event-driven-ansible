@@ -19,6 +19,7 @@ action_groups:
     - project_info
     - rulebook_info
     - rulebook_activation
+    - rulebook_activation_copy
     - rulebook_activation_info
     - user
 plugin_routing:
