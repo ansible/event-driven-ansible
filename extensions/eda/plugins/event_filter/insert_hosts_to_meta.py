@@ -98,7 +98,7 @@ def main(
 
     if isinstance(hosts, str):
         hosts = hosts.split(host_separator) if host_separator else [hosts]
-    elif isinstance(hosts, (list, tuple)):  # noqa: UP038
+    elif isinstance(hosts, (list, tuple)):
         for host in hosts:
             if not isinstance(host, str):
                 msg = f"{host} is not a valid hostname"

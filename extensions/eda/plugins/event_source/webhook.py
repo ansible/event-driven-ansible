@@ -8,7 +8,8 @@ import json
 import logging
 import ssl
 import typing
-from typing import Any, Awaitable
+from collections.abc import Awaitable  # noqa: TC003
+from typing import Any
 
 from aiohttp import web
 
@@ -194,19 +195,19 @@ def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
     context = None
     if "certfile" in args:
         certfile = args.get("certfile")
-        keyfile = args.get("keyfile", None)
-        password = args.get("password", None)
+        keyfile = args.get("keyfile")
+        password = args.get("password")
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        if not isinstance(certfile, str):  # pragma: no-cover
+            msg = f"certfile is not a string, got a {type(certfile)} instead."
+            raise TypeError(msg)
         try:
-            if not isinstance(certfile, str):  # pragma: no-cover
-                msg = f"certfile is not a string, got a {type(certfile)} instead."
-                raise ValueError(msg)
             context.load_cert_chain(certfile, keyfile, password)
         except Exception:
             logger.exception("Failed to load certificates. Check they are valid")
             raise
-        cafile = args.get("cafile", None)
-        capath = args.get("capath", None)
+        cafile = args.get("cafile")
+        capath = args.get("capath")
         if cafile or capath:
             try:
                 context.load_verify_locations(cafile, capath)
