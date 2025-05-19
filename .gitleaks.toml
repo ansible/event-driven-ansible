@@ -1,5 +1,2 @@
 [allowlist]
 description = "Global Allowlist"
-
-# Ignore based on any subset of the file path
-paths = ['''tests\/unit\/event_source\/certs''']

@@ -1,5 +1,8 @@
 import asyncio
+import pathlib
+import shutil
 import ssl
+import subprocess
 from http import HTTPStatus
 from typing import Any, Optional
 
@@ -7,6 +10,32 @@ import aiohttp
 import pytest
 
 from extensions.eda.plugins.event_source.webhook import main as webhook_main
+
+
+@pytest.fixture(scope="session")
+def dynamic_certs(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+    sscg = shutil.which("sscg")
+    if not sscg:
+        pytest.skip("'sscg' is not available")
+    path = tmp_path_factory.mktemp("certs")
+    subprocess.run(
+        [
+            sscg,
+            "--cert-file",
+            "server.crt",
+            "--cert-key-file",
+            "server.key",
+            "--client-file",
+            "client.crt",
+            "--client-key-file",
+            "client.key",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=path,
+    )
+    return path
 
 
 async def start_server(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
@@ -72,16 +101,16 @@ async def test_cancel() -> None:
 
 
 @pytest.mark.asyncio
-async def test_post_endpoint() -> None:
+async def test_post_endpoint(dynamic_certs: pathlib.Path) -> None:
     queue: asyncio.Queue[Any] = asyncio.Queue()
 
     args = {
         "host": "localhost",
         "port": 8000,
         "token": "secret",
-        "certfile": "./tests/unit/event_source/certs/server.crt",
-        "keyfile": "./tests/unit/event_source/certs/server.key",
-        "cafile": "./tests/unit/event_source/certs/client.crt",
+        "certfile": str(dynamic_certs / "server.crt"),
+        "keyfile": str(dynamic_certs / "server.key"),
+        "cafile": str(dynamic_certs / "ca.crt"),
     }
     plugin_task = asyncio.create_task(start_server(queue, args))
 
@@ -89,8 +118,8 @@ async def test_post_endpoint() -> None:
         "payload": {"src_path": "https://example.com/payload"},
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
-        "client_certfile": "./tests/unit/event_source/certs/client.crt",
-        "client_keyfile": "./tests/unit/event_source/certs/client.key",
+        "client_certfile": str(dynamic_certs / "client.crt"),
+        "client_keyfile": str(dynamic_certs / "client.key"),
     }
 
     post_task = asyncio.create_task(post_code(plugin_task, task_info))
