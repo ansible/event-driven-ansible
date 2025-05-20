@@ -82,6 +82,7 @@ disable = [
   "too-many-branches",
   "inconsistent-return-statements",
   "invalid-name",
+  "too-many-positional-arguments",
 ]
 max-line-length=120
 
