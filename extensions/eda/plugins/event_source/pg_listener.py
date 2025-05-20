@@ -122,9 +122,9 @@ def _validate_args(args: dict[str, Any]) -> None:
     err_msg = None
     if not isinstance(args["channels"], list) or not args["channels"]:
         err_msg = "Channels must be a list and not empty"
-    if args.get("dsn") is not None and not isinstance(args["dsn"], str):
+    elif args.get("dsn") is not None and not isinstance(args["dsn"], str):
         err_msg = "DSN must be a string"
-    if args.get("postgres_params") is not None and not isinstance(
+    elif args.get("postgres_params") is not None and not isinstance(
         args["postgres_params"],
         dict,
     ):

@@ -8,7 +8,6 @@ import json
 import logging
 import ssl
 import typing
-from collections.abc import Awaitable  # noqa: TC003
 from typing import Any
 
 from aiohttp import web
@@ -95,7 +94,7 @@ EXAMPLES = r"""
 """
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Awaitable, Callable
 
 logger = logging.getLogger(__name__)
 routes = web.RouteTableDef()
