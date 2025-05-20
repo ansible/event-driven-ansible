@@ -142,7 +142,6 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
           path: |
-            ansible_collections/ansible/eda/.tox/**/log/
             ansible_collections/ansible/eda/.tox/**/coverage.xml
             ansible_collections/ansible/eda/tests/output/reports/coverage.xml
             ansible_collections/ansible/eda/tests/output/junit/*.xml
