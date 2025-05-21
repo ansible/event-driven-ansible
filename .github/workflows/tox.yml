@@ -138,6 +138,7 @@ jobs:
 
       - name: Archive logs
         uses: actions/upload-artifact@v4
+        if: ${{ matrix.name != 'lint' }}
         with:
           name: logs-${{ matrix.name }}
           if-no-files-found: error
