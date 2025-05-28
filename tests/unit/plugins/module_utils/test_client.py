@@ -82,6 +82,7 @@ def client() -> Iterator[tuple[Client, Mock]]:
         )
         yield client_instance, mock_request_instance
 
+
 @pytest.mark.parametrize(
     "input_host, expected_host",
     [
@@ -94,26 +95,32 @@ def client() -> Iterator[tuple[Client, Mock]]:
         ("https://example.com:8443", "https://example.com:8443"),
     ],
 )
-def test_client_init_host_processing_valid_inputs(input_host: str, expected_host: str) -> None:
+def test_client_init_host_processing_valid_inputs(
+    input_host: str, expected_host: str
+) -> None:
     """
     Tests the host processing logic in the Client's __init__ method for valid, non-empty inputs.
     """
     client_instance = Client(host=input_host)
     assert client_instance.host == expected_host
 
+
 @pytest.mark.parametrize(
     "invalid_host_input",
     [
         None,
         "",
-    ]
+    ],
 )
-def test_client_init_invalid_host_raises_error(invalid_host_input: Optional[str]) -> None:
+def test_client_init_invalid_host_raises_error(
+    invalid_host_input: Optional[str],
+) -> None:
     """
     Tests that passing host=None or host="" raises a ValueError.
     """
     with pytest.raises(ValueError, match="Host must be a non-empty string."):
         Client(host=invalid_host_input)
+
 
 def test_client_init_attributes_assignment() -> None:
     """
@@ -133,6 +140,7 @@ def test_client_init_attributes_assignment() -> None:
     assert client_instance.timeout == 42
     assert client_instance.validate_certs is False
 
+
 def test_client_init_default_optional_attributes() -> None:
     """
     Tests that optional attributes are None by default when not provided.
@@ -143,6 +151,7 @@ def test_client_init_default_optional_attributes() -> None:
     assert client_instance.password is None
     assert client_instance.timeout is None
     assert client_instance.validate_certs is None
+
 
 @pytest.mark.parametrize(
     "method, status_code, expected_response, exception_type, exception_message, headers, data",
