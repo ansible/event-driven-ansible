@@ -31,6 +31,21 @@
     that:
       - r.changed
 
+- name: Update project url
+  ansible.eda.project:
+    name: "{{ project_name }}_new"
+    new_name: "{{ project_name }}_new"
+    description: "Example project description"
+    url: "https://example.com/project1"
+    organization_name: Default
+    state: present
+  register: r
+
+- name: Check project update
+  assert:
+    that:
+      - r.changed
+
 - name: Update project again
   ansible.eda.project:
     name: "{{ project_name }}_new"
