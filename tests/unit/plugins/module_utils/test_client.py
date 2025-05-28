@@ -87,7 +87,7 @@ def client() -> Iterator[tuple[Client, Mock]]:
     "input_host, expected_host",
     [
         ("example.com", "https://example.com"),
-        ("test-site.org", "https://test-site.org"),
+        ("mocked-url.com", "https://mocked-url.com"),
         ("http://example.com", "http://example.com"),
         ("https://example.com", "https://example.com"),
         ("example.com:8080", "https://example.com:8080"),
@@ -128,13 +128,13 @@ def test_client_init_attributes_assignment() -> None:
     along with host processing.
     """
     client_instance = Client(
-        host="myedasrv",
+        host="example",
         username="testuser",
         password="testpass",
         timeout=42,
         validate_certs=False,
     )
-    assert client_instance.host == "https://myedasrv"
+    assert client_instance.host == "https://example"
     assert client_instance.username == "testuser"
     assert client_instance.password == "testpass"
     assert client_instance.timeout == 42
@@ -145,8 +145,8 @@ def test_client_init_default_optional_attributes() -> None:
     """
     Tests that optional attributes are None by default when not provided.
     """
-    client_instance = Client(host="onlyhost.com")
-    assert client_instance.host == "https://onlyhost.com"
+    client_instance = Client(host="example.com")
+    assert client_instance.host == "https://example.com"
     assert client_instance.username is None
     assert client_instance.password is None
     assert client_instance.timeout is None
