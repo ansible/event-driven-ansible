@@ -27,6 +27,7 @@
       until:
         - r_info.projects[0].modified_at != r_info.projects[0].created_at
         - r_info.projects[0].scm_branch == scm_branch
+        - r_info.projects[0].import_state == "completed"
       retries: 30
       delay: 1
 
@@ -48,6 +49,7 @@
       until:
         - r_info.projects[0].modified_at != r_info.projects[0].created_at
         - r_info.projects[0].scm_branch == "main"
+        - r_info.projects[0].import_state == "completed"
       retries: 30
       delay: 1
 

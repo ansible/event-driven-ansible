@@ -38,8 +38,13 @@
 
     # need to wait for project creation otherwise sync can fail
     - name: Wait for project creation
-      pause:
-        seconds: 5
+      ansible.eda.project_info:
+        name: "{{ project_name }}_test_sync"
+      register: r_info
+      until:
+        - r_info.projects[0].import_state == "completed"
+      retries: 30
+      delay: 1
 
     - name: Sync project
       ansible.eda.project:
