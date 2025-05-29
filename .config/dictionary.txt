@@ -32,7 +32,6 @@ confluentinc
 conftest
 conninfo
 containerd
-darglint
 dbname
 deadsnakes
 devel
