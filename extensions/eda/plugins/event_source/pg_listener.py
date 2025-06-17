@@ -117,16 +117,20 @@ def _validate_args(args: dict[str, Any]) -> None:
         raise MissingRequiredArgumentError(msg)
 
     # Type checking
-    # TODO(alejandro): We should implement a standard way to validate the schema
+    # TODO(alejandro): We should implement a standard way to validate the schema, # noqa: TD003, FIX002
     # of the arguments for all the plugins
+    err_msg = None
     if not isinstance(args["channels"], list) or not args["channels"]:
-        raise ValueError("Channels must be a list and not empty")
-    if args.get("dsn") is not None and not isinstance(args["dsn"], str):
-        raise ValueError("DSN must be a string")
-    if args.get("postgres_params") is not None and not isinstance(
-        args["postgres_params"], dict
+        err_msg = "Channels must be a list and not empty"
+    elif args.get("dsn") is not None and not isinstance(args["dsn"], str):
+        err_msg = "DSN must be a string"
+    elif args.get("postgres_params") is not None and not isinstance(
+        args["postgres_params"],
+        dict,
     ):
-        raise ValueError("Postgres params must be a dictionary")
+        err_msg = "Postgres params must be a dictionary"
+    if err_msg:
+        raise ValueError(err_msg)
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:

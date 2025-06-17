@@ -25,8 +25,9 @@ EXAMPLES = r"""
 
 
 def main(
-    event: dict[str, Any], overwrite: bool = True
-) -> dict[str, Any]:  # noqa: FBT001, FBT002
+    event: dict[str, Any],
+    overwrite: bool = True,  # noqa: FBT001, FBT002
+) -> dict[str, Any]:
     """Change dashes in keys to underscores."""
     logger = mp.get_logger()
     logger.info("dashes_to_underscores")
