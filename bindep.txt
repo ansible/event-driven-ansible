@@ -4,3 +4,11 @@ libsystemd-dev [test platform:debian]
 pkg-config  [test platform:debian]
 
 shellcheck [lint platform:ubuntu-noble]
+
+
+# RHEL-based systems
+krb5-devel [platform:rpm]
+systemd-devel [platform:rpm]
+gcc [platform:rpm]
+python3.11-devel [platform:rpm]
+pkg-config [platform:rpm]
