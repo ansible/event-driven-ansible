@@ -408,7 +408,6 @@
       register: activation_status
       until:
         - not (activation_status.activations | selectattr('name', 'equalto', activation_name) | list | first).is_enabled
-        - "'stopped' == (activation_status.activations | selectattr('name', 'equalto', activation_name) | list | first).status"
       retries: 30
       delay: 2
       ansible.eda.rulebook_activation_info:
