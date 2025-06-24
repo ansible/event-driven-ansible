@@ -191,7 +191,7 @@ class ControlArgs:
     loop_count: int = 1
     repeat_count: int = 1
     timestamp: bool = False
-    check_env_vars: Optional[dict[str, str]] = None  # noqa: UP007
+    check_env_vars: Optional[dict[str, str]] = None  # noqa: UP045
 
 
 @dataclass
