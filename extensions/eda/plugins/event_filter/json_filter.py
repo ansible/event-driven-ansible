@@ -60,8 +60,8 @@ def _matches_exclude_keys(exclude_keys: list[str], string: str) -> bool:
 
 def main(
     event: dict[str, Any],
-    exclude_keys: Optional[list[str]] = None,  # noqa: UP007
-    include_keys: Optional[list[str]] = None,  # noqa: UP007
+    exclude_keys: Optional[list[str]] = None,  # noqa: UP045
+    include_keys: Optional[list[str]] = None,  # noqa: UP045
 ) -> dict[str, Any]:
     """Filter keys out of events."""
     if exclude_keys is None:
