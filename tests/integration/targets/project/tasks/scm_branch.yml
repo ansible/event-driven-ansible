@@ -12,7 +12,7 @@
         organization_name: Default
         state: present
         sync: true
-        scm_branch: "{{ scm_branch }}"
+        scm_branch: "{{ scm_branch }}"
       register: r
 
     - name: Check project with branch creation
@@ -38,9 +38,7 @@
         description: "Example project description"
         organization_name: Default
         state: present
-        sync: true
         scm_branch: "main"
-      register: re
 
     - name: Wait for project sync state with edit branch
       ansible.eda.project_info:
