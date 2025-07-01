@@ -49,7 +49,7 @@ dependencies: {}
 repository: https://github.com/ansible/event-driven-ansible
 
 # The URL to any online docs
-documentation: https://ansible.readthedocs.io/projects/ansible-eda/
+documentation: https://galaxy.ansible.com/ui/repo/published/ansible/eda/docs/
 
 # The URL to the homepage of the collection/project
 homepage: https://www.redhat.com/en/technologies/management/ansible/event-driven-ansible
