@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Type, Optional
+from typing import Any, Optional, Type
 from unittest.mock import MagicMock, patch
 
 import pytest
