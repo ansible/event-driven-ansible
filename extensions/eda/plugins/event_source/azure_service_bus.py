@@ -1,10 +1,9 @@
 import asyncio
-import concurrent.futures
 import contextlib
 import json
 from typing import Any
 
-from azure.servicebus import ServiceBusClient
+from azure.servicebus.aio import ServiceBusClient
 
 DOCUMENTATION = r"""
 ---
@@ -38,31 +37,27 @@ EXAMPLES = r"""
 """
 
 
-def receive_events(
-    loop: asyncio.events.AbstractEventLoop,
+async def receive_events(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
-    """Receive events from service bus."""
+    """Receive events from service bus asynchronously."""
     servicebus_client = ServiceBusClient.from_connection_string(
         conn_str=args["conn_str"],
         logging_enable=bool(args.get("logging_enable", True)),
     )
 
-    with servicebus_client:
+    async with servicebus_client:
         receiver = servicebus_client.get_queue_receiver(queue_name=args["queue_name"])
-        with receiver:
-            for msg in receiver:
+        async with receiver:
+            async for msg in receiver:
                 meta = {"message_id": msg.message_id}
                 body = str(msg)
                 with contextlib.suppress(json.JSONDecodeError):
                     body = json.loads(body)
 
-                loop.call_soon_threadsafe(
-                    queue.put_nowait,
-                    {"body": body, "meta": meta},
-                )
-                receiver.complete_message(msg)
+                await queue.put({"body": body, "meta": meta})
+                await receiver.complete_message(msg)
 
 
 async def main(
@@ -70,10 +65,7 @@ async def main(
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
     """Receive events from service bus in a loop."""
-    loop = asyncio.get_running_loop()
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as task_pool:
-        await loop.run_in_executor(task_pool, receive_events, loop, queue, args)
+    await receive_events(queue, args)
 
 
 if __name__ == "__main__":
@@ -82,7 +74,7 @@ if __name__ == "__main__":
     class MockQueue(asyncio.Queue[Any]):
         """A fake queue."""
 
-        def put_nowait(self: "MockQueue", event: dict[str, Any]) -> None:
+        async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
             print(event)  # noqa: T201
 
