@@ -1,6 +1,7 @@
 import asyncio
-from typing import Any, Dict, Type, Optional
+from typing import Any, Dict, Optional, Type
 from unittest.mock import patch
+
 import pytest
 
 from extensions.eda.plugins.event_source.azure_service_bus import receive_events
