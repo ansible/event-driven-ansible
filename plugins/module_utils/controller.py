@@ -17,7 +17,11 @@ from .errors import EDAError
 
 
 class Controller:
-    IDENTITY_FIELDS = {"users": "username"}
+    IDENTITY_FIELDS = {
+        "users": "username",
+        "role_user_assignments": "role_definition",
+        "role_team_assignments": "role_definition",
+    }
     ENCRYPTED_STRING = "$encrypted$"
 
     def __init__(self, client: Client, module: AnsibleModule) -> None:
@@ -348,7 +352,7 @@ class Controller:
         )
 
     def delete_if_needed(
-        self, existing_item: dict[str, Any], endpoint: str
+        self, existing_item: Optional[dict[str, Any]], endpoint: str
     ) -> dict[str, Any]:
         if not existing_item:
             return self.result
