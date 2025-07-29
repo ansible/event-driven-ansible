@@ -38,3 +38,10 @@ plugin_routing:
         warning_text: >-
           activation_info has been renamed to rulebook_activation_info.
           Please update your tasks.
+    azure_service_bus:
+      redirect: azure.azcollection.azure_service_bus
+      deprecation:
+        removal_version: 3.0.0
+        warning_text: >-
+          azure_service_bus has been moved to azure.azcollection.azure_service_bus.
+          Please update your tasks.

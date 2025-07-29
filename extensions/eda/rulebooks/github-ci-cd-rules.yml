@@ -1,7 +1,7 @@
 - name: GitHub Deploy Git Hook Rules
   hosts: all
   sources:
-    - ansible.eda.azure_service_bus:
+    - azure.azcollection.azure_service_bus:
         conn_str: "{{connection_str}}"
         queue_name: "{{queue_name}}"
       filters:
