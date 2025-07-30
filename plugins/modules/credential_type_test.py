@@ -131,17 +131,21 @@ def main() -> None:
     )
 
     controller = Controller(client, module)
-    
+
     credential_type_name = module.params.get("name")
     inputs = module.params.get("inputs", {})
     metadata = module.params.get("metadata", {})
 
     try:
         # Get credential type
-        cred_type_response = controller.get_endpoint("credential-types/", name=credential_type_name)
-        if cred_type_response.status != 200 or not cred_type_response.json.get("results"):
+        cred_type_response = controller.get_endpoint(
+            "credential-types/", name=credential_type_name
+        )
+        if cred_type_response.status != 200 or not cred_type_response.json.get(
+            "results"
+        ):
             module.fail_json(msg=f"Credential type '{credential_type_name}' not found")
-        
+
         credential_type = cred_type_response.json["results"][0]
         credential_type_id = credential_type["id"]
 
@@ -154,40 +158,45 @@ def main() -> None:
 
         if module.check_mode:
             # In check mode, just return success without actually testing
-            controller.result.update({
-                "test_result": {
-                    "success": True,
-                    "message": "Check mode - test would be performed",
-                    "details": {"check_mode": True}
-                },
-                "credential_type": credential_type
-            })
+            controller.result.update(
+                {
+                    "test_result": {
+                        "success": True,
+                        "message": "Check mode - test would be performed",
+                        "details": {"check_mode": True},
+                    },
+                    "credential_type": credential_type,
+                }
+            )
         else:
             # Perform actual test
             test_response = controller.post_endpoint(
-                f"credential-types/{credential_type_id}/test/",
-                data=test_data
+                f"credential-types/{credential_type_id}/test/", data=test_data
             )
-            
+
             if test_response.status == 200:
-                controller.result.update({
-                    "test_result": test_response.json,
-                    "credential_type": credential_type
-                })
+                controller.result.update(
+                    {
+                        "test_result": test_response.json,
+                        "credential_type": credential_type,
+                    }
+                )
             else:
                 # Test failed
                 error_msg = "Credential type test failed"
                 if test_response.json and isinstance(test_response.json, dict):
                     error_msg = test_response.json.get("message", error_msg)
-                
-                controller.result.update({
-                    "test_result": {
-                        "success": False,
-                        "message": error_msg,
-                        "details": test_response.json if test_response.json else {}
-                    },
-                    "credential_type": credential_type
-                })
+
+                controller.result.update(
+                    {
+                        "test_result": {
+                            "success": False,
+                            "message": error_msg,
+                            "details": test_response.json if test_response.json else {},
+                        },
+                        "credential_type": credential_type,
+                    }
+                )
 
     except EDAError as e:
         module.fail_json(msg=str(e))

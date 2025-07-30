@@ -125,7 +125,7 @@ def main() -> None:
     )
 
     controller = Controller(client, module)
-    
+
     credential_name = module.params.get("name")
     organization_name = module.params.get("organization_name")
     metadata = module.params.get("metadata", {})
@@ -134,17 +134,21 @@ def main() -> None:
         # Get organization ID if specified
         query_params = {}
         if organization_name:
-            org_response = controller.get_endpoint("organizations/", name=organization_name)
+            org_response = controller.get_endpoint(
+                "organizations/", name=organization_name
+            )
             if org_response.status == 200 and org_response.json.get("results"):
                 query_params["organization"] = org_response.json["results"][0]["id"]
             else:
                 module.fail_json(msg=f"Organization '{organization_name}' not found")
 
         # Get credential
-        cred_response = controller.get_endpoint("eda-credentials/", name=credential_name, **query_params)
+        cred_response = controller.get_endpoint(
+            "eda-credentials/", name=credential_name, **query_params
+        )
         if cred_response.status != 200 or not cred_response.json.get("results"):
             module.fail_json(msg=f"Credential '{credential_name}' not found")
-        
+
         credential = cred_response.json["results"][0]
         credential_id = credential["id"]
 
@@ -155,40 +159,42 @@ def main() -> None:
 
         if module.check_mode:
             # In check mode, just return success without actually testing
-            controller.result.update({
-                "test_result": {
-                    "success": True,
-                    "message": "Check mode - test would be performed",
-                    "details": {"check_mode": True}
-                },
-                "credential": credential
-            })
+            controller.result.update(
+                {
+                    "test_result": {
+                        "success": True,
+                        "message": "Check mode - test would be performed",
+                        "details": {"check_mode": True},
+                    },
+                    "credential": credential,
+                }
+            )
         else:
             # Perform actual test
             test_response = controller.post_endpoint(
-                f"eda-credentials/{credential_id}/test/",
-                data=test_data
+                f"eda-credentials/{credential_id}/test/", data=test_data
             )
-            
+
             if test_response.status == 200:
-                controller.result.update({
-                    "test_result": test_response.json,
-                    "credential": credential
-                })
+                controller.result.update(
+                    {"test_result": test_response.json, "credential": credential}
+                )
             else:
                 # Test failed
                 error_msg = "Credential test failed"
                 if test_response.json and isinstance(test_response.json, dict):
                     error_msg = test_response.json.get("message", error_msg)
-                
-                controller.result.update({
-                    "test_result": {
-                        "success": False,
-                        "message": error_msg,
-                        "details": test_response.json if test_response.json else {}
-                    },
-                    "credential": credential
-                })
+
+                controller.result.update(
+                    {
+                        "test_result": {
+                            "success": False,
+                            "message": error_msg,
+                            "details": test_response.json if test_response.json else {},
+                        },
+                        "credential": credential,
+                    }
+                )
 
     except EDAError as e:
         module.fail_json(msg=str(e))

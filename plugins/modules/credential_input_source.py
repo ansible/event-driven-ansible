@@ -119,7 +119,7 @@ target_credential:
   }
 source_credential:
   description: Information about the source credential.
-  returned: always  
+  returned: always
   type: dict
   sample: {
     "id": 23,
@@ -156,7 +156,7 @@ from ..module_utils.errors import EDAError
 
 
 def create_or_update_credential_input_source(
-    controller: Controller, 
+    controller: Controller,
     target_credential_id: int,
     source_credential_id: int,
     input_field_name: str,
@@ -169,15 +169,17 @@ def create_or_update_credential_input_source(
     existing_input_sources = controller.get_endpoint(
         f"eda-credentials/{target_credential_id}/input_sources/"
     )
-    
+
     existing_source = None
     if existing_input_sources.status == 200:
         for source in existing_input_sources.json.get("results", []):
-            if (source.get("source_credential", {}).get("id") == source_credential_id and
-                source.get("input_field_name") == input_field_name):
+            if (
+                source.get("source_credential", {}).get("id") == source_credential_id
+                and source.get("input_field_name") == input_field_name
+            ):
                 existing_source = source
                 break
-    
+
     data = {
         "target_credential": target_credential_id,
         "source_credential": source_credential_id,
@@ -186,26 +188,22 @@ def create_or_update_credential_input_source(
         "metadata": metadata,
         "organization": organization_id,
     }
-    
+
     if existing_source:
         # Update existing input source
         response = controller.patch_endpoint(
-            f"credential-input-sources/{existing_source['id']}/",
-            data=data
+            f"credential-input-sources/{existing_source['id']}/", data=data
         )
         if response.status == 200:
             controller.result["changed"] = True
             return response.json
     else:
         # Create new input source
-        response = controller.post_endpoint(
-            "credential-input-sources/",
-            data=data
-        )
+        response = controller.post_endpoint("credential-input-sources/", data=data)
         if response.status in (200, 201):
             controller.result["changed"] = True
             return response.json
-    
+
     raise EDAError(f"Failed to create/update credential input source: {response.text}")
 
 
@@ -220,11 +218,13 @@ def delete_credential_input_source(
     existing_input_sources = controller.get_endpoint(
         f"eda-credentials/{target_credential_id}/input_sources/"
     )
-    
+
     if existing_input_sources.status == 200:
         for source in existing_input_sources.json.get("results", []):
-            if (source.get("source_credential", {}).get("id") == source_credential_id and
-                source.get("input_field_name") == input_field_name):
+            if (
+                source.get("source_credential", {}).get("id") == source_credential_id
+                and source.get("input_field_name") == input_field_name
+            ):
                 # Delete the input source
                 response = controller.delete_endpoint(
                     f"credential-input-sources/{source['id']}/"
@@ -233,8 +233,10 @@ def delete_credential_input_source(
                     controller.result["changed"] = True
                     return
                 else:
-                    raise EDAError(f"Failed to delete credential input source: {response.text}")
-    
+                    raise EDAError(
+                        f"Failed to delete credential input source: {response.text}"
+                    )
+
     # Input source not found - might already be deleted
     controller.result["changed"] = False
 
@@ -264,7 +266,7 @@ def main() -> None:
     )
 
     controller = Controller(client, module)
-    
+
     target_credential_name = module.params.get("target_credential_name")
     source_credential_name = module.params.get("source_credential_name")
     input_field_name = module.params.get("input_field_name")
@@ -277,22 +279,36 @@ def main() -> None:
         # Get organization ID
         organization_id = None
         if organization_name:
-            org_response = controller.get_endpoint("organizations/", name=organization_name)
+            org_response = controller.get_endpoint(
+                "organizations/", name=organization_name
+            )
             if org_response.status == 200 and org_response.json.get("results"):
                 organization_id = org_response.json["results"][0]["id"]
             else:
                 module.fail_json(msg=f"Organization '{organization_name}' not found")
 
         # Get target credential ID
-        target_cred_response = controller.get_endpoint("eda-credentials/", name=target_credential_name)
-        if target_cred_response.status != 200 or not target_cred_response.json.get("results"):
-            module.fail_json(msg=f"Target credential '{target_credential_name}' not found")
+        target_cred_response = controller.get_endpoint(
+            "eda-credentials/", name=target_credential_name
+        )
+        if target_cred_response.status != 200 or not target_cred_response.json.get(
+            "results"
+        ):
+            module.fail_json(
+                msg=f"Target credential '{target_credential_name}' not found"
+            )
         target_credential_id = target_cred_response.json["results"][0]["id"]
 
         # Get source credential ID
-        source_cred_response = controller.get_endpoint("eda-credentials/", name=source_credential_name)
-        if source_cred_response.status != 200 or not source_cred_response.json.get("results"):
-            module.fail_json(msg=f"Source credential '{source_credential_name}' not found")
+        source_cred_response = controller.get_endpoint(
+            "eda-credentials/", name=source_credential_name
+        )
+        if source_cred_response.status != 200 or not source_cred_response.json.get(
+            "results"
+        ):
+            module.fail_json(
+                msg=f"Source credential '{source_credential_name}' not found"
+            )
         source_credential_id = source_cred_response.json["results"][0]["id"]
 
         if state == "present":

@@ -145,7 +145,7 @@ def main() -> None:
     )
 
     controller = Controller(client, module)
-    
+
     target_credential_name = module.params.get("target_credential_name")
     source_credential_name = module.params.get("source_credential_name")
     input_field_name = module.params.get("input_field_name")
@@ -154,22 +154,38 @@ def main() -> None:
     try:
         # Build query parameters for filtering
         query_params = {}
-        
+
         # Filter by target credential
         if target_credential_name:
-            target_cred_response = controller.get_endpoint("eda-credentials/", name=target_credential_name)
-            if target_cred_response.status == 200 and target_cred_response.json.get("results"):
-                query_params["target_credential"] = target_cred_response.json["results"][0]["id"]
+            target_cred_response = controller.get_endpoint(
+                "eda-credentials/", name=target_credential_name
+            )
+            if target_cred_response.status == 200 and target_cred_response.json.get(
+                "results"
+            ):
+                query_params["target_credential"] = target_cred_response.json[
+                    "results"
+                ][0]["id"]
             else:
-                module.fail_json(msg=f"Target credential '{target_credential_name}' not found")
+                module.fail_json(
+                    msg=f"Target credential '{target_credential_name}' not found"
+                )
 
         # Filter by source credential
         if source_credential_name:
-            source_cred_response = controller.get_endpoint("eda-credentials/", name=source_credential_name)
-            if source_cred_response.status == 200 and source_cred_response.json.get("results"):
-                query_params["source_credential"] = source_cred_response.json["results"][0]["id"]
+            source_cred_response = controller.get_endpoint(
+                "eda-credentials/", name=source_credential_name
+            )
+            if source_cred_response.status == 200 and source_cred_response.json.get(
+                "results"
+            ):
+                query_params["source_credential"] = source_cred_response.json[
+                    "results"
+                ][0]["id"]
             else:
-                module.fail_json(msg=f"Source credential '{source_credential_name}' not found")
+                module.fail_json(
+                    msg=f"Source credential '{source_credential_name}' not found"
+                )
 
         # Filter by input field name
         if input_field_name:
@@ -177,7 +193,9 @@ def main() -> None:
 
         # Filter by organization
         if organization_name:
-            org_response = controller.get_endpoint("organizations/", name=organization_name)
+            org_response = controller.get_endpoint(
+                "organizations/", name=organization_name
+            )
             if org_response.status == 200 and org_response.json.get("results"):
                 query_params["organization"] = org_response.json["results"][0]["id"]
             else:
@@ -185,11 +203,15 @@ def main() -> None:
 
         # Get credential input sources
         response = controller.get_endpoint("credential-input-sources/", **query_params)
-        
+
         if response.status == 200:
-            controller.result["credential_input_sources"] = response.json.get("results", [])
+            controller.result["credential_input_sources"] = response.json.get(
+                "results", []
+            )
         else:
-            raise EDAError(f"Failed to retrieve credential input sources: {response.text}")
+            raise EDAError(
+                f"Failed to retrieve credential input sources: {response.text}"
+            )
 
     except EDAError as e:
         module.fail_json(msg=str(e))
