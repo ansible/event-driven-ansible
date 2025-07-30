@@ -1,0 +1,344 @@
+---
+- name: Credential Input Source integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
+  block:
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
+
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
+
+    - name: Define variables for credentials and input sources
+      set_fact:
+        target_credential_name: "Target_Credential_{{ test_id }}"
+        source_credential_name: "Source_Credential_{{ test_id }}"
+        target_credential_type_name: "Target_CredentialType_{{ test_id }}"
+        source_credential_type_name: "Source_CredentialType_{{ test_id }}"
+        input_field_name: "password"
+        input_source_description: "Test input source for External SMS"
+
+    # CREATE PREREQUISITE CREDENTIAL TYPES
+    - name: Create target credential type (regular credential)
+      ansible.eda.credential_type:
+        name: "{{ target_credential_type_name }}"
+        state: present
+        description: "A test target credential type"
+        inputs:
+          fields:
+            - id: "username"
+              type: "string"
+              label: "Username"
+            - id: "password"
+              type: "string"
+              label: "Password"
+              secret: true
+        injectors:
+          extra_vars:
+            username: "username"
+            password: "password"
+
+    - name: Create source credential type (external SMS)
+      ansible.eda.credential_type:
+        name: "{{ source_credential_type_name }}"
+        state: present
+        description: "A test external SMS credential type"
+        inputs:
+          fields:
+            - id: "url"
+              type: "string"
+              label: "Vault URL"
+            - id: "token"
+              type: "string"
+              label: "Vault Token"
+              secret: true
+        injectors:
+          external:
+            url: "url"
+            token: "token"
+
+    # CREATE PREREQUISITE CREDENTIALS
+    - name: Create target credential
+      ansible.eda.credential:
+        state: present
+        name: "{{ target_credential_name }}"
+        description: "Target credential for input source testing"
+        credential_type_name: "{{ target_credential_type_name }}"
+        inputs:
+          username: "testuser"
+          password: "placeholder"  # This will be replaced by external SMS
+        organization_name: Default
+
+    - name: Create source credential (external SMS)
+      ansible.eda.credential:
+        state: present
+        name: "{{ source_credential_name }}"
+        description: "Source credential for external SMS"
+        credential_type_name: "{{ source_credential_type_name }}"
+        inputs:
+          url: "https://vault.example.com:8200"
+          token: "hvs.test-token"
+        organization_name: Default
+
+    # TEST CREDENTIAL INPUT SOURCE CRUD OPERATIONS
+    - name: Create credential input source in check mode
+      ansible.eda.credential_input_source:
+        state: present
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        description: "{{ input_source_description }}"
+        metadata:
+          secret_path: "secret/myapp"
+          secret_key: "password"
+        organization_name: Default
+      check_mode: true
+      register: _result
+
+    - name: Check credential input source creation in check mode
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create credential input source
+      ansible.eda.credential_input_source:
+        state: present
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        description: "{{ input_source_description }}"
+        metadata:
+          secret_path: "secret/myapp"
+          secret_key: "password"
+        organization_name: Default
+      register: _result
+
+    - name: Check credential input source creation
+      assert:
+        that:
+          - _result.changed
+          - _result.input_field_name == input_field_name
+          - _result.description == input_source_description
+
+    - name: Create credential input source again (should not change)
+      ansible.eda.credential_input_source:
+        state: present
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        description: "{{ input_source_description }}"
+        metadata:
+          secret_path: "secret/myapi"
+          secret_key: "password"
+        organization_name: Default
+      register: _result
+
+    - name: Check credential input source is updated (metadata changed)
+      assert:
+        that:
+          - _result.changed
+
+    # TEST INFO MODULE
+    - name: Get info about all credential input sources
+      ansible.eda.credential_input_source_info:
+      register: _all_input_sources
+
+    - name: Get info about credential input sources for target credential
+      ansible.eda.credential_input_source_info:
+        target_credential_name: "{{ target_credential_name }}"
+      register: _target_input_sources
+
+    - name: Check that target credential input source is found
+      assert:
+        that:
+          - _target_input_sources.credential_input_sources | length >= 1
+          - _target_input_sources.credential_input_sources[0].input_field_name == input_field_name
+
+    - name: Get info about credential input sources for source credential
+      ansible.eda.credential_input_source_info:
+        source_credential_name: "{{ source_credential_name }}"
+      register: _source_input_sources
+
+    - name: Check that source credential input source is found
+      assert:
+        that:
+          - _source_input_sources.credential_input_sources | length >= 1
+
+    - name: Get info about credential input sources by field name
+      ansible.eda.credential_input_source_info:
+        input_field_name: "{{ input_field_name }}"
+      register: _field_input_sources
+
+    - name: Check that field input source is found
+      assert:
+        that:
+          - _field_input_sources.credential_input_sources | length >= 1
+
+    # TEST ERROR HANDLING
+    - name: Try to create input source with non-existent target credential
+      ansible.eda.credential_input_source:
+        state: present
+        target_credential_name: "NonExistentCredential"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check that error is handled correctly for non-existent target credential
+      assert:
+        that:
+          - _result.failed
+          - "'not found' in _result.msg"
+
+    - name: Try to create input source with non-existent source credential
+      ansible.eda.credential_input_source:
+        state: present
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "NonExistentCredential"
+        input_field_name: "{{ input_field_name }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Check that error is handled correctly for non-existent source credential
+      assert:
+        that:
+          - _result.failed
+          - "'not found' in _result.msg"
+
+    # TEST TESTING MODULES
+    - name: Test source credential connectivity
+      ansible.eda.credential_test:
+        name: "{{ source_credential_name }}"
+        organization_name: Default
+        metadata:
+          secret_path: "test/secret"
+      register: _test_result
+      ignore_errors: true  # External SMS might not be actually available
+
+    - name: Check credential test structure
+      assert:
+        that:
+          - _test_result.test_result is defined
+          - _test_result.credential is defined
+          - _test_result.credential.name == source_credential_name
+
+    - name: Test credential type
+      ansible.eda.credential_type_test:
+        name: "{{ source_credential_type_name }}"
+        inputs:
+          url: "https://vault.example.com:8200"
+          token: "hvs.test-token"
+      register: _test_result
+      ignore_errors: true  # External SMS might not be actually available
+
+    - name: Check credential type test structure
+      assert:
+        that:
+          - _test_result.test_result is defined
+          - _test_result.credential_type is defined
+          - _test_result.credential_type.name == source_credential_type_name
+
+    # DELETE TESTS
+    - name: Delete operation without required parameters
+      ansible.eda.credential_input_source:
+        state: absent
+        target_credential_name: "{{ target_credential_name }}"
+        # Missing source_credential_name and input_field_name
+      ignore_errors: true
+      register: _result
+
+    - name: Check if required parameters are enforced
+      assert:
+        that:
+          - _result.failed
+
+    - name: Delete non-existing credential input source in check mode
+      ansible.eda.credential_input_source:
+        state: absent
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "NonExistentCredential"
+        input_field_name: "nonexistent_field"
+        organization_name: Default
+      check_mode: true
+      register: _result
+
+    - name: Check delete non-existing input source in check mode
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Delete credential input source
+      ansible.eda.credential_input_source:
+        state: absent
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check credential input source deletion
+      assert:
+        that:
+          - _result.changed
+
+    - name: Delete credential input source again (should not change)
+      ansible.eda.credential_input_source:
+        state: absent
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check credential input source is not deleted again
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Verify input source is deleted
+      ansible.eda.credential_input_source_info:
+        target_credential_name: "{{ target_credential_name }}"
+      register: _input_sources
+
+    - name: Check that no input sources remain for target credential
+      assert:
+        that:
+          - _input_sources.credential_input_sources | length == 0
+
+  always:
+    - name: Clean up - credential input sources
+      ansible.eda.credential_input_source:
+        state: absent
+        target_credential_name: "{{ target_credential_name }}"
+        source_credential_name: "{{ source_credential_name }}"
+        input_field_name: "{{ input_field_name }}"
+        organization_name: Default
+      ignore_errors: true
+
+    - name: Clean up - credentials
+      ansible.eda.credential:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ target_credential_name }}"
+        - "{{ source_credential_name }}"
+      ignore_errors: true
+
+    - name: Clean up - credential types
+      ansible.eda.credential_type:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ target_credential_type_name }}"
+        - "{{ source_credential_type_name }}"
+      ignore_errors: true
