@@ -61,8 +61,27 @@ options:
     default: "utf-8"
   topic:
     description:
-      - The kafka topic.
+      - The kafka topic. topic, topics, and topic_pattern are mutually exclusive.
     type: str
+  topics:
+    description:
+      - The kafka topics. topic, topics, and topic_pattern are mutually exclusive.
+    type: list
+    elements: str
+  topic_pattern:
+    description:
+      - The kafka topic pattern. It must be a valid regex. topic, topics, and topic_pattern are mutually exclusive.
+        [AIOKafkaConsumer](https://aiokafka.readthedocs.io/en/stable/api.html#aiokafka.AIOKafkaConsumer) performs 
+        periodic metadata refreshes in the background and will notice when new partitions are added to one of the
+        subscribed topics or when a new topic matching a subscribed regex is created. See metadata_max_age_ms for
+        more details on how to configure the metadata refresh.
+    type: str
+  metadata_max_age_ms:
+    description:
+      - The period of time in milliseconds for forcing a refresh of metadata.
+        It configures how soon a topic or partition change is detected. Default to 5 minutes.
+    type: int
+    default: 300000 # 5 minutes
   group_id:
     description:
       - A kafka group id.
@@ -111,7 +130,9 @@ EXAMPLES = r"""
     check_hostname: true
     verify_mode: "CERT_OPTIONAL"
     encoding: "utf-8"
-    topic: "demo"
+    topics:
+      - "demo"
+      - "demo2"
     group_id: "test"
     offset: "earliest"
     security_protocol: "SASL_PLAINTEXT"
@@ -129,6 +150,17 @@ async def main(  # pylint: disable=R0914
     logger = logging.getLogger()
 
     topic = args.get("topic")
+    topics = args.get("topics")
+    topic_pattern = args.get("topic_pattern")
+
+    num_topics = sum(1 for tp in (topic, topics, topic_pattern) if tp is not None)
+    if num_topics != 1:
+        msg = "Exactly one of topic, topics, or topic_pattern must be provided."
+        raise ValueError(msg)
+
+    if topic:
+        topics = [topic]
+
     host = args.get("host")
     port = args.get("port")
     cafile = args.get("cafile")
@@ -170,7 +202,6 @@ async def main(  # pylint: disable=R0914
         ssl_context.verify_mode = verify_mode
 
     kafka_consumer = AIOKafkaConsumer(
-        topic,
         bootstrap_servers=f"{host}:{port}",
         group_id=group_id,
         enable_auto_commit=True,
@@ -183,7 +214,10 @@ async def main(  # pylint: disable=R0914
         sasl_plain_password=args.get("sasl_plain_password"),
         sasl_kerberos_service_name=args.get("sasl_kerberos_service_name"),
         sasl_kerberos_domain_name=args.get("sasl_kerberos_domain_name"),
+        metadata_max_age_ms=int(args.get("metadata_max_age_ms", 300000)),
     )
+
+    kafka_consumer.subscribe(topics=topics, pattern=topic_pattern)
 
     await kafka_consumer.start()
 

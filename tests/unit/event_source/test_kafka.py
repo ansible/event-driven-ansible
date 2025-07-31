@@ -46,8 +46,20 @@ class MockConsumer(AsyncMock):  # type: ignore[misc]
     def __aiter__(self) -> AsyncIterator:
         return AsyncIterator()
 
+    def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+        assert topics or pattern
+        assert not (topics and pattern)
 
-def test_receive_from_kafka_place_in_queue(myqueue: MockQueue) -> None:
+
+@pytest.mark.parametrize(
+    "topic_type, topic_value",
+    [("topic", "eda"), ("topics", ["eda1", "eda2"]), ("topic_pattern", "eda_*")]
+)
+def test_receive_from_kafka_place_in_queue(
+    myqueue: MockQueue,
+    topic_type: str,
+    topic_value: str | list[str]
+) -> None:
     with patch(
         "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer
     ):
@@ -55,7 +67,7 @@ def test_receive_from_kafka_place_in_queue(myqueue: MockQueue) -> None:
             kafka_main(
                 myqueue,
                 {
-                    "topic": "eda",
+                    topic_type: topic_value,
                     "host": "localhost",
                     "port": "9092",
                     "group_id": "test",
@@ -67,3 +79,20 @@ def test_receive_from_kafka_place_in_queue(myqueue: MockQueue) -> None:
             "meta": {"headers": {"foo": "bar"}},
         }
         assert len(myqueue.queue) == 2
+
+
+@pytest.mark.parametrize(
+    "topic_args",
+    [
+        {"topic": "eda", "topics": ["eda1", "eda2"], "topic_pattern": "eda_*"},
+        {"topics": ["eda1", "eda2"], "topic_pattern": "eda_*"},
+        {"topic": "eda", "topic_pattern": "eda_*"},
+        {"topic": "eda", "topics": ["eda1", "eda2"]},
+    ]
+)
+def test_mixed_topics_and_patterns(myqueue: MockQueue, topic_args: dict[str, Any]) -> None:
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of topic, topics, or topic_pattern must be provided."
+    ):
+        asyncio.run(kafka_main(myqueue, topic_args))
