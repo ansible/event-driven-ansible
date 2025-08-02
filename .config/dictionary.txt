@@ -88,4 +88,5 @@ toxinidir
 trustore
 truststore
 unshallow
+uuid
 whitt
