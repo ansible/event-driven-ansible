@@ -71,7 +71,7 @@ options:
   topic_pattern:
     description:
       - The kafka topic pattern. It must be a valid regex. topic, topics, and topic_pattern are mutually exclusive.
-        [AIOKafkaConsumer](https://aiokafka.readthedocs.io/en/stable/api.html#aiokafka.AIOKafkaConsumer) performs 
+        [AIOKafkaConsumer](https://aiokafka.readthedocs.io/en/stable/api.html#aiokafka.AIOKafkaConsumer) performs
         periodic metadata refreshes in the background and will notice when new partitions are added to one of the
         subscribed topics or when a new topic matching a subscribed regex is created. See metadata_max_age_ms for
         more details on how to configure the metadata refresh.

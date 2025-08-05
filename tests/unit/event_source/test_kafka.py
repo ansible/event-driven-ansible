@@ -53,12 +53,10 @@ class MockConsumer(AsyncMock):  # type: ignore[misc]
 
 @pytest.mark.parametrize(
     "topic_type, topic_value",
-    [("topic", "eda"), ("topics", ["eda1", "eda2"]), ("topic_pattern", "eda_*")]
+    [("topic", "eda"), ("topics", ["eda1", "eda2"]), ("topic_pattern", "eda_*")],
 )
 def test_receive_from_kafka_place_in_queue(
-    myqueue: MockQueue,
-    topic_type: str,
-    topic_value: str | list[str]
+    myqueue: MockQueue, topic_type: str, topic_value: str | list[str]
 ) -> None:
     with patch(
         "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer", new=MockConsumer
@@ -88,11 +86,13 @@ def test_receive_from_kafka_place_in_queue(
         {"topics": ["eda1", "eda2"], "topic_pattern": "eda_*"},
         {"topic": "eda", "topic_pattern": "eda_*"},
         {"topic": "eda", "topics": ["eda1", "eda2"]},
-    ]
+    ],
 )
-def test_mixed_topics_and_patterns(myqueue: MockQueue, topic_args: dict[str, Any]) -> None:
+def test_mixed_topics_and_patterns(
+    myqueue: MockQueue, topic_args: dict[str, Any]
+) -> None:
     with pytest.raises(
         ValueError,
-        match="Exactly one of topic, topics, or topic_pattern must be provided."
+        match="Exactly one of topic, topics, or topic_pattern must be provided.",
     ):
         asyncio.run(kafka_main(myqueue, topic_args))
