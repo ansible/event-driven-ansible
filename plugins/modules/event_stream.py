@@ -66,6 +66,13 @@ options:
     type: bool
     default: false
     version_added: 2.1.0
+  uuid:
+    description:
+      - Custom UUID for the event stream URL.
+      - If not provided, UUID will be auto-generated.
+      - Must be unique across all event streams.
+    type: str
+    version_added: 2.9.0
   state:
     description:
       - Desired state of the resource.
@@ -86,6 +93,13 @@ EXAMPLES = r"""
     credential_name: "Example Credential"
     organization_name: Default
 
+- name: Create an EDA Event Stream with custom UUID
+  ansible.eda.event_stream:
+    name: "Static Event Stream"
+    uuid: "550e8400-e29b-41d4-a716-446655440000"
+    credential_name: "Example Credential"
+    organization_name: Default
+
 - name: Delete an EDA Event Stream
   ansible.eda.event_stream:
     name: "Example Event Stream"
@@ -102,6 +116,7 @@ id:
 """
 
 
+import uuid
 from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
@@ -147,6 +162,15 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     if organization_id:
         credential_params["organization_id"] = organization_id
 
+    uuid_param = module.params.get("uuid")
+    if uuid_param:
+        try:
+            # Validate UUID format
+            uuid.UUID(uuid_param)
+            credential_params["uuid"] = uuid_param
+        except ValueError:
+            module.fail_json(msg=f"Invalid UUID format: {uuid_param}")
+
     return credential_params
 
 
@@ -158,6 +182,7 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         headers=dict(type="str", default=""),
         forward_events=dict(type="bool", default=False),
+        uuid=dict(type="str", required=False),
         state=dict(choices=["present", "absent"], default="present"),
         # fix: event_stream_type is not used in the module
         event_stream_type=dict(
