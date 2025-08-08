@@ -18,7 +18,9 @@ author:
    - "Alina Buzachis (@alinabuzachis)"
 short_description: Manage credentials in EDA Controller
 description:
-    - This module allows the user to create, update or delete a credential in EDA controller.
+    - This module allows the user to create, update, delete, or test a credential in EDA controller.
+    - When using state 'test', the module validates credential connectivity to external systems without making changes.
+    - Testing is particularly useful for verifying external secret management system credentials.
 version_added: 2.0.0
 options:
   name:
@@ -55,16 +57,30 @@ options:
     description:
       - Description of the credential.
     type: str
+  metadata:
+    description:
+      - Additional configuration for testing specific secrets or configurations
+      - Only used when state is 'test'
+      - The structure depends on the credential type and external system
+      - For HashiCorp Vault, should include keys like 'secret_path' and 'secret_key'
+    required: false
+    type: dict
   state:
     description:
       - Desired state of the resource.
+      - C(present) - Create or update the credential
+      - C(absent) - Remove the credential
+      - C(test) - Test the credential connectivity without making any changes
     default: "present"
-    choices: ["present", "absent"]
+    choices: ["present", "absent", "test"]
     type: str
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
 notes:
   - M(ansible.eda.credential) supports AAP 2.5 and onwards.
+  - The C(test) state validates credential connectivity without making any changes and always returns C(changed=False).
+  - Testing supports external secret management systems and requires the credential to already exist.
+  - The C(metadata) parameter is only used with C(state=test) to specify test-specific configurations.
 """
 
 
@@ -87,6 +103,21 @@ EXAMPLES = r"""
   ansible.eda.credential:
     name: "New Copied Credential"
     copy_from: "Existing Credential"
+
+- name: Test a HashiCorp Vault credential connectivity
+  ansible.eda.credential:
+    name: "vault_lookup_credential"
+    state: test
+    metadata:
+      secret_path: "secret/myapp"
+      secret_key: "password"
+    organization_name: Default
+
+- name: Test credential basic connectivity
+  ansible.eda.credential:
+    name: "my_aws_credential"
+    state: test
+    organization_name: Default
 """
 
 
@@ -96,6 +127,27 @@ id:
   returned: when exists
   type: int
   sample: 24
+test_result:
+  description: Result of the credential test.
+  returned: when state is 'test'
+  type: dict
+  contains:
+    success:
+      description: Whether the credential test was successful.
+      type: bool
+      sample: true
+    message:
+      description: Human-readable message describing the test result.
+      type: str
+      sample: "Credential test successful"
+    details:
+      description: Additional details about the test result or error information.
+      type: dict
+      returned: when additional information is available
+  sample: {
+    "success": true,
+    "message": "Credential test successful"
+  }
 """
 
 
@@ -153,7 +205,8 @@ def main() -> None:
         inputs=dict(type="dict"),
         credential_type_name=dict(type="str"),
         organization_name=dict(type="str", aliases=["organization"]),
-        state=dict(choices=["present", "absent"], default="present"),
+        metadata=dict(type="dict"),
+        state=dict(choices=["present", "absent", "test"], default="present"),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -202,6 +255,57 @@ def main() -> None:
         )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
+
+    if state == "test":
+        if not credential:
+            module.fail_json(msg=f"Credential '{name}' not found")
+
+        metadata = module.params.get("metadata", {})
+        test_data = {"metadata": metadata} if metadata else {}
+
+        if module.check_mode:
+            test_result = {
+                "success": True,
+                "message": "Check mode - test would be performed",
+                "details": {"check_mode": True},
+            }
+            module.exit_json(changed=False, test_result=test_result)
+
+        try:
+            test_response = controller.post_endpoint(
+                f"eda-credentials/{credential['id']}/test/", data=test_data
+            )
+
+            if test_response.status in [200, 202]:
+                if test_response.json:
+                    test_result = test_response.json
+                else:
+                    test_result = {
+                        "success": True,
+                        "message": f"HTTP {test_response.status}: Credential test accepted",
+                        "details": {"status": test_response.status},
+                    }
+            else:
+                error_msg = "Credential test failed"
+                if test_response.json and isinstance(test_response.json, dict):
+                    error_msg = test_response.json.get("message", error_msg)
+                elif test_response.data:
+                    error_msg = f"HTTP {test_response.status}: {test_response.data}"
+
+                test_result = {
+                    "success": False,
+                    "message": error_msg,
+                    "details": (
+                        test_response.json
+                        if test_response.json
+                        else {"status": test_response.status}
+                    ),
+                }
+
+            module.exit_json(changed=False, test_result=test_result)
+
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to test credential: {e}")
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this

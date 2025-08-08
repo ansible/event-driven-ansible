@@ -9,6 +9,8 @@ action_groups:
     - controller_token
     - credential
     - credential_info
+    - credential_input_source
+    - credential_input_source_info
     - credential_type
     - credential_type_info
     - decision_environment
