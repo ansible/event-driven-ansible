@@ -453,7 +453,7 @@ def create_params(
                 controller=controller,
                 module=module,
             )
-        )
+        ).rstrip("\n")
 
     # Set the remaining parameters
     if module.params.get("description"):
