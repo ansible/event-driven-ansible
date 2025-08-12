@@ -27,11 +27,11 @@ repos:
         # always_run: true
         files: ^(\.config/dictionary\.txt)$
   - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.10.0
+    rev: v0.11.0
     hooks:
       - id: shellcheck
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.0.1
+    rev: v9.2.0
     hooks:
       - id: cspell
   - repo: https://github.com/pycqa/isort
@@ -44,7 +44,7 @@ repos:
       - id: black
         language_version: python3
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.16.1
+    rev: v1.17.1
     hooks:
       - id: mypy
         # empty args needed in order to match mypy cli behavior
@@ -70,7 +70,7 @@ repos:
           - xxhash
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.12.2"
+    rev: "v0.12.7"
     hooks:
       - id: ruff
         args: [
@@ -129,7 +129,7 @@ repos:
         stages: [manual]
         pass_filenames: false
   - repo: https://github.com/jazzband/pip-tools
-    rev: 7.4.1
+    rev: v7.5.0
     hooks:
       - id: pip-compile
         name: pip-combile -> constraints.txt
