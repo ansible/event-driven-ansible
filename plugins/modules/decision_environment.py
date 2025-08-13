@@ -40,6 +40,17 @@ options:
       description:
         - Name of the credential to associate with the decision environment.
       type: str
+    pull_policy:
+      description:
+        - Image pull policy for the decision environment container.
+        - C(always) pulls the image before starting the container.
+        - C(never) prevents pulling and uses local image.
+        - C(missing) only pulls if image is not available locally.
+        - For Kubernetes deployments, these values are converted to C(Always), C(Never), and C(IfNotPresent).
+      type: str
+      choices: ['always', 'never', 'missing']
+      default: 'always'
+      version_added: '2.9.0'
     state:
       description:
         - Desired state of the resource.
@@ -67,6 +78,7 @@ EXAMPLES = r"""
     description: "Example Decision Environment description"
     image_url: "quay.io/test"
     credential: "Example Credential"
+    pull_policy: "missing"
     organization_name: Default
     state: present
 
@@ -113,6 +125,7 @@ def main() -> None:
         description=dict(),
         image_url=dict(),
         credential=dict(),
+        pull_policy=dict(choices=["always", "never", "missing"], default="always"),
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
     )
@@ -154,6 +167,7 @@ def main() -> None:
     description = module.params.get("description")
     image_url = module.params.get("image_url")
     credential = module.params.get("credential")
+    pull_policy = module.params.get("pull_policy")
     ret = {}
 
     try:
@@ -178,6 +192,8 @@ def main() -> None:
         decision_environment_params["description"] = description
     if image_url:
         decision_environment_params["image_url"] = image_url
+    if pull_policy:
+        decision_environment_params["pull_policy"] = pull_policy
 
     credential_id = None
     if config_endpoint_avail.status not in (404,) and credential:
