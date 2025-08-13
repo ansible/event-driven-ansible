@@ -1,0 +1,127 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Test pull policy always (default)
+  ansible.eda.decision_environment:
+    name: "{{ decision_env_name }}_always"
+    description: "Test pull policy always"
+    image_url: "{{ image_url }}"
+    organization_name: Default
+    state: present
+  register: r
+
+- name: Check decision environment with default pull policy
+  assert:
+    that:
+      - r.changed
+
+- name: Get info for always pull policy decision environment
+  ansible.eda.decision_environment_info:
+    name: "{{ decision_env_name }}_always"
+  register: de_always_info
+
+- name: Assert default pull policy is always
+  assert:
+    that:
+      - de_always_info.decision_environments[0].pull_policy == "always"
+
+- name: Test pull policy never
+  ansible.eda.decision_environment:
+    name: "{{ decision_env_name }}_never"
+    description: "Test pull policy never"
+    image_url: "{{ image_url }}"
+    pull_policy: "never"
+    organization_name: Default
+    state: present
+  register: r
+
+- name: Check decision environment with never pull policy
+  assert:
+    that:
+      - r.changed
+
+- name: Get info for never pull policy decision environment
+  ansible.eda.decision_environment_info:
+    name: "{{ decision_env_name }}_never"
+  register: de_never_info
+
+- name: Assert pull policy is never
+  assert:
+    that:
+      - de_never_info.decision_environments[0].pull_policy == "never"
+
+- name: Test pull policy missing
+  ansible.eda.decision_environment:
+    name: "{{ decision_env_name }}_missing"
+    description: "Test pull policy missing"
+    image_url: "{{ image_url }}"
+    pull_policy: "missing"
+    organization_name: Default
+    state: present
+  register: r
+
+- name: Check decision environment with missing pull policy
+  assert:
+    that:
+      - r.changed
+
+- name: Get info for missing pull policy decision environment
+  ansible.eda.decision_environment_info:
+    name: "{{ decision_env_name }}_missing"
+  register: de_missing_info
+
+- name: Assert pull policy is missing
+  assert:
+    that:
+      - de_missing_info.decision_environments[0].pull_policy == "missing"
+
+- name: Test pull policy update from always to never
+  ansible.eda.decision_environment:
+    name: "{{ decision_env_name }}_always"
+    description: "Test pull policy update"
+    image_url: "{{ image_url }}"
+    pull_policy: "never"
+    organization_name: Default
+    state: present
+  register: r
+
+- name: Check decision environment pull policy update
+  assert:
+    that:
+      - r.changed
+
+- name: Get info after pull policy update
+  ansible.eda.decision_environment_info:
+    name: "{{ decision_env_name }}_always"
+  register: de_updated_info
+
+- name: Assert pull policy was updated to never
+  assert:
+    that:
+      - de_updated_info.decision_environments[0].pull_policy == "never"
+
+- name: Test idempotency with pull policy
+  ansible.eda.decision_environment:
+    name: "{{ decision_env_name }}_never"
+    description: "Test pull policy never"
+    image_url: "{{ image_url }}"
+    pull_policy: "never"
+    organization_name: Default
+    state: present
+  register: r
+
+- name: Check idempotency with pull policy
+  assert:
+    that:
+      - not r.changed
+
+- name: Clean up pull policy test environments
+  ansible.eda.decision_environment:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ decision_env_name }}_always"
+    - "{{ decision_env_name }}_never"
+    - "{{ decision_env_name }}_missing"
+  ignore_errors: true

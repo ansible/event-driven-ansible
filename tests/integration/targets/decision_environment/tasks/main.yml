@@ -30,6 +30,7 @@
     - include_tasks: create.yml
     - include_tasks: delete.yml
     - include_tasks: update.yml
+    - include_tasks: pull_policy.yml
   always:
     - name: Clean up - decision environment
       ansible.eda.decision_environment:
@@ -38,6 +39,9 @@
       loop:
         - "{{ decision_env_name }}"
         - "{{ decision_env_name }}_new"
+        - "{{ decision_env_name }}_always"
+        - "{{ decision_env_name }}_never"
+        - "{{ decision_env_name }}_missing"
       ignore_errors: true
 
     - name: Clean up - credential
