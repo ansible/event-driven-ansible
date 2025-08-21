@@ -1,0 +1,35 @@
+---
+- name: Test invalid authentication scenarios
+  block:
+    - name: Test invalid username/password
+      ansible.eda.project_info:
+        aap_hostname: "{{ aap_hostname }}"
+        aap_username: "invalid_user"
+        aap_password: "invalid_password"
+        aap_validate_certs: "{{ aap_validate_certs }}"
+      register: invalid_basic_auth
+      ignore_errors: true
+
+    - name: Verify invalid basic auth fails
+      ansible.builtin.assert:
+        that:
+          - invalid_basic_auth is failed
+        msg: "Invalid basic authentication should fail"
+
+    - name: Test invalid token
+      ansible.eda.project_info:
+        aap_hostname: "{{ aap_hostname }}"
+        aap_token: "invalid_token_123456789"
+        aap_validate_certs: "{{ aap_validate_certs }}"
+      register: invalid_token_auth
+      ignore_errors: true
+
+    - name: Verify invalid token auth fails
+      ansible.builtin.assert:
+        that:
+          - invalid_token_auth is failed
+        msg: "Invalid token authentication should fail"
+
+    - name: Display invalid authentication tests success
+      ansible.builtin.debug:
+        msg: "✓ Invalid authentication scenarios properly rejected"
