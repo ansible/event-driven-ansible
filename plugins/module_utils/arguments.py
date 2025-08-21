@@ -43,4 +43,13 @@ AUTH_ARGSPEC: dict[str, dict[str, object]] = {
         ),
         "aliases": ["aap_request_timeout"],
     },
+    "controller_token": {
+        "required": False,
+        "no_log": True,
+        "fallback": (
+            env_fallback,
+            ["CONTROLLER_TOKEN", "AAP_TOKEN", "AAP_OAUTH_TOKEN"],
+        ),
+        "aliases": ["aap_token", "aap_oauth_token"],
+    },
 }

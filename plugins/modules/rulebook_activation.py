@@ -549,6 +549,7 @@ def main() -> None:
         password=module.params.get("controller_password"),
         timeout=module.params.get("request_timeout"),
         validate_certs=module.params.get("validate_certs"),
+        token=module.params.get("controller_token"),
     )
 
     name = module.params.get("name")
