@@ -32,6 +32,15 @@ options:
         type: str
         version_added: '2.0.0'
         aliases: [ aap_password ]
+    controller_token:
+        description:
+          - Token used for authentication.
+          - If not set, the value of C(CONTROLLER_TOKEN), E(AAP_TOKEN), or E(AAP_OAUTH_TOKEN) environment variables
+          - will be used.
+          - Support for E(CONTROLLER_TOKEN), E(AAP_TOKEN), and E(AAP_OAUTH_TOKEN) has been added in version 2.10.
+        type: str
+        version_added: '2.10.0'
+        aliases: [ aap_token, aap_oauth_token ]
     request_timeout:
         description:
           - Timeout in seconds for the connection with the EDA controller.
