@@ -1,0 +1,21 @@
+- name: test kafka source plugin with topic pattern matching
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic_pattern: "kafka-pattern-.*"
+        host: localhost
+        port: 9092
+        offset: earliest
+        encoding: ascii
+  rules:
+    - name: match kafka event from pattern matching topics
+      condition: event.body.name == "Pattern test"
+      action:
+        debug:
+          msg: "Rule fired successfully for pattern topics"
+
+    - name: stop
+      condition: event.body == "stop"
+      action:
+        shutdown:
+

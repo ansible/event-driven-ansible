@@ -30,8 +30,8 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
     # For SSL/SASL ports, just check if the port is open rather than full producer
     if check_ssl and ("9093" in bootstrap_servers or "9094" in bootstrap_servers or "9095" in bootstrap_servers):
         import socket
-        host, port = bootstrap_servers.split(":")
-        port = int(port)
+        host, port_str = bootstrap_servers.split(":")
+        port = int(port_str)
 
         for attempt in range(timeout):
             try:
@@ -48,7 +48,10 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
                 print(f"Waiting for Kafka broker port {bootstrap_servers} to be listening...")
             time.sleep(1)
 
-        print(f"Warning: Kafka broker port {bootstrap_servers} not ready after {timeout} seconds (may need SSL/SASL setup)")
+        print(
+            f"Warning: Kafka broker port {bootstrap_servers} not ready after {timeout} seconds "
+            "(may need SSL/SASL setup)"
+        )
         return
 
     for attempt in range(timeout):
