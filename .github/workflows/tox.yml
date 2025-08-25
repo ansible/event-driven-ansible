@@ -98,7 +98,7 @@ jobs:
 
       - name: Install Java
         if: "${{ startsWith(matrix.name, 'py') }}"
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "zulu"
           java-version: "17"
