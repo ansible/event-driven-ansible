@@ -1,4 +1,5 @@
 import os
+import socket
 import subprocess
 import time
 from dataclasses import dataclass
@@ -19,39 +20,43 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
         check_ssl: Whether to check SSL/SASL ports (may not be ready immediately)
 
     Raises:
-        Exception: If Kafka is not ready within timeout
+        TimeoutError: If Kafka is not ready within timeout
+        ConnectionError: If unable to connect to Kafka
     """
     try:
         from kafka import KafkaProducer
+        from kafka.errors import KafkaError
     except ImportError:
         print("kafka-python-ng not available, skipping health check")
         return
 
+    start_time = time.time()
+
     # For SSL/SASL ports, just check if the port is open rather than full producer
     if check_ssl and ("9093" in bootstrap_servers or "9094" in bootstrap_servers or "9095" in bootstrap_servers):
-        import socket
-        host, port = bootstrap_servers.split(":")
-        port = int(port)
+        host, port_str = bootstrap_servers.split(":")
+        port = int(port_str)
+        first_attempt = True
 
-        for attempt in range(timeout):
+        while time.time() - start_time < timeout:
             try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(1)
-                result = sock.connect_ex((host, port))
-                sock.close()
-                if result == 0:
+                with socket.create_connection((host, port), timeout=1):
                     print(f"Kafka broker port {bootstrap_servers} is listening")
                     return
-            except Exception:
-                pass
-            if attempt == 0:
-                print(f"Waiting for Kafka broker port {bootstrap_servers} to be listening...")
-            time.sleep(1)
+            except (socket.timeout, socket.error, OSError) as e:
+                if first_attempt:
+                    print(f"Waiting for Kafka broker port {bootstrap_servers} to be listening...")
+                    first_attempt = False
+                time.sleep(1)
 
-        print(f"Warning: Kafka broker port {bootstrap_servers} not ready after {timeout} seconds (may need SSL/SASL setup)")
-        return
+        raise TimeoutError(
+            f"Kafka broker port {bootstrap_servers} not ready after {timeout} seconds "
+            "(may need SSL/SASL setup)"
+        )
 
-    for attempt in range(timeout):
+    # For regular Kafka producer connection
+    first_attempt = True
+    while time.time() - start_time < timeout:
         try:
             producer = KafkaProducer(
                 bootstrap_servers=bootstrap_servers,
@@ -61,12 +66,13 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
             producer.close()
             print(f"Kafka broker at {bootstrap_servers} is ready")
             return
-        except Exception as e:
-            if attempt == 0:
+        except (KafkaError, OSError, ConnectionError) as e:
+            if first_attempt:
                 print(f"Waiting for Kafka broker at {bootstrap_servers} to be ready...")
+                first_attempt = False
             time.sleep(1)
 
-    raise Exception(f"Kafka broker at {bootstrap_servers} not ready after {timeout} seconds")
+    raise TimeoutError(f"Kafka broker at {bootstrap_servers} not ready after {timeout} seconds")
 
 
 @dataclass
