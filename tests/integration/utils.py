@@ -9,7 +9,11 @@ from . import TESTS_PATH
 DEFAULT_TEST_TIMEOUT: int = 25
 
 
-def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int = 30, check_ssl: bool = False) -> None:
+def wait_for_kafka_ready(
+    bootstrap_servers: str = "localhost:9092",
+    timeout: int = 30,
+    check_ssl: bool = False,
+) -> None:
     """
     Wait for Kafka broker to be ready by attempting to create a producer.
 
@@ -28,8 +32,13 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
         return
 
     # For SSL/SASL ports, just check if the port is open rather than full producer
-    if check_ssl and ("9093" in bootstrap_servers or "9094" in bootstrap_servers or "9095" in bootstrap_servers):
+    if check_ssl and (
+        "9093" in bootstrap_servers
+        or "9094" in bootstrap_servers
+        or "9095" in bootstrap_servers
+    ):
         import socket
+
         host, port_str = bootstrap_servers.split(":")
         port = int(port_str)
 
@@ -45,7 +54,9 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
             except Exception:
                 pass
             if attempt == 0:
-                print(f"Waiting for Kafka broker port {bootstrap_servers} to be listening...")
+                print(
+                    f"Waiting for Kafka broker port {bootstrap_servers} to be listening..."
+                )
             time.sleep(1)
 
         print(
@@ -57,19 +68,19 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
     for attempt in range(timeout):
         try:
             producer = KafkaProducer(
-                bootstrap_servers=bootstrap_servers,
-                request_timeout_ms=1000,
-                retries=0
+                bootstrap_servers=bootstrap_servers, request_timeout_ms=1000, retries=0
             )
             producer.close()
             print(f"Kafka broker at {bootstrap_servers} is ready")
             return
-        except Exception as e:
+        except Exception:
             if attempt == 0:
                 print(f"Waiting for Kafka broker at {bootstrap_servers} to be ready...")
             time.sleep(1)
 
-    raise Exception(f"Kafka broker at {bootstrap_servers} not ready after {timeout} seconds")
+    raise Exception(
+        f"Kafka broker at {bootstrap_servers} not ready after {timeout} seconds"
+    )
 
 
 @dataclass

@@ -12,7 +12,6 @@ from kafka import KafkaProducer
 from .. import TESTS_PATH
 from ..utils import CLIRunner, wait_for_kafka_ready
 
-
 SKIP_REASON = "Skipping Kafka tests for py311-linux-arm64, py39-macos, and py312-macos"
 
 
@@ -40,7 +39,7 @@ def should_skip_kafka_tests() -> bool:
     if python_version == "3.12" and system == "darwin":
         return True
 
-    # Check for py311-linux-arm64   
+    # Check for py311-linux-arm64
     if python_version == "3.11" and system == "linux" and machine in ["aarch64"]:
         return True
 
@@ -96,7 +95,7 @@ def send_kafka_messages_and_run_test(
 def kafka_certs() -> Generator[subprocess.CompletedProcess[bytes], None, None]:
     if should_skip_kafka_tests():
         pytest.skip(SKIP_REASON)
-    
+
     cwd = os.path.join(TESTS_PATH, "event_source_kafka")
     print(cwd)
     result = subprocess.run([os.path.join(cwd, "certs-create.sh")], cwd=cwd, check=True)
@@ -108,7 +107,7 @@ def kafka_certs() -> Generator[subprocess.CompletedProcess[bytes], None, None]:
 def kafka_broker() -> Generator[subprocess.CompletedProcess[bytes], None, None]:
     if should_skip_kafka_tests():
         pytest.skip(SKIP_REASON)
-    
+
     cwd = os.path.join(TESTS_PATH, "event_source_kafka")
     print(cwd)
     # Keep --quiet-pull here is it does spam CI/CD console
@@ -132,10 +131,10 @@ def kafka_broker() -> Generator[subprocess.CompletedProcess[bytes], None, None]:
 def kafka_producer(
     kafka_certs: subprocess.CompletedProcess[bytes],
     kafka_broker: subprocess.CompletedProcess[bytes],
-) -> KafkaProducer:   
+) -> KafkaProducer:
     if should_skip_kafka_tests():
         pytest.skip(SKIP_REASON)
-    
+
     return KafkaProducer(bootstrap_servers="localhost:9092")
 
 
@@ -149,7 +148,10 @@ def test_kafka_source_plaintext(
     )
 
     topics_and_messages = [
-        ("kafka-events-plaintext", json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii")),
+        (
+            "kafka-events-plaintext",
+            json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii"),
+        ),
         ("kafka-events-plaintext", "stop".encode("ascii")),
     ]
 
@@ -172,7 +174,10 @@ def test_kafka_source_with_headers(
     )
 
     topics_and_messages = [
-        ("kafka-events-plaintext", json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii")),
+        (
+            "kafka-events-plaintext",
+            json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii"),
+        ),
         ("kafka-events-plaintext", "stop".encode("ascii")),
     ]
 
@@ -199,7 +204,10 @@ def test_kafka_source_ssl(
     ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules_ssl.yml")
 
     topics_and_messages = [
-        ("kafka-events-ssl", json.dumps({"name": "Produced for SSL consumers"}).encode("ascii")),
+        (
+            "kafka-events-ssl",
+            json.dumps({"name": "Produced for SSL consumers"}).encode("ascii"),
+        ),
         ("kafka-events-ssl", "stop".encode("ascii")),
     ]
 
@@ -222,7 +230,12 @@ def test_kafka_source_sasl_plaintext(
     )
 
     topics_and_messages = [
-        ("kafka-events-sasl-plaintext", json.dumps({"name": "Produced for SASL_PLAINTEXT consumers"}).encode("ascii")),
+        (
+            "kafka-events-sasl-plaintext",
+            json.dumps({"name": "Produced for SASL_PLAINTEXT consumers"}).encode(
+                "ascii"
+            ),
+        ),
         ("kafka-events-sasl-plaintext", "stop".encode("ascii")),
     ]
 
@@ -245,7 +258,10 @@ def test_kafka_source_sasl_ssl(
     )
 
     topics_and_messages = [
-        ("kafka-events-sasl-ssl", json.dumps({"name": "Produced for SASL_SSL consumers"}).encode("ascii")),
+        (
+            "kafka-events-sasl-ssl",
+            json.dumps({"name": "Produced for SASL_SSL consumers"}).encode("ascii"),
+        ),
         ("kafka-events-sasl-ssl", "stop".encode("ascii")),
     ]
 
@@ -270,8 +286,14 @@ def test_kafka_source_multiple_topics(
 
     # Send messages to different topics - should get 2 rule matches
     topics_and_messages = [
-        ("kafka-events-topic1", json.dumps({"name": "Multi-topic test"}).encode("ascii")),
-        ("kafka-events-topic2", json.dumps({"name": "Multi-topic test"}).encode("ascii")),
+        (
+            "kafka-events-topic1",
+            json.dumps({"name": "Multi-topic test"}).encode("ascii"),
+        ),
+        (
+            "kafka-events-topic2",
+            json.dumps({"name": "Multi-topic test"}).encode("ascii"),
+        ),
         ("kafka-events-other", json.dumps({"name": "Other topic"}).encode("ascii")),
         ("kafka-events-topic1", "stop".encode("ascii")),
     ]
