@@ -131,6 +131,71 @@
         that:
           - not _result.changed
 
+    - name: Test HashiCorp Vault credential type with API v2 inputs and metadata
+      ansible.eda.credential_type:
+        name: "HashiCorp Vault Secret Lookup"
+        state: test
+        test_inputs:
+          url: "https://vault.example.com:8200/"
+          token: "dummy-token-for-testing"
+          api_version: "v2"
+          default_auth_path: "token"
+        test_metadata:
+          secret_path: "secret/eventstream"
+          secret_key: "username"
+      register: _test_result
+      ignore_errors: true
+
+    - name: Test credential type without inputs or metadata
+      ansible.eda.credential_type:
+        name: "{{ new_credential_type_name }}"
+        state: test
+      register: _test_result
+      ignore_errors: true
+
+    - name: Check credential type test without inputs
+      assert:
+        that:
+          - not _test_result.changed
+          - (_test_result.test_result is defined and _test_result.credential_type is defined) or _test_result.failed
+          - "'This field is required' in _test_result.msg"
+
+    - name: Test credential type in check mode to verify test state works
+      ansible.eda.credential_type:
+        name: "{{ new_credential_type_name }}"
+        state: test
+        test_inputs:
+          url: "https://vault.example.com:8200/"
+          token: "dummy-token-for-testing"
+          api_version: "v2"
+          default_auth_path: "token"
+        test_metadata:
+          secret_path: "secret/eventstream"
+          secret_key: "username"
+      check_mode: true
+      register: _test_result
+
+    - name: Check that test state works in check mode
+      assert:
+        that:
+          - not _test_result.changed
+          - _test_result.test_result is defined
+          - _test_result.test_result.success == true
+          - "'Check mode' in _test_result.test_result.message"
+
+    - name: Test non-existing credential type
+      ansible.eda.credential_type:
+        name: "NonExistingCredentialType"
+        state: test
+      register: _test_result
+      ignore_errors: true
+
+    - name: Check test of non-existing credential type fails
+      assert:
+        that:
+          - _test_result.failed
+          - "'not found' in _test_result.msg"
+
     # DELETE
     - name: Delete operation type without required name parameter
       ansible.eda.credential_type:

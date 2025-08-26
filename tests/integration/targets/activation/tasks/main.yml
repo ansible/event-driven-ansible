@@ -526,7 +526,7 @@
           - not _result.changed
           - '"The specified source_name Test source name does not exist." in _result.msg'
 
-    - name: Create a rulebook activation
+    - name: Create a rulebook activation with event stream
       ansible.eda.rulebook_activation:
         name: "{{ activation_name_source_index }}"
         description: "Example Activation description"
@@ -546,6 +546,27 @@
       assert:
         that:
           - _result.changed
+
+    - name: Create a rulebook activation with event stream again (same parameters)
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name_source_index }}"
+        description: "Example Activation description"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        state: disabled
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        organization_name: Default
+        event_streams:
+          - event_stream: "{{ event_stream_name }}"
+            source_index: 0
+      register: _result
+
+    - name: Assert that no updates were made
+      assert:
+        that:
+          - not _result.changed
 
     - name: Get information about the rulebook activation
       ansible.eda.rulebook_activation_info:

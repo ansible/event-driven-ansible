@@ -21,7 +21,9 @@
       set_fact:
         event_stream_name: "Test_EvenStream_{{ test_id }}"
         new_event_stream_name: "New_Test_EventStream_{{ test_id }}"
+        uuid_event_stream_name: "Test_UUID_EventStream_{{ test_id }}"
         credential_name: "Test_Credential_{{ test_id }}"
+        custom_uuid: "550e8400-e29b-41d4-a716-446655440000"
 
     - name: Create credential
       ansible.eda.credential:
@@ -152,6 +154,76 @@
     - name: List all event stream
       ansible.eda.event_stream_info:
 
+    # UUID TESTS
+    - name: Create event stream with custom UUID in check mode
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ uuid_event_stream_name }}"
+        uuid: "{{ custom_uuid }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      check_mode: true
+      register: _result
+
+    - name: Check event stream with UUID creation in check mode
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create event stream with custom UUID
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ uuid_event_stream_name }}"
+        uuid: "{{ custom_uuid }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check event stream with UUID is created
+      assert:
+        that:
+          - _result.changed
+
+    - name: Create event stream with custom UUID again (idempotency)
+      ansible.eda.event_stream:
+        state: present
+        name: "{{ uuid_event_stream_name }}"
+        uuid: "{{ custom_uuid }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      register: _result
+
+    - name: Check event stream with UUID is not created again
+      assert:
+        that:
+          - not _result.changed
+
+    - name: Test duplicate UUID rejection
+      ansible.eda.event_stream:
+        state: present
+        name: "Test_UUID_Duplicate_{{ test_id }}"
+        uuid: "{{ custom_uuid }}"
+        credential_name: "{{ credential_name }}"
+        organization_name: Default
+      register: _result
+      ignore_errors: true
+
+    - name: Verify duplicate UUID is rejected
+      assert:
+        that:
+          - _result.failed or (_result.changed == false and "already exists" in _result.msg | default(""))
+
+    - name: Get info about UUID event stream
+      ansible.eda.event_stream_info:
+        name: "{{ uuid_event_stream_name }}"
+      register: _result
+
+    - name: Check if UUID event stream exists
+      assert:
+        that:
+          - _result.event_streams | length == 1
+          - _result.event_streams[0].name == uuid_event_stream_name
+
     # DELETE
     - name: Delete operation type without required name parameter
       ansible.eda.event_stream:
@@ -196,6 +268,8 @@
       loop:
         - "{{ event_stream_name }}"
         - "{{ new_event_stream_name }}"
+        - "{{ uuid_event_stream_name }}"
+        - "Test_UUID_Duplicate_{{ test_id }}"
       ignore_errors: true
 
     - name: Clean up - credential

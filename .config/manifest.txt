@@ -77,6 +77,8 @@ plugins/modules/
 plugins/modules/controller_token.py
 plugins/modules/credential.py
 plugins/modules/credential_info.py
+plugins/modules/credential_input_source.py
+plugins/modules/credential_input_source_info.py
 plugins/modules/credential_type.py
 plugins/modules/credential_type_info.py
 plugins/modules/decision_environment.py

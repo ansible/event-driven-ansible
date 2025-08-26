@@ -74,7 +74,7 @@ jobs:
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # needed by setuptools-scm
           path: ansible_collections/ansible/eda
@@ -98,7 +98,7 @@ jobs:
 
       - name: Install Java
         if: "${{ startsWith(matrix.name, 'py') }}"
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "zulu"
           java-version: "17"
@@ -182,7 +182,7 @@ jobs:
 
     steps:
       # checkout needed for codecov action which needs codecov.yml file
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python # likely needed for coverage
         uses: actions/setup-python@v5
@@ -202,7 +202,7 @@ jobs:
           separate-directories: true
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: logs
           path: .
@@ -225,7 +225,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage data
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.0
         with:
           name: ${{ matrix.name }}
           # verbose: true # optional (default = false)
@@ -249,10 +249,10 @@ jobs:
     environment: release
     if: github.event_name == 'push' && github.ref_type == 'tag'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download the artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: collection-artifact
 
