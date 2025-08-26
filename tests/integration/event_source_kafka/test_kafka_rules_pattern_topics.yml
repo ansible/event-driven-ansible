@@ -18,4 +18,3 @@
       condition: event.body == "stop"
       action:
         shutdown:
-

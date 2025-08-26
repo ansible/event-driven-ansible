@@ -36,7 +36,7 @@ def should_skip_kafka_tests() -> bool:
     return False
 
 
-IS_UNAVAILABLE_PLATFORM=should_skip_kafka_tests()
+IS_UNAVAILABLE_PLATFORM = should_skip_kafka_tests()
 SKIP_REASON = "Skipping Kafka tests on macos or arm64"
 
 
@@ -142,7 +142,10 @@ def test_kafka_source_plaintext(
     )
 
     topics_and_messages = [
-        ("kafka-events-plaintext", json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii")),
+        (
+            "kafka-events-plaintext",
+            json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii"),
+        ),
         ("kafka-events-plaintext", "stop".encode("ascii")),
     ]
 
@@ -165,7 +168,10 @@ def test_kafka_source_with_headers(
     )
 
     topics_and_messages = [
-        ("kafka-events-plaintext", json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii")),
+        (
+            "kafka-events-plaintext",
+            json.dumps({"name": "Produced for PLAINTEXT consumers"}).encode("ascii"),
+        ),
         ("kafka-events-plaintext", "stop".encode("ascii")),
     ]
 
@@ -192,7 +198,10 @@ def test_kafka_source_ssl(
     ruleset = os.path.join(TESTS_PATH, "event_source_kafka", "test_kafka_rules_ssl.yml")
 
     topics_and_messages = [
-        ("kafka-events-ssl", json.dumps({"name": "Produced for SSL consumers"}).encode("ascii")),
+        (
+            "kafka-events-ssl",
+            json.dumps({"name": "Produced for SSL consumers"}).encode("ascii"),
+        ),
         ("kafka-events-ssl", "stop".encode("ascii")),
     ]
 
@@ -215,7 +224,12 @@ def test_kafka_source_sasl_plaintext(
     )
 
     topics_and_messages = [
-        ("kafka-events-sasl-plaintext", json.dumps({"name": "Produced for SASL_PLAINTEXT consumers"}).encode("ascii")),
+        (
+            "kafka-events-sasl-plaintext",
+            json.dumps({"name": "Produced for SASL_PLAINTEXT consumers"}).encode(
+                "ascii"
+            ),
+        ),
         ("kafka-events-sasl-plaintext", "stop".encode("ascii")),
     ]
 
@@ -238,7 +252,10 @@ def test_kafka_source_sasl_ssl(
     )
 
     topics_and_messages = [
-        ("kafka-events-sasl-ssl", json.dumps({"name": "Produced for SASL_SSL consumers"}).encode("ascii")),
+        (
+            "kafka-events-sasl-ssl",
+            json.dumps({"name": "Produced for SASL_SSL consumers"}).encode("ascii"),
+        ),
         ("kafka-events-sasl-ssl", "stop".encode("ascii")),
     ]
 
@@ -263,8 +280,14 @@ def test_kafka_source_multiple_topics(
 
     # Send messages to different topics - should get 2 rule matches
     topics_and_messages = [
-        ("kafka-events-topic1", json.dumps({"name": "Multi-topic test"}).encode("ascii")),
-        ("kafka-events-topic2", json.dumps({"name": "Multi-topic test"}).encode("ascii")),
+        (
+            "kafka-events-topic1",
+            json.dumps({"name": "Multi-topic test"}).encode("ascii"),
+        ),
+        (
+            "kafka-events-topic2",
+            json.dumps({"name": "Multi-topic test"}).encode("ascii"),
+        ),
         ("kafka-events-other", json.dumps({"name": "Other topic"}).encode("ascii")),
         ("kafka-events-topic1", "stop".encode("ascii")),
     ]

@@ -10,7 +10,11 @@ from . import TESTS_PATH
 DEFAULT_TEST_TIMEOUT: int = 25
 
 
-def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int = 30, check_ssl: bool = False) -> None:
+def wait_for_kafka_ready(
+    bootstrap_servers: str = "localhost:9092",
+    timeout: int = 30,
+    check_ssl: bool = False,
+) -> None:
     """
     Wait for Kafka broker to be ready by attempting to create a producer.
 
@@ -33,7 +37,11 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
     start_time = time.time()
 
     # For SSL/SASL ports, just check if the port is open rather than full producer
-    if check_ssl and ("9093" in bootstrap_servers or "9094" in bootstrap_servers or "9095" in bootstrap_servers):
+    if check_ssl and (
+        "9093" in bootstrap_servers
+        or "9094" in bootstrap_servers
+        or "9095" in bootstrap_servers
+    ):
         host, port_str = bootstrap_servers.split(":")
         port = int(port_str)
         first_attempt = True
@@ -43,9 +51,11 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
                 with socket.create_connection((host, port), timeout=1):
                     print(f"Kafka broker port {bootstrap_servers} is listening")
                     return
-            except (socket.timeout, socket.error, OSError) as e:
+            except (socket.timeout, socket.error, OSError):
                 if first_attempt:
-                    print(f"Waiting for Kafka broker port {bootstrap_servers} to be listening...")
+                    print(
+                        f"Waiting for Kafka broker port {bootstrap_servers} to be listening..."
+                    )
                     first_attempt = False
                 time.sleep(1)
 
@@ -59,20 +69,20 @@ def wait_for_kafka_ready(bootstrap_servers: str = "localhost:9092", timeout: int
     while time.time() - start_time < timeout:
         try:
             producer = KafkaProducer(
-                bootstrap_servers=bootstrap_servers,
-                request_timeout_ms=1000,
-                retries=0
+                bootstrap_servers=bootstrap_servers, request_timeout_ms=1000, retries=0
             )
             producer.close()
             print(f"Kafka broker at {bootstrap_servers} is ready")
             return
-        except (KafkaError, OSError, ConnectionError) as e:
+        except (KafkaError, OSError, ConnectionError):
             if first_attempt:
                 print(f"Waiting for Kafka broker at {bootstrap_servers} to be ready...")
                 first_attempt = False
             time.sleep(1)
 
-    raise TimeoutError(f"Kafka broker at {bootstrap_servers} not ready after {timeout} seconds")
+    raise TimeoutError(
+        f"Kafka broker at {bootstrap_servers} not ready after {timeout} seconds"
+    )
 
 
 @dataclass
