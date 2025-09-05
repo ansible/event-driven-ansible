@@ -75,6 +75,7 @@
         name: upstream decision environment
         credential: quay.io credential
         image_url: quay.io/ansible/ansible-rulebook:main
+        pull_policy: "missing"  # Optional: only pull if image not available locally
 
     - name: Create a basic event stream
       ansible.eda.event_stream:
