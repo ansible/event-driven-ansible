@@ -47,6 +47,7 @@
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
     credential: "{{ credential_name }}"
+    pull_policy: "missing"
     organization_name: Default
     state: present
   register: r
@@ -66,10 +67,11 @@
     _created_de: "{{ _result_de.decision_environments | list | first }}"
     _created_credential: "{{ _result_credential.credentials | list | first }}"
 
-- name: Assert created decision environment has the correct credential
+- name: Assert created decision environment has the correct credential and pull policy
   ansible.builtin.assert:
     that:
       - _created_de["eda_credential_id"] == _created_credential["id"]
+      - _created_de["pull_policy"] == "missing"
 
 - name: Create decision environment again
   ansible.eda.decision_environment:
@@ -77,6 +79,7 @@
     description: "Example decision environment description"
     image_url: "{{ image_url }}"
     credential: "{{ credential_name }}"
+    pull_policy: "missing"
     organization_name: Default
     state: present
   register: r
