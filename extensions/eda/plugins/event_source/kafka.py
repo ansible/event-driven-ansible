@@ -188,15 +188,15 @@ async def main(  # pylint: disable=R0914
     if host and brokers:
         msg = "Only one of host and brokers parameter must be set"
         raise ValueError(msg)
-    
+
     if (host and not port) or (port and not host):
         msg = "Port and host must be set"
         raise ValueError(msg)
-    
+
     if not host and not brokers:
         msg = "host + port or brokers must be set"
         raise ValueError(msg)
-    
+
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
         raise ValueError(msg)
