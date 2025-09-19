@@ -98,19 +98,39 @@ def test_mixed_topics_and_patterns(
     ):
         asyncio.run(kafka_main(myqueue, topic_args))
 
+
 @pytest.mark.parametrize(
     "args, error_msg",
     [
         # Only host set
-        ({"host": "localhost", "port": None, "brokers": None, "topic": "eda"}, "Port and host must be set"),
+        (
+            {"host": "localhost", "port": None, "brokers": None, "topic": "eda"},
+            "Port and host must be set",
+        ),
         # Only port set
-        ({"host": None, "port": 9092, "brokers": None, "topic": "eda"}, "Port and host must be set"),
+        (
+            {"host": None, "port": 9092, "brokers": None, "topic": "eda"},
+            "Port and host must be set",
+        ),
         # Neither host nor brokers set
-        ({"host": None, "port": None, "brokers": None, "topic": "eda"}, "host + port or brokers must be set"),
+        (
+            {"host": None, "port": None, "brokers": None, "topic": "eda"},
+            "host + port or brokers must be set",
+        ),
         # Both host and brokers set
-        ({"host": "localhost", "port": 9092, "brokers": ["localhost:9092"], "topic": "eda"}, "Only one of host and brokers parameter must be set")
-    ]
+        (
+            {
+                "host": "localhost",
+                "port": 9092,
+                "brokers": ["localhost:9092"],
+                "topic": "eda",
+            },
+            "Only one of host and brokers parameter must be set",
+        ),
+    ],
 )
-def test_host_port_brokers_combinations(myqueue: MockQueue, args: dict[str, Any], error_msg: str) -> None:
+def test_host_port_brokers_combinations(
+    myqueue: MockQueue, args: dict[str, Any], error_msg: str
+) -> None:
     with pytest.raises(ValueError, match=re.escape(error_msg)):
         asyncio.run(kafka_main(myqueue, args))
