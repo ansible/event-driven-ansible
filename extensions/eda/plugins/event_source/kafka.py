@@ -89,7 +89,7 @@ options:
     default: null
   client_id:
     description:
-      - client_id (str) – a name for this client.
+      - client_id (str) a name for this client.
         This string is passed in each request to servers and can be used to identify specific server-side log entries
         that correspond to this client.
         Also submitted to GroupCoordinator for logging with respect to consumer group administration
