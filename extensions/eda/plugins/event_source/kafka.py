@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 from ssl import CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED
-from typing import Any
+from typing import Any, Optional
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
@@ -152,7 +152,9 @@ EXAMPLES = r"""
 """
 
 
-def _host_or_broker_validation(host: str, port: int, brokers: list[str]) -> None:
+def _host_or_broker_validation(
+    host: Optional[str], port: Optional[int], brokers: Optional[list[str]]
+) -> None:
     if host and brokers:
         msg = "Only one of host and brokers parameter must be set"
         raise ValueError(msg)
