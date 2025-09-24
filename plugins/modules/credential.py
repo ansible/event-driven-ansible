@@ -170,6 +170,15 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
         credential_params["description"] = module.params["description"]
 
     if module.params.get("inputs"):
+        for key, value in module.params["inputs"].items():
+            if not (isinstance(value, str) or isinstance(value, bool)):
+                module.fail_json(
+                    msg=(
+                        f"Input fields must always have a boolean or string value. "
+                        f"The value provided in the '{key}' field is of type {type(value).__name__}."
+                    )
+                )
+
         credential_params["inputs"] = module.params["inputs"]
 
     credential_type_id = None
