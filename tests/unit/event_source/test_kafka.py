@@ -103,20 +103,11 @@ def test_mixed_topics_and_patterns(
     "args, error_msg",
     [
         # Only host set
-        (
-            {"host": "localhost", "port": None, "brokers": None, "topic": "eda"},
-            "Port and host must be set",
-        ),
+        ({"host": "localhost", "port": None, "brokers": None, "topic": "eda"}, "Host and port must be set"),
         # Only port set
-        (
-            {"host": None, "port": 9092, "brokers": None, "topic": "eda"},
-            "Port and host must be set",
-        ),
+        ({"host": None, "port": 9092, "brokers": None, "topic": "eda"}, "Host and port must be set"),
         # Neither host nor brokers set
-        (
-            {"host": None, "port": None, "brokers": None, "topic": "eda"},
-            "host + port or brokers must be set",
-        ),
+        ({"host": None, "port": None, "brokers": None, "topic": "eda"}, "host and port or brokers must be set"),
         # Both host and brokers set
         (
             {

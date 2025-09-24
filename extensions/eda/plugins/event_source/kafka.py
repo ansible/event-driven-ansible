@@ -152,6 +152,21 @@ EXAMPLES = r"""
 """
 
 
+def _host_or_broker_validation(host: str, port: int, brokers: list[str]) -> None:
+    if host and brokers:
+        msg = "Only one of host and brokers parameter must be set"
+        raise ValueError(msg)
+
+    if (host and not port) or (port and not host):
+        msg = "Host and port must be set"
+        raise ValueError(msg)
+
+    if not host and not brokers:
+        msg = "host and port or brokers must be set"
+        raise ValueError(msg)
+
+
+
 async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
@@ -185,17 +200,7 @@ async def main(  # pylint: disable=R0914
     encoding = args.get("encoding", "utf-8")
     security_protocol = args.get("security_protocol", "PLAINTEXT")
 
-    if host and brokers:
-        msg = "Only one of host and brokers parameter must be set"
-        raise ValueError(msg)
-
-    if (host and not port) or (port and not host):
-        msg = "Port and host must be set"
-        raise ValueError(msg)
-
-    if not host and not brokers:
-        msg = "host + port or brokers must be set"
-        raise ValueError(msg)
+    _host_or_broker_validation(host, port, brokers)
 
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
