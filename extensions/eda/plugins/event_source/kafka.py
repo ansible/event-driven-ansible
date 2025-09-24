@@ -166,7 +166,6 @@ def _host_or_broker_validation(host: str, port: int, brokers: list[str]) -> None
         raise ValueError(msg)
 
 
-
 async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
