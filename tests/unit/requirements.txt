@@ -9,3 +9,5 @@ pytest<8  # https://github.com/ansible/ansible/issues/82713
 pytest-asyncio
 psycopg[binary,pool]
 xxhash
+pyjwt
+cryptography
