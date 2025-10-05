@@ -1,11 +1,42 @@
 import asyncio
 import json
 import logging
+import os
+import sys
 from ssl import CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED
 from typing import Any
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
+
+try:
+    from .oauth_tokens import create_oauth_provider
+except ImportError:
+    # Since ansible-rulebook launches the source plugin via
+    # run_py.run_path it doesn't set the python path and the
+    # import fails, hence this workaround.
+    module_directory = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(module_directory)
+    from oauth_tokens import create_oauth_provider # type: ignore
+
+DEFAULT_SASL_MECHANISM = "PLAIN"
+DEFAULT_OFFSET = "latest"
+DEFAULT_VERIFY_MODE = "CERT_REQUIRED"
+VERIFY_MODES = {
+    "CERT_NONE": CERT_NONE,
+    "CERT_OPTIONAL": CERT_OPTIONAL,
+    "CERT_REQUIRED": CERT_REQUIRED,
+}
+
+SUPPORTED_SASL_MECHANISMS = [
+    "PLAIN",
+    "SCRAM-SHA-256",
+    "SCRAM-SHA-512",
+    "GSSAPI",
+    "OAUTHBEARER",
+]
+USER_PASSWORD_MECHANISMS = ["SCRAM-SHA-256", "SCRAM-SHA-512"]
+PLAIN_CREDENTIAL_KEYS = ["sasl_plain_username", "sasl_plain_password"]
 
 DOCUMENTATION = r"""
 ---
@@ -32,7 +63,7 @@ options:
     description:
       - The optional client certificate file path containing the client
         certificate, as well as CA certificates needed to establish
-        the certificate's authenticity.
+        the certificates authenticity.
     type: str
   keyfile:
     description:
@@ -121,6 +152,80 @@ options:
     description:
       - The kerberos REALM
     type: str
+  sasl_oauth_token_endpoint:
+    description:
+      - The URL to get the OAuth2 token from your Authorization Server
+    type: str
+  sasl_oauth_client_id:
+    description:
+      - The id used when fetching the token from Authorization Server
+    type: str
+  sasl_oauth_client_secret:
+    description:
+      - The secret used when fetching the token from Authorization Server.
+        This is not needed if you are using private_key_jwt
+    type: str
+  sasl_oauth_private_keyfile:
+    description:
+      - When using the private_key_jwt this specifies the private key file
+        This is not needed if you are using regular oauth flow
+    type: str
+  sasl_oauth_public_keyfile:
+    description:
+      - When using the private_key_jwt this specifies the public key file
+        This is not needed if you are using regular oauth flow
+        Some of the Authorization Servers require that the public key
+        signature be sent instead of the key id
+        If a public key file is specified the JWT Header will have the
+        x5t X.509 Certificate SHA-1 Thumb print
+        x5t#S256 X.509 Certificate SHA-256 Thumb print
+        If this field is missing we wont set these in the JWT Header
+    type: str
+  sasl_oauth_issuer:
+    description:
+      - When using the private_key_jwt this specifies the issuer (iss)
+        that will be set in the JWT header, by default this value
+        is set to be the same as sasl_oauth_client_id
+    type: str
+    default: the same value as sasl_oauth_client_id
+  sasl_oauth_subject:
+    description:
+      - When using the private_key_jwt this specifies the issuer (sub)
+        that will be set in the JWT header, by default this value
+        is set to be the same as sasl_oauth_client_id
+    type: str
+    default: the same value as sasl_oauth_client_id
+  sasl_oauth_audience:
+    description:
+      - When using the private_key_jwt this specifies the audience (aud)
+        that will be set in the JWT header, by default this value
+        is set to be the same as sasl_oauth_token_endpoint
+    type: str
+    default: the same value as sasl_oauth_token_endpoint
+  sasl_oauth_token_duration:
+    description:
+      - The life span of the token specified in minutes
+        The default is 30 minutes
+    type: int
+    default: 30
+  sasl_oauth_algorithm:
+    description:
+      - When using the private_key_jwt the algorithm to use in jwt
+        that will be set in the JWT header, by default this value
+        is set to be RS256
+    type: str
+    default: "RS256"
+  sasl_oauth_method:
+    description:
+      - When fetching a token from a Auth Server you can choose from
+        client_secret_basic, client_secret_post
+        client_secret_jwt, private_key_jwt
+    type: str
+    default: "client_secret_basic"
+  sasl_oauth_scope:
+    description:
+      - The optional scope when using OAUTHBEARER
+    type: str
 """
 
 EXAMPLES = r"""
@@ -140,6 +245,38 @@ EXAMPLES = r"""
     sasl_plain_username: "admin"
     sasl_plain_password: "test"
 """
+
+
+def _validate_args(args: dict[str, Any]) -> None:
+
+    sasl_mechanism = args.get("sasl_mechanism", DEFAULT_SASL_MECHANISM)
+    verify_mode = args.get("verify_mode", DEFAULT_VERIFY_MODE)
+    offset = args.get("offset", DEFAULT_OFFSET)
+
+    if sasl_mechanism not in SUPPORTED_SASL_MECHANISMS:
+        msg = (
+            f"SASL Mechanism {sasl_mechanism} is not supported: "
+            f"valid mechanisms are {SUPPORTED_SASL_MECHANISMS}"
+        )
+        raise ValueError(msg)
+
+    if sasl_mechanism in USER_PASSWORD_MECHANISMS:
+        for key in PLAIN_CREDENTIAL_KEYS:
+            if key not in args:
+                msg = (
+                    f"For sasl_mechanism {sasl_mechanism}, {key} is missing."
+                    "Please specify all of the following arguments: "
+                    f"{','.join(PLAIN_CREDENTIAL_KEYS)}"
+                )
+                raise ValueError(msg)
+
+    if offset not in ("latest", "earliest"):
+        msg = f"Invalid offset option: {offset}"
+        raise ValueError(msg)
+
+    if verify_mode not in VERIFY_MODES:
+        msg = f"Invalid verify_mode option: {verify_mode}"
+        raise ValueError(msg)
 
 
 async def main(  # pylint: disable=R0914
@@ -168,28 +305,22 @@ async def main(  # pylint: disable=R0914
     keyfile = args.get("keyfile")
     password = args.get("password")
     check_hostname = args.get("check_hostname", True)
-    verify_mode = args.get("verify_mode", "CERT_REQUIRED")
+    verify_mode = args.get("verify_mode", DEFAULT_VERIFY_MODE)
     group_id = args.get("group_id")
-    offset = args.get("offset", "latest")
+    offset = args.get("offset", DEFAULT_OFFSET)
     encoding = args.get("encoding", "utf-8")
     security_protocol = args.get("security_protocol", "PLAINTEXT")
+    sasl_mechanism = args.get("sasl_mechanism", DEFAULT_SASL_MECHANISM)
+    sasl_oauth_token_provider = None
 
-    if offset not in ("latest", "earliest"):
-        msg = f"Invalid offset option: {offset}"
-        raise ValueError(msg)
+    _validate_args(args)
 
-    verify_modes = {
-        "CERT_NONE": CERT_NONE,
-        "CERT_OPTIONAL": CERT_OPTIONAL,
-        "CERT_REQUIRED": CERT_REQUIRED,
-    }
-    try:
-        verify_mode = verify_modes[verify_mode]
-    except KeyError as exc:
-        msg = f"Invalid verify_mode option: {verify_mode}"
-        raise ValueError(msg) from exc
+    if sasl_mechanism == "OAUTHBEARER":
+
+        sasl_oauth_token_provider = create_oauth_provider(args)
 
     ssl_context = None
+    verify_mode = VERIFY_MODES[verify_mode]
     if cafile or security_protocol.endswith("SSL"):
         security_protocol = security_protocol.replace("PLAINTEXT", "SSL")
         ssl_context = create_ssl_context(
@@ -209,12 +340,13 @@ async def main(  # pylint: disable=R0914
         auto_offset_reset=offset,
         security_protocol=security_protocol,
         ssl_context=ssl_context,
-        sasl_mechanism=args.get("sasl_mechanism", "PLAIN"),
+        sasl_mechanism=args.get("sasl_mechanism", DEFAULT_SASL_MECHANISM),
         sasl_plain_username=args.get("sasl_plain_username"),
         sasl_plain_password=args.get("sasl_plain_password"),
         sasl_kerberos_service_name=args.get("sasl_kerberos_service_name"),
         sasl_kerberos_domain_name=args.get("sasl_kerberos_domain_name"),
         metadata_max_age_ms=int(args.get("metadata_max_age_ms", 300000)),
+        sasl_oauth_token_provider=sasl_oauth_token_provider,
     )
 
     kafka_consumer.subscribe(topics=topics, pattern=topic_pattern)

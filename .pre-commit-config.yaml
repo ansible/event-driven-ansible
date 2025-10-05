@@ -70,6 +70,8 @@ repos:
           - types-requests
           - watchdog>=5.0.0
           - xxhash
+          - pyjwt
+          - cryptography
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.13.3"
