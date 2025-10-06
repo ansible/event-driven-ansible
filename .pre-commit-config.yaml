@@ -35,16 +35,16 @@ repos:
     hooks:
       - id: cspell
   - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
+    rev: 6.1.0
     hooks:
       - id: isort
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.9.0
     hooks:
       - id: black
         language_version: python3
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.18.2
     hooks:
       - id: mypy
         # empty args needed in order to match mypy cli behavior
@@ -70,7 +70,7 @@ repos:
           - xxhash
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.12.11"
+    rev: "v0.13.3"
     hooks:
       - id: ruff
         args: [
@@ -87,7 +87,7 @@ repos:
         ]
 
   - repo: https://github.com/pycqa/pylint
-    rev: v3.3.8
+    rev: v3.3.9
     hooks:
       - id: pylint
         args:
@@ -129,7 +129,7 @@ repos:
         stages: [manual]
         pass_filenames: false
   - repo: https://github.com/jazzband/pip-tools
-    rev: v7.5.0
+    rev: v7.5.1
     hooks:
       - id: pip-compile
         name: pip-combile -> constraints.txt
