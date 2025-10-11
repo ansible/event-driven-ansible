@@ -17,7 +17,7 @@ except ImportError:
     # import fails, hence this workaround.
     module_directory = os.path.dirname(os.path.abspath(__file__))
     sys.path.append(module_directory)
-    from oauth_tokens import create_oauth_provider # type: ignore
+    from oauth_tokens import create_oauth_provider  # type: ignore
 
 DEFAULT_SASL_MECHANISM = "PLAIN"
 DEFAULT_OFFSET = "latest"
