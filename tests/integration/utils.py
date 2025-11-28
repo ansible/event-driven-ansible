@@ -1,13 +1,16 @@
 import os
 import socket
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
 from . import TESTS_PATH
 
-DEFAULT_TEST_TIMEOUT: int = 25
+# socket.getfqdn() and socket.gethostbyname() can be slow on macOS;
+# hence, extend the timeout
+DEFAULT_TEST_TIMEOUT: int = 120 if sys.platform == "darwin" else 25
 
 
 def wait_for_kafka_ready(
