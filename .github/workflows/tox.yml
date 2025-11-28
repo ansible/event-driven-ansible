@@ -57,7 +57,7 @@ jobs:
             staging: tox -e py311-staging
           # ^ arm64 runner is using py311 for matching python version used in AAP 2.5
           # building docs on macos is needed to avoid diverging behavior
-          platforms: linux,macos,linux-arm64:ubuntu-24.04-arm64-2core
+          platforms: linux,macos,linux-arm64:ubuntu-24.04-arm
           skip_explode: "1"
   build:
     name: ${{ matrix.name }}
