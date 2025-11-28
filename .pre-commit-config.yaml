@@ -9,6 +9,8 @@ ci:
   skip:
     # These will not run on pre-commit.ci
     - ansible-test-sanity # requires network access
+    - mypy # the pre-commit.ci env does not have py3.9 anymore
+    - pip-compile # the pre-commit.ci env does not have py3.9 anymore
     - shellcheck  # no docker
     - tox # requires network access
 exclude: >
