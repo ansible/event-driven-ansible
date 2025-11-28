@@ -2,7 +2,8 @@
 coverage-enable-subprocess>=1.0 # see https://github.com/nedbat/coveragepy/issues/1341#issuecomment-1228942657
 coverage==6.5.0; python_version < "3.10"  # ansible-core will complain
 coverage==7.3.2; python_version == "3.10"  # ansible-core will complain
-coverage[toml] == 7.6.1; python_version >= "3.11" # ansible-core will complain
+coverage[toml] == 7.6.1; python_version == "3.11" # ansible-core will complain
+coverage[toml] == 7.10.7; python_version >= "3.12" # ansible-core will complain
 pytest>=7.0.0
 asyncmock>=0.4.2
 pytest-asyncio>=0.20.0
