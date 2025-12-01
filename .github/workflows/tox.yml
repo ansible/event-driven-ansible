@@ -74,7 +74,7 @@ jobs:
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # needed by setuptools-scm
           path: ansible_collections/ansible/eda
@@ -182,7 +182,7 @@ jobs:
 
     steps:
       # checkout needed for codecov action which needs codecov.yml file
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Python # likely needed for coverage
         uses: actions/setup-python@v6
@@ -249,7 +249,7 @@ jobs:
     environment: release
     if: github.event_name == 'push' && github.ref_type == 'tag'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Download the artifact
         uses: actions/download-artifact@v5
