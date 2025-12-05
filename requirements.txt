@@ -11,4 +11,6 @@ kafka-python-ng;  python_version >= "3.12"
 psycopg[binary,pool]  # extras needed to avoid install failure on macos-aarch64
 systemd-python; sys_platform != 'darwin'
 watchdog>=5.0.0  # types
+pyjwt
+cryptography
 xxhash
