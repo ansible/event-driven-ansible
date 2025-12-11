@@ -50,13 +50,9 @@ def watch(
     """Watch for changes and put events on the queue.
 
     :param loop: The asyncio event loop
-    :type loop: asyncio.events.AbstractEventLoop
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments including path and ignore patterns
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     root_path = args["path"]
 
@@ -137,11 +133,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     changes in the specified directory.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     loop = asyncio.get_event_loop()
 
