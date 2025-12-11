@@ -89,15 +89,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
-    """Main entry point for the credential_type_info module.
-
-    Retrieves and returns information about credential types from the
-    EDA controller. Can filter by name or return all credential types.
-
-    :raises: AnsibleModule.fail_json on errors during retrieval
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         name=dict(type="str", required=False),
     )

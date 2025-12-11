@@ -86,7 +86,6 @@ pythonmain
 realworld
 refspec
 rejectattr
-rtype
 rulebook
 rulebooks
 ruleset

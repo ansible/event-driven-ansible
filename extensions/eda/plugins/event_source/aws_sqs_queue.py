@@ -95,11 +95,8 @@ async def main(  # noqa: C901, PLR0912
     SQS queue for messages and puts them into the event queue.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     :raises ValueError: If queue name is missing or queue doesn't exist
     """
     logger = logging.getLogger()
@@ -200,9 +197,7 @@ def connection_args(args: dict[str, Any]) -> dict[str, Any]:
     """Provide connection arguments to AWS SQS queue.
 
     :param args: Configuration arguments containing AWS credentials
-    :type args: dict[str, Any]
     :returns: Dictionary of connection arguments for boto client
-    :rtype: dict[str, Any]
     """
     selected_args = {}
 

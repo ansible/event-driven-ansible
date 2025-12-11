@@ -92,15 +92,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
-    """Main entry point for the controller_token module.
-
-    Manages AWX tokens in EDA controller by creating, updating, or deleting them
-    based on the provided parameters and desired state.
-
-    :raises: AnsibleModule.fail_json on errors during token operations
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         name=dict(required=True),
         description=dict(),

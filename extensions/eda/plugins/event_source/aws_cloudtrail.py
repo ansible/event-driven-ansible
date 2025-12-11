@@ -79,9 +79,7 @@ def _cloudtrail_event_to_dict(event: dict[str, Any]) -> dict[str, Any]:
     """Convert CloudTrail event to dictionary format.
 
     :param event: The CloudTrail event to convert
-    :type event: dict[str, Any]
     :returns: Converted event dictionary with parsed CloudTrailEvent
-    :rtype: dict[str, Any]
     """
     event["EventTime"] = event["EventTime"].isoformat()
     event["CloudTrailEvent"] = json.loads(event["CloudTrailEvent"])
@@ -95,11 +93,8 @@ def _get_events(
     """Filter and process CloudTrail events.
 
     :param events: List of CloudTrail events to process
-    :type events: list[dict[str, Any]]
     :param last_event_ids: List of event IDs from previous iteration
-    :type last_event_ids: list[str]
     :returns: Tuple of (filtered events, latest event time, latest event IDs)
-    :rtype: tuple[list[dict[str, Any]], Any, list[str]]
     """
     event_time = None
     event_ids = []
@@ -124,11 +119,8 @@ async def _get_cloudtrail_events(
     """Get CloudTrail events using paginator.
 
     :param client: The boto client for CloudTrail
-    :type client: BaseClient
     :param params: Parameters for the lookup_events API call
-    :type params: dict[str, Any]
     :returns: List of CloudTrail events
-    :rtype: list[dict[str, Any]]
     """
     paginator = client.get_paginator("lookup_events")
     results: dict[str, Any] = await cast(
@@ -160,11 +152,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     CloudTrail for new events and puts them into the queue.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     delay = int(args.get("delay_seconds", 10))
 
@@ -198,9 +187,7 @@ def connection_args(args: dict[str, Any]) -> dict[str, Any]:
     """Provide connection arguments to AWS CloudTrail.
 
     :param args: Configuration arguments containing AWS credentials
-    :type args: dict[str, Any]
     :returns: Dictionary of connection arguments for boto client
-    :rtype: dict[str, Any]
     """
     selected_args = {}
 

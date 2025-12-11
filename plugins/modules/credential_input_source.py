@@ -215,15 +215,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
-    """Main entry point for the credential_input_source module.
-
-    Manages credential input sources in EDA controller by creating, updating,
-    or removing them based on the provided parameters and desired state.
-
-    :raises: AnsibleModule.fail_json on errors during input source operations
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         description=dict(),
         input_field_name=dict(required=True),
