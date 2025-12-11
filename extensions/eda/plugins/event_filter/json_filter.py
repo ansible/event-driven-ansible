@@ -1,3 +1,10 @@
+"""Event filter plugin for filtering keys from events.
+
+This module provides functionality to include or exclude specific keys from
+event dictionaries using pattern matching. Include patterns override exclude
+patterns.
+"""
+
 from __future__ import annotations
 
 import fnmatch
@@ -51,10 +58,28 @@ EXAMPLES = r"""
 
 
 def _matches_include_keys(include_keys: list[str], string: str) -> bool:
+    """Check if a string matches any of the include key patterns.
+
+    :param include_keys: List of patterns to match against
+    :type include_keys: list[str]
+    :param string: The string to check for matches
+    :type string: str
+    :returns: True if the string matches any include pattern, False otherwise
+    :rtype: bool
+    """
     return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
 
 
 def _matches_exclude_keys(exclude_keys: list[str], string: str) -> bool:
+    """Check if a string matches any of the exclude key patterns.
+
+    :param exclude_keys: List of patterns to match against
+    :type exclude_keys: list[str]
+    :param string: The string to check for matches
+    :type string: str
+    :returns: True if the string matches any exclude pattern, False otherwise
+    :rtype: bool
+    """
     return any(fnmatch.fnmatch(string, pattern) for pattern in exclude_keys)
 
 
@@ -63,7 +88,21 @@ def main(
     exclude_keys: Optional[list[str]] = None,  # noqa: UP045
     include_keys: Optional[list[str]] = None,  # noqa: UP045
 ) -> dict[str, Any]:
-    """Filter keys out of events."""
+    """Filter keys out of events.
+
+    Recursively processes the event dictionary to remove keys matching
+    exclude patterns, while preserving keys matching include patterns.
+    Include patterns take precedence over exclude patterns.
+
+    :param event: The event dictionary to filter
+    :type event: dict[str, Any]
+    :param exclude_keys: List of key patterns to exclude from the event
+    :type exclude_keys: Optional[list[str]]
+    :param include_keys: List of key patterns to include even if they match exclude patterns
+    :type include_keys: Optional[list[str]]
+    :returns: The filtered event dictionary
+    :rtype: dict[str, Any]
+    """
     if exclude_keys is None:
         exclude_keys = []
 

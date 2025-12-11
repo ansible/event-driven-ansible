@@ -4,6 +4,12 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for listing rulebooks from EDA Controller.
+
+This module provides functionality to retrieve information about rulebooks
+from an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -88,6 +94,15 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
+    """Main entry point for the rulebook_info module.
+
+    Retrieves and returns information about rulebooks from the EDA controller.
+    Can filter by name and/or project name.
+
+    :raises: AnsibleModule.fail_json on errors during retrieval
+    :returns: None
+    :rtype: None
+    """
     argument_spec = dict(
         name=dict(type="str", required=False),
         project_name=dict(type="str", required=False, aliases=["project"]),

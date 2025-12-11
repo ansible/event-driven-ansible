@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events via Kafka topic.
+
+This module provides an event source plugin for consuming messages from Apache Kafka
+topics using the aiokafka library with support for SSL/SASL authentication.
+"""
+
 import asyncio
 import json
 import logging
@@ -146,7 +152,19 @@ async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Receive events via a kafka topic."""
+    """Receive events via a kafka topic.
+
+    Main entry point for the Kafka event source plugin. Creates a Kafka consumer
+    and continuously receives messages from the configured topics.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments for the event source
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    :raises ValueError: If topic configuration is invalid or verify_mode is invalid
+    """
     logger = logging.getLogger()
 
     topic = args.get("topic")
@@ -233,7 +251,17 @@ async def receive_msg(
     kafka_consumer: AIOKafkaConsumer,
     encoding: str,
 ) -> None:
-    """Receive messages from the Kafka topic and put them into the queue."""
+    """Receive messages from the Kafka topic and put them into the queue.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param kafka_consumer: The Kafka consumer instance
+    :type kafka_consumer: AIOKafkaConsumer
+    :param encoding: The encoding to use for decoding messages
+    :type encoding: str
+    :returns: None
+    :rtype: None
+    """
     logger = logging.getLogger()
 
     async for msg in kafka_consumer:
