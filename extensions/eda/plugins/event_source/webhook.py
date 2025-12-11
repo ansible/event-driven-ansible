@@ -111,9 +111,7 @@ async def webhook(request: web.Request) -> web.Response:
     """Return response to webhook request.
 
     :param request: The incoming HTTP request with JSON payload
-    :type request: web.Request
     :returns: HTTP response with endpoint name
-    :rtype: web.Response
     :raises web.HTTPBadRequest: If JSON payload is invalid
     """
     try:
@@ -136,9 +134,7 @@ def _parse_token(request: web.Request) -> tuple[str, str]:
     """Parse and validate bearer token from request.
 
     :param request: The incoming HTTP request
-    :type request: web.Request
     :returns: Tuple of (scheme, token)
-    :rtype: tuple[str, str]
     :raises web.HTTPUnauthorized: If token is invalid or not Bearer type
     """
     scheme, token = request.headers["Authorization"].strip().split(" ")
@@ -153,9 +149,7 @@ async def _hmac_verify(request: web.Request) -> bool:
     """Verify HMAC signature of the request payload.
 
     :param request: The incoming HTTP request
-    :type request: web.Request
     :returns: True if HMAC signature is valid
-    :rtype: bool
     :raises web.HTTPBadRequest: If signature header is missing
     :raises ValueError: If HMAC format is unsupported
     """
@@ -199,11 +193,8 @@ async def bearer_auth(
     """Verify authorization is Bearer type.
 
     :param request: The incoming HTTP request
-    :type request: web.Request
     :param handler: The request handler to call after validation
-    :type handler: Callable[[web.Request], Awaitable[web.StreamResponse]]
     :returns: The response from the handler
-    :rtype: web.StreamResponse
     :raises web.HTTPUnauthorized: If authorization is invalid or missing
     """
     try:
@@ -224,11 +215,8 @@ async def hmac_verify(
     """Verify event's HMAC signature.
 
     :param request: The incoming HTTP request
-    :type request: web.Request
     :param handler: The request handler to call after validation
-    :type handler: Callable[[web.Request], Awaitable[web.StreamResponse]]
     :returns: The response from the handler
-    :rtype: web.StreamResponse
     :raises web.HTTPUnauthorized: If HMAC verification fails
     """
     hmac_verified = await _hmac_verify(request)
@@ -242,9 +230,7 @@ def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
     """Create and configure SSL context for TLS/mTLS support.
 
     :param args: Configuration arguments containing certificate paths
-    :type args: dict[str, Any]
     :returns: Configured SSL context or None if TLS is not enabled
-    :rtype: ssl.SSLContext | None
     :raises TypeError: If certfile is not a string
     """
     context = None
@@ -280,11 +266,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     to receive JSON events via HTTP/HTTPS webhooks with optional authentication.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     :raises ValueError: If required arguments are missing or invalid
     """
     if "port" not in args:

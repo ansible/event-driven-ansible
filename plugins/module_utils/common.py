@@ -36,17 +36,11 @@ def lookup_resource_id(
     with an error message.
 
     :param module: Ansible module instance for error output
-    :type module: AnsibleModule
     :param controller: Controller instance for executing requests
-    :type controller: Controller
     :param endpoint: API endpoint for resource lookup
-    :type endpoint: str
     :param name: Resource name to search for
-    :type name: str
     :param params: Additional parameters for the search (optional)
-    :type params: Optional[dict[str, Any]]
     :returns: ID of the found resource or None if not found
-    :rtype: Optional[int]
     :raises: Module fails with error via module.fail_json on EDAError
     """
     result = None

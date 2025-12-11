@@ -21,8 +21,6 @@ def main(event: dict[str, Any]) -> dict[str, Any]:
     any modifications.
 
     :param event: The event dictionary to process
-    :type event: dict[str, Any]
     :returns: The same event dictionary without modifications
-    :rtype: dict[str, Any]
     """
     return event

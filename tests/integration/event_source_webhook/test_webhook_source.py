@@ -19,10 +19,7 @@ def wait_for_events(proc: subprocess.Popen[bytes], timeout: float = 15.0) -> Non
     start = time.time()
     if not proc.stdout:  # pragma: no cover
         return
-    while True:
-        stdout = proc.stdout.readline().decode()
-        if not stdout:
-            break
+    while stdout := proc.stdout.readline().decode():
         if "Waiting for events" in stdout:
             break
         time.sleep(0.1)
