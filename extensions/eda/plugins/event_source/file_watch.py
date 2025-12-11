@@ -1,3 +1,9 @@
+"""Event source plugin for watching file system changes.
+
+This module provides an event source plugin for monitoring file system changes
+using the watchdog library.
+"""
+
 import asyncio
 import concurrent.futures
 from typing import Any
@@ -41,7 +47,17 @@ def watch(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Watch for changes and put events on the queue."""
+    """Watch for changes and put events on the queue.
+
+    :param loop: The asyncio event loop
+    :type loop: asyncio.events.AbstractEventLoop
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments including path and ignore patterns
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    """
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
@@ -115,7 +131,18 @@ def watch(
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Watch for changes to a file and put events on the queue."""
+    """Watch for changes to a file and put events on the queue.
+
+    Main entry point for the file watch event source plugin. Monitors file system
+    changes in the specified directory.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments for the event source
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    """
     loop = asyncio.get_event_loop()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as task_pool:

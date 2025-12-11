@@ -1,3 +1,10 @@
+"""Event filter plugin for extracting hosts from event data and inserting into meta.
+
+This module provides functionality to extract host information from event data
+using JSON paths and insert them into the event's meta dictionary for limiting
+action execution to specific hosts.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -68,7 +75,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 class PathNotExistError(Exception):
-    """Cannot find the path in the event."""
+    """Exception raised when the specified path does not exist in the event.
+
+    This exception is raised when the host_path parameter points to a location
+    that does not exist in the event data structure and raise_error is True.
+    """
 
 
 # pylint: disable=too-many-arguments
@@ -81,7 +92,29 @@ def main(
     raise_error: bool = False,
     log_error: bool = True,
 ) -> dict[str, Any]:
-    """Extract hosts from event data and insert into meta dict."""
+    """Extract hosts from event data and insert into meta dict.
+
+    This function extracts host information from the event data using the
+    specified JSON path and inserts it into the event's meta dictionary.
+    The hosts can be a string, a list, or a delimited string.
+
+    :param event: The event dictionary to process
+    :type event: dict[str, Any]
+    :param host_path: The JSON path to find hosts in the event data
+    :type host_path: str | None
+    :param host_separator: The separator to split a host string into multiple hosts
+    :type host_separator: str | None
+    :param path_separator: The separator to interpret the host_path
+    :type path_separator: str
+    :param raise_error: Whether to raise PathNotExistError if host_path does not exist
+    :type raise_error: bool
+    :param log_error: Whether to log an error message if host_path does not exist
+    :type log_error: bool
+    :returns: The modified event dictionary with hosts inserted into meta
+    :rtype: dict[str, Any]
+    :raises PathNotExistError: If host_path does not exist and raise_error is True
+    :raises TypeError: If hosts value is not a string, list, or tuple
+    """
     if not host_path:
         return event
 

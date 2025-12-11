@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events via AWS SQS queue.
+
+This module provides an event source plugin for receiving events from an AWS SQS queue
+using the aiobotocore library. It supports all authentication methods provided by boto.
+"""
+
 import asyncio
 import json
 import logging
@@ -83,7 +89,19 @@ async def main(  # noqa: C901, PLR0912
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Receive events via an AWS SQS queue."""
+    """Receive events via an AWS SQS queue.
+
+    Main entry point for the AWS SQS queue event source plugin. Continuously polls
+    SQS queue for messages and puts them into the event queue.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments for the event source
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    :raises ValueError: If queue name is missing or queue doesn't exist
+    """
     logger = logging.getLogger()
 
     if "name" not in args:
@@ -179,7 +197,13 @@ async def main(  # noqa: C901, PLR0912
 
 
 def connection_args(args: dict[str, Any]) -> dict[str, Any]:
-    """Provide connection arguments to AWS SQS queue."""
+    """Provide connection arguments to AWS SQS queue.
+
+    :param args: Configuration arguments containing AWS credentials
+    :type args: dict[str, Any]
+    :returns: Dictionary of connection arguments for boto client
+    :rtype: dict[str, Any]
+    """
     selected_args = {}
 
     # Best Practice: get credentials from ~/.aws/credentials or the environment

@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events from AWS CloudTrail.
+
+This module provides an event source plugin for getting events from AWS CloudTrail
+using the aiobotocore library. It supports all authentication methods provided by boto.
+"""
+
 import asyncio
 import json
 from datetime import datetime
@@ -70,6 +76,13 @@ EXAMPLES = r"""
 
 
 def _cloudtrail_event_to_dict(event: dict[str, Any]) -> dict[str, Any]:
+    """Convert CloudTrail event to dictionary format.
+
+    :param event: The CloudTrail event to convert
+    :type event: dict[str, Any]
+    :returns: Converted event dictionary with parsed CloudTrailEvent
+    :rtype: dict[str, Any]
+    """
     event["EventTime"] = event["EventTime"].isoformat()
     event["CloudTrailEvent"] = json.loads(event["CloudTrailEvent"])
     return event
@@ -79,6 +92,15 @@ def _get_events(
     events: list[dict[str, Any]],
     last_event_ids: list[str],
 ) -> tuple[list[dict[str, Any]], Any, list[str]]:
+    """Filter and process CloudTrail events.
+
+    :param events: List of CloudTrail events to process
+    :type events: list[dict[str, Any]]
+    :param last_event_ids: List of event IDs from previous iteration
+    :type last_event_ids: list[str]
+    :returns: Tuple of (filtered events, latest event time, latest event IDs)
+    :rtype: tuple[list[dict[str, Any]], Any, list[str]]
+    """
     event_time = None
     event_ids = []
     result = []
@@ -99,6 +121,15 @@ async def _get_cloudtrail_events(
     client: BaseClient,
     params: dict[str, Any],
 ) -> list[dict[str, Any]]:
+    """Get CloudTrail events using paginator.
+
+    :param client: The boto client for CloudTrail
+    :type client: BaseClient
+    :param params: Parameters for the lookup_events API call
+    :type params: dict[str, Any]
+    :returns: List of CloudTrail events
+    :rtype: list[dict[str, Any]]
+    """
     paginator = client.get_paginator("lookup_events")
     results: dict[str, Any] = await cast(
         "Awaitable[dict[str, Any]]",
@@ -123,7 +154,18 @@ ARGS_MAPPING = {
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Receive events via AWS CloudTrail."""
+    """Receive events via AWS CloudTrail.
+
+    Main entry point for the AWS CloudTrail event source plugin. Continuously polls
+    CloudTrail for new events and puts them into the queue.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments for the event source
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    """
     delay = int(args.get("delay_seconds", 10))
 
     session = get_session()
@@ -153,7 +195,13 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
 
 
 def connection_args(args: dict[str, Any]) -> dict[str, Any]:
-    """Provide connection arguments to AWS CloudTrail."""
+    """Provide connection arguments to AWS CloudTrail.
+
+    :param args: Configuration arguments containing AWS credentials
+    :type args: dict[str, Any]
+    :returns: Dictionary of connection arguments for boto client
+    :rtype: dict[str, Any]
+    """
     selected_args = {}
 
     # Best Practice: get credentials from ~/.aws/credentials or the environment

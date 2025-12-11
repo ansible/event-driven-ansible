@@ -1,3 +1,9 @@
+"""Event source plugin for generating infinite events with increasing index.
+
+This module provides an event source plugin that generates events with an
+increasing index that never ends, similar to a ticker.
+"""
+
 import asyncio
 import itertools
 from typing import Any
@@ -22,7 +28,18 @@ EXAMPLES = r"""
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Generate events with an increasing index i and a time between ticks."""
+    """Generate events with an increasing index i and a time between ticks.
+
+    Main entry point for the tick event source plugin. Generates events with
+    an infinite increasing counter starting from 1.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments including delay between ticks
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    """
     delay = args.get("delay", 1)
 
     for i in itertools.count(start=1):
