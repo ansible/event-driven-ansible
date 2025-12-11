@@ -1,3 +1,9 @@
+"""Event source plugin for polling URLs and checking their status.
+
+This module provides an event source plugin that continuously polls a set of URLs
+and sends events with their status information using aiohttp.
+"""
+
 import asyncio
 from typing import Any
 
@@ -38,7 +44,18 @@ OK = 200
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Poll a set of URLs and send events with status."""
+    """Poll a set of URLs and send events with status.
+
+    Main entry point for the URL check event source plugin. Continuously polls
+    URLs and sends status information to the event queue.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments including URLs and delay
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    """
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
     verify_ssl = args.get("verify_ssl", True)
