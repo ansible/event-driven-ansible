@@ -110,9 +110,7 @@ def _validate_chunked_payload(payload: dict[str, Any]) -> None:
     """Validate that chunked payload contains all required keys.
 
     :param payload: The chunked payload to validate
-    :type payload: dict[str, Any]
     :returns: None
-    :rtype: None
     :raises MissingChunkKeyError: If required chunk key is missing
     """
     for key in REQUIRED_CHUNK_KEYS:
@@ -124,9 +122,7 @@ def _validate_args(args: dict[str, Any]) -> None:
     """Validate the arguments and raise exception accordingly.
 
     :param args: Configuration arguments to validate
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     :raises MissingRequiredArgumentError: If required arguments are missing
     :raises ValueError: If argument types are invalid
     """
@@ -162,11 +158,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     PostgreSQL NOTIFY events on specified channels and handles message chunking.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     :raises OperationalError: If PostgreSQL connection fails
     """
     _validate_args(args)
@@ -205,13 +198,9 @@ async def _handle_chunked_message(
     """Handle chunked message assembly and validation.
 
     :param data: The chunk data received
-    :type data: dict[str, Any]
     :param chunked_cache: Cache for storing incomplete chunked messages
-    :type chunked_cache: dict[str, Any]
     :param queue: The asyncio queue to put complete messages into
-    :type queue: asyncio.Queue[Any]
     :returns: None
-    :rtype: None
     """
     message_uuid = data[MESSAGE_CHUNKED_UUID]
     number_of_chunks = data[MESSAGE_CHUNK_COUNT]

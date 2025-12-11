@@ -41,12 +41,9 @@ def main(
     the entire structure.
 
     :param event: The event dictionary to process
-    :type event: dict[str, Any]
     :param overwrite: Whether to overwrite existing keys if there is a collision
                       with the new underscore-based key name
-    :type overwrite: bool
     :returns: The modified event dictionary with dashes replaced by underscores
-    :rtype: dict[str, Any]
     """
     logger = mp.get_logger()
     logger.info("dashes_to_underscores")

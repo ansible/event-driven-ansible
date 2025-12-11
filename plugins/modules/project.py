@@ -136,15 +136,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
-    """Main entry point for the project module.
-
-    Manages projects in EDA controller by creating, updating, or deleting
-    them based on the provided parameters and desired state.
-
-    :raises: AnsibleModule.fail_json on errors during project operations
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         name=dict(required=True),
         new_name=dict(),

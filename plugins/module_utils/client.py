@@ -36,11 +36,8 @@ class Response:
         """Initialize the response object.
 
         :param status: HTTP status code of the response
-        :type status: int
         :param data: Response body as a string
-        :type data: str
         :param headers: HTTP response headers (optional)
-        :type headers: Optional[Any]
         """
         self.status = status
         self.data = data
@@ -59,7 +56,6 @@ class Response:
         On subsequent calls, returns the cached value.
 
         :returns: Parsed JSON data
-        :rtype: Any
         :raises EDAHTTPError: If the data is not valid JSON
         """
         if self._json is None:
@@ -91,17 +87,11 @@ class Client:
         """Initialize the HTTP client.
 
         :param host: EDA controller host (with or without protocol)
-        :type host: str
         :param username: Username for authentication (optional)
-        :type username: Optional[str]
         :param password: Password for authentication (optional)
-        :type password: Optional[str]
         :param token: Token for authentication (optional)
-        :type token: Optional[str]
         :param timeout: Timeout for HTTP requests (optional)
-        :type timeout: Optional[Any]
         :param validate_certs: Whether to validate SSL certificates (optional)
-        :type validate_certs: Optional[Any]
         :raises ValueError: If host is empty
         :raises EDAHTTPError: If unable to parse the host URL
         """
@@ -144,15 +134,10 @@ class Client:
         and error handling.
 
         :param method: HTTP method (GET, POST, PUT, PATCH, DELETE)
-        :type method: str
         :param path: Full URL path for the request
-        :type path: str
         :param data: Data to send in the request body (optional)
-        :type data: Optional[Any]
         :param headers: HTTP headers for the request (optional)
-        :type headers: Optional[Any]
         :returns: Response object with request results
-        :rtype: Response
         :raises AuthError: On authentication error (HTTP 401)
         :raises EDAHTTPError: On network or URL errors
         """
@@ -197,13 +182,9 @@ class Client:
         query parameters, and resource identifier as needed.
 
         :param endpoint: API endpoint (can be relative or full)
-        :type endpoint: str
         :param query_params: Query parameters to add to the URL (optional)
-        :type query_params: Optional[Any]
         :param identifier: Resource ID to add to the path (optional)
-        :type identifier: Optional[Any]
         :returns: Parsed URL object
-        :rtype: ParseResult
         """
         # Make sure we start with /api/vX
         if not endpoint.startswith("/"):
@@ -232,13 +213,9 @@ class Client:
         URL, header, and data handling based on the method.
 
         :param method: HTTP method (GET, POST, PUT, PATCH, DELETE)
-        :type method: str
         :param endpoint: API endpoint for the request
-        :type endpoint: str
         :param kwargs: Additional parameters (data, headers, id)
-        :type kwargs: Any
         :returns: Response object with request results
-        :rtype: Response
         :raises EDAHTTPError: If HTTP method is not specified
         """
         # In case someone is calling us directly; make sure we were given a
@@ -276,11 +253,8 @@ class Client:
         """Execute a GET request.
 
         :param path: API endpoint for the GET request
-        :type path: str
         :param kwargs: Additional request parameters
-        :type kwargs: str
         :returns: Response object
-        :rtype: Response
         :raises EDAHTTPError: If response status is not 200 or 404
         """
         resp = self.request("GET", path, **kwargs)
@@ -292,11 +266,8 @@ class Client:
         """Execute a POST request.
 
         :param path: API endpoint for the POST request
-        :type path: str
         :param kwargs: Additional request parameters (data, headers)
-        :type kwargs: Any
         :returns: Response object
-        :rtype: Response
         :raises EDAHTTPError: If response status is not 201, 202, or 204
         """
         resp = self.request("POST", path, **kwargs)
@@ -308,11 +279,8 @@ class Client:
         """Execute a PATCH request.
 
         :param path: API endpoint for the PATCH request
-        :type path: str
         :param kwargs: Additional request parameters (data, headers, id)
-        :type kwargs: Any
         :returns: Response object
-        :rtype: Response
         :raises EDAHTTPError: If response status is not 200
         """
         resp = self.request("PATCH", path, **kwargs)
@@ -324,11 +292,8 @@ class Client:
         """Execute a DELETE request.
 
         :param path: API endpoint for the DELETE request
-        :type path: str
         :param kwargs: Additional request parameters (id)
-        :type kwargs: Any
         :returns: Response object
-        :rtype: Response
         :raises EDAHTTPError: If response status is not 204
         """
         resp = self.request("DELETE", path, **kwargs)

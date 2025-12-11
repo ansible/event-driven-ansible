@@ -343,11 +343,8 @@ async def main(  # pylint: disable=R0914
     a Generic instance with the provided configuration.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     await Generic(queue, args)()
 

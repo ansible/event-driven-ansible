@@ -158,11 +158,8 @@ async def main(  # pylint: disable=R0914
     and continuously receives messages from the configured topics.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     :raises ValueError: If topic configuration is invalid or verify_mode is invalid
     """
     logger = logging.getLogger()
@@ -254,13 +251,9 @@ async def receive_msg(
     """Receive messages from the Kafka topic and put them into the queue.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param kafka_consumer: The Kafka consumer instance
-    :type kafka_consumer: AIOKafkaConsumer
     :param encoding: The encoding to use for decoding messages
-    :type encoding: str
     :returns: None
-    :rtype: None
     """
     logger = logging.getLogger()
 

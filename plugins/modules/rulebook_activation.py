@@ -273,13 +273,9 @@ def find_matching_source(
     """Find a matching source based on the source_name in the event.
 
     :param event: Event dictionary containing source_name
-    :type event: Dict[str, Any]
     :param sources: List of available sources
-    :type sources: List[Dict[str, Any]]
     :param module: The Ansible module instance
-    :type module: AnsibleModule
     :returns: Matching source dictionary
-    :rtype: Dict[str, Any]
     :raises: AnsibleModule.fail_json if no match is found
     """
     # Get the source_name from the event
@@ -304,13 +300,9 @@ def process_event_streams(
     """Process event streams and create source mappings.
 
     :param rulebook_id: The ID of the rulebook
-    :type rulebook_id: int
     :param controller: The controller object used for API calls
-    :type controller: Controller
     :param module: The module object for error handling
-    :type module: AnsibleModule
     :returns: List of source mappings
-    :rtype: List[Dict[str, Any]]
     """
 
     source_mappings = []
@@ -390,13 +382,9 @@ def create_params(
     from the module parameters and resolving various resource IDs.
 
     :param module: The Ansible module instance
-    :type module: AnsibleModule
     :param controller: The EDA controller instance
-    :type controller: Controller
     :param is_aap_24: Flag indicating if AAP version is 2.4
-    :type is_aap_24: bool
     :returns: Dictionary containing activation parameters
-    :rtype: Dict[str, Any]
     """
     activation_params: Dict[str, Any] = {}
 
@@ -505,15 +493,7 @@ def create_params(
 
 
 def main() -> None:
-    """Main entry point for the rulebook_activation module.
-
-    Manages rulebook activations in EDA controller by creating, updating,
-    deleting, or restarting them based on the provided parameters.
-
-    :raises: AnsibleModule.fail_json on errors during activation operations
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),

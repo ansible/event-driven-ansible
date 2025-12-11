@@ -75,9 +75,7 @@ async def status(_request: web.Request) -> web.Response:
     """Return status of a web request.
 
     :param _request: The incoming HTTP request
-    :type _request: web.Request
     :returns: HTTP response with status 200 and text "up"
-    :rtype: web.Response
     """
     return web.Response(status=200, text="up")
 
@@ -87,9 +85,7 @@ async def webhook(request: web.Request) -> web.Response:
     """Read events from webhook and process alert data.
 
     :param request: The incoming HTTP request containing alert payload
-    :type request: web.Request
     :returns: HTTP response with status 202 and text "Received"
-    :rtype: web.Response
     """
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
@@ -151,9 +147,7 @@ def clean_host(host: str) -> str:
     """Remove port from host string if it exists.
 
     :param host: The host string that may contain port information
-    :type host: str
     :returns: The host string without port
-    :rtype: str
     """
     if ":" in host:
         return host.split(":")[0]
@@ -167,11 +161,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     to receive webhook events from alertmanager or compatible alerting systems.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     app = web.Application()
     app["queue"] = queue

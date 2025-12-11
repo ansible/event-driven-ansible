@@ -61,12 +61,9 @@ def main(
     Consecutive non-alphanumeric characters are coalesced into a single underscore.
 
     :param event: The event dictionary to process
-    :type event: dict[str, Any]
     :param overwrite: Whether to overwrite existing keys if there is a collision
                       with the new normalized key name
-    :type overwrite: bool
     :returns: The modified event dictionary with normalized keys
-    :rtype: dict[str, Any]
     """
     logger = mp.get_logger()
     logger.info("normalize_keys")
@@ -85,13 +82,9 @@ def _normalize_embedded_keys(
     It handles nested dictionaries and lists recursively.
 
     :param obj: The object to normalize (dictionary, list, or other value)
-    :type obj: dict[str, Any]
     :param overwrite: Whether to overwrite existing keys on collision
-    :type overwrite: bool
     :param logger: Logger instance for logging warnings
-    :type logger: logging.Logger
     :returns: The normalized object with updated keys
-    :rtype: dict[str, Any]
     """
     if isinstance(obj, dict):
         new_dict = {}

@@ -62,10 +62,7 @@ def test_url_check_source_sanity(
     subprocess_teardown(runner)
 
     assert runner.stdout is not None
-    while True:
-        line = runner.stdout.readline().decode()
-        if not line:
-            break
+    while line := runner.stdout.readline().decode():
         if "msg" in line:
             assert f'"msg": "{expected_resp_data}"' in line
             break
@@ -88,10 +85,7 @@ def test_url_check_source_error_handling(
     subprocess_teardown(runner)
 
     assert runner.stdout is not None
-    while True:
-        line = runner.stdout.readline().decode()
-        if not line:
-            break
+    while line := runner.stdout.readline().decode():
         if "msg" in line:
             assert "Endpoint down" in line
             break
