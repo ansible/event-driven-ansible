@@ -1,3 +1,9 @@
+"""Event source plugin for tailing systemd journald logs.
+
+This module provides an event source plugin for reading and monitoring systemd
+journal logs using the systemd-python library.
+"""
+
 import asyncio
 from typing import Any
 

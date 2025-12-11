@@ -4,6 +4,12 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for managing credential types in EDA Controller.
+
+This module provides functionality to create, update, delete, or test
+credential types in an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -157,6 +163,15 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
+    """Main entry point for the credential_type module.
+
+    Manages credential types in EDA controller by creating, updating, deleting,
+    or testing them based on the provided parameters and desired state.
+
+    :raises: AnsibleModule.fail_json on errors during credential type operations
+    :returns: None
+    :rtype: None
+    """
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),

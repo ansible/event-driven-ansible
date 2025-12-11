@@ -1,3 +1,9 @@
+"""Event filter plugin for converting dashes to underscores in event keys.
+
+This module provides functionality to transform dictionary keys by replacing
+dashes with underscores throughout the event data structure.
+"""
+
 import multiprocessing as mp
 from typing import Any
 
@@ -28,7 +34,20 @@ def main(
     event: dict[str, Any],
     overwrite: bool = True,  # noqa: FBT001, FBT002
 ) -> dict[str, Any]:
-    """Change dashes in keys to underscores."""
+    """Change dashes in keys to underscores.
+
+    Recursively processes the event dictionary and replaces all dashes
+    in keys with underscores. Handles nested dictionaries by traversing
+    the entire structure.
+
+    :param event: The event dictionary to process
+    :type event: dict[str, Any]
+    :param overwrite: Whether to overwrite existing keys if there is a collision
+                      with the new underscore-based key name
+    :type overwrite: bool
+    :returns: The modified event dictionary with dashes replaced by underscores
+    :rtype: dict[str, Any]
+    """
     logger = mp.get_logger()
     logger.info("dashes_to_underscores")
     queue = [event]

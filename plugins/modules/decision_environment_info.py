@@ -4,6 +4,12 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for listing decision environments in EDA Controller.
+
+This module provides functionality to retrieve information about decision
+environments from an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -72,6 +78,15 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
+    """Main entry point for the decision_environment_info module.
+
+    Retrieves and returns information about decision environments from the
+    EDA controller. Can filter by name or return all decision environments.
+
+    :raises: AnsibleModule.fail_json on errors during retrieval
+    :returns: None
+    :rtype: None
+    """
     argument_spec: dict[str, Any] = dict(
         name=dict(),
     )
