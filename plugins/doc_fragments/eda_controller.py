@@ -2,9 +2,20 @@
 
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+"""Documentation fragments for EDA controller modules.
+
+This module provides shared documentation fragments for Ansible modules
+that interact with the Event-Driven Ansible controller.
+"""
 
 
 class ModuleDocFragment:
+    """Documentation fragment class for EDA controller authentication options.
+
+    Contains shared documentation for common module parameters used to
+    authenticate and connect to the EDA controller.
+    """
+
     AUTHS = """
 options:
     controller_host:

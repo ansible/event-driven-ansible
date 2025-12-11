@@ -4,6 +4,12 @@
 # GNU General Public License v3.0+
 # (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for managing rulebook activations in EDA Controller.
+
+This module provides functionality to create, delete, or restart rulebook
+activations in an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -264,9 +270,17 @@ from ..module_utils.errors import EDAError
 def find_matching_source(
     event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
 ) -> Dict[str, Any]:
-    """
-    Finds a matching source based on the source_name in the event.
-    Raises an error if no match is found.
+    """Find a matching source based on the source_name in the event.
+
+    :param event: Event dictionary containing source_name
+    :type event: Dict[str, Any]
+    :param sources: List of available sources
+    :type sources: List[Dict[str, Any]]
+    :param module: The Ansible module instance
+    :type module: AnsibleModule
+    :returns: Matching source dictionary
+    :rtype: Dict[str, Any]
+    :raises: AnsibleModule.fail_json if no match is found
     """
     # Get the source_name from the event
     source_name = event.get("source_name")
@@ -287,16 +301,16 @@ def process_event_streams(
     controller: Controller,
     module: AnsibleModule,
 ) -> List[Dict[str, Any]]:
-    """
-    Processes event streams and updates activation_params with source mappings.
+    """Process event streams and create source mappings.
 
-    Args:
-        rulebook_id: The ID of the rulebook.
-        controller: The controller object used for API calls.
-        module: The module object, typically for error handling.
-
-    Returns:
-        List source mappings.
+    :param rulebook_id: The ID of the rulebook
+    :type rulebook_id: int
+    :param controller: The controller object used for API calls
+    :type controller: Controller
+    :param module: The module object for error handling
+    :type module: AnsibleModule
+    :returns: List of source mappings
+    :rtype: List[Dict[str, Any]]
     """
 
     source_mappings = []
@@ -370,6 +384,20 @@ def process_event_streams(
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
 ) -> Dict[str, Any]:
+    """Create rulebook activation parameters from module arguments.
+
+    Constructs a dictionary of activation parameters by extracting values
+    from the module parameters and resolving various resource IDs.
+
+    :param module: The Ansible module instance
+    :type module: AnsibleModule
+    :param controller: The EDA controller instance
+    :type controller: Controller
+    :param is_aap_24: Flag indicating if AAP version is 2.4
+    :type is_aap_24: bool
+    :returns: Dictionary containing activation parameters
+    :rtype: Dict[str, Any]
+    """
     activation_params: Dict[str, Any] = {}
 
     # Get the project id, only required to get the rulebook id
@@ -477,6 +505,15 @@ def create_params(
 
 
 def main() -> None:
+    """Main entry point for the rulebook_activation module.
+
+    Manages rulebook activations in EDA controller by creating, updating,
+    deleting, or restarting them based on the provided parameters.
+
+    :raises: AnsibleModule.fail_json on errors during activation operations
+    :returns: None
+    :rtype: None
+    """
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),

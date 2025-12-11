@@ -5,6 +5,12 @@
 # GNU General Public License v3.0+
 # (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for managing credentials in EDA Controller.
+
+This module provides functionality to create, update, delete, or test
+credentials in an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -163,6 +169,18 @@ from ..module_utils.errors import EDAError
 
 
 def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
+    """Create credential parameters from module arguments.
+
+    Constructs a dictionary of credential parameters by extracting values from
+    the module parameters and resolving credential type and organization IDs.
+
+    :param module: The Ansible module instance
+    :type module: AnsibleModule
+    :param controller: The EDA controller instance
+    :type controller: Controller
+    :returns: Dictionary containing credential parameters
+    :rtype: dict[str, Any]
+    """
     credential_params: dict[str, Any] = {}
 
     credential_params = {}
@@ -197,6 +215,15 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
 
 
 def main() -> None:
+    """Main entry point for the credential module.
+
+    Manages credentials in EDA controller by creating, updating, deleting,
+    or testing them based on the provided parameters and desired state.
+
+    :raises: AnsibleModule.fail_json on errors during credential operations
+    :returns: None
+    :rtype: None
+    """
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),

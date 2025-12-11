@@ -12,6 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+"""Generic event source plugin for inserting custom data.
+
+This module provides a generic event source plugin that allows insertion of custom
+event data with various configuration options including timing, randomization,
+and payload manipulation.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -330,7 +337,18 @@ async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Call the Generic Source Plugin."""
+    """Call the Generic Source Plugin.
+
+    Main entry point for the generic event source plugin. Creates and executes
+    a Generic instance with the provided configuration.
+
+    :param queue: The asyncio queue to put events into
+    :type queue: asyncio.Queue[Any]
+    :param args: Configuration arguments for the event source
+    :type args: dict[str, Any]
+    :returns: None
+    :rtype: None
+    """
     await Generic(queue, args)()
 
 
