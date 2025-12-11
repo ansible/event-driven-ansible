@@ -64,15 +64,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
-    """Main entry point for the rulebook_activation_copy module.
-
-    Copies an existing rulebook activation to create a new one with
-    the specified name.
-
-    :raises: AnsibleModule.fail_json on errors during copy operation
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         name=dict(type="str", required=True),
         copy_from=dict(type="str", required=True),

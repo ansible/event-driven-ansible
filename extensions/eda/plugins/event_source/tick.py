@@ -34,11 +34,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     an infinite increasing counter starting from 1.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments including delay between ticks
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     delay = args.get("delay", 1)
 

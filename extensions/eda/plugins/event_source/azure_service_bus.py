@@ -50,11 +50,8 @@ async def receive_events(
     """Receive events from service bus asynchronously.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments including connection string and queue name
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     servicebus_client = ServiceBusClient.from_connection_string(
         conn_str=args["conn_str"],
@@ -83,11 +80,8 @@ async def main(
     Main entry point for the Azure Service Bus event source plugin.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments for the event source
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     await receive_events(queue, args)
 

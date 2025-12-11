@@ -42,9 +42,7 @@ class Controller:
         """Initialize the controller.
 
         :param client: HTTP client for making API requests
-        :type client: Client
         :param module: Ansible module instance for accessing parameters and results
-        :type module: AnsibleModule
         """
         self.client = client
         self.module = module
@@ -63,9 +61,7 @@ class Controller:
         (usually 'name', but may be different for some resources).
 
         :param endpoint: API endpoint of the resource
-        :type endpoint: str
         :returns: Identity field name ('name' or type-specific)
-        :rtype: str
         """
         return Controller.IDENTITY_FIELDS.get(endpoint, "name")
 
@@ -73,11 +69,8 @@ class Controller:
         """Execute a GET request to the endpoint.
 
         :param endpoint: API endpoint for the request
-        :type endpoint: str
         :param kwargs: Additional parameters for the request
-        :type kwargs: Any
         :returns: Response object from the API
-        :rtype: Response
         """
         return self.client.get(endpoint, **kwargs)
 
@@ -88,11 +81,8 @@ class Controller:
         without making the actual request.
 
         :param endpoint: API endpoint for the request
-        :type endpoint: str
         :param kwargs: Additional parameters for the request (usually data)
-        :type kwargs: Any
         :returns: Response object from the API or mock response in check mode
-        :rtype: Response
         """
         # Handle check mode
         if self.module.check_mode:
@@ -108,11 +98,8 @@ class Controller:
         without making the actual request.
 
         :param endpoint: API endpoint for the request
-        :type endpoint: str
         :param kwargs: Additional parameters for the request (usually data and id)
-        :type kwargs: Any
         :returns: Response object from the API or mock response in check mode
-        :rtype: Response
         """
         # Handle check mode
         if self.module.check_mode:
@@ -128,11 +115,8 @@ class Controller:
         without making the actual request.
 
         :param endpoint: API endpoint for the request
-        :type endpoint: str
         :param kwargs: Additional parameters for the request (usually id)
-        :type kwargs: Any
         :returns: Response object from the API or mock response in check mode
-        :rtype: Response
         """
         # Handle check mode
         if self.module.check_mode:
@@ -148,9 +132,7 @@ class Controller:
         but may be another field, e.g., 'username' for users).
 
         :param item: Item data from the API
-        :type item: Any
         :returns: Value of the item's identity field
-        :rtype: Any
         :raises EDAError: If unable to determine the identity field
         """
         if item:
@@ -171,7 +153,6 @@ class Controller:
         """Raise an error when multiple results are received instead of one.
 
         :param response: List of received items
-        :type response: list[Any]
         :raises EDAError: Always, with a message about the number of items found
         """
         sample = response.copy()
@@ -189,13 +170,9 @@ class Controller:
         If more than one is found - raises an error.
 
         :param endpoint: API endpoint for the search
-        :type endpoint: str
         :param name: Name of the item to search for
-        :type name: Optional[str]
         :param kwargs: Additional parameters for the search
-        :type kwargs: Any
         :returns: Data of the found item or empty dictionary
-        :rtype: dict[str, Any]
         :raises EDAError: If more than one item is found
         """
         result = self.get_one_or_many(endpoint, name=name, **kwargs)
@@ -222,13 +199,9 @@ class Controller:
         Finds a resource by name and returns its ID.
 
         :param endpoint: API endpoint for the search
-        :type endpoint: str
         :param name: Resource name
-        :type name: str
         :param kwargs: Additional parameters for the search
-        :type kwargs: Any
         :returns: ID of the found resource or None if not found
-        :rtype: Optional[int]
         :raises EDAError: If the ID is not an integer
         """
         result = self.get_exactly_one(endpoint, name, **kwargs)
@@ -252,13 +225,9 @@ class Controller:
         Can filter by name if specified.
 
         :param endpoint: API endpoint for the request
-        :type endpoint: str
         :param name: Name to filter results by (optional)
-        :type name: Optional[str]
         :param kwargs: Additional parameters for the request
-        :type kwargs: Any
         :returns: List of found items
-        :rtype: List[dict[str, Any]]
         :raises EDAError: On API errors or invalid response format
         """
         new_kwargs = kwargs.copy()
@@ -305,13 +274,9 @@ class Controller:
         Used when it's known that the item does not exist.
 
         :param new_item: Data for the new item
-        :type new_item: dict[str, Any]
         :param endpoint: API endpoint for creation
-        :type endpoint: str
         :param item_type: Item type for error messages
-        :type item_type: str
         :returns: Dictionary with 'changed' and 'id' keys
-        :rtype: dict[str, bool]
         :raises EDAError: If endpoint is missing or creation errors occur
         """
         response = None
@@ -347,13 +312,9 @@ class Controller:
         Creates a new resource without preliminary existence checks.
 
         :param new_item: Data for the new item
-        :type new_item: dict[str, Any]
         :param endpoint: API endpoint for creation
-        :type endpoint: str
         :param item_type: Item type for error messages
-        :type item_type: str
         :returns: Dictionary with 'changed' key
-        :rtype: dict[str, bool]
         :raises EDAError: On creation errors
         """
 
@@ -378,11 +339,8 @@ class Controller:
         and changes may be detected inaccurately.
 
         :param field: Name of the field with encrypted data
-        :type field: str
         :param old: Old item data
-        :type old: dict[str, Any]
         :param warning: Whether to show the warning
-        :type warning: bool
         """
         if not warning:
             return
@@ -399,9 +357,7 @@ class Controller:
         contains the $encrypted$ marker anywhere in the data structure.
 
         :param obj: Object to check (dict, list, or scalar value)
-        :type obj: Any
         :returns: True if encrypted values are found
-        :rtype: bool
         """
         if isinstance(obj, dict):
             for val in obj.values():
@@ -425,11 +381,8 @@ class Controller:
         depending on unknown encrypted values.
 
         :param old_field: Old field value
-        :type old_field: Any
         :param new_field: New field value
-        :type new_field: Any
         :returns: True if fields are the same or could be the same
-        :rtype: bool
         """
         if isinstance(old_field, dict) and isinstance(new_field, dict):
             if set(old_field.keys()) != set(new_field.keys()):
@@ -456,15 +409,10 @@ class Controller:
         update_secrets setting. Returns True if objects differ or could differ.
 
         :param old: Old object data
-        :type old: dict[str, Any]
         :param new: New object data
-        :type new: dict[str, Any]
         :param field_set: Set of fields to compare (if None, all fields from new)
-        :type field_set: Optional[set[str]]
         :param warning: Whether to show warnings about encrypted fields
-        :type warning: bool
         :returns: True if objects differ or could differ
-        :rtype: bool
         """
         if field_set is None:
             field_set = set(fd for fd in new.keys())
@@ -501,15 +449,10 @@ class Controller:
         a PATCH request if differences are found.
 
         :param existing_item: Existing item data from the API
-        :type existing_item: dict[str, Any]
         :param new_item: New data for the update
-        :type new_item: dict[str, Any]
         :param endpoint: API endpoint for the update
-        :type endpoint: str
         :param item_type: Item type for error messages
-        :type item_type: str
         :returns: Dictionary with 'changed' and 'id' keys
-        :rtype: dict[str, bool]
         :raises RuntimeError: If called without existing_item
         :raises EDAError: On update errors or missing required data
         """
@@ -572,15 +515,10 @@ class Controller:
         if the item exists and there are differences.
 
         :param existing_item: Existing item data or empty dictionary
-        :type existing_item: dict[str, Any]
         :param new_item: New item data
-        :type new_item: dict[str, Any]
         :param endpoint: API endpoint for the operation
-        :type endpoint: str
         :param item_type: Item type for error messages
-        :type item_type: str
         :returns: Dictionary with 'changed' and 'id' keys
-        :rtype: dict[str, bool]
         """
         if existing_item:
             return self.update_if_needed(
@@ -604,11 +542,8 @@ class Controller:
         If the item doesn't exist, returns result unchanged.
 
         :param existing_item: Existing item data or empty dictionary
-        :type existing_item: dict[str, Any]
         :param endpoint: API endpoint for deletion
-        :type endpoint: str
         :returns: Dictionary with 'changed' and 'id' keys
-        :rtype: dict[str, Any]
         :raises EDAError: On deletion errors or missing required data
         """
         if not existing_item:
@@ -657,15 +592,10 @@ class Controller:
         Creates a copy of an existing resource with a new name.
 
         :param name: Name for the new item
-        :type name: str
         :param copy_from: Name or ID of the source item to copy
-        :type copy_from: str
         :param endpoint: API endpoint for copying
-        :type endpoint: str
         :param item_type: Item type for error messages
-        :type item_type: str
         :returns: Dictionary with 'changed' and 'id' keys
-        :rtype: dict[str, bool]
         :raises EDAError: If parameters are missing or copy errors occur
         """
         response = None
@@ -699,11 +629,8 @@ class Controller:
         Executes a restart of an existing EDA activation.
 
         :param existing_item: Existing activation data with ID
-        :type existing_item: dict[str, Any]
         :param endpoint: API endpoint for restart
-        :type endpoint: str
         :returns: Dictionary with 'changed' and 'id' keys
-        :rtype: dict[str, bool]
         :raises EDAError: If parameters are missing or restart errors occur
         """
         response = None

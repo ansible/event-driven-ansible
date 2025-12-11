@@ -94,15 +94,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
-    """Main entry point for the rulebook_info module.
-
-    Retrieves and returns information about rulebooks from the EDA controller.
-    Can filter by name and/or project name.
-
-    :raises: AnsibleModule.fail_json on errors during retrieval
-    :returns: None
-    :rtype: None
-    """
+    """Module entry point."""
     argument_spec = dict(
         name=dict(type="str", required=False),
         project_name=dict(type="str", required=False, aliases=["project"]),

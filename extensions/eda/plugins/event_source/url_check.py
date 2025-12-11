@@ -50,11 +50,8 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     URLs and sends status information to the event queue.
 
     :param queue: The asyncio queue to put events into
-    :type queue: asyncio.Queue[Any]
     :param args: Configuration arguments including URLs and delay
-    :type args: dict[str, Any]
     :returns: None
-    :rtype: None
     """
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
