@@ -1,3 +1,9 @@
+"""Event source plugin for loading facts from YAML files.
+
+This module provides an event source plugin for loading facts from YAML files
+initially and when the file changes using watchdog library.
+"""
+
 import pathlib
 from asyncio import Queue
 from typing import Any, Union
@@ -28,7 +34,13 @@ EXAMPLES = r"""
 
 
 def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
-    """Send facts to the queue."""
+    """Send facts to the queue.
+
+    :param queue: The queue to put facts into
+    :param filename: Path to the YAML file containing facts
+    :returns: None
+    :raises TypeError: If facts are not in expected format
+    """
     if isinstance(filename, bytes):
         filename = str(filename, "utf-8")
     with pathlib.Path(filename).open(encoding="utf-8") as file:
@@ -54,7 +66,15 @@ def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
 
 
 def main(queue: Queue[Any], args: dict[str, Any]) -> None:
-    """Load facts from YAML files initially and when the file changes."""
+    """Load facts from YAML files initially and when the file changes.
+
+    Main entry point for the file event source plugin. Loads facts from specified
+    YAML files and watches for changes.
+
+    :param queue: The queue to put events into
+    :param args: Configuration arguments including list of files
+    :returns: None
+    """
     files = [pathlib.Path(f).resolve().as_posix() for f in args.get("files", [])]
 
     if not files:
@@ -66,6 +86,13 @@ def main(queue: Queue[Any], args: dict[str, Any]) -> None:
 
 
 def _observe_files(queue: Queue[Any], files: list[str]) -> None:
+    """Observe file changes and send facts when files are modified.
+
+    :param queue: The queue to put events into
+    :param files: List of file paths to observe
+    :returns: None
+    """
+
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 

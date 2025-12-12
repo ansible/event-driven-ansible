@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events via webhook.
+
+This module provides an event source plugin for receiving JSON events via webhooks
+with support for TLS, mTLS, bearer token authentication, and HMAC verification.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -102,7 +108,12 @@ routes = web.RouteTableDef()
 
 @routes.post(r"/{endpoint:.*}")
 async def webhook(request: web.Request) -> web.Response:
-    """Return response to webhook request."""
+    """Return response to webhook request.
+
+    :param request: The incoming HTTP request with JSON payload
+    :returns: HTTP response with endpoint name
+    :raises web.HTTPBadRequest: If JSON payload is invalid
+    """
     try:
         payload = await request.json()
     except json.JSONDecodeError as exc:
@@ -120,6 +131,12 @@ async def webhook(request: web.Request) -> web.Response:
 
 
 def _parse_token(request: web.Request) -> tuple[str, str]:
+    """Parse and validate bearer token from request.
+
+    :param request: The incoming HTTP request
+    :returns: Tuple of (scheme, token)
+    :raises web.HTTPUnauthorized: If token is invalid or not Bearer type
+    """
     scheme, token = request.headers["Authorization"].strip().split(" ")
     if scheme != "Bearer":
         raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
@@ -129,6 +146,13 @@ def _parse_token(request: web.Request) -> tuple[str, str]:
 
 
 async def _hmac_verify(request: web.Request) -> bool:
+    """Verify HMAC signature of the request payload.
+
+    :param request: The incoming HTTP request
+    :returns: True if HMAC signature is valid
+    :raises web.HTTPBadRequest: If signature header is missing
+    :raises ValueError: If HMAC format is unsupported
+    """
     hmac_secret = request.app["hmac_secret"]
     hmac_header = request.app["hmac_header"]
     hmac_algo = request.app["hmac_algo"]
@@ -166,7 +190,13 @@ async def bearer_auth(
     request: web.Request,
     handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
 ) -> web.StreamResponse:
-    """Verify authorization is Bearer type."""
+    """Verify authorization is Bearer type.
+
+    :param request: The incoming HTTP request
+    :param handler: The request handler to call after validation
+    :returns: The response from the handler
+    :raises web.HTTPUnauthorized: If authorization is invalid or missing
+    """
     try:
         _parse_token(request)
     except KeyError:
@@ -182,7 +212,13 @@ async def hmac_verify(
     request: web.Request,
     handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
 ) -> web.StreamResponse:
-    """Verify event's HMAC signature."""
+    """Verify event's HMAC signature.
+
+    :param request: The incoming HTTP request
+    :param handler: The request handler to call after validation
+    :returns: The response from the handler
+    :raises web.HTTPUnauthorized: If HMAC verification fails
+    """
     hmac_verified = await _hmac_verify(request)
     if not hmac_verified:
         raise web.HTTPUnauthorized(text="HMAC verification failed")
@@ -191,6 +227,12 @@ async def hmac_verify(
 
 
 def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
+    """Create and configure SSL context for TLS/mTLS support.
+
+    :param args: Configuration arguments containing certificate paths
+    :returns: Configured SSL context or None if TLS is not enabled
+    :raises TypeError: If certfile is not a string
+    """
     context = None
     if "certfile" in args:
         certfile = args.get("certfile")
@@ -218,7 +260,16 @@ def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Receive events via webhook."""
+    """Receive events via webhook.
+
+    Main entry point for the webhook event source plugin. Sets up a web server
+    to receive JSON events via HTTP/HTTPS webhooks with optional authentication.
+
+    :param queue: The asyncio queue to put events into
+    :param args: Configuration arguments for the event source
+    :returns: None
+    :raises ValueError: If required arguments are missing or invalid
+    """
     if "port" not in args:
         msg = "Missing required argument: port"
         raise ValueError(msg)
