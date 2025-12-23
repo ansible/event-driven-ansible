@@ -104,7 +104,7 @@ jobs:
           java-version: "17"
 
       - name: Set pre-commit cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: ${{ contains(matrix.name, 'lint') }}
         with:
           path: |
@@ -137,7 +137,7 @@ jobs:
         if: ${{ matrix.command5 }}
 
       - name: Archive logs
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: ${{ matrix.name != 'lint' }}
         with:
           name: logs-${{ matrix.name }}
@@ -149,7 +149,7 @@ jobs:
             ansible_collections/ansible/eda/tests/output/junit/*.xml
 
       - name: Archive collection archive
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         # we need to do for only one job, 'tox -e docs' when run on linux:
         if: ${{ matrix.name == 'docs-sanity' }}
         with:
@@ -192,7 +192,7 @@ jobs:
       - run: pip3 install 'coverage>=7.5.1'
 
       - name: Merge logs into a single archive
-        uses: actions/upload-artifact/merge@v5
+        uses: actions/upload-artifact/merge@v6
         with:
           name: logs
           include-hidden-files: true
@@ -202,7 +202,7 @@ jobs:
           separate-directories: true
 
       - name: Download artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: logs
           path: .
@@ -252,7 +252,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download the artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: collection-artifact
 
