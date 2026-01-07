@@ -46,11 +46,15 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     if not urls:
         return
 
+    common_get_args = {}
+    if not verify_ssl:
+        common_get_args["ssl"] = False
+
     while True:
         for url in urls:
             try:
                 async with aiohttp.ClientSession() as session:  # noqa: SIM117
-                    async with session.get(url, verify_ssl=verify_ssl) as resp:
+                    async with session.get(url, **common_get_args) as resp:
                         await queue.put(
                             {
                                 "url_check": {
