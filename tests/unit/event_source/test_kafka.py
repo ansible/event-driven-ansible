@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -67,7 +68,7 @@ def test_receive_from_kafka_place_in_queue(
                 {
                     topic_type: topic_value,
                     "host": "localhost",
-                    "port": "9092",
+                    "port": 9092,
                     "group_id": "test",
                 },
             )
@@ -96,3 +97,40 @@ def test_mixed_topics_and_patterns(
         match="Exactly one of topic, topics, or topic_pattern must be provided.",
     ):
         asyncio.run(kafka_main(myqueue, topic_args))
+
+
+@pytest.mark.parametrize(
+    "args, error_msg",
+    [
+        # Only host set
+        (
+            {"host": "localhost", "port": None, "brokers": None, "topic": "eda"},
+            "Host and port must be set",
+        ),
+        # Only port set
+        (
+            {"host": None, "port": 9092, "brokers": None, "topic": "eda"},
+            "Host and port must be set",
+        ),
+        # Neither host nor brokers set
+        (
+            {"host": None, "port": None, "brokers": None, "topic": "eda"},
+            "host and port or brokers must be set",
+        ),
+        # Both host and brokers set
+        (
+            {
+                "host": "localhost",
+                "port": 9092,
+                "brokers": ["localhost:9092"],
+                "topic": "eda",
+            },
+            "Only one of host and brokers parameter must be set",
+        ),
+    ],
+)
+def test_host_port_brokers_combinations(
+    myqueue: MockQueue, args: dict[str, Any], error_msg: str
+) -> None:
+    with pytest.raises(ValueError, match=re.escape(error_msg)):
+        asyncio.run(kafka_main(myqueue, args))

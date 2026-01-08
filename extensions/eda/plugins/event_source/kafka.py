@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 from ssl import CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED
-from typing import Any
+from typing import Any, Optional
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
@@ -14,15 +14,21 @@ description:
   - An ansible-rulebook event source plugin for receiving events via a kafka topic.
 options:
   host:
-    description:
       - The host where the kafka topic is hosted.
     type: str
-    required: true
+    required: false
   port:
     description:
       - The port where the kafka server is listening.
-    type: str
-    required: true
+    type: false
+  brokers:
+    description:
+      - A list of host[:port] strings
+        that the consumer should contact to bootstrap initial cluster metadata.
+        This does not have to be the full node list.
+        It just needs to have at least one broker that will respond to a Metadata API Request
+    type: list(str)
+    required: false
   cafile:
     description:
       - The optional certificate authority file path containing certificates
@@ -126,7 +132,11 @@ options:
 EXAMPLES = r"""
 - ansible.eda.kafka:
     host: "localhost"
-    port: "9092"
+    port: 9092
+    brokers:
+      - broker-1:9092
+      - broker-2:9093
+      - broker-3:9094
     check_hostname: true
     verify_mode: "CERT_OPTIONAL"
     encoding: "utf-8"
@@ -140,6 +150,22 @@ EXAMPLES = r"""
     sasl_plain_username: "admin"
     sasl_plain_password: "test"
 """
+
+
+def _host_or_broker_validation(
+    host: Optional[str], port: Optional[int], brokers: Optional[list[str]]
+) -> None:
+    if host and brokers:
+        msg = "Only one of host and brokers parameter must be set"
+        raise ValueError(msg)
+
+    if (host and not port) or (port and not host):
+        msg = "Host and port must be set"
+        raise ValueError(msg)
+
+    if not host and not brokers:
+        msg = "host and port or brokers must be set"
+        raise ValueError(msg)
 
 
 async def main(  # pylint: disable=R0914
@@ -163,6 +189,7 @@ async def main(  # pylint: disable=R0914
 
     host = args.get("host")
     port = args.get("port")
+    brokers = args.get("brokers")
     cafile = args.get("cafile")
     certfile = args.get("certfile")
     keyfile = args.get("keyfile")
@@ -173,6 +200,8 @@ async def main(  # pylint: disable=R0914
     offset = args.get("offset", "latest")
     encoding = args.get("encoding", "utf-8")
     security_protocol = args.get("security_protocol", "PLAINTEXT")
+
+    _host_or_broker_validation(host, port, brokers)
 
     if offset not in ("latest", "earliest"):
         msg = f"Invalid offset option: {offset}"
@@ -202,7 +231,7 @@ async def main(  # pylint: disable=R0914
         ssl_context.verify_mode = verify_mode
 
     kafka_consumer = AIOKafkaConsumer(
-        bootstrap_servers=f"{host}:{port}",
+        bootstrap_servers=brokers if brokers else f"{host}:{port}",
         group_id=group_id,
         enable_auto_commit=True,
         max_poll_records=1,
