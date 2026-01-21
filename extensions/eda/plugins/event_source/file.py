@@ -34,13 +34,7 @@ EXAMPLES = r"""
 
 
 def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
-    """Send facts to the queue.
-
-    :param queue: The queue to put facts into
-    :param filename: Path to the YAML file containing facts
-    :returns: None
-    :raises TypeError: If facts are not in expected format
-    """
+    """Send facts to the queue."""
     if isinstance(filename, bytes):
         filename = str(filename, "utf-8")
     with pathlib.Path(filename).open(encoding="utf-8") as file:
@@ -66,15 +60,7 @@ def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
 
 
 def main(queue: Queue[Any], args: dict[str, Any]) -> None:
-    """Load facts from YAML files initially and when the file changes.
-
-    Main entry point for the file event source plugin. Loads facts from specified
-    YAML files and watches for changes.
-
-    :param queue: The queue to put events into
-    :param args: Configuration arguments including list of files
-    :returns: None
-    """
+    """Load facts from YAML files initially and when the file changes."""
     files = [pathlib.Path(f).resolve().as_posix() for f in args.get("files", [])]
 
     if not files:
@@ -86,12 +72,7 @@ def main(queue: Queue[Any], args: dict[str, Any]) -> None:
 
 
 def _observe_files(queue: Queue[Any], files: list[str]) -> None:
-    """Observe file changes and send facts when files are modified.
-
-    :param queue: The queue to put events into
-    :param files: List of file paths to observe
-    :returns: None
-    """
+    """Observe file changes and send facts when files are modified."""
 
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
@@ -100,18 +81,20 @@ def _observe_files(queue: Queue[Any], files: list[str]) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self, event: FileSystemEvent) -> None:
+            """Handle file creation events."""
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
         def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
-            pass
+            """Handle file deletion events."""
 
         def on_modified(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file modification events."""
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
         def on_moved(self: "Handler", event: FileSystemEvent) -> None:
-            pass
+            """Handle file move events."""
 
     observer = Observer()
     handler = Handler()

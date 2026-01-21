@@ -72,21 +72,13 @@ routes = web.RouteTableDef()
 
 @routes.get("/")
 async def status(_request: web.Request) -> web.Response:
-    """Return status of a web request.
-
-    :param _request: The incoming HTTP request
-    :returns: HTTP response with status 200 and text "up"
-    """
+    """Return status of a web request."""
     return web.Response(status=200, text="up")
 
 
 @routes.post("/{endpoint}")
 async def webhook(request: web.Request) -> web.Response:
-    """Read events from webhook and process alert data.
-
-    :param request: The incoming HTTP request containing alert payload
-    :returns: HTTP response with status 202 and text "Received"
-    """
+    """Read events from webhook and process alert data."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
 
@@ -144,26 +136,14 @@ async def webhook(request: web.Request) -> web.Response:
 
 
 def clean_host(host: str) -> str:
-    """Remove port from host string if it exists.
-
-    :param host: The host string that may contain port information
-    :returns: The host string without port
-    """
+    """Remove port from host string if it exists."""
     if ":" in host:
         return host.split(":")[0]
     return host
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Receive events via alertmanager webhook.
-
-    Main entry point for the alertmanager event source plugin. Sets up a web server
-    to receive webhook events from alertmanager or compatible alerting systems.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments for the event source
-    :returns: None
-    """
+    """Receive events via alertmanager webhook."""
     app = web.Application()
     app["queue"] = queue
     app["data_host_path"] = str(args.get("data_host_path", "labels.instance"))

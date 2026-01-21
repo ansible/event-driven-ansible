@@ -89,16 +89,7 @@ async def main(  # noqa: C901, PLR0912
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Receive events via an AWS SQS queue.
-
-    Main entry point for the AWS SQS queue event source plugin. Continuously polls
-    SQS queue for messages and puts them into the event queue.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments for the event source
-    :returns: None
-    :raises ValueError: If queue name is missing or queue doesn't exist
-    """
+    """Receive events via an AWS SQS queue."""
     logger = logging.getLogger()
 
     if "name" not in args:
@@ -194,11 +185,7 @@ async def main(  # noqa: C901, PLR0912
 
 
 def connection_args(args: dict[str, Any]) -> dict[str, Any]:
-    """Provide connection arguments to AWS SQS queue.
-
-    :param args: Configuration arguments containing AWS credentials
-    :returns: Dictionary of connection arguments for boto client
-    """
+    """Provide connection arguments to AWS SQS queue."""
     selected_args = {}
 
     # Best Practice: get credentials from ~/.aws/credentials or the environment

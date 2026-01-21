@@ -41,7 +41,6 @@ def lookup_resource_id(
     :param name: Resource name to search for
     :param params: Additional parameters for the search (optional)
     :returns: ID of the found resource or None if not found
-    :raises: Module fails with error via module.fail_json on EDAError
     """
     result = None
 

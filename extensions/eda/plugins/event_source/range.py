@@ -27,15 +27,7 @@ EXAMPLES = r"""
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Generate events with an increasing index i with a limit.
-
-    Main entry point for the range event source plugin. Generates events with
-    an increasing counter from 0 to limit-1.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments including limit
-    :returns: None
-    """
+    """Generate events with an increasing index i with a limit."""
     delay = args.get("delay", 0)
 
     for i in range(int(args["limit"])):
