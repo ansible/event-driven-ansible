@@ -58,22 +58,12 @@ EXAMPLES = r"""
 
 
 def _matches_include_keys(include_keys: list[str], string: str) -> bool:
-    """Check if a string matches any of the include key patterns.
-
-    :param include_keys: List of patterns to match against
-    :param string: The string to check for matches
-    :returns: True if the string matches any include pattern, False otherwise
-    """
+    """Check if a string matches any of the include key patterns."""
     return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
 
 
 def _matches_exclude_keys(exclude_keys: list[str], string: str) -> bool:
-    """Check if a string matches any of the exclude key patterns.
-
-    :param exclude_keys: List of patterns to match against
-    :param string: The string to check for matches
-    :returns: True if the string matches any exclude pattern, False otherwise
-    """
+    """Check if a string matches any of the exclude key patterns."""
     return any(fnmatch.fnmatch(string, pattern) for pattern in exclude_keys)
 
 
@@ -82,17 +72,7 @@ def main(
     exclude_keys: Optional[list[str]] = None,  # noqa: UP045
     include_keys: Optional[list[str]] = None,  # noqa: UP045
 ) -> dict[str, Any]:
-    """Filter keys out of events.
-
-    Recursively processes the event dictionary to remove keys matching
-    exclude patterns, while preserving keys matching include patterns.
-    Include patterns take precedence over exclude patterns.
-
-    :param event: The event dictionary to filter
-    :param exclude_keys: List of key patterns to exclude from the event
-    :param include_keys: List of key patterns to include even if they match exclude patterns
-    :returns: The filtered event dictionary
-    """
+    """Filter keys out of events."""
     if exclude_keys is None:
         exclude_keys = []
 

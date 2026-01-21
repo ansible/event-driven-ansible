@@ -276,7 +276,6 @@ def find_matching_source(
     :param sources: List of available sources
     :param module: The Ansible module instance
     :returns: Matching source dictionary
-    :raises: AnsibleModule.fail_json if no match is found
     """
     # Get the source_name from the event
     source_name = event.get("source_name")
