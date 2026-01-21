@@ -1,3 +1,10 @@
+"""Event filter plugin for normalizing keys to alphanumeric and underscore.
+
+This module provides functionality to normalize dictionary keys by replacing
+non-alphanumeric characters (except underscores) with underscores throughout
+the event data structure.
+"""
+
 import logging
 import multiprocessing as mp
 import re
@@ -58,6 +65,7 @@ def _normalize_embedded_keys(
     overwrite: bool,  # noqa: FBT001
     logger: logging.Logger,
 ) -> dict[str, Any]:
+    """Recursively normalize keys in nested dictionaries and lists."""
     if isinstance(obj, dict):
         new_dict = {}
         original_keys = list(obj.keys())

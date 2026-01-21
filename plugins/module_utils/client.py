@@ -3,6 +3,13 @@
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
+"""HTTP client for interacting with Event-Driven Ansible API.
+
+This module provides classes for making HTTP requests
+to the Event-Driven Ansible controller with authentication
+and error handling.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 from typing import Any, Optional
@@ -19,7 +26,19 @@ from .errors import AuthError, EDAHTTPError
 
 
 class Response:
+    """Class representing an HTTP response from EDA API.
+
+    Encapsulates HTTP response data including status,
+    content, and headers. Provides convenient access to JSON data.
+    """
+
     def __init__(self, status: int, data: str, headers: Optional[Any] = None) -> None:
+        """Initialize the response object.
+
+        :param status: HTTP status code of the response
+        :param data: Response body as a string
+        :param headers: HTTP response headers (optional)
+        """
         self.status = status
         self.data = data
         # [('h1', 'v1'), ('H2', 'V2')] -> {'h1': 'v1', 'h2': 'V2'}
@@ -31,6 +50,13 @@ class Response:
 
     @property
     def json(self) -> Any:
+        """Get the response content as JSON.
+
+        Parses the response body as JSON and caches the result.
+        On subsequent calls, returns the cached value.
+
+        :returns: Parsed JSON data
+        """
         if self._json is None:
             try:
                 self._json = json.loads(self.data)
@@ -42,6 +68,12 @@ class Response:
 
 
 class Client:
+    """HTTP client for interacting with Event-Driven Ansible API.
+
+    Provides methods for making HTTP requests to the EDA controller
+    with support for various authentication methods (token or username/password).
+    """
+
     def __init__(
         self,
         host: str,
@@ -51,6 +83,15 @@ class Client:
         timeout: Optional[Any] = None,
         validate_certs: Optional[Any] = None,
     ) -> None:
+        """Initialize the HTTP client.
+
+        :param host: EDA controller host (with or without protocol)
+        :param username: Username for authentication (optional)
+        :param password: Password for authentication (optional)
+        :param token: Token for authentication (optional)
+        :param timeout: Timeout for HTTP requests (optional)
+        :param validate_certs: Whether to validate SSL certificates (optional)
+        """
         if not host:
             raise ValueError("Host must be a non-empty string.")
 
@@ -84,6 +125,17 @@ class Client:
         data: Optional[Any] = None,
         headers: Optional[Any] = None,
     ) -> Response:
+        """Execute an HTTP request to the API.
+
+        Internal method for making HTTP requests with authentication
+        and error handling.
+
+        :param method: HTTP method (GET, POST, PUT, PATCH, DELETE)
+        :param path: Full URL path for the request
+        :param data: Data to send in the request body (optional)
+        :param headers: HTTP headers for the request (optional)
+        :returns: Response object with request results
+        """
         try:
             raw_resp = self.session.open(
                 method,
@@ -119,6 +171,16 @@ class Client:
         query_params: Optional[Any] = None,
         identifier: Optional[Any] = None,
     ) -> ParseResult:
+        """Build a full URL for an API endpoint.
+
+        Constructs a full URL from the endpoint, adding API prefix,
+        query parameters, and resource identifier as needed.
+
+        :param endpoint: API endpoint (can be relative or full)
+        :param query_params: Query parameters to add to the URL (optional)
+        :param identifier: Resource ID to add to the path (optional)
+        :returns: Parsed URL object
+        """
         # Make sure we start with /api/vX
         if not endpoint.startswith("/"):
             endpoint = f"/{endpoint}"
@@ -140,6 +202,16 @@ class Client:
         return url
 
     def request(self, method: str, endpoint: str, **kwargs: Any) -> Response:
+        """Execute an HTTP request to the specified endpoint.
+
+        Main method for making API requests with automatic
+        URL, header, and data handling based on the method.
+
+        :param method: HTTP method (GET, POST, PUT, PATCH, DELETE)
+        :param endpoint: API endpoint for the request
+        :param kwargs: Additional parameters (data, headers, id)
+        :returns: Response object with request results
+        """
         # In case someone is calling us directly; make sure we were given a
         # method, let's not just assume a GET
         if not method:
@@ -172,24 +244,48 @@ class Client:
         return self._request(method, url.geturl(), data=data, headers=headers)
 
     def get(self, path: str, **kwargs: str) -> Response:
+        """Execute a GET request.
+
+        :param path: API endpoint for the GET request
+        :param kwargs: Additional request parameters
+        :returns: Response object
+        """
         resp = self.request("GET", path, **kwargs)
         if resp.status in (200, 404):
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
     def post(self, path: str, **kwargs: Any) -> Response:
+        """Execute a POST request.
+
+        :param path: API endpoint for the POST request
+        :param kwargs: Additional request parameters (data, headers)
+        :returns: Response object
+        """
         resp = self.request("POST", path, **kwargs)
         if resp.status in [201, 202, 204]:
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
     def patch(self, path: str, **kwargs: Any) -> Response:
+        """Execute a PATCH request.
+
+        :param path: API endpoint for the PATCH request
+        :param kwargs: Additional request parameters (data, headers, id)
+        :returns: Response object
+        """
         resp = self.request("PATCH", path, **kwargs)
         if resp.status == 200:
             return resp
         raise EDAHTTPError(f"HTTP error {resp.json}")
 
     def delete(self, path: str, **kwargs: Any) -> Response:
+        """Execute a DELETE request.
+
+        :param path: API endpoint for the DELETE request
+        :param kwargs: Additional request parameters (id)
+        :returns: Response object
+        """
         resp = self.request("DELETE", path, **kwargs)
         if resp.status == 204:
             return resp

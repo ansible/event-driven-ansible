@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events from AWS CloudTrail.
+
+This module provides an event source plugin for getting events from AWS CloudTrail
+using the aiobotocore library. It supports all authentication methods provided by boto.
+"""
+
 import asyncio
 import json
 from datetime import datetime
@@ -70,6 +76,7 @@ EXAMPLES = r"""
 
 
 def _cloudtrail_event_to_dict(event: dict[str, Any]) -> dict[str, Any]:
+    """Convert CloudTrail event to dictionary format."""
     event["EventTime"] = event["EventTime"].isoformat()
     event["CloudTrailEvent"] = json.loads(event["CloudTrailEvent"])
     return event
@@ -79,6 +86,7 @@ def _get_events(
     events: list[dict[str, Any]],
     last_event_ids: list[str],
 ) -> tuple[list[dict[str, Any]], Any, list[str]]:
+    """Filter and process CloudTrail events."""
     event_time = None
     event_ids = []
     result = []
@@ -99,6 +107,7 @@ async def _get_cloudtrail_events(
     client: BaseClient,
     params: dict[str, Any],
 ) -> list[dict[str, Any]]:
+    """Get CloudTrail events using paginator."""
     paginator = client.get_paginator("lookup_events")
     results: dict[str, Any] = await cast(
         "Awaitable[dict[str, Any]]",
