@@ -44,15 +44,7 @@ OK = 200
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Poll a set of URLs and send events with status.
-
-    Main entry point for the URL check event source plugin. Continuously polls
-    URLs and sends status information to the event queue.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments including URLs and delay
-    :returns: None
-    """
+    """Poll a set of URLs and send events with status."""
     urls = args.get("urls", [])
     delay = int(args.get("delay", 1))
     verify_ssl = args.get("verify_ssl", True)

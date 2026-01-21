@@ -92,22 +92,7 @@ def main(
     raise_error: bool = False,
     log_error: bool = True,
 ) -> dict[str, Any]:
-    """Extract hosts from event data and insert into meta dict.
-
-    This function extracts host information from the event data using the
-    specified JSON path and inserts it into the event's meta dictionary.
-    The hosts can be a string, a list, or a delimited string.
-
-    :param event: The event dictionary to process
-    :param host_path: The JSON path to find hosts in the event data
-    :param host_separator: The separator to split a host string into multiple hosts
-    :param path_separator: The separator to interpret the host_path
-    :param raise_error: Whether to raise PathNotExistError if host_path does not exist
-    :param log_error: Whether to log an error message if host_path does not exist
-    :returns: The modified event dictionary with hosts inserted into meta
-    :raises PathNotExistError: If host_path does not exist and raise_error is True
-    :raises TypeError: If hosts value is not a string, list, or tuple
-    """
+    """Extract hosts from event data and insert into meta dict."""
     if not host_path:
         return event
 

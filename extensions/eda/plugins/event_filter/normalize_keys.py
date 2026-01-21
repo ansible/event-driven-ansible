@@ -54,17 +54,7 @@ def main(
     event: dict[str, Any],
     overwrite: bool = True,  # noqa: FBT001, FBT002
 ) -> dict[str, Any]:
-    """Change keys that contain non-alphanumeric characters to underscores.
-
-    Recursively processes the event dictionary and normalizes all keys by
-    replacing non-alphanumeric characters (except underscores) with underscores.
-    Consecutive non-alphanumeric characters are coalesced into a single underscore.
-
-    :param event: The event dictionary to process
-    :param overwrite: Whether to overwrite existing keys if there is a collision
-                      with the new normalized key name
-    :returns: The modified event dictionary with normalized keys
-    """
+    """Change keys that contain non-alphanumeric characters to underscores."""
     logger = mp.get_logger()
     logger.info("normalize_keys")
     return _normalize_embedded_keys(event, overwrite, logger)
@@ -75,17 +65,7 @@ def _normalize_embedded_keys(
     overwrite: bool,  # noqa: FBT001
     logger: logging.Logger,
 ) -> dict[str, Any]:
-    """Recursively normalize keys in nested dictionaries and lists.
-
-    This helper function traverses the data structure and normalizes all
-    dictionary keys by replacing non-alphanumeric characters with underscores.
-    It handles nested dictionaries and lists recursively.
-
-    :param obj: The object to normalize (dictionary, list, or other value)
-    :param overwrite: Whether to overwrite existing keys on collision
-    :param logger: Logger instance for logging warnings
-    :returns: The normalized object with updated keys
-    """
+    """Recursively normalize keys in nested dictionaries and lists."""
     if isinstance(obj, dict):
         new_dict = {}
         original_keys = list(obj.keys())
