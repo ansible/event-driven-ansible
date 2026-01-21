@@ -34,17 +34,7 @@ def main(
     event: dict[str, Any],
     overwrite: bool = True,  # noqa: FBT001, FBT002
 ) -> dict[str, Any]:
-    """Change dashes in keys to underscores.
-
-    Recursively processes the event dictionary and replaces all dashes
-    in keys with underscores. Handles nested dictionaries by traversing
-    the entire structure.
-
-    :param event: The event dictionary to process
-    :param overwrite: Whether to overwrite existing keys if there is a collision
-                      with the new underscore-based key name
-    :returns: The modified event dictionary with dashes replaced by underscores
-    """
+    """Change dashes in keys to underscores."""
     logger = mp.get_logger()
     logger.info("dashes_to_underscores")
     queue = [event]

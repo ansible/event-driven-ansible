@@ -133,7 +133,6 @@ class Controller:
 
         :param item: Item data from the API
         :returns: Value of the item's identity field
-        :raises EDAError: If unable to determine the identity field
         """
         if item:
             if "name" in item:
@@ -153,7 +152,6 @@ class Controller:
         """Raise an error when multiple results are received instead of one.
 
         :param response: List of received items
-        :raises EDAError: Always, with a message about the number of items found
         """
         sample = response.copy()
         sample = sample[:2] + ["...more results snipped..."]
@@ -173,7 +171,6 @@ class Controller:
         :param name: Name of the item to search for
         :param kwargs: Additional parameters for the search
         :returns: Data of the found item or empty dictionary
-        :raises EDAError: If more than one item is found
         """
         result = self.get_one_or_many(endpoint, name=name, **kwargs)
         matches = []
@@ -202,7 +199,6 @@ class Controller:
         :param name: Resource name
         :param kwargs: Additional parameters for the search
         :returns: ID of the found resource or None if not found
-        :raises EDAError: If the ID is not an integer
         """
         result = self.get_exactly_one(endpoint, name, **kwargs)
         if result:
@@ -228,7 +224,6 @@ class Controller:
         :param name: Name to filter results by (optional)
         :param kwargs: Additional parameters for the request
         :returns: List of found items
-        :raises EDAError: On API errors or invalid response format
         """
         new_kwargs = kwargs.copy()
 
@@ -277,7 +272,6 @@ class Controller:
         :param endpoint: API endpoint for creation
         :param item_type: Item type for error messages
         :returns: Dictionary with 'changed' and 'id' keys
-        :raises EDAError: If endpoint is missing or creation errors occur
         """
         response = None
         if not endpoint:
@@ -315,7 +309,6 @@ class Controller:
         :param endpoint: API endpoint for creation
         :param item_type: Item type for error messages
         :returns: Dictionary with 'changed' key
-        :raises EDAError: On creation errors
         """
 
         response = self.post_endpoint(endpoint, data=new_item)
@@ -453,8 +446,6 @@ class Controller:
         :param endpoint: API endpoint for the update
         :param item_type: Item type for error messages
         :returns: Dictionary with 'changed' and 'id' keys
-        :raises RuntimeError: If called without existing_item
-        :raises EDAError: On update errors or missing required data
         """
         response = None
         if not existing_item:
@@ -544,7 +535,6 @@ class Controller:
         :param existing_item: Existing item data or empty dictionary
         :param endpoint: API endpoint for deletion
         :returns: Dictionary with 'changed' and 'id' keys
-        :raises EDAError: On deletion errors or missing required data
         """
         if not existing_item:
             return self.result
@@ -596,7 +586,6 @@ class Controller:
         :param endpoint: API endpoint for copying
         :param item_type: Item type for error messages
         :returns: Dictionary with 'changed' and 'id' keys
-        :raises EDAError: If parameters are missing or copy errors occur
         """
         response = None
         if not copy_from:
@@ -631,7 +620,6 @@ class Controller:
         :param existing_item: Existing activation data with ID
         :param endpoint: API endpoint for restart
         :returns: Dictionary with 'changed' and 'id' keys
-        :raises EDAError: If parameters are missing or restart errors occur
         """
         response = None
         if not endpoint:

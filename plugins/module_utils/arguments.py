@@ -19,8 +19,6 @@ from ansible.module_utils.basic import env_fallback
 #:
 #: Defines parameters for connecting to the Event-Driven Ansible controller,
 #: including host, credentials, SSL validation, and timeouts.
-#:
-#: :type: dict[str, dict[str, object]]
 AUTH_ARGSPEC: dict[str, dict[str, object]] = {
     "controller_host": {
         "fallback": (env_fallback, ["CONTROLLER_HOST", "AAP_HOSTNAME"]),

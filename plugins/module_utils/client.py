@@ -56,7 +56,6 @@ class Response:
         On subsequent calls, returns the cached value.
 
         :returns: Parsed JSON data
-        :raises EDAHTTPError: If the data is not valid JSON
         """
         if self._json is None:
             try:
@@ -92,8 +91,6 @@ class Client:
         :param token: Token for authentication (optional)
         :param timeout: Timeout for HTTP requests (optional)
         :param validate_certs: Whether to validate SSL certificates (optional)
-        :raises ValueError: If host is empty
-        :raises EDAHTTPError: If unable to parse the host URL
         """
         if not host:
             raise ValueError("Host must be a non-empty string.")
@@ -138,8 +135,6 @@ class Client:
         :param data: Data to send in the request body (optional)
         :param headers: HTTP headers for the request (optional)
         :returns: Response object with request results
-        :raises AuthError: On authentication error (HTTP 401)
-        :raises EDAHTTPError: On network or URL errors
         """
         try:
             raw_resp = self.session.open(
@@ -216,7 +211,6 @@ class Client:
         :param endpoint: API endpoint for the request
         :param kwargs: Additional parameters (data, headers, id)
         :returns: Response object with request results
-        :raises EDAHTTPError: If HTTP method is not specified
         """
         # In case someone is calling us directly; make sure we were given a
         # method, let's not just assume a GET
@@ -255,7 +249,6 @@ class Client:
         :param path: API endpoint for the GET request
         :param kwargs: Additional request parameters
         :returns: Response object
-        :raises EDAHTTPError: If response status is not 200 or 404
         """
         resp = self.request("GET", path, **kwargs)
         if resp.status in (200, 404):
@@ -268,7 +261,6 @@ class Client:
         :param path: API endpoint for the POST request
         :param kwargs: Additional request parameters (data, headers)
         :returns: Response object
-        :raises EDAHTTPError: If response status is not 201, 202, or 204
         """
         resp = self.request("POST", path, **kwargs)
         if resp.status in [201, 202, 204]:
@@ -281,7 +273,6 @@ class Client:
         :param path: API endpoint for the PATCH request
         :param kwargs: Additional request parameters (data, headers, id)
         :returns: Response object
-        :raises EDAHTTPError: If response status is not 200
         """
         resp = self.request("PATCH", path, **kwargs)
         if resp.status == 200:
@@ -294,7 +285,6 @@ class Client:
         :param path: API endpoint for the DELETE request
         :param kwargs: Additional request parameters (id)
         :returns: Response object
-        :raises EDAHTTPError: If response status is not 204
         """
         resp = self.request("DELETE", path, **kwargs)
         if resp.status == 204:
