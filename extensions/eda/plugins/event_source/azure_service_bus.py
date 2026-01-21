@@ -47,12 +47,7 @@ async def receive_events(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
-    """Receive events from service bus asynchronously.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments including connection string and queue name
-    :returns: None
-    """
+    """Receive events from service bus asynchronously."""
     servicebus_client = ServiceBusClient.from_connection_string(
         conn_str=args["conn_str"],
         logging_enable=bool(args.get("logging_enable", True)),
@@ -75,14 +70,7 @@ async def main(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
-    """Receive events from service bus in a loop.
-
-    Main entry point for the Azure Service Bus event source plugin.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments for the event source
-    :returns: None
-    """
+    """Receive events from service bus."""
     await receive_events(queue, args)
 
 

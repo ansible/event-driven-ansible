@@ -47,13 +47,7 @@ def watch(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Watch for changes and put events on the queue.
-
-    :param loop: The asyncio event loop
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments including path and ignore patterns
-    :returns: None
-    """
+    """Watch for changes and put events on the queue."""
     root_path = args["path"]
 
     class Handler(RegexMatchingEventHandler):
@@ -63,6 +57,7 @@ def watch(
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file creation events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -76,6 +71,7 @@ def watch(
             )
 
         def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file deletion events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -89,6 +85,7 @@ def watch(
             )
 
         def on_modified(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file modification events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -102,6 +99,7 @@ def watch(
             )
 
         def on_moved(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file move events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -127,15 +125,7 @@ def watch(
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Watch for changes to a file and put events on the queue.
-
-    Main entry point for the file watch event source plugin. Monitors file system
-    changes in the specified directory.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments for the event source
-    :returns: None
-    """
+    """Watch for changes to a file and put events on the queue."""
     loop = asyncio.get_event_loop()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as task_pool:

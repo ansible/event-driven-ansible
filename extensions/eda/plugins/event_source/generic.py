@@ -337,15 +337,7 @@ async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-    """Call the Generic Source Plugin.
-
-    Main entry point for the generic event source plugin. Creates and executes
-    a Generic instance with the provided configuration.
-
-    :param queue: The asyncio queue to put events into
-    :param args: Configuration arguments for the event source
-    :returns: None
-    """
+    """Generate events with custom configuration and timing options."""
     await Generic(queue, args)()
 
 

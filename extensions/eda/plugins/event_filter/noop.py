@@ -15,12 +15,5 @@ description:
 
 
 def main(event: dict[str, Any]) -> dict[str, Any]:
-    """Return the input event unchanged.
-
-    This is a no-operation filter that passes through the event without
-    any modifications.
-
-    :param event: The event dictionary to process
-    :returns: The same event dictionary without modifications
-    """
+    """Return the input event unchanged."""
     return event
