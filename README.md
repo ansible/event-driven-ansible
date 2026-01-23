@@ -33,6 +33,10 @@ Several event sources and event filters have been migrated from this collection 
 ### Deprecated Event Sources
 
 - `ansible.eda.azure_service_bus` → `azure.azcollection.azure_service_bus`
+- `ansible.eda.file` → `community.eda.file`
+- `ansible.eda.file_watch` → `community.eda.file_watch`
+- `ansible.eda.journald` → `community.eda.journald`
+- `ansible.eda.url_check` → `community.eda.url_check`
 
 ## Requirements
 

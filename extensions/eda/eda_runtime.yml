@@ -6,3 +6,23 @@ plugin_routing:
         removal_version: "3.0.0"
         warning_text: |
           Please use azure.azcollection.azure_service_bus instead.
+    file:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.file instead.
+    file_watch:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.file_watch instead.
+    journald:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.journald instead.
+    url_check:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.url_check instead.
