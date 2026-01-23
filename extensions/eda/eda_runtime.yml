@@ -1,0 +1,8 @@
+---
+plugin_routing:
+  event_source:
+    azure_service_bus:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use azure.azcollection.azure_service_bus instead.

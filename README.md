@@ -30,6 +30,10 @@ Several event sources and event filters have been migrated from this collection 
 
 **Note:** For backwards compatibility, these plugins remain available in the `ansible.eda` namespace and are automatically mapped to `eda.builtin`. However, they are no longer actively maintained in this collection. Please update your rulebooks to use the `eda.builtin` versions.
 
+### Deprecated Event Sources
+
+- `ansible.eda.azure_service_bus` → `azure.azcollection.azure_service_bus`
+
 ## Requirements
 
 ### Ansible version compatibility
