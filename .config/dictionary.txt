@@ -24,6 +24,7 @@ alinabuzachis
 antsibull
 auths
 awxuser
+azcollection
 basepython
 benthomasosn
 bindep
