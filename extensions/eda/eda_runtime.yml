@@ -1,5 +1,11 @@
 ---
 plugin_routing:
+  event_filter:
+    noop:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          No-op filter, simply stop using it.
   event_source:
     azure_service_bus:
       deprecation:
@@ -21,6 +27,11 @@ plugin_routing:
         removal_version: "3.0.0"
         warning_text: |
           Please use community.eda.journald instead.
+    tick:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use the eda.builtin.generic or eda.builtin.range source instead.
     url_check:
       deprecation:
         removal_version: "3.0.0"
