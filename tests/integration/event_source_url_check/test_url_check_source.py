@@ -109,7 +109,7 @@ def test_url_check_source_urls(
     time.sleep(10)
     runner.terminate()
 
-    (stdout, stderr) = runner.communicate()
+    stdout, stderr = runner.communicate()
     assert stdout is not None
     msgs = [line for line in stdout.decode().splitlines() if "msg" in line]
     assert len(msgs) == 3
