@@ -7,6 +7,16 @@ plugin_routing:
         warning_text: |
           No-op filter, simply stop using it.
   event_source:
+    aws_cloudtrail:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use amazon.aws.aws_cloudtrail instead.
+    aws_sqs_queue:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use amazon.aws.aws_sqs_queue instead.
     azure_service_bus:
       deprecation:
         removal_version: "3.0.0"
