@@ -131,7 +131,7 @@ async def webhook(request: web.Request) -> web.Response:
 def clean_host(host: str) -> str:
     """Remove port from host string if it exists."""
     if ":" in host:
-        return host.split(":")[0]
+        return host.split(":", maxsplit=1)[0]
     return host
 
 
