@@ -4,6 +4,12 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for listing credential input sources from EDA Controller.
+
+This module provides functionality to retrieve information about credential
+input sources from an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -112,6 +118,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
+    """Module entry point."""
     argument_spec = dict(
         target_credential=dict(type="str", required=False),
         source_credential=dict(type="str", required=False),
