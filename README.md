@@ -32,11 +32,18 @@ Several event sources and event filters have been migrated from this collection 
 
 ### Deprecated Event Sources
 
+- `ansible.eda.aws_cloudtrail` → `amazon.aws.aws_cloudtrail`
+- `ansible.eda.aws_sqs_queue` → `amazon.aws.aws_sqs_queue`
 - `ansible.eda.azure_service_bus` → `azure.azcollection.azure_service_bus`
 - `ansible.eda.file` → `community.eda.file`
 - `ansible.eda.file_watch` → `community.eda.file_watch`
 - `ansible.eda.journald` → `community.eda.journald`
+- `ansible.eda.tick` → use either `eda.builtin.generic` or `eda.builtin.range`
 - `ansible.eda.url_check` → `community.eda.url_check`
+
+### Deprecated Event Filters
+
+- `ansible.eda.noop` -- no replacement for it, simply stop using it
 
 ## Requirements
 
