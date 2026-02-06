@@ -297,7 +297,7 @@ class Generic:
         if not self.my_args.payload_file:
             return
         path = Path(self.my_args.payload_file)
-        if not path.is_file():
+        if not path.is_file():  # noqa: ASYNC240
             msg = f"File {self.my_args.payload_file} not found"
             raise ValueError(msg)
         with path.open(mode="r", encoding="utf-8") as file:  # noqa: ASYNC230
