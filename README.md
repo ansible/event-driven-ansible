@@ -147,7 +147,7 @@ See [CONTRIBUTING.md](https://github.com/ansible/event-driven-ansible/blob/main/
 
 If you installed this collection from either from Galaxy or GitHub, there may community help available on the [Ansible Forum](https://forum.ansible.com/).
 
-Red Hat customers are entitled to support for certified content through Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner. 
+Red Hat customers are entitled to support for certified content through Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner.
 
 ## Release notes
 
