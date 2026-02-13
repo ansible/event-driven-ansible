@@ -29,6 +29,7 @@ extensions/eda/plugins/event_source/file_watch.py
 extensions/eda/plugins/event_source/generic.py
 extensions/eda/plugins/event_source/journald.py
 extensions/eda/plugins/event_source/kafka.py
+extensions/eda/plugins/event_source/oauth_tokens.py
 extensions/eda/plugins/event_source/pg_listener.py
 extensions/eda/plugins/event_source/range.py
 extensions/eda/plugins/event_source/README.md

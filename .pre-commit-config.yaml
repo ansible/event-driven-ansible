@@ -51,7 +51,7 @@ repos:
       - id: mypy
         # empty args needed in order to match mypy cli behavior
         args: []
-        language_version: python3.9 # minimal supported version, keeps results consistent
+        language_version: python3.10 # minimal supported version, keeps results consistent
         additional_dependencies:
           - aiohttp
           - aiokafka
@@ -70,6 +70,8 @@ repos:
           - types-requests
           - watchdog>=5.0.0
           - xxhash
+          - pyjwt
+          - cryptography
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.13.3"
@@ -111,6 +113,8 @@ repos:
           - types-aiobotocore
           - watchdog>=5.0.0
           - xxhash
+          - pyjwt
+          - cryptography
   - repo: local
     hooks:
       - id: ansible-test-sanity
@@ -140,7 +144,7 @@ repos:
         entry: pip-compile --upgrade --no-annotate --strip-extras --unsafe-package=ansible-core --unsafe-package=doctutils --unsafe-package=setuptools --output-file=.config/constraints.txt .config/requirements.txt .config/requirements-test.txt .config/requirements-docs.txt
         files: ^.config\/.*requirements.*$
         language: python
-        language_version: "3.9" # minimal we support officially
+        language_version: "3.10" # minimal we support officially
         pass_filenames: false
         stages: [manual]
         additional_dependencies:
