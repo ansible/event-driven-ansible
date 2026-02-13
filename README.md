@@ -143,6 +143,12 @@ See [CONTRIBUTING.md](https://github.com/ansible/event-driven-ansible/blob/main/
 - [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) - Details on contributing to Ansible
 - [Contributing to Collections](https://docs.ansible.com/ansible/devel/dev_guide/developing_collections.html#contributing-to-collections) - How to check out collection git repositories correctly
 
+## Support
+
+If you installed this collection from either from Galaxy or GitHub, there may community help available on the [Ansible Forum](https://forum.ansible.com/).
+
+Red Hat customers are entitled to support for certified content through Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner.
+
 ## Release notes
 
 See Documentation tab on Automation Hub.
