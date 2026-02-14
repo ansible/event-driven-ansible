@@ -87,6 +87,14 @@ options:
       - A kafka group id.
     type: str
     default: null
+  client_id:
+    description:
+      - client_id (str) a name for this client.
+        This string is passed in each request to servers and can be used to identify specific server-side log entries
+        that correspond to this client.
+        Also submitted to GroupCoordinator for logging with respect to consumer group administration
+    type: str
+    default: null
   offset:
     description:
       - Where to automatically reset the offset.
@@ -134,6 +142,7 @@ EXAMPLES = r"""
       - "demo"
       - "demo2"
     group_id: "test"
+    client_id: "client-01"
     offset: "earliest"
     security_protocol: "SASL_PLAINTEXT"
     sasl_mechanism: "GSSAPI"
@@ -170,6 +179,7 @@ async def main(  # pylint: disable=R0914
     check_hostname = args.get("check_hostname", True)
     verify_mode = args.get("verify_mode", "CERT_REQUIRED")
     group_id = args.get("group_id")
+    client_id = args.get("client_id")
     offset = args.get("offset", "latest")
     encoding = args.get("encoding", "utf-8")
     security_protocol = args.get("security_protocol", "PLAINTEXT")
@@ -204,6 +214,7 @@ async def main(  # pylint: disable=R0914
     kafka_consumer = AIOKafkaConsumer(
         bootstrap_servers=f"{host}:{port}",
         group_id=group_id,
+        client_id=client_id,
         enable_auto_commit=True,
         max_poll_records=1,
         auto_offset_reset=offset,
