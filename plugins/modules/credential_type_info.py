@@ -4,6 +4,12 @@
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+"""Ansible module for listing credential types in EDA Controller.
+
+This module provides functionality to retrieve information about credential
+types from an Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type
@@ -83,6 +89,7 @@ from ..module_utils.errors import EDAError
 
 
 def main() -> None:
+    """Module entry point."""
     argument_spec = dict(
         name=dict(type="str", required=False),
     )
