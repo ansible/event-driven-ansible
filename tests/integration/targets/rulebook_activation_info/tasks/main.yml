@@ -1,0 +1,138 @@
+---
+# Copyright: Contributors to the Ansible project
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Rulebook activation info module integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
+
+  block:
+    - name: Generate a random_string for the test
+      set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_letters length=16') }}"
+      when: random_string is not defined
+
+    - name: Generate a ID for the test
+      set_fact:
+        test_id: "{{ random_string | to_uuid }}"
+      when: test_id is not defined
+
+    - name: Define variables for test resources
+      set_fact:
+        test_project_name: "Test_Project_Info_{{ test_id }}"
+        test_activation_name: "Test_Activation_Info_{{ test_id }}"
+        test_decision_env_name: "Test_DE_Info_{{ test_id }}"
+        test_credential_name: "Test_Cred_Info_{{ test_id }}"
+        image_url: "quay.io/ansible/awx:latest"
+        scm_url: "https://github.com/ansible/event-driven-ansible.git"
+        rulebook_name: "demo_controller_rulebook.yml"
+
+    - name: Create a credential for container registry
+      ansible.eda.credential:
+        state: present
+        name: "{{ test_credential_name }}"
+        description: "Container registry credential for testing"
+        credential_type_name: "Container Registry"
+        inputs:
+          host: "quay.io"
+          username: "test"
+          password: "test"
+        organization_name: Default
+
+    - name: Create a test project
+      ansible.eda.project:
+        name: "{{ test_project_name }}"
+        description: "Test Project for activation info"
+        url: "{{ scm_url }}"
+        organization_name: Default
+        state: present
+
+    - name: Wait for the project to be imported
+      register: project_status
+      until: project_status.projects[0].import_state == "completed"
+      retries: 30
+      delay: 2
+      ansible.eda.project_info:
+        name: "{{ test_project_name }}"
+
+    - name: Create a test decision environment
+      ansible.eda.decision_environment:
+        name: "{{ test_decision_env_name }}"
+        description: "Test Decision Environment for activation info"
+        credential: "{{ test_credential_name }}"
+        image_url: "{{ image_url }}"
+        organization_name: Default
+
+    - name: Create a test activation with restart_on_project_update
+      ansible.eda.rulebook_activation:
+        name: "{{ test_activation_name }}"
+        description: "Test activation for info module"
+        project_name: "{{ test_project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ test_decision_env_name }}"
+        organization_name: Default
+        restart_on_project_update: true
+        state: present
+
+    - name: List all activations in check mode
+      ansible.eda.rulebook_activation_info:
+      check_mode: true
+      register: r
+
+    - name: Check if activations are returned in check mode
+      assert:
+        that:
+          - "'activations' in r"
+          - r.restart_on_project_update is true
+
+    - name: List all activations
+      ansible.eda.rulebook_activation_info:
+      register: r
+
+    - name: Check if activations are returned
+      assert:
+        that:
+          - "'activations' in r"
+          - "r.activations | length > 0"
+
+    - name: Get specific activation info
+      ansible.eda.rulebook_activation_info:
+        name: "{{ test_activation_name }}"
+      register: r
+
+    - name: Verify specific activation is returned with restart_on_project_update field
+      assert:
+        that:
+          - "'activations' in r"
+          - "r.activations | length > 0"
+          - "test_activation_name in r.activations[0].name"
+          - "'restart_on_project_update' in r.activations[0]"
+
+  always:
+    - name: Clean up - activation
+      ansible.eda.rulebook_activation:
+        name: "{{ test_activation_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up - decision environment
+      ansible.eda.decision_environment:
+        name: "{{ test_decision_env_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up - project
+      ansible.eda.project:
+        name: "{{ test_project_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up - credential
+      ansible.eda.credential:
+        name: "{{ test_credential_name }}"
+        state: absent
+      ignore_errors: true

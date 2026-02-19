@@ -53,6 +53,31 @@
           - "'projects' in r"
           - "r['projects'] == []"
 
+    - name: Create project with auto-sync for info test
+      ansible.eda.project:
+        name: "TestProjectAutoSync"
+        url: "https://github.com/ansible/eda-sample-project"
+        description: "Test project with auto-sync"
+        organization_name: Default
+        update_revision_on_launch: true
+        scm_update_cache_timeout: 600
+        state: present
+
+    - name: Get project info with sync fields
+      ansible.eda.project_info:
+        name: "TestProjectAutoSync"
+      register: r
+
+    - name: Verify sync-related fields are present
+      assert:
+        that:
+          - "'projects' in r"
+          - "r['projects'] | length > 0"
+          - "'update_revision_on_launch' in r['projects'][0]"
+          - "'scm_update_cache_timeout' in r['projects'][0]"
+          - "'last_sync_at' in r['projects'][0] or r['projects'][0].last_sync_at is defined or r['projects'][0].last_sync_at is none"
+          - "'sync_status' in r['projects'][0] or r['projects'][0].sync_status is defined or r['projects'][0].sync_status is none"
+
   always:
     - name: Clean up - project
       ansible.eda.project:
@@ -60,4 +85,5 @@
         state: absent
       loop:
         - Example
+        - TestProjectAutoSync
       ignore_errors: true

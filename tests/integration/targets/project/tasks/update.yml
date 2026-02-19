@@ -71,3 +71,38 @@
   assert:
     that:
       - r.changed
+
+- name: Create project with update_revision_on_launch parameters
+  ansible.eda.project:
+    name: "{{ project_name }}_update_revision_on_launch"
+    url: "{{ url }}"
+    description: "Project with update_revision_on_launch enabled"
+    organization_name: Default
+    update_revision_on_launch: true
+    scm_update_cache_timeout: 300
+    state: present
+  register: r
+
+- name: Check project with update_revision_on_launch created
+  assert:
+    that:
+      - r.changed
+      - r.id is defined
+      - r.update_revision_on_launch is true
+
+- name: Update project update_revision_on_launch settings
+  ansible.eda.project:
+    name: "{{ project_name }}_update_revision_on_launch"
+    url: "{{ url }}"
+    description: "Project with update_revision_on_launch updated"
+    organization_name: Default
+    update_revision_on_launch: false
+    scm_update_cache_timeout: 0
+    state: present
+  register: r
+
+- name: Check project update_revision_on_launch updated
+  assert:
+    that:
+      - r.changed
+      - r.update_revision_on_launch is false
