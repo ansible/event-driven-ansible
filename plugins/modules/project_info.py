@@ -67,7 +67,11 @@ projects:
           "scm_type": "git",
           "signature_validation_credential_id": null,
           "url": "https://github.com/ansible/ansible-ui",
-          "verify_ssl": true
+          "verify_ssl": true,
+          "update_revision_on_launch": false,
+          "scm_update_cache_timeout": 0,
+          "last_sync_at": "2024-08-12T20:35:28.367702Z",
+          "sync_status": "success"
       },
   ]
 """  # NOQA
