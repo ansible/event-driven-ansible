@@ -613,7 +613,7 @@ def main() -> None:
 
     if restart:
         if not activation:
-          module.fail_json(msg="Cannot restart activation that does not exist.")
+            module.fail_json(msg="Cannot restart activation that does not exist.")
         try:
             result = controller.restart_if_needed(
                 activation,
