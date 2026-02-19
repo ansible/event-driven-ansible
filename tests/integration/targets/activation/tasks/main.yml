@@ -35,6 +35,8 @@
         project_name: "Test_Project_{{ test_id }}"
         token_value: "your_private_access_token_name"
         image_url: "quay.io/ansible/awx:latest"
+        project_update_revision_on_launch: true
+        project_scm_update_cache_timeout: 3600
         scm_url: https://github.com/ansible/event-driven-ansible.git
         rulebook_name: "demo_controller_rulebook.yml"
         event_stream_name: "Test_EventStream_{{ test_id }}"
@@ -166,6 +168,8 @@
         url: "{{ scm_url }}"
         credential: "{{ credential_name }}"
         organization_name: Default
+        update_revision_on_launch: "{{ project_update_revision_on_launch }}"
+        scm_update_cache_timeout: "{{ project_scm_update_cache_timeout }}"
         state: present
       register: project_creation
 
@@ -246,13 +250,14 @@
         _source_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name) | list | first }}"
         _copied_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name_copy) | list | first }}"
 
-    - name: Assert that rulebook activation was copied and all fields are equal except
-            'name', 'id', 'created_at', 'updated_at', 'modified_at',
-            'status' and 'status_message'
+    - name:
+        Assert that rulebook activation was copied and all fields are equal except
+        'name', 'id', 'created_at', 'updated_at', 'modified_at',
+        'status' and 'status_message'
       ansible.builtin.assert:
         that:
           - _source_activation | dict2items | rejectattr('key', 'in', ignored_fields) | items2dict ==
-             _copied_activation | dict2items | rejectattr('key', 'in', ignored_fields) | items2dict
+            _copied_activation | dict2items | rejectattr('key', 'in', ignored_fields) | items2dict
           - _source_activation.name + '_Copy' == _copied_activation.name
       vars:
         ignored_fields:
@@ -282,7 +287,7 @@
       assert:
         that:
           - _result.failed
-          - "\"Unable to access 'id' of the activation to copy from.\" in _result.msg"
+          - '"Unable to access ''id'' of the activation to copy from." in _result.msg'
 
     - name: Copy activation and use existing name
       ansible.eda.rulebook_activation_copy:
