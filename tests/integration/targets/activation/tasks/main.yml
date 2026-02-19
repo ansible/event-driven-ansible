@@ -691,6 +691,52 @@
         name: "{{ activation_name }}"
         state: absent
 
+    - name: Create activation with restart_on_project_update enabled
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_restart_on_update"
+        description: "Test activation with restart on project update"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        restart_on_project_update: true
+        state: present
+      register: r
+
+    - name: Assert activation with restart_on_project_update was created
+      assert:
+        that:
+          - r.changed
+          - r.id is defined
+
+    - name: Update activation restart_on_project_update to false
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_restart_on_update"
+        description: "Test activation with restart on project update disabled"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        restart_on_project_update: false
+        state: present
+      register: r
+
+    - name: Assert activation restart_on_project_update was updated
+      assert:
+        that:
+          - r.changed
+
+    - name: Delete activation with restart_on_project_update
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_restart_on_update"
+        state: absent
+      register: r
+
+    - name: Assert activation with restart_on_project_update was deleted
+      assert:
+        that:
+          - r.changed
+
   always:
     - name: Delete project
       ansible.eda.project:
@@ -709,6 +755,7 @@
         - "{{ activation_name_source_index }}"
         - "{{ activation_name_wrong_source }}"
         - "{{ activation_name_copy }}"
+        - "{{ activation_name }}_restart_on_update"
         - Invalid_activation
       ignore_errors: true
 
