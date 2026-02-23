@@ -121,7 +121,7 @@ options:
       - Used to indicate if an activation should restart after a project update.
     type: bool
     default: false
-    version_added: '2.11.0'
+    version_added: '2.12.0'
   event_streams:
     description:
       - A list of event stream names that this rulebook activation listens to.
@@ -280,7 +280,7 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import lookup_resource_id
+from ..module_utils.common import handle_api_error, lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -665,7 +665,9 @@ def main() -> None:
         )
         module.exit_json(**result)
     except EDAError as e:
-        module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
+        handle_api_error(
+            module, e, new_params=["restart_on_project_update"], min_version="2.7"
+        )
 
 
 if __name__ == "__main__":

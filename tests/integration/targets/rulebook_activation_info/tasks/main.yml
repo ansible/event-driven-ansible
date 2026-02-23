@@ -87,7 +87,7 @@
       assert:
         that:
           - "'activations' in r"
-          - r.restart_on_project_update is true
+          - r.activations[0].restart_on_project_update is true
 
     - name: List all activations
       ansible.eda.rulebook_activation_info:
