@@ -75,14 +75,14 @@ options:
         - Enable automatic project sync on activation launch
       type: bool
       default: False
-      version_added: 2.11.0
+      version_added: 2.12.0
     scm_update_cache_timeout:
       description:
         - Cache timeout in seconds for project updates (0 = no cache, max 86400).
         - Requires update_revision_on_launch to be true.
       type: int
       default: 0
-      version_added: 2.11.0
+      version_added: 2.12.0
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -139,7 +139,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import lookup_resource_id
+from ..module_utils.common import handle_api_error, lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -274,7 +274,12 @@ def main() -> None:
             item_type="project",
         )
     except EDAError as eda_err:
-        module.fail_json(msg=str(eda_err))
+        handle_api_error(
+            module,
+            eda_err,
+            new_params=["update_revision_on_launch", "scm_update_cache_timeout"],
+            min_version="2.7",
+        )
 
     if sync_enabled and project:
         sync_endpoint = f"{project_endpoint}/{ret['id']}/sync"
