@@ -18,6 +18,6 @@ build:
     - git fetch --unshallow || true
     - git fetch --tags
     - pip install --user tox
-    - python3 -m tox -e docs
+    - python3 -m tox -e py312-docs
     - mkdir -p $READTHEDOCS_OUTPUT
     - cp -r docs/build/html ${READTHEDOCS_OUTPUT}/
