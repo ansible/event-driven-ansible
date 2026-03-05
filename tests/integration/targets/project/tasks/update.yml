@@ -106,3 +106,14 @@
     that:
       - r.changed
       - r.update_revision_on_launch is false
+
+- name: Delete project with update_revision_on_launch
+  ansible.eda.project:
+    name: "{{ project_name }}_update_revision_on_launch"
+    state: absent
+  register: r
+
+- name: Check if project with update_revision_on_launch deleted
+  assert:
+    that:
+      - r.changed
