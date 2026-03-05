@@ -120,7 +120,7 @@ options:
     description:
       - Used to indicate if an activation should restart after a project update.
     type: bool
-    default: false
+    default: False
     version_added: '2.12.0'
   event_streams:
     description:
@@ -181,7 +181,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     state: disabled
-    restart_on_project_update: false
+    restart_on_project_update: False
 
 - name: Create a rulebook activation with event_streams option
   ansible.eda.rulebook_activation:
@@ -195,7 +195,7 @@ EXAMPLES = r"""
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
-    restart_on_project_update: false
+    restart_on_project_update: False
 
 - name: Rename a rulebook activation
   ansible.eda.rulebook_activation:
@@ -205,7 +205,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
-    restart_on_project_update: false
+    restart_on_project_update: False
 
 - name: Update a rulebook activation
   ansible.eda.rulebook_activation:
@@ -226,33 +226,33 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
-    restart_on_project_update: true
+    restart_on_project_update: True
 
 - name: Enable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: enabled
-    restart_on_project_update: false
+    restart_on_project_update: False
 
 - name: Disable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     new_name: "Example Rulebook Activation New Name"
     state: disabled
-    restart_on_project_update: false
+    restart_on_project_update: False
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - Restart"
     organization_name: "Default"
     restart: true
-    restart_on_project_update: false
+    restart_on_project_update: False
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
-    restart_on_project_update: false
+    restart_on_project_update: False
 """
 
 
@@ -496,9 +496,13 @@ def create_params(
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
-    activation_params["restart_on_project_update"] = module.params[
-        "restart_on_project_update"
-    ]
+
+    restart_on_project_update = module.params["restart_on_project_update"]
+
+    if restart_on_project_update:
+        activation_params["restart_on_project_update"] = module.params[
+            "restart_on_project_update"
+        ]
     return activation_params
 
 
@@ -612,8 +616,6 @@ def main() -> None:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
 
     if restart:
-        if not activation:
-            module.fail_json(msg="Cannot restart activation that does not exist.")
         try:
             result = controller.restart_if_needed(
                 activation,

@@ -95,6 +95,11 @@
   ansible.eda.project:
     name: "{{ item }}"
     state: absent
+  retries: 3
+  delay: 2
+  until: r is not failed
+  register: r
+  ignore_errors: true
 
 - name: Check create project with missing url
   ansible.eda.project:

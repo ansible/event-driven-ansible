@@ -120,7 +120,7 @@ EXAMPLES = r"""
     organization_name: Default
     state: present
     update_revision_on_launch: True
-    scm_update_cache_timeout: 3000
+    scm_update_cache_timeout: 3600
 
 - name: Delete the project
   ansible.eda.project:
@@ -300,6 +300,8 @@ def main() -> None:
     scm_branch = module.params.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
+    update_revision_on_launch = module.params.get("update_revision_on_launch")
+    scm_update_cache_timeout = module.params.get("scm_update_cache_timeout")
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -347,12 +349,14 @@ def main() -> None:
     else:
         project_params["name"] = project_name
 
-    project_params["update_revision_on_launch"] = module.params.get(
-        "update_revision_on_launch"
-    )
-    project_params["scm_update_cache_timeout"] = module.params.get(
-        "scm_update_cache_timeout"
-    )
+    if update_revision_on_launch:
+        project_params["update_revision_on_launch"] = module.params.get(
+            "update_revision_on_launch"
+        )
+    if scm_update_cache_timeout:
+        project_params["scm_update_cache_timeout"] = module.params.get(
+            "scm_update_cache_timeout"
+        )
     # If the state was present and we can let the module build or update the existing project,
     # this will return on its own
     try:
