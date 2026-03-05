@@ -15,6 +15,8 @@ build:
     - asdf --version
     - asdf plugin add github-cli
     - asdf install
+    - asdf plugin add python
+    - asdf install python 3.11.15
     - git fetch --unshallow || true
     - git fetch --tags
     - pip install --user tox
