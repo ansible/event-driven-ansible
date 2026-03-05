@@ -70,6 +70,19 @@ options:
       type: bool
       default: False
       version_added: 2.2.0
+    update_revision_on_launch:
+      description:
+        - Enable automatic project sync on activation launch
+      type: bool
+      default: False
+      version_added: 2.12.0
+    scm_update_cache_timeout:
+      description:
+        - Cache timeout in seconds for project updates (0 = no cache, max 86400).
+        - Requires update_revision_on_launch to be true.
+      type: int
+      default: 0
+      version_added: 2.12.0
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -99,6 +112,8 @@ EXAMPLES = r"""
     scm_branch: "devel"
     organization_name: Default
     state: present
+    update_revision_on_launch: True
+    scm_update_cache_timeout: 3600
 
 - name: Delete the project
   ansible.eda.project:
@@ -124,7 +139,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import lookup_resource_id
+from ..module_utils.common import handle_api_error, lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -141,6 +156,8 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
         sync=dict(type="bool", default=False),
+        update_revision_on_launch=dict(type="bool", default=False),
+        scm_update_cache_timeout=dict(type="int", default=0),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -194,6 +211,8 @@ def main() -> None:
     scm_branch = module.params.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
+    update_revision_on_launch = module.params.get("update_revision_on_launch")
+    scm_update_cache_timeout = module.params.get("scm_update_cache_timeout")
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -241,6 +260,14 @@ def main() -> None:
     else:
         project_params["name"] = project_name
 
+    if update_revision_on_launch:
+        project_params["update_revision_on_launch"] = module.params.get(
+            "update_revision_on_launch"
+        )
+    if scm_update_cache_timeout:
+        project_params["scm_update_cache_timeout"] = module.params.get(
+            "scm_update_cache_timeout"
+        )
     # If the state was present and we can let the module build or update the existing project,
     # this will return on its own
     try:
@@ -251,7 +278,12 @@ def main() -> None:
             item_type="project",
         )
     except EDAError as eda_err:
-        module.fail_json(msg=str(eda_err))
+        handle_api_error(
+            module,
+            eda_err,
+            new_params=["update_revision_on_launch", "scm_update_cache_timeout"],
+            min_version="2.7",
+        )
 
     if sync_enabled and project:
         sync_endpoint = f"{project_endpoint}/{ret['id']}/sync"
