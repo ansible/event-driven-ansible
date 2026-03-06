@@ -727,10 +727,13 @@ def test_feedback_queue_timeout(myqueue: MockQueue) -> None:
             coro.close()
         raise asyncio.TimeoutError
 
-    with patch(
-        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
-        new=MockConsumerForTimeout,
-    ), patch("asyncio.wait_for", side_effect=mock_wait_for):
+    with (
+        patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=MockConsumerForTimeout,
+        ),
+        patch("asyncio.wait_for", side_effect=mock_wait_for),
+    ):
         asyncio.run(
             kafka_main(
                 myqueue,
