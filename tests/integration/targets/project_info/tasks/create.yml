@@ -6,7 +6,7 @@
   ansible.eda.project:
     name: Example
     description: "Example project description"
-    url: "https://example.com/project1"
+    url: "https://github.com/ansible/event-driven-ansible"
     organization_name: Default
     state: present
   register: r

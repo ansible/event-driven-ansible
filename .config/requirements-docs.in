@@ -7,3 +7,4 @@ myst-parser
 setuptools<82 # https://issues.redhat.com/browse/AAH-3375
 sphinx
 sphinx-ansible-theme>=0.10.3
+tox>=4.15.1,<4.48.0 # tox 4.48.x has AttributeError in --showconfig

@@ -82,6 +82,7 @@ ruleset
 rulesets
 selectattr
 servicebus
+showconfig
 skipsdist
 snakeoil
 sscg

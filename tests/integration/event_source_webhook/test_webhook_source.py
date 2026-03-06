@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from .. import TESTS_PATH
-from ..utils import CLIRunner
+from ..utils import CLIRunner, wait_for_http_server
 
 
 def wait_for_events(proc: subprocess.Popen[bytes], timeout: float = 15.0) -> None:
@@ -60,6 +60,7 @@ def test_webhook_source_sanity(
     subprocess_teardown(proc)
 
     wait_for_events(proc)
+    wait_for_http_server(port=port)
 
     for msg in msgs:
         headers = {"Authorization": "Bearer secret"}
@@ -88,6 +89,7 @@ def test_webhook_source_with_busy_port(
     subprocess_teardown(proc1)
 
     wait_for_events(proc1)
+    wait_for_http_server(port=5000)
 
     proc2 = CLIRunner(rules=rules_file, debug=True).run_in_background()
     proc2.wait(timeout=15)
@@ -128,6 +130,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown: Callable[..., None]) ->
     subprocess_teardown(proc)
 
     wait_for_events(proc)
+    wait_for_http_server(port=port)
 
     for msg, digest in msgs:
         headers = {"x-hub-signature-256": digest}
