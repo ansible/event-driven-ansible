@@ -13,6 +13,43 @@ from . import TESTS_PATH
 DEFAULT_TEST_TIMEOUT: int = 120 if sys.platform == "darwin" else 25
 
 
+def wait_for_http_server(
+    host: str = "localhost",
+    port: int = 5000,
+    timeout: int = 15,
+    path: str = "/",
+) -> None:
+    """
+    Wait for HTTP server to be ready by checking if the port is listening.
+
+    Args:
+        host: Server host
+        port: Server port
+        timeout: Maximum time to wait in seconds
+        path: Optional path to check (currently unused, reserved for future health checks)
+
+    Raises:
+        TimeoutError: If server is not ready within timeout
+    """
+    start_time = time.time()
+    first_attempt = True
+
+    while time.time() - start_time < timeout:
+        try:
+            with socket.create_connection((host, port), timeout=1):
+                print(f"HTTP server at {host}:{port} is ready")
+                return
+        except (socket.timeout, socket.error, OSError):
+            if first_attempt:
+                print(f"Waiting for HTTP server at {host}:{port} to be ready...")
+                first_attempt = False
+            time.sleep(0.5)
+
+    raise TimeoutError(
+        f"HTTP server at {host}:{port} not ready after {timeout} seconds"
+    )
+
+
 def wait_for_kafka_ready(
     bootstrap_servers: str = "localhost:9092",
     timeout: int = 30,
