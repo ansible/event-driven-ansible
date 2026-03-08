@@ -4,6 +4,6 @@ attrs
 galaxy-importer>=0.4.24
 mk>=2.6.1
 myst-parser
-setuptools<82 # https://issues.redhat.com/browse/AAH-3375
+setuptools<83 # https://issues.redhat.com/browse/AAH-3375
 sphinx
 sphinx-ansible-theme>=0.10.3
