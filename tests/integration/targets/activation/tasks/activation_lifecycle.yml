@@ -118,6 +118,41 @@
         that:
           - result.changed
 
+    - name: Create activation with restart_on_project_update enabled
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_restart_on_update"
+        description: "Test activation with restart_on_project_update"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        enabled: false
+        restart_on_project_update: true
+        organization_name: "{{ organization_name }}"
+      register: result
+
+    - name: Verify activation creation with restart_on_project_update
+      assert:
+        that:
+          - result.changed
+
+    - name: Get activation info to verify restart_on_project_update
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}_restart_on_update"
+      register: activation_info
+
+    - name: Verify restart_on_project_update is set
+      assert:
+        that:
+          - activation_info.activations | length > 0
+          - "'restart_on_project_update' in activation_info.activations[0]"
+          - activation_info.activations[0].restart_on_project_update is true
+
+    - name: Delete activation with restart_on_project_update
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_restart_on_update"
+        state: absent
+      ignore_errors: true
+
   always:
     - name: Delete project
       ansible.eda.project:
