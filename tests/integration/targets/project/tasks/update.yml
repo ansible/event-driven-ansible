@@ -36,7 +36,8 @@
     name: "{{ project_name }}_new"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
-    url: "https://example.com/project1"
+    url: "https://github.com/ansible/event-driven-ansible"
+    proxy: "{{ proxy }}"
     organization_name: Default
     state: present
   register: r
@@ -51,7 +52,8 @@
     name: "{{ project_name }}_new"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
-    url: "https://example.com/project1"
+    url: "https://github.com/ansible/event-driven-ansible"
+    proxy: "{{ proxy }}"
     organization_name: Default
     state: present
   register: r
