@@ -204,7 +204,7 @@ def wait_for_project_sync(
 
         except EDAError:
             raise
-        except Exception as e:
+        except Exception:
             # Continue polling on transient errors
             pass
 
