@@ -4,7 +4,6 @@ import subprocess
 import time
 from typing import Callable
 
-import pytest
 import requests
 
 from .. import TESTS_PATH
@@ -27,9 +26,7 @@ def wait_for_events(proc: subprocess.Popen[bytes], timeout: float = 15.0) -> Non
             raise TimeoutError("Timeout waiting for events")
 
 
-def test_webhook_source_sanity(
-    subprocess_teardown: Callable[..., None]
-) -> None:
+def test_webhook_source_sanity(subprocess_teardown: Callable[..., None]) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
@@ -85,14 +82,18 @@ def test_webhook_source_with_busy_port(
     env["WH_PORT"] = str(port)
 
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
-    proc1 = CLIRunner(rules=rules_file, envvars="WH_PORT", env=env, debug=True).run_in_background()
+    proc1 = CLIRunner(
+        rules=rules_file, envvars="WH_PORT", env=env, debug=True
+    ).run_in_background()
     subprocess_teardown(proc1)
 
     wait_for_events(proc1)
     wait_for_http_server(port=port)
 
     # Try to start another process on the same port - should fail
-    proc2 = CLIRunner(rules=rules_file, envvars="WH_PORT", env=env, debug=True).run_in_background()
+    proc2 = CLIRunner(
+        rules=rules_file, envvars="WH_PORT", env=env, debug=True
+    ).run_in_background()
     proc2.wait(timeout=15)
     stdout, _unused_stderr = proc2.communicate()
     assert "address already in use" in stdout.decode()

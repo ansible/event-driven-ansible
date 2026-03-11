@@ -22,6 +22,7 @@ def get_free_port() -> int:
         port: int = s.getsockname()[1]
     return port
 
+
 # socket.getfqdn() and socket.gethostbyname() can be slow on macOS;
 # hence, extend the timeout
 DEFAULT_TEST_TIMEOUT: int = 120 if sys.platform == "darwin" else 25
