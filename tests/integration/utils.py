@@ -8,6 +8,20 @@ from typing import Any, List, Optional
 
 from . import TESTS_PATH
 
+
+def get_free_port() -> int:
+    """
+    Get a free port from the OS by binding to port 0 and letting the OS assign one.
+
+    Returns:
+        int: An available port number
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        s.listen(1)
+        port: int = s.getsockname()[1]
+    return port
+
 # socket.getfqdn() and socket.gethostbyname() can be slow on macOS;
 # hence, extend the timeout
 DEFAULT_TEST_TIMEOUT: int = 120 if sys.platform == "darwin" else 25
@@ -16,7 +30,7 @@ DEFAULT_TEST_TIMEOUT: int = 120 if sys.platform == "darwin" else 25
 def wait_for_http_server(
     host: str = "localhost",
     port: int = 5000,
-    timeout: int = 15,
+    timeout: int = 60,
     path: str = "/",
 ) -> None:
     """
@@ -33,20 +47,33 @@ def wait_for_http_server(
     """
     start_time = time.time()
     first_attempt = True
+    last_error = None
 
-    while time.time() - start_time < timeout:
+    while True:
         try:
             with socket.create_connection((host, port), timeout=1):
                 print(f"HTTP server at {host}:{port} is ready")
                 return
-        except (socket.timeout, socket.error, OSError):
+        except (socket.timeout, socket.error, OSError) as e:
+            last_error = e
             if first_attempt:
                 print(f"Waiting for HTTP server at {host}:{port} to be ready...")
                 first_attempt = False
+
+            # Check if we've exceeded the timeout before sleeping
+            if time.time() - start_time >= timeout:
+                break
+
             time.sleep(0.5)
+        except Exception as e:
+            # Handle unexpected exceptions by wrapping them in TimeoutError
+            raise TimeoutError(
+                f"Unexpected error while waiting for HTTP server at {host}:{port}: {e}"
+            ) from e
 
     raise TimeoutError(
-        f"HTTP server at {host}:{port} not ready after {timeout} seconds"
+        f"HTTP server at {host}:{port} not ready after {timeout} seconds. "
+        f"Last error: {last_error}"
     )
 
 

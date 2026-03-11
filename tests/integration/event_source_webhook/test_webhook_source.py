@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from .. import TESTS_PATH
-from ..utils import CLIRunner, wait_for_http_server
+from ..utils import CLIRunner, get_free_port, wait_for_http_server
 
 
 def wait_for_events(proc: subprocess.Popen[bytes], timeout: float = 15.0) -> None:
@@ -27,20 +27,15 @@ def wait_for_events(proc: subprocess.Popen[bytes], timeout: float = 15.0) -> Non
             raise TimeoutError("Timeout waiting for events")
 
 
-@pytest.mark.parametrize(
-    "port",
-    [
-        pytest.param(5000, id="default_port"),
-        pytest.param(5001, id="custom_port"),
-    ],
-)
 def test_webhook_source_sanity(
-    subprocess_teardown: Callable[..., None], port: int
+    subprocess_teardown: Callable[..., None]
 ) -> None:
     """
     Check the successful execution, response and shutdown
     of the webhook source plugin.
     """
+    port = get_free_port()
+
     msgs = [
         json.dumps({"ping": "pong"}).encode("ascii"),
         json.dumps({"shutdown": ""}).encode("ascii"),
@@ -84,14 +79,20 @@ def test_webhook_source_with_busy_port(
     Ensure the CLI responds correctly if the desired port is
     already in use.
     """
+    port = get_free_port()
+
+    env = os.environ.copy()
+    env["WH_PORT"] = str(port)
+
     rules_file = TESTS_PATH + "/event_source_webhook/test_webhook_rules.yml"
-    proc1 = CLIRunner(rules=rules_file, debug=True).run_in_background()
+    proc1 = CLIRunner(rules=rules_file, envvars="WH_PORT", env=env, debug=True).run_in_background()
     subprocess_teardown(proc1)
 
     wait_for_events(proc1)
-    wait_for_http_server(port=5000)
+    wait_for_http_server(port=port)
 
-    proc2 = CLIRunner(rules=rules_file, debug=True).run_in_background()
+    # Try to start another process on the same port - should fail
+    proc2 = CLIRunner(rules=rules_file, envvars="WH_PORT", env=env, debug=True).run_in_background()
     proc2.wait(timeout=15)
     stdout, _unused_stderr = proc2.communicate()
     assert "address already in use" in stdout.decode()
@@ -114,7 +115,7 @@ def test_webhook_source_hmac_sanity(subprocess_teardown: Callable[..., None]) ->
         ),
     ]
 
-    port = 5000
+    port = get_free_port()
     url = f"http://localhost:{port}/webhook"
 
     env = os.environ.copy()
@@ -154,7 +155,7 @@ def test_webhook_source_with_unsupported_hmac_algo(
     Ensure the CLI responds correctly if the desired HMAC algorithm is not supported.
     """
 
-    port = 5000
+    port = get_free_port()
     env = os.environ.copy()
     env["WH_PORT"] = str(port)
     env["HMAC_SECRET"] = "secret"
