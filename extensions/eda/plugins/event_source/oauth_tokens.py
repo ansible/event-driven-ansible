@@ -25,7 +25,7 @@ import logging
 import time
 import uuid
 from abc import abstractmethod
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
 import cryptography
