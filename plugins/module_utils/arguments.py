@@ -3,12 +3,22 @@
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
+"""Module for defining Ansible module arguments for Event-Driven Ansible.
+
+This module contains argument specifications for authentication
+and connection to the Event-Driven Ansible controller.
+"""
+
 from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type
 
 from ansible.module_utils.basic import env_fallback
 
+#: Argument specification for EDA controller authentication.
+#:
+#: Defines parameters for connecting to the Event-Driven Ansible controller,
+#: including host, credentials, SSL validation, and timeouts.
 AUTH_ARGSPEC: dict[str, dict[str, object]] = {
     "controller_host": {
         "fallback": (env_fallback, ["CONTROLLER_HOST", "AAP_HOSTNAME"]),
