@@ -438,7 +438,8 @@ async def receive_msg(
             if eda_feedback_queue:
                 try:
                     await asyncio.wait_for(
-                        eda_feedback_queue.get(), timeout=feedback_timeout,
+                        eda_feedback_queue.get(),
+                        timeout=feedback_timeout,
                     )
                     await kafka_consumer.commit()
                 except asyncio.TimeoutError:
