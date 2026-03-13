@@ -116,6 +116,12 @@ options:
       - This field will be removed in version 3.0.0.
     type: bool
     default: true
+  restart_on_project_update:
+    description:
+      - Used to indicate if an activation should restart after a project update.
+    type: bool
+    default: False
+    version_added: '2.12.0'
   event_streams:
     description:
       - A list of event stream names that this rulebook activation listens to.
@@ -175,6 +181,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     state: disabled
+    restart_on_project_update: False
 
 - name: Create a rulebook activation with event_streams option
   ansible.eda.rulebook_activation:
@@ -188,6 +195,7 @@ EXAMPLES = r"""
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
+    restart_on_project_update: False
 
 - name: Rename a rulebook activation
   ansible.eda.rulebook_activation:
@@ -197,6 +205,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
+    restart_on_project_update: False
 
 - name: Update a rulebook activation
   ansible.eda.rulebook_activation:
@@ -208,27 +217,42 @@ EXAMPLES = r"""
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
 
+- name: Restart a rulebook activation on project update
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    log_level: debug
+    restart_policy: always
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    restart_on_project_update: True
+
 - name: Enable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: enabled
+    restart_on_project_update: False
 
 - name: Disable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     new_name: "Example Rulebook Activation New Name"
     state: disabled
+    restart_on_project_update: False
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - Restart"
     organization_name: "Default"
     restart: true
+    restart_on_project_update: False
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
+    restart_on_project_update: False
 """
 
 
@@ -256,7 +280,7 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import lookup_resource_id
+from ..module_utils.common import handle_api_error, lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -473,6 +497,12 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
+    restart_on_project_update = module.params["restart_on_project_update"]
+
+    if restart_on_project_update:
+        activation_params["restart_on_project_update"] = module.params[
+            "restart_on_project_update"
+        ]
     return activation_params
 
 
@@ -524,6 +554,7 @@ def main() -> None:
         state=dict(
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
+        restart_on_project_update=dict(type="bool", default=False),
     )
 
     # Define the state the activation is transitioning to, and uses
@@ -636,7 +667,9 @@ def main() -> None:
         )
         module.exit_json(**result)
     except EDAError as e:
-        module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
+        handle_api_error(
+            module, e, new_params=["restart_on_project_update"], min_version="2.7"
+        )
 
 
 if __name__ == "__main__":
