@@ -169,7 +169,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import handle_api_error, lookup_resource_id
+from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -303,6 +303,12 @@ def main() -> None:
     update_revision_on_launch = module.params.get("update_revision_on_launch")
     scm_update_cache_timeout = module.params.get("scm_update_cache_timeout")
 
+    # Validate that update_revision_on_launch is enabled when scm_update_cache_timeout is set
+    if scm_update_cache_timeout and scm_update_cache_timeout > 0 and not update_revision_on_launch:
+        module.fail_json(
+            msg="scm_update_cache_timeout requires update_revision_on_launch to be true"
+        )
+
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         try:
@@ -349,11 +355,11 @@ def main() -> None:
     else:
         project_params["name"] = project_name
 
-    if update_revision_on_launch:
+    if "update_revision_on_launch" in module.params and module.params.get("update_revision_on_launch") is not None:
         project_params["update_revision_on_launch"] = module.params.get(
             "update_revision_on_launch"
         )
-    if scm_update_cache_timeout:
+    if "scm_update_cache_timeout" in module.params and module.params.get("scm_update_cache_timeout") is not None:
         project_params["scm_update_cache_timeout"] = module.params.get(
             "scm_update_cache_timeout"
         )
@@ -367,12 +373,7 @@ def main() -> None:
             item_type="project",
         )
     except EDAError as eda_err:
-        handle_api_error(
-            module,
-            eda_err,
-            new_params=["update_revision_on_launch", "scm_update_cache_timeout"],
-            min_version="2.7",
-        )
+        module.fail_json(msg=str(eda_err))
 
     # Wait for project import to complete if project was created or updated
     if wait_for_completion and ret.get("changed") and ret.get("id"):

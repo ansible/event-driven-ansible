@@ -280,7 +280,7 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
 from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
-from ..module_utils.common import handle_api_error, lookup_resource_id
+from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
 
@@ -497,9 +497,7 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    restart_on_project_update = module.params["restart_on_project_update"]
-
-    if restart_on_project_update:
+    if "restart_on_project_update" in module.params and module.params.get("restart_on_project_update") is not None:
         activation_params["restart_on_project_update"] = module.params[
             "restart_on_project_update"
         ]
@@ -669,10 +667,7 @@ def main() -> None:
         )
         module.exit_json(**result)
     except EDAError as e:
-        handle_api_error(
-            module, e, new_params=["restart_on_project_update"], min_version="2.7"
-        )
-
+        module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
 
 if __name__ == "__main__":
     main()

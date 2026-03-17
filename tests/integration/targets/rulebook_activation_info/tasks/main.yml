@@ -27,6 +27,7 @@
         test_activation_name: "Test_Activation_Info_{{ test_id }}"
         test_decision_env_name: "Test_DE_Info_{{ test_id }}"
         test_credential_name: "Test_Cred_Info_{{ test_id }}"
+        test_aap_credential_name: "Test_AAP_Cred_Info_{{ test_id }}"
         image_url: "quay.io/ansible/awx:latest"
         scm_url: "https://github.com/ansible/event-driven-ansible.git"
         rulebook_name: "demo_controller_rulebook.yml"
@@ -67,6 +68,18 @@
         image_url: "{{ image_url }}"
         organization_name: Default
 
+    - name: Create AAP credential
+      ansible.eda.credential:
+        state: present
+        name: "{{ test_aap_credential_name }}"
+        credential_type_name: Red Hat Ansible Automation Platform
+        organization_name: Default
+        inputs:
+          host: "{{ aap_hostname }}"
+          username: "{{ aap_username }}"
+          password: "{{ aap_password }}"
+      register: AAP_credential
+
     - name: Create a test activation with restart_on_project_update
       ansible.eda.rulebook_activation:
         name: "{{ test_activation_name }}"
@@ -74,6 +87,8 @@
         project_name: "{{ test_project_name }}"
         rulebook_name: "{{ rulebook_name }}"
         decision_environment_name: "{{ test_decision_env_name }}"
+        eda_credentials:
+          - "{{ test_aap_credential_name }}"
         organization_name: Default
         restart_on_project_update: true
         state: present
@@ -138,6 +153,12 @@
     - name: Clean up - project
       ansible.eda.project:
         name: "{{ test_project_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up - AAP credential
+      ansible.eda.credential:
+        name: "{{ test_aap_credential_name }}"
         state: absent
       ignore_errors: true
 

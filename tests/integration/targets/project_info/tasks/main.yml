@@ -75,8 +75,6 @@
           - "r['projects'] | length > 0"
           - "'update_revision_on_launch' in r['projects'][0]"
           - "'scm_update_cache_timeout' in r['projects'][0]"
-          - "'last_sync_at' in r['projects'][0] or r['projects'][0].last_sync_at is defined or r['projects'][0].last_sync_at is none"
-          - "'sync_status' in r['projects'][0] or r['projects'][0].sync_status is defined or r['projects'][0].sync_status is none"
 
   always:
     - name: Clean up - project
