@@ -8,12 +8,6 @@ on:
       - "v*.*"
   pull_request:
     branches: ["main"]
-  # Run the tox tests every 8 hours.
-  # This will help to identify faster if
-  # there is a CI failure related to a
-  # change in any dependency.
-  schedule:
-    - cron: '0 */8 * * *'
   # Run on demand
   workflow_dispatch:
 
