@@ -77,6 +77,19 @@ options:
         - This prevents race conditions when immediately deleting or using a project after creation.
       type: bool
       default: True
+    update_revision_on_launch:
+      description:
+        - Enable automatic project sync on activation launch
+      type: bool
+      default: False
+      version_added: 2.12.0
+    scm_update_cache_timeout:
+      description:
+        - Cache timeout in seconds for project updates (0 = no cache, max 86400).
+        - Requires update_revision_on_launch to be true.
+      type: int
+      default: 0
+      version_added: 2.12.0
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -106,6 +119,8 @@ EXAMPLES = r"""
     scm_branch: "devel"
     organization_name: Default
     state: present
+    update_revision_on_launch: True
+    scm_update_cache_timeout: 3600
 
 - name: Delete the project
   ansible.eda.project:
@@ -229,6 +244,8 @@ def main() -> None:
         state=dict(choices=["present", "absent"], default="present"),
         sync=dict(type="bool", default=False),
         wait=dict(type="bool", default=True),
+        update_revision_on_launch=dict(type="bool", default=False),
+        scm_update_cache_timeout=dict(type="int", default=0),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -283,6 +300,18 @@ def main() -> None:
     scm_branch = module.params.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
+    update_revision_on_launch = module.params.get("update_revision_on_launch")
+    scm_update_cache_timeout = module.params.get("scm_update_cache_timeout")
+
+    # Validate that update_revision_on_launch is enabled when scm_update_cache_timeout is set
+    if (
+        scm_update_cache_timeout
+        and scm_update_cache_timeout > 0
+        and not update_revision_on_launch
+    ):
+        module.fail_json(
+            msg="scm_update_cache_timeout requires update_revision_on_launch to be true"
+        )
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -330,6 +359,20 @@ def main() -> None:
     else:
         project_params["name"] = project_name
 
+    if (
+        "update_revision_on_launch" in module.params
+        and module.params.get("update_revision_on_launch") is not None
+    ):
+        project_params["update_revision_on_launch"] = module.params.get(
+            "update_revision_on_launch"
+        )
+    if (
+        "scm_update_cache_timeout" in module.params
+        and module.params.get("scm_update_cache_timeout") is not None
+    ):
+        project_params["scm_update_cache_timeout"] = module.params.get(
+            "scm_update_cache_timeout"
+        )
     # If the state was present and we can let the module build or update the existing project,
     # this will return on its own
     try:

@@ -40,4 +40,6 @@
       loop:
         - "{{ project_name }}"
         - "{{ project_name }}_new"
+        - "{{ project_name }}_test_partial"
+        - "{{ project_name }}_update_revision_on_launch"
       ignore_errors: true

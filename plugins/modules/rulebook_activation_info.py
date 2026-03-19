@@ -71,7 +71,8 @@ activations:
       "eda_credentials": [],
       "k8s_service_name": "",
       "event_streams": [],
-      "swap_single_source": false
+      "swap_single_source": false,
+      "restart_on_project_update": false
     }
   ]
 """
