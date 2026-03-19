@@ -497,7 +497,10 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
-    if "restart_on_project_update" in module.params and module.params.get("restart_on_project_update") is not None:
+    if (
+        "restart_on_project_update" in module.params
+        and module.params.get("restart_on_project_update") is not None
+    ):
         activation_params["restart_on_project_update"] = module.params[
             "restart_on_project_update"
         ]
@@ -615,7 +618,7 @@ def main() -> None:
 
     if restart:
         if not activation:
-          module.fail_json(msg="Cannot restart activation that does not exist.")
+            module.fail_json(msg="Cannot restart activation that does not exist.")
         try:
             result = controller.restart_if_needed(
                 activation,
@@ -668,6 +671,7 @@ def main() -> None:
         module.exit_json(**result)
     except EDAError as e:
         module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
+
 
 if __name__ == "__main__":
     main()

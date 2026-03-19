@@ -304,7 +304,11 @@ def main() -> None:
     scm_update_cache_timeout = module.params.get("scm_update_cache_timeout")
 
     # Validate that update_revision_on_launch is enabled when scm_update_cache_timeout is set
-    if scm_update_cache_timeout and scm_update_cache_timeout > 0 and not update_revision_on_launch:
+    if (
+        scm_update_cache_timeout
+        and scm_update_cache_timeout > 0
+        and not update_revision_on_launch
+    ):
         module.fail_json(
             msg="scm_update_cache_timeout requires update_revision_on_launch to be true"
         )
@@ -355,11 +359,17 @@ def main() -> None:
     else:
         project_params["name"] = project_name
 
-    if "update_revision_on_launch" in module.params and module.params.get("update_revision_on_launch") is not None:
+    if (
+        "update_revision_on_launch" in module.params
+        and module.params.get("update_revision_on_launch") is not None
+    ):
         project_params["update_revision_on_launch"] = module.params.get(
             "update_revision_on_launch"
         )
-    if "scm_update_cache_timeout" in module.params and module.params.get("scm_update_cache_timeout") is not None:
+    if (
+        "scm_update_cache_timeout" in module.params
+        and module.params.get("scm_update_cache_timeout") is not None
+    ):
         project_params["scm_update_cache_timeout"] = module.params.get(
             "scm_update_cache_timeout"
         )
