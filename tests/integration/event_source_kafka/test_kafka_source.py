@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import io
 import json
 import os
 import platform
@@ -5,6 +8,7 @@ import re
 import subprocess
 from typing import Any, Generator, Optional
 
+import fastavro
 import pytest
 from kafka import KafkaProducer
 
@@ -47,6 +51,7 @@ def send_kafka_messages_and_run_test(
     expected_output_pattern: str,
     expected_match_count: int = 1,
     headers: Optional[list[tuple[str, bytes]]] = None,
+    extra_vars: Optional[str] = None,
 ) -> None:
     """
     Helper function to send Kafka messages and run tests with improved reliability.
@@ -58,6 +63,7 @@ def send_kafka_messages_and_run_test(
         expected_output_pattern: Regex pattern to match in output
         expected_match_count: Expected number of pattern matches in output
         headers: Optional headers to send with all messages (except stop messages)
+        extra_vars: Optional path to extra vars file for ansible-rulebook
     """
     # Send messages with proper flushing
     for topic, message in topics_and_messages:
@@ -71,7 +77,7 @@ def send_kafka_messages_and_run_test(
     kafka_producer.flush()
 
     # Run the rulebook test
-    result = CLIRunner(rules=ruleset).run()
+    result = CLIRunner(rules=ruleset, extra_vars=extra_vars).run()
 
     # Use pattern matching for more robust output checking
     stdout_content = result.stdout.decode()
@@ -327,3 +333,64 @@ def test_kafka_source_pattern_topics(
         expected_output_pattern=r"Rule fired successfully for pattern topics",
         expected_match_count=3,
     )
+
+
+def _serialize_avro_schemaless(record: dict[str, Any], schema: dict[str, Any]) -> bytes:
+    """Serialize a record to raw Avro binary (schemaless format)."""
+    parsed = fastavro.parse_schema(schema)
+    buf = io.BytesIO()
+    fastavro.schemaless_writer(buf, parsed, record)
+    return buf.getvalue()
+
+
+def test_kafka_source_avro_local_schema(
+    kafka_certs: subprocess.CompletedProcess[bytes],
+    kafka_broker: subprocess.CompletedProcess[bytes],
+    kafka_producer: Any,
+) -> None:
+    """Test Kafka source with Avro message format and local schema file."""
+    schema_file = os.path.join(
+        TESTS_PATH, "event_source_kafka", "schemas", "test_event.avsc"
+    )
+
+    avro_schema = {
+        "type": "record",
+        "name": "TestEvent",
+        "namespace": "com.example.eda.test",
+        "fields": [
+            {"name": "name", "type": "string"},
+            {"name": "value", "type": "int"},
+        ],
+    }
+
+    ruleset = os.path.join(
+        TESTS_PATH, "event_source_kafka", "test_kafka_rules_avro.yml"
+    )
+
+    # Write extra vars file to pass the schema path via Jinja templating
+    vars_file = os.path.join(TESTS_PATH, "event_source_kafka", "avro_test_vars.yml")
+    with open(vars_file, "w") as f:
+        json.dump({"avro_schema_file": schema_file}, f)
+
+    try:
+        # Produce Avro-encoded messages
+        event_msg = _serialize_avro_schemaless(
+            {"name": "Produced for Avro consumers", "value": 42}, avro_schema
+        )
+        stop_msg = _serialize_avro_schemaless({"name": "stop", "value": 0}, avro_schema)
+
+        topics_and_messages = [
+            ("kafka-events-avro", event_msg),
+            ("kafka-events-avro", stop_msg),
+        ]
+
+        send_kafka_messages_and_run_test(
+            kafka_producer=kafka_producer,
+            topics_and_messages=topics_and_messages,
+            ruleset=ruleset,
+            expected_output_pattern=r"Rule fired successfully for Avro consumers",
+            expected_match_count=1,
+            extra_vars=vars_file,
+        )
+    finally:
+        os.unlink(vars_file)
