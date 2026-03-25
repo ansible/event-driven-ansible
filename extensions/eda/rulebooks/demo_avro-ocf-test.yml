@@ -1,0 +1,32 @@
+---
+# Parameterized rulebook for EDA Controller UI testing.
+# Used by: Use Case 2b (Object Container Format)
+# Variable names match the kafka-avro credential type injectors.yml.
+# No schema file or registry needed — the schema is embedded in each message.
+- name: "Avro Object Container Format Test"
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: "{{ kafka_avro_topic }}"
+        host: "{{ kafka_avro_host }}"
+        port: "{{ kafka_avro_port }}"
+        offset: "{{ kafka_avro_offset }}"
+        group_id: "{{ kafka_avro_group_id }}"
+        message_format: "{{ message_format }}"
+  rules:
+    - name: Critical alert — trigger remediation
+      condition: event.body.severity == "critical"
+      action:
+        debug:
+          msg: >-
+            CRITICAL ALERT on {{ event.body.host }}:
+            {{ event.body.message }}
+            [source_offset={{ event.meta.source_offset }}]
+
+    - name: Warning alert — log for review
+      condition: event.body.severity == "warning"
+      action:
+        debug:
+          msg: >-
+            WARNING on {{ event.body.host }}:
+            {{ event.body.message }}

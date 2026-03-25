@@ -1,0 +1,34 @@
+---
+# Parameterized rulebook for EDA Controller UI testing.
+# Used by: Use Case 2a (Local Schema File)
+# Variable names match the kafka-avro credential type injectors.yml.
+# The avro_schema_file path comes from the credential type's file injector,
+# which writes the schema JSON content to a temp file at runtime.
+- name: "Avro + Local Schema File Test"
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: "{{ kafka_avro_topic }}"
+        host: "{{ kafka_avro_host }}"
+        port: "{{ kafka_avro_port }}"
+        offset: "{{ kafka_avro_offset }}"
+        group_id: "{{ kafka_avro_group_id }}"
+        message_format: "{{ message_format }}"
+        avro_schema_file: "{{ eda.filename.avro_schema_file | default('', true) }}"
+  rules:
+    - name: Critical alert — trigger remediation
+      condition: event.body.severity == "critical"
+      action:
+        debug:
+          msg: >-
+            CRITICAL ALERT on {{ event.body.host }}:
+            {{ event.body.message }}
+            [source_offset={{ event.meta.source_offset }}]
+
+    - name: Warning alert — log for review
+      condition: event.body.severity == "warning"
+      action:
+        debug:
+          msg: >-
+            WARNING on {{ event.body.host }}:
+            {{ event.body.message }}
