@@ -4,6 +4,7 @@ ARGSPEC
 AUTHS
 Abhijeet
 Alina
+Apicurio
 Buzachis
 Centrify
 Conjur
@@ -11,12 +12,14 @@ EDAHTTP
 FQCN
 GSSAPI
 Kaio
+Karapace
 Kasurde
 Nikhil
 OAUTHBEARER
 Oliveira
 PYTHONUNBUFFERED
 Passw
+Redpanda
 Thycotic
 akasurde
 alertmanager
@@ -24,6 +27,8 @@ alinabuzachis
 antsibull
 auths
 autosync
+autouse
+avsc
 awxuser
 azcollection
 basepython
@@ -33,11 +38,14 @@ buildx
 cafile
 capath
 caroot
+ccompat
+certfile
 cliconf
 confluentinc
 conftest
 conninfo
 containerd
+creds
 cyberark
 dbname
 deadsnakes
@@ -68,6 +76,7 @@ libsystemd
 myapp
 mydb
 myqueue
+mytoken
 nada
 netconf
 noprompt
@@ -81,6 +90,7 @@ rulebook
 rulebooks
 ruleset
 rulesets
+schemaregistry
 selectattr
 servicebus
 skipsdist
