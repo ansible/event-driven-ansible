@@ -117,6 +117,18 @@
             "description": "Password for SASL PLAIN authentication",
             "type": "string",
             "format": "password"
+        },
+        "feedback": {
+            "description": "Should the source plugin wait for feedback before processing the next event from the kafka topic.",
+            "type": "boolean",
+            "title": "Feedback",
+            "default": false
+        },
+        "feedback_timeout": {
+            "description": "Timeout in seconds to wait for feedback from the rule engine before raising an exception. Only applies when feedback is enabled.",
+            "type": "integer",
+            "title": "Feedback Timeout",
+            "default": 120
         }
     },
     "required": [
