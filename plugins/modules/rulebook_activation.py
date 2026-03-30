@@ -154,6 +154,16 @@ options:
     type: str
     default: "error"
     choices: ["debug", "info", "error"]
+  enable_persistence:
+    description:
+      - Enable event persistence for this activation.
+    type: bool
+    default: false
+  rule_engine_credential_id:
+    description:
+      - The ID of the Event-Driven Ansible Rule Engine Credential.
+      - Optional parameter. When omitted, the field will not be sent in the request.
+    type: int
   state:
     description:
       - Desired state of the resource.
@@ -504,6 +514,15 @@ def create_params(
         activation_params["restart_on_project_update"] = module.params[
             "restart_on_project_update"
         ]
+
+    if module.params.get("enable_persistence") is not None:
+        activation_params["enable_persistence"] = module.params["enable_persistence"]
+
+    if module.params.get("rule_engine_credential_id") is not None:
+        activation_params["rule_engine_credential_id"] = module.params[
+            "rule_engine_credential_id"
+        ]
+
     return activation_params
 
 
@@ -552,6 +571,8 @@ def main() -> None:
             removed_from_collection="ansible.eda",
         ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
+        enable_persistence=dict(type="bool", default=False),
+        rule_engine_credential_id=dict(type="int"),
         state=dict(
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
