@@ -131,10 +131,10 @@ def test_receive_from_kafka_place_in_queue(
         )
         assert myqueue.queue[0]["body"] == {"i": 0}
         assert myqueue.queue[0]["meta"]["headers"] == {"foo": "bar"}
-        # Check for the new meta fields: uuid and produced_at
-        assert "uuid" in myqueue.queue[0]["meta"]
+        # Check for the new meta fields: source_offset and produced_at
+        assert "source_offset" in myqueue.queue[0]["meta"]
         assert "produced_at" in myqueue.queue[0]["meta"]
-        assert myqueue.queue[0]["meta"]["uuid"] == "test-topic:0:0"
+        assert myqueue.queue[0]["meta"]["source_offset"] == "test-topic:0:0"
         assert len(myqueue.queue) == TEST_ITEMS_COUNT
 
 
@@ -253,8 +253,8 @@ def test_message_uuid_header_takes_precedence(myqueue: MockQueue) -> None:
         assert myqueue.queue[0]["meta"]["uuid"] == "header-uuid"
 
 
-def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
-    """Test that uuid is generated from topic:partition:offset when not provided."""
+def test_generated_source_offset_from_coordinates(myqueue: MockQueue) -> None:
+    """Test that source_offset is generated from topic:partition:offset."""
 
     class MockConsumerWithCoordinates(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
@@ -284,7 +284,7 @@ def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
             ),
         )
         assert len(myqueue.queue) == 1
-        assert myqueue.queue[0]["meta"]["uuid"] == "my-topic:5:100"
+        assert myqueue.queue[0]["meta"]["source_offset"] == "my-topic:5:100"
 
 
 def test_produced_at_timestamp(myqueue: MockQueue) -> None:
@@ -894,7 +894,7 @@ class TestAvroDeserializer:
             )
             assert myqueue.queue[0]["body"] == {"i": 0}
             assert myqueue.queue[0]["meta"]["headers"] == {"foo": "bar"}
-            assert "uuid" in myqueue.queue[0]["meta"]
+            assert "source_offset" in myqueue.queue[0]["meta"]
             assert "produced_at" in myqueue.queue[0]["meta"]
             assert len(myqueue.queue) == 2
 
