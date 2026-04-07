@@ -194,5 +194,24 @@
         "host",
         "port",
         "topic"
-    ]
+    ],
+    "not": {
+        "anyOf": [
+            {
+                "required": ["schema_registry_basic_auth", "schema_registry_bearer_token"]
+            },
+            {
+                "required": ["schema_registry_basic_auth", "schema_registry_oauth_client_id"]
+            },
+            {
+                "required": ["schema_registry_bearer_token", "schema_registry_oauth_client_id"]
+            }
+        ]
+    },
+    "dependentRequired": {
+        "schema_registry_oauth_client_id": [
+            "schema_registry_oauth_client_secret",
+            "schema_registry_oauth_token_url"
+        ]
+    }
 }

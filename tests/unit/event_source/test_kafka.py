@@ -6,7 +6,7 @@ import json
 import struct
 import time
 import uuid
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock as StdAsyncMock
 from unittest.mock import MagicMock, patch
 
@@ -17,7 +17,9 @@ from asyncmock import AsyncMock
 
 from extensions.eda.plugins.event_source.kafka import (
     AvroDeserializer,
+    SchemaRegistryAuthError,
     _configure_avro,
+    _decode_message_body,
     get_message_timestamp,
 )
 from extensions.eda.plugins.event_source.kafka import main as kafka_main
@@ -132,9 +134,10 @@ def test_receive_from_kafka_place_in_queue(
         )
         assert myqueue.queue[0]["body"] == {"i": 0}
         assert myqueue.queue[0]["meta"]["headers"] == {"foo": "bar"}
-        # Check for the new meta fields: uuid and produced_at
-        assert "uuid" in myqueue.queue[0]["meta"]
+        # Check for the new meta fields: source_offset and produced_at
+        assert "source_offset" in myqueue.queue[0]["meta"]
         assert "produced_at" in myqueue.queue[0]["meta"]
+        assert myqueue.queue[0]["meta"]["source_offset"] == "test-topic:0:0"
         # UUID should be a valid UUID5 generated from topic:partition:offset
         expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "test-topic:0:0"))
         assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
@@ -261,7 +264,7 @@ def test_message_uuid_header_takes_precedence(myqueue: MockQueue) -> None:
 
 
 def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
-    """Test that a valid UUID5 is generated from topic:partition:offset."""
+    """Test that UUID5 and source_offset are generated from topic:partition:offset."""
 
     class MockConsumerWithCoordinates(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
@@ -291,6 +294,7 @@ def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
             ),
         )
         assert len(myqueue.queue) == 1
+        assert myqueue.queue[0]["meta"]["source_offset"] == "my-topic:5:100"
         expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "my-topic:5:100"))
         assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
 
@@ -940,7 +944,7 @@ class TestAvroDeserializer:
             )
             assert myqueue.queue[0]["body"] == {"i": 0}
             assert myqueue.queue[0]["meta"]["headers"] == {"foo": "bar"}
-            assert "uuid" in myqueue.queue[0]["meta"]
+            assert "source_offset" in myqueue.queue[0]["meta"]
             assert "produced_at" in myqueue.queue[0]["meta"]
             assert len(myqueue.queue) == 2
 
@@ -983,6 +987,10 @@ class TestAvroKafkaIntegration:
                     mock = MagicMock()
                     mock.value = self.messages[self.index]
                     mock.headers = [("source", b"test")]
+                    mock.timestamp = 1708714664000
+                    mock.topic = "avro-test"
+                    mock.partition = 0
+                    mock.offset = self.index
                     self.index += 1
                     return mock
                 raise StopAsyncIteration
@@ -1016,6 +1024,8 @@ class TestAvroKafkaIntegration:
         assert myqueue.queue[0]["body"] == {"name": "event-1", "value": 10}
         assert myqueue.queue[1]["body"] == {"name": "event-2", "value": 20}
         assert myqueue.queue[0]["meta"]["headers"] == {"source": "test"}
+        assert myqueue.queue[0]["meta"]["source_offset"] == "avro-test:0:0"
+        assert myqueue.queue[1]["meta"]["source_offset"] == "avro-test:0:1"
 
 
 # --- Schema Registry Tests ---
@@ -1131,9 +1141,9 @@ class TestSchemaCache:
         parsed = fastavro.parse_schema(SAMPLE_AVRO_SCHEMA)
         for i in range(d._SCHEMA_CACHE_MAX_SIZE + 5):
             d._schema_cache[i] = parsed
-            if len(d._schema_cache) > d._SCHEMA_CACHE_MAX_SIZE:
+            if len(d._schema_cache) >= d._SCHEMA_CACHE_MAX_SIZE:
                 d._schema_cache.popitem(last=False)
-        assert len(d._schema_cache) == d._SCHEMA_CACHE_MAX_SIZE
+        assert len(d._schema_cache) == d._SCHEMA_CACHE_MAX_SIZE - 1
         assert 0 not in d._schema_cache
         assert d._SCHEMA_CACHE_MAX_SIZE + 4 in d._schema_cache
 
@@ -1246,14 +1256,7 @@ class TestSchemaRegistryDeserialize:
     def test_wire_format_registry_failure_falls_back_to_local(
         self, avro_schema_file: str
     ) -> None:
-        """When registry fetch fails, fallback to local schema is attempted.
-
-        The fallback passes the FULL data (including 5-byte wire header)
-        to the local schema deserializer. fastavro's schemaless_reader is
-        lenient and will parse it (producing garbled data), but the key
-        assertion is that the registry failure warning path is exercised
-        and a result is returned (not an exception).
-        """
+        """When registry fetch fails, fall back to local schema with stripped header."""
         d = AvroDeserializer(
             avro_schema_file=avro_schema_file,
             schema_registry_url="http://localhost:8081",
@@ -1275,14 +1278,43 @@ class TestSchemaRegistryDeserialize:
         mock_session.get = MagicMock(return_value=mock_resp)
         d._http_session = mock_session
 
-        # Registry fails -> warning logged -> falls back to local schema
-        # Local schema parses the data (wire header causes garbled output)
+        # Registry fails -> warning logged -> header stripped -> local schema succeeds
         result = asyncio.run(d.deserialize(wire_data))
-        assert result is not None
-        assert isinstance(result, dict)
+        assert result == {"name": "fallback-event", "value": 33}
 
-    def test_wire_format_registry_failure_no_local_schema(self) -> None:
-        """When registry fetch fails and no local schema, try object container (returns None for raw)."""
+    def test_wire_format_registry_transient_error_falls_back_to_local(
+        self, avro_schema_file: str
+    ) -> None:
+        """Transient registry error (500) retries then falls back to local schema."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "transient-fallback", "value": 77}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(), history=(), status=500, message="Error"
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
+        mock_session.get = MagicMock(return_value=mock_resp)
+        d._http_session = mock_session
+
+        with patch("asyncio.sleep", new_callable=StdAsyncMock):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "transient-fallback", "value": 77}
+
+    def test_wire_format_registry_transient_error_no_local_schema_skips(
+        self,
+    ) -> None:
+        """Transient registry error (500) without local schema skips message after retries."""
         d = AvroDeserializer(schema_registry_url="http://localhost:8081")
         record = {"name": "no-fallback", "value": 1}
         wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
@@ -1301,9 +1333,346 @@ class TestSchemaRegistryDeserialize:
         mock_session.get = MagicMock(return_value=mock_resp)
         d._http_session = mock_session
 
-        result = asyncio.run(d.deserialize(wire_data))
-        # No local schema, not valid object container -> None
+        with patch("asyncio.sleep", new_callable=StdAsyncMock):
+            result = asyncio.run(d.deserialize(wire_data))
         assert result is None
+
+    def test_wire_format_registry_network_error_no_local_schema_skips(
+        self,
+    ) -> None:
+        """Network error without local schema skips message after retries."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "network-fail", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
+        mock_session.get = MagicMock(
+            side_effect=aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("Connection refused")
+            )
+        )
+        d._http_session = mock_session
+
+        with patch("asyncio.sleep", new_callable=StdAsyncMock):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result is None
+
+    def test_wire_format_registry_malformed_response_falls_back(
+        self, avro_schema_file: str
+    ) -> None:
+        """Malformed registry response (missing 'schema' key) is permanent — falls back to local."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "malformed-resp", "value": 55}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=42)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"unexpected_key": "no schema field here"}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
+        mock_session.get = MagicMock(return_value=mock_resp)
+        d._http_session = mock_session
+
+        result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "malformed-resp", "value": 55}
+        assert 42 not in d._schema_cache
+
+
+class TestSchemaRegistryRetry:
+    """Tests for retry with exponential backoff on transient registry errors."""
+
+    def test_retry_succeeds_on_second_attempt(self) -> None:
+        """Registry fetch succeeds on second attempt after transient failure."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        parsed = cast("dict[str, Any]", fastavro.parse_schema(SAMPLE_AVRO_SCHEMA))
+
+        call_count = {"n": 0}
+
+        async def mock_fetch(schema_id: int) -> dict[str, Any] | None:
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                raise aiohttp.ClientConnectorError(
+                    connection_key=MagicMock(), os_error=OSError("refused")
+                )
+            return parsed
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=mock_fetch),
+            patch("asyncio.sleep", new_callable=StdAsyncMock) as mock_sleep,
+        ):
+            result = asyncio.run(d._get_schema_with_retry(42))
+
+        assert result == parsed
+        assert call_count["n"] == 2
+        mock_sleep.assert_awaited_once_with(1.0)
+
+    def test_retry_exhausted_returns_none(self) -> None:
+        """All retries fail — returns None (message skipped)."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def always_fail(schema_id: int) -> None:
+            raise aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("refused")
+            )
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=always_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+        ):
+            result = asyncio.run(d._get_schema_with_retry(42))
+
+        assert result is None
+
+    def test_retry_does_not_retry_auth_error(self) -> None:
+        """SchemaRegistryAuthError is never retried."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def auth_fail(schema_id: int) -> None:
+            raise SchemaRegistryAuthError("auth failed", status=401)
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=auth_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock) as mock_sleep,
+        ):
+            with pytest.raises(SchemaRegistryAuthError):
+                asyncio.run(d._get_schema_with_retry(42))
+
+        mock_sleep.assert_not_awaited()
+
+    def test_retry_logs_each_attempt(self) -> None:
+        """Each retry attempt is logged with attempt count and delay."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def always_fail(schema_id: int) -> None:
+            raise aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("refused")
+            )
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=always_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+            patch.object(d, "_logger") as mock_logger,
+        ):
+            asyncio.run(d._get_schema_with_retry(42))
+
+        warning_calls = mock_logger.warning.call_args_list
+        assert len(warning_calls) == 2
+        assert "attempt 1/3" in warning_calls[0].args[0] % warning_calls[0].args[1:]
+        assert "attempt 2/3" in warning_calls[1].args[0] % warning_calls[1].args[1:]
+        mock_logger.error.assert_called_once()
+
+    def test_retry_backoff_delays(self) -> None:
+        """Sleep durations follow exponential backoff: 1s, 2s."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def always_fail(schema_id: int) -> None:
+            raise aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("refused")
+            )
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=always_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock) as mock_sleep,
+        ):
+            asyncio.run(d._get_schema_with_retry(42))
+
+        assert mock_sleep.await_args_list == [
+            ((1.0,),),
+            ((2.0,),),
+        ]
+
+
+class TestSchemaRegistryAuthErrors:
+    """Tests for permanent auth failure handling (401/403)."""
+
+    def _make_auth_error_session(self, status: int) -> StdAsyncMock:
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=status,
+                message="Unauthorized" if status == 401 else "Forbidden",
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
+        mock_session.get = MagicMock(return_value=mock_resp)
+        return mock_session
+
+    def test_401_raises_schema_registry_auth_error(self) -> None:
+        """HTTP 401 raises SchemaRegistryAuthError immediately."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        d._http_session = self._make_auth_error_session(401)
+
+        with pytest.raises(SchemaRegistryAuthError, match="authentication failed"):
+            asyncio.run(d._get_schema_from_registry(42))
+
+    def test_403_raises_schema_registry_auth_error(self) -> None:
+        """HTTP 403 raises SchemaRegistryAuthError immediately."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        d._http_session = self._make_auth_error_session(403)
+
+        with pytest.raises(SchemaRegistryAuthError, match="authentication failed"):
+            asyncio.run(d._get_schema_from_registry(42))
+
+    def test_auth_error_propagates_through_deserialize(self) -> None:
+        """SchemaRegistryAuthError propagates through deserialize uncaught."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "auth-test", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+        d._http_session = self._make_auth_error_session(401)
+
+        with pytest.raises(SchemaRegistryAuthError):
+            asyncio.run(d.deserialize(wire_data))
+
+    def test_auth_error_bypasses_local_schema_fallback(
+        self, avro_schema_file: str
+    ) -> None:
+        """Even with local schema, auth error still propagates (no fallback)."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "auth-bypass", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+        d._http_session = self._make_auth_error_session(401)
+
+        with pytest.raises(SchemaRegistryAuthError):
+            asyncio.run(d.deserialize(wire_data))
+
+    def test_auth_error_kills_plugin_via_main(self, myqueue: MockQueue) -> None:
+        """Auth error from registry propagates through main(), stopping plugin."""
+
+        class AuthFailConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> AuthFailIterator:
+                return AuthFailIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        class AuthFailIterator:
+            def __init__(self) -> None:
+                self.count = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.count < 1:
+                    mock = MagicMock()
+                    mock.value = _serialize_wire_format(
+                        {"name": "test", "value": 1},
+                        SAMPLE_AVRO_SCHEMA,
+                        schema_id=99,
+                    )
+                    mock.headers = [(b"foo", b"bar")]
+                    mock.timestamp = 1708714664000
+                    mock.topic = "test-topic"
+                    mock.partition = 0
+                    mock.offset = 0
+                    self.count += 1
+                    return mock
+                raise StopAsyncIteration
+
+        with (
+            patch(
+                "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+                new=AuthFailConsumer,
+            ),
+            patch(
+                "extensions.eda.plugins.event_source.kafka.AvroDeserializer"
+                "._get_schema_with_retry",
+                side_effect=SchemaRegistryAuthError("auth failed", status=401),
+            ),
+            pytest.raises(SchemaRegistryAuthError),
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "message_format": "avro",
+                        "schema_registry_url": "http://localhost:8081",
+                    },
+                ),
+            )
+
+
+class TestSchemaRegistryOAuthAuthError:
+    """Tests for OAuth-specific error messages on 401."""
+
+    def _make_auth_error_session(self, status: int) -> StdAsyncMock:
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=status,
+                message="Unauthorized" if status == 401 else "Forbidden",
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
+        mock_session.get = MagicMock(return_value=mock_resp)
+        return mock_session
+
+    def test_401_with_oauth_mentions_token_expiry(self) -> None:
+        """401 with OAuth configured includes token expiry hint."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        d._oauth_access_token = "expired-token"
+        d._oauth_token_expiry = time.time() + 3600
+        d._http_session = self._make_auth_error_session(401)
+
+        with pytest.raises(
+            SchemaRegistryAuthError, match="OAuth token may have expired"
+        ):
+            asyncio.run(d._get_schema_from_registry(42))
+
+    def test_401_without_oauth_generic_message(self) -> None:
+        """401 without OAuth uses generic auth error message."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        d._http_session = self._make_auth_error_session(401)
+
+        with pytest.raises(SchemaRegistryAuthError, match="stopping plugin"):
+            asyncio.run(d._get_schema_from_registry(42))
+
+    def test_403_with_oauth_mentions_token_expiry(self) -> None:
+        """403 with OAuth configured includes token expiry hint."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        d._oauth_access_token = "expired-token"
+        d._oauth_token_expiry = time.time() + 3600
+        d._http_session = self._make_auth_error_session(403)
+
+        with pytest.raises(
+            SchemaRegistryAuthError, match="OAuth token may have expired"
+        ):
+            asyncio.run(d._get_schema_from_registry(42))
 
 
 class TestGetAuthHeaders:
@@ -1420,6 +1789,7 @@ class TestFetchOAuthToken:
                 "scope": "registry:read",
             },
             ssl=None,  # http:// registry URL produces no SSL context
+            timeout=d._request_timeout,
         )
 
     def test_fetch_oauth_token_without_scope(self) -> None:
@@ -1766,6 +2136,70 @@ class TestAvroNoneSkipsMessage:
                 )
             )
             # Corrupt data returns None, message should be skipped
+            assert len(myqueue.queue) == 0
+
+
+class TestTombstoneMessage:
+    """Test that Kafka tombstone messages (value=None) are handled gracefully."""
+
+    def test_decode_message_body_returns_none_for_tombstone(self) -> None:
+        """_decode_message_body returns None when msg_value is None."""
+        result = asyncio.run(_decode_message_body(None, "utf-8", "json", None))
+        assert result is None
+
+    def test_decode_message_body_returns_none_for_avro_tombstone(
+        self, avro_schema_file: str
+    ) -> None:
+        """_decode_message_body returns None for tombstone in avro mode."""
+        _msg_format, deserializer = _configure_avro(
+            {"message_format": "avro", "avro_schema_file": avro_schema_file}
+        )
+        result = asyncio.run(_decode_message_body(None, "utf-8", "avro", deserializer))
+        assert result is None
+
+    def test_tombstone_skipped_in_main(self, myqueue: MockQueue) -> None:
+        """Tombstone messages are skipped without crashing the consumer loop."""
+
+        class TombstoneIterator:
+            def __init__(self) -> None:
+                self.count = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.count < 1:
+                    mock = MagicMock()
+                    mock.value = None  # tombstone
+                    mock.headers = []
+                    mock.timestamp = 1708714664000
+                    mock.topic = "test-topic"
+                    mock.partition = 0
+                    mock.offset = 0
+                    self.count += 1
+                    return mock
+                raise StopAsyncIteration
+
+        class TombstoneConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> TombstoneIterator:
+                return TombstoneIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        with patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=TombstoneConsumer,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                    },
+                )
+            )
+            # Tombstone returns None, if data: check skips it
             assert len(myqueue.queue) == 0
 
 

@@ -107,5 +107,6 @@ toxinidir
 trustore
 truststore
 unshallow
+userinfo
 uuid
 whitt

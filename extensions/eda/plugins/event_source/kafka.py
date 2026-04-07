@@ -6,12 +6,13 @@ import base64
 import io
 import json
 import logging
-import uuid
 import ssl
 import struct
 import time
+import uuid
 from collections import OrderedDict
 from datetime import datetime, timezone
+from http import HTTPStatus
 from pathlib import Path
 from ssl import CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED
 from typing import TYPE_CHECKING, Any, cast
@@ -36,14 +37,17 @@ DOCUMENTATION = r"""
 short_description: Receive events via a kafka topic.
 description:
   - An ansible-rulebook event source plugin for receiving events via a kafka topic.
-  - Each event is assigned a valid RFC 4122 UUID under meta.uuid.
+  - Each event includes C(meta.source_offset) set to C({topic}:{partition}:{offset})
+    for tracing messages back to their Kafka coordinates.
+  - Each event is assigned a valid RFC 4122 UUID under C(meta.uuid).
   - By default, a deterministic UUID5 is generated from the Kafka message
     coordinates (topic, partition, offset).
-  - You can override this by providing a valid UUID via the "message_uuid"
-    header or the "message_uuid" field in the message body. Headers take
+  - You can override this by providing a valid UUID via the C(message_uuid)
+    header or the C(message_uuid) field in the message body. Headers take
     precedence over body.
-  - If a provided "message_uuid" is not a valid UUID, the generated UUID is
-    used instead and the original value is preserved under meta.message_id.
+  - If a provided C(message_uuid) is not a valid UUID, the generated UUID is
+    used instead and the original value is preserved under C(meta.message_id).
+  - Messages with a null value (Kafka tombstones) are skipped.
 options:
   host:
     description:
@@ -236,7 +240,7 @@ options:
 notes:
   - >-
     A custom EDA credential type for this plugin is available as a GitHub Gist
-    at U(<GIST_URL_PLACEHOLDER>). It uses C(extra_vars) and C(file) injectors
+    at U(https://gist.github.com/B-Whitt/7b4d08dbc8b78a706b5db4a5ad00e22d). It uses C(extra_vars) and C(file) injectors
     to securely manage Kafka, SSL, Avro, and Schema Registry parameters.
   - >-
     For EDA credential type documentation, see
@@ -294,6 +298,15 @@ QUEUE_TIMEOUT = 120
 _uuid_warning = {"emitted": False}
 
 
+class SchemaRegistryAuthError(Exception):
+    """Raised when Schema Registry returns 401/403 (permanent auth failure)."""
+
+    def __init__(self, message: str, *, status: int) -> None:
+        """Initialize with message and HTTP status code."""
+        super().__init__(message)
+        self.status = status
+
+
 class AvroDeserializer:
     """Handles Avro message deserialization with local schema files and Schema Registry."""
 
@@ -301,6 +314,10 @@ class AvroDeserializer:
     _WIRE_FORMAT_MAGIC = 0
     _WIRE_FORMAT_HEADER_SIZE = 5
     _SCHEMA_CACHE_MAX_SIZE = 100
+    _REGISTRY_MAX_RETRIES = 3
+    _REGISTRY_RETRY_INITIAL_DELAY = 1.0
+    _REGISTRY_RETRY_MAX_DELAY = 10.0
+    _REGISTRY_RETRY_BACKOFF_FACTOR = 2
 
     def __init__(
         self,
@@ -317,6 +334,7 @@ class AvroDeserializer:
         ssl_cafile: str | None = None,
         ssl_certfile: str | None = None,
         ssl_keyfile: str | None = None,
+        ssl_password: str | None = None,
     ) -> None:
         """Initialize with local schema file and/or Schema Registry config.
 
@@ -333,6 +351,7 @@ class AvroDeserializer:
             ssl_cafile: CA file for SSL connections.
             ssl_certfile: Client certificate file for SSL.
             ssl_keyfile: Client key file for SSL.
+            ssl_password: Password for encrypted keyfiles.
 
         Raises:
             ImportError: If fastavro is not installed.
@@ -356,6 +375,7 @@ class AvroDeserializer:
         self._schema_cache: OrderedDict[int, dict[str, Any]] = OrderedDict()
         self._http_session: aiohttp.ClientSession | None = None
         self._ssl_context: ssl.SSLContext | None = None
+        self._request_timeout = aiohttp.ClientTimeout(total=30)
 
         # Auth state
         self._basic_auth_header: str | None = None
@@ -382,9 +402,10 @@ class AvroDeserializer:
                 ssl_cafile=ssl_cafile,
                 ssl_certfile=ssl_certfile,
                 ssl_keyfile=ssl_keyfile,
+                ssl_password=ssl_password,
             )
 
-    def _configure_registry(
+    def _configure_registry(  # pylint: disable=too-many-locals
         self,
         *,
         url: str,
@@ -397,15 +418,21 @@ class AvroDeserializer:
         ssl_cafile: str | None,
         ssl_certfile: str | None,
         ssl_keyfile: str | None,
+        ssl_password: str | None,
     ) -> None:
         """Validate and configure Schema Registry connection."""
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https"):
-            msg = f"schema_registry_url must use http or https scheme, got: {url}"
+            msg = "schema_registry_url must use http or https scheme"
             raise ValueError(msg)
         if not parsed.hostname:
-            msg = f"schema_registry_url must have a hostname, got: {url}"
+            msg = "schema_registry_url must have a hostname"
             raise ValueError(msg)
+
+        # Strip userinfo (user:password@) from URL before logging
+        safe_url = parsed._replace(
+            netloc=parsed.hostname + (f":{parsed.port}" if parsed.port else ""),
+        ).geturl()
 
         # Validate auth mutual exclusion
         auth_methods = sum(1 for a in (basic_auth, bearer_token, oauth_client_id) if a)
@@ -428,8 +455,9 @@ class AvroDeserializer:
 
         # Build Basic Auth header
         if basic_auth:
-            creds = base64.b64encode(basic_auth.encode()).decode()
-            self._basic_auth_header = f"Basic {creds}"
+            self._basic_auth_header = (
+                f"Basic {base64.b64encode(basic_auth.encode()).decode()}"
+            )
 
         # Build SSL context
         if use_ssl and parsed.scheme == "https":
@@ -440,9 +468,10 @@ class AvroDeserializer:
                 self._ssl_context.load_cert_chain(
                     certfile=ssl_certfile,
                     keyfile=ssl_keyfile,
+                    password=ssl_password,
                 )
 
-        self._logger.info("Schema Registry configured: %s", url)
+        self._logger.info("Schema Registry configured: %s", safe_url)
 
     async def _get_auth_headers(self) -> dict[str, str]:
         """Build authorization headers for Schema Registry requests."""
@@ -477,6 +506,7 @@ class AvroDeserializer:
                     self._oauth_token_url,
                     data=data,
                     ssl=self._ssl_context,
+                    timeout=self._request_timeout,
                 ) as resp:
                     resp.raise_for_status()
                     token_data = await resp.json()
@@ -503,7 +533,7 @@ class AvroDeserializer:
         """Check if data starts with the Confluent wire format header."""
         return (
             self._registry_url is not None
-            and len(data) > self._WIRE_FORMAT_HEADER_SIZE
+            and len(data) >= self._WIRE_FORMAT_HEADER_SIZE
             and data[0] == self._WIRE_FORMAT_MAGIC
         )
 
@@ -513,7 +543,20 @@ class AvroDeserializer:
         return int(schema_id)
 
     async def _get_schema_from_registry(self, schema_id: int) -> dict[str, Any] | None:
-        """Fetch and cache a schema from the Schema Registry by ID."""
+        """Fetch and cache a schema from the Schema Registry by ID.
+
+        Returns the parsed schema on success, None for permanent failures
+        (schema not found, malformed response). Re-raises transient failures
+        (network errors, auth errors, server errors) so the caller can
+        decide whether to fall back or stop.
+
+        Raises:
+            SchemaRegistryAuthError: On HTTP 401/403 (authentication failure).
+            aiohttp.ClientResponseError: On non-404/non-auth HTTP errors (server).
+            aiohttp.ClientError: On network/connection errors.
+            asyncio.TimeoutError: On request timeout.
+
+        """
         # Check cache
         if schema_id in self._schema_cache:
             self._schema_cache.move_to_end(schema_id)
@@ -531,6 +574,7 @@ class AvroDeserializer:
                 url,
                 headers=headers,
                 ssl=self._ssl_context,
+                timeout=self._request_timeout,
             ) as resp:
                 resp.raise_for_status()
                 resp_data = await resp.json()
@@ -538,9 +582,48 @@ class AvroDeserializer:
                 # cast: fastavro lacks type stubs (mypy no-any-return)
                 schema = fastavro.parse_schema(json.loads(schema_str))
                 parsed_schema = cast("dict[str, Any]", schema)
-        except Exception:  # pylint: disable=broad-exception-caught
+        except aiohttp.ClientResponseError as exc:
+            if exc.status == HTTPStatus.NOT_FOUND:
+                self._logger.exception(
+                    "Schema ID %d not found in registry (404)",
+                    schema_id,
+                )
+                return None
+            if exc.status in (
+                HTTPStatus.UNAUTHORIZED,
+                HTTPStatus.FORBIDDEN,
+            ):
+                if self._oauth_client_id:
+                    msg = (
+                        "Schema Registry authentication failed (HTTP %d) "
+                        "— OAuth token may have expired. Check "
+                        "oauth_token_url and credentials."
+                    )
+                else:
+                    msg = (
+                        "Schema Registry authentication failed (HTTP %d), "
+                        "stopping plugin"
+                    )
+                self._logger.exception(msg, exc.status)
+                raise SchemaRegistryAuthError(
+                    msg % exc.status,
+                    status=exc.status,
+                ) from exc
             self._logger.exception(
-                "Failed to fetch schema ID %d from registry",
+                "Registry HTTP error %d for schema ID %d",
+                exc.status,
+                schema_id,
+            )
+            raise
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            self._logger.exception(
+                "Registry connection error for schema ID %d",
+                schema_id,
+            )
+            raise
+        except (KeyError, json.JSONDecodeError):
+            self._logger.exception(
+                "Malformed registry response for schema ID %d",
                 schema_id,
             )
             return None
@@ -552,6 +635,57 @@ class AvroDeserializer:
         self._schema_cache[schema_id] = parsed_schema
         self._logger.info("Cached schema ID %d from registry", schema_id)
         return parsed_schema
+
+    async def _get_schema_with_retry(
+        self,
+        schema_id: int,
+    ) -> dict[str, Any] | None:
+        """Fetch schema from registry with exponential backoff on transient errors.
+
+        Raises:
+            SchemaRegistryAuthError: On HTTP 401/403 (propagated immediately).
+
+        """
+        last_exc: Exception | None = None
+        delay = self._REGISTRY_RETRY_INITIAL_DELAY
+
+        # ruff: disable[PERF203]
+        for attempt in range(1, self._REGISTRY_MAX_RETRIES + 1):
+            try:
+                return await self._get_schema_from_registry(schema_id)
+            except SchemaRegistryAuthError:  # pylint: disable=try-except-raise
+                raise
+            except (
+                aiohttp.ClientResponseError,
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
+            ) as exc:
+                last_exc = exc
+                if attempt < self._REGISTRY_MAX_RETRIES:
+                    self._logger.warning(
+                        "Registry fetch failed for schema ID %d "
+                        "(attempt %d/%d), retrying in %.1fs: %s",
+                        schema_id,
+                        attempt,
+                        self._REGISTRY_MAX_RETRIES,
+                        delay,
+                        exc,
+                    )
+                    await asyncio.sleep(delay)
+                    delay = min(
+                        delay * self._REGISTRY_RETRY_BACKOFF_FACTOR,
+                        self._REGISTRY_RETRY_MAX_DELAY,
+                    )
+        # ruff: enable[PERF203]
+
+        self._logger.error(
+            "Registry fetch failed for schema ID %d after %d attempts, "
+            "skipping message: %s",
+            schema_id,
+            self._REGISTRY_MAX_RETRIES,
+            last_exc,
+        )
+        return None
 
     def _load_schema_file(self, schema_path: str) -> None:
         """Load and validate a local Avro schema file."""
@@ -575,6 +709,9 @@ class AvroDeserializer:
         1. Wire format (Schema Registry) if schema_registry_url is configured
            and message has the magic byte header.
         2. Local schema (schemaless_reader) if avro_schema_file was provided.
+           If a wire format header was detected in step 1 but the registry
+           lookup failed, the 5-byte header is stripped before falling back
+           to the local schema.
         3. Object Container format (self-describing, embedded schema).
 
         Args:
@@ -592,23 +729,31 @@ class AvroDeserializer:
             )
             return None
 
+        payload = data  # default: entire message is the payload
+
         # Attempt 1: Wire format (Schema Registry)
+        # SchemaRegistryAuthError (401/403) propagates uncaught
+        # to terminate the plugin — auth failures are permanent.
         if self._is_wire_format(data):
             schema_id = self._extract_schema_id(data)
-            registry_schema = await self._get_schema_from_registry(schema_id)
+            registry_schema = await self._get_schema_with_retry(schema_id)
+
             if registry_schema is not None:
                 return self._deserialize_with_schema(
                     data[self._WIRE_FORMAT_HEADER_SIZE :],
                     registry_schema,
                 )
+            # Registry unavailable or schema not found — fall through
             self._logger.warning(
-                "Registry lookup failed for schema ID %d, trying fallbacks",
+                "Registry lookup failed for schema ID %d; falling back "
+                "to local schema.",
                 schema_id,
             )
+            payload = data[self._WIRE_FORMAT_HEADER_SIZE :]
 
         # Attempt 2: Schemaless deserialization with local schema
         if self._schema is not None:
-            return self._deserialize_with_schema(data, self._schema)
+            return self._deserialize_with_schema(payload, self._schema)
 
         # Attempt 3: Object Container format (self-describing)
         return self._deserialize_object_container(data)
@@ -631,19 +776,31 @@ class AvroDeserializer:
             return {"value": record}
 
     def _deserialize_object_container(self, data: bytes) -> dict[str, Any] | None:
-        """Deserialize Avro Object Container format (embedded schema)."""
+        """Deserialize Avro Object Container format (embedded schema).
+
+        Returns the first record only. Kafka messages are single-value;
+        additional records in a multi-record container are ignored.
+        """
         try:
             reader = io.BytesIO(data)
             avro_reader = fastavro.reader(reader)
-            for record in avro_reader:
-                if isinstance(record, dict):
-                    return record
-                return {"value": record}
+            first_record = None
+            for i, record in enumerate(avro_reader):
+                if i == 0:
+                    first_record = (
+                        record if isinstance(record, dict) else {"value": record}
+                    )
+                else:
+                    self._logger.debug(
+                        "Ignoring additional record(s) in Object Container message",
+                    )
+                    break
         except Exception:  # pylint: disable=broad-exception-caught
             self._logger.exception(
                 "Failed to deserialize Avro message as Object Container format",
             )
-        return None
+            return None
+        return first_record
 
     async def close(self) -> None:
         """Close the HTTP session if open."""
@@ -656,6 +813,7 @@ def _configure_avro(
     ssl_cafile: str | None = None,
     ssl_certfile: str | None = None,
     ssl_keyfile: str | None = None,
+    ssl_password: str | None = None,
 ) -> tuple[str, AvroDeserializer | None]:
     """Validate and configure Avro deserialization from plugin args."""
     logger = logging.getLogger()
@@ -684,6 +842,7 @@ def _configure_avro(
             ssl_cafile=ssl_cafile if schema_registry_ssl else None,
             ssl_certfile=ssl_certfile if schema_registry_ssl else None,
             ssl_keyfile=ssl_keyfile if schema_registry_ssl else None,
+            ssl_password=ssl_password if schema_registry_ssl else None,
         )
         logger.info("Avro deserialization enabled")
 
@@ -904,6 +1063,7 @@ async def main(
         ssl_cafile=config["cafile"],
         ssl_certfile=config["certfile"],
         ssl_keyfile=config["keyfile"],
+        ssl_password=config["password"],
     )
 
     kafka_consumer.subscribe(topics=topics, pattern=topic_pattern)
@@ -928,13 +1088,20 @@ async def main(
 
 
 async def _decode_message_body(
-    msg_value: bytes,
+    msg_value: bytes | None,
     encoding: str,
     message_format: str,
     deserializer: AvroDeserializer | None,
 ) -> dict[str, Any] | str | None:
-    """Decode a Kafka message body based on the configured format."""
+    """Decode a Kafka message body based on the configured format.
+
+    Returns None for tombstone messages (null value) and deserialization failures.
+    """
     logger = logging.getLogger()
+
+    if msg_value is None:
+        logger.debug("Received tombstone message (null value), skipping")
+        return None
 
     if message_format == "avro" and deserializer is not None:
         data = await deserializer.deserialize(msg_value)
