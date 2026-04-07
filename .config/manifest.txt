@@ -60,6 +60,7 @@ extensions/eda/rulebooks/github-ci-cd-rules.yml
 extensions/eda/rulebooks/hello_events.yml
 extensions/eda/rulebooks/journald_events.yml
 extensions/eda/rulebooks/kafka-test-rules.yml
+extensions/eda/rulebooks/kafka-test-schema-registry.yml
 extensions/eda/rulebooks/local-test-rules.yml
 extensions/eda/rulebooks/process_down.yml
 FILES.json
