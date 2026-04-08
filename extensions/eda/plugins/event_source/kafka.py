@@ -35,10 +35,13 @@ DOCUMENTATION = r"""
 short_description: Receive events via a kafka topic.
 description:
   - An ansible-rulebook event source plugin for receiving events via a kafka topic.
-  - To make each message unique you can either add message_uuid to the header or
-  - add message_uuid to the message body
-  - if both of these are missing we will use the {topic}:{partition}.{offset} to
-  - make the unique message uuid
+  - Each event includes C(meta.source_offset) set to C({topic}:{partition}:{offset})
+    for tracing messages back to their Kafka coordinates.
+  - To provide a custom identifier you can add C(message_uuid) to either the Kafka
+    message header or the message body. If found, it is stored in C(meta.uuid).
+    If C(message_uuid) is not present, the rulebook engine generates a UUID
+    automatically via the C(insert_meta_info) event filter.
+  - Messages with a null value (Kafka tombstones) are skipped.
 options:
   host:
     description:
@@ -569,6 +572,9 @@ class AvroDeserializer:
         1. Wire format (Schema Registry) if schema_registry_url is configured
            and message has the magic byte header.
         2. Local schema (schemaless_reader) if avro_schema_file was provided.
+           If a wire format header was detected in step 1 but the registry
+           lookup failed, the 5-byte header is stripped before falling back
+           to the local schema.
         3. Object Container format (self-describing, embedded schema).
 
         Args:
@@ -586,6 +592,8 @@ class AvroDeserializer:
             )
             return None
 
+        payload = data  # default: entire message is the payload
+
         # Attempt 1: Wire format (Schema Registry)
         if self._is_wire_format(data):
             schema_id = self._extract_schema_id(data)
@@ -596,13 +604,17 @@ class AvroDeserializer:
                     registry_schema,
                 )
             self._logger.warning(
-                "Registry lookup failed for schema ID %d, trying fallbacks",
+                "Registry lookup failed for schema ID %d; falling back to "
+                "local schema. Data may be incorrect if the local schema "
+                "differs from schema ID %d.",
+                schema_id,
                 schema_id,
             )
+            payload = data[self._WIRE_FORMAT_HEADER_SIZE :]
 
         # Attempt 2: Schemaless deserialization with local schema
         if self._schema is not None:
-            return self._deserialize_with_schema(data, self._schema)
+            return self._deserialize_with_schema(payload, self._schema)
 
         # Attempt 3: Object Container format (self-describing)
         return self._deserialize_object_container(data)
@@ -913,13 +925,20 @@ async def main(
 
 
 async def _decode_message_body(
-    msg_value: bytes,
+    msg_value: bytes | None,
     encoding: str,
     message_format: str,
     deserializer: AvroDeserializer | None,
 ) -> dict[str, Any] | str | None:
-    """Decode a Kafka message body based on the configured format."""
+    """Decode a Kafka message body based on the configured format.
+
+    Returns None for tombstone messages (null value) and deserialization failures.
+    """
     logger = logging.getLogger()
+
+    if msg_value is None:
+        logger.debug("Received tombstone message (null value), skipping")
+        return None
 
     if message_format == "avro" and deserializer is not None:
         data = await deserializer.deserialize(msg_value)

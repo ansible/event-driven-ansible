@@ -17,6 +17,7 @@ from asyncmock import AsyncMock
 from extensions.eda.plugins.event_source.kafka import (
     AvroDeserializer,
     _configure_avro,
+    _decode_message_body,
     get_message_timestamp,
 )
 from extensions.eda.plugins.event_source.kafka import main as kafka_main
@@ -1200,14 +1201,7 @@ class TestSchemaRegistryDeserialize:
     def test_wire_format_registry_failure_falls_back_to_local(
         self, avro_schema_file: str
     ) -> None:
-        """When registry fetch fails, fallback to local schema is attempted.
-
-        The fallback passes the FULL data (including 5-byte wire header)
-        to the local schema deserializer. fastavro's schemaless_reader is
-        lenient and will parse it (producing garbled data), but the key
-        assertion is that the registry failure warning path is exercised
-        and a result is returned (not an exception).
-        """
+        """When registry fetch fails, fall back to local schema with stripped header."""
         d = AvroDeserializer(
             avro_schema_file=avro_schema_file,
             schema_registry_url="http://localhost:8081",
@@ -1229,11 +1223,9 @@ class TestSchemaRegistryDeserialize:
         mock_session.get = MagicMock(return_value=mock_resp)
         d._http_session = mock_session
 
-        # Registry fails -> warning logged -> falls back to local schema
-        # Local schema parses the data (wire header causes garbled output)
+        # Registry fails -> warning logged -> header stripped -> local schema succeeds
         result = asyncio.run(d.deserialize(wire_data))
-        assert result is not None
-        assert isinstance(result, dict)
+        assert result == {"name": "fallback-event", "value": 33}
 
     def test_wire_format_registry_failure_no_local_schema(self) -> None:
         """When registry fetch fails and no local schema, try object container (returns None for raw)."""
@@ -1720,6 +1712,70 @@ class TestAvroNoneSkipsMessage:
                 )
             )
             # Corrupt data returns None, message should be skipped
+            assert len(myqueue.queue) == 0
+
+
+class TestTombstoneMessage:
+    """Test that Kafka tombstone messages (value=None) are handled gracefully."""
+
+    def test_decode_message_body_returns_none_for_tombstone(self) -> None:
+        """_decode_message_body returns None when msg_value is None."""
+        result = asyncio.run(_decode_message_body(None, "utf-8", "json", None))
+        assert result is None
+
+    def test_decode_message_body_returns_none_for_avro_tombstone(
+        self, avro_schema_file: str
+    ) -> None:
+        """_decode_message_body returns None for tombstone in avro mode."""
+        _, deserializer = _configure_avro(
+            {"message_format": "avro", "avro_schema_file": avro_schema_file}
+        )
+        result = asyncio.run(_decode_message_body(None, "utf-8", "avro", deserializer))
+        assert result is None
+
+    def test_tombstone_skipped_in_main(self, myqueue: MockQueue) -> None:
+        """Tombstone messages are skipped without crashing the consumer loop."""
+
+        class TombstoneIterator:
+            def __init__(self) -> None:
+                self.count = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.count < 1:
+                    mock = MagicMock()
+                    mock.value = None  # tombstone
+                    mock.headers = []
+                    mock.timestamp = 1708714664000
+                    mock.topic = "test-topic"
+                    mock.partition = 0
+                    mock.offset = 0
+                    self.count += 1
+                    return mock
+                raise StopAsyncIteration
+
+        class TombstoneConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> TombstoneIterator:
+                return TombstoneIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        with patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=TombstoneConsumer,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                    },
+                )
+            )
+            # Tombstone returns None, if data: check skips it
             assert len(myqueue.queue) == 0
 
 
