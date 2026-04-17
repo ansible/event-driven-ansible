@@ -76,6 +76,26 @@ options:
       type: bool
       default: False
       version_added: 2.2.0
+    wait:
+      description:
+        - Wait for the project import/sync to complete before returning.
+        - When enabled, the module will poll the project status until import_state is 'completed' or 'failed'.
+        - This prevents race conditions when immediately deleting or using a project after creation.
+      type: bool
+      default: True
+    update_revision_on_launch:
+      description:
+        - Enable automatic project sync on activation launch
+      type: bool
+      default: False
+      version_added: 2.12.0
+    scm_update_cache_timeout:
+      description:
+        - Cache timeout in seconds for project updates (0 = no cache, max 86400).
+        - Requires update_revision_on_launch to be true.
+      type: int
+      default: 0
+      version_added: 2.12.0
 extends_documentation_fragment:
     - ansible.eda.eda_controller.auths
 """
@@ -105,6 +125,8 @@ EXAMPLES = r"""
     scm_branch: "devel"
     organization_name: Default
     state: present
+    update_revision_on_launch: True
+    scm_update_cache_timeout: 3600
 
 - name: Delete the project
   ansible.eda.project:
@@ -113,6 +135,28 @@ EXAMPLES = r"""
     aap_password: MySuperSecretPassw0rd
     name: "Example Project"
     state: absent
+
+- name: Create project and wait for import to complete
+  ansible.eda.project:
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
+    name: "Example Project"
+    url: "https://example.com/project1"
+    organization_name: Default
+    wait: true
+    state: present
+
+- name: Create project without waiting (faster but may cause race conditions)
+  ansible.eda.project:
+    aap_hostname: https://my_eda_host/
+    aap_username: admin
+    aap_password: MySuperSecretPassw0rd
+    name: "Example Project"
+    url: "https://example.com/project1"
+    organization_name: Default
+    wait: false
+    state: present
 """
 
 RETURN = r"""
@@ -124,6 +168,7 @@ id:
 """
 
 
+import time
 from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
@@ -133,6 +178,63 @@ from ..module_utils.client import Client
 from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
+
+
+def wait_for_project_sync(
+    controller: Controller,
+    project_id: int,
+    timeout: int = 60,
+    poll_interval: int = 2,
+) -> None:
+    """
+    Wait for a project import/sync to complete.
+
+    Args:
+        controller: The controller instance
+        project_id: The ID of the project to wait for
+        timeout: Maximum time to wait in seconds (default: 60)
+        poll_interval: Time between polls in seconds (default: 2)
+
+    Raises:
+        EDAError: If the import fails or times out
+    """
+    project_endpoint = f"projects/{project_id}"
+    start_time = time.time()
+    last_import_state = None
+
+    while time.time() - start_time < timeout:
+        try:
+            project = controller.get_endpoint(project_endpoint)
+            if project.status == 200 and project.json:
+                import_state = project.json.get("import_state")
+
+                # Log state changes for debugging
+                if import_state != last_import_state:
+                    last_import_state = import_state
+
+                # Check if import completed successfully
+                if import_state == "completed":
+                    # Add a small delay to ensure database transaction commits
+                    time.sleep(1)
+                    return
+
+                # Check if import failed
+                if import_state == "failed":
+                    error_msg = project.json.get("import_error", "Unknown error")
+                    raise EDAError(f"Project import failed: {error_msg}")
+
+        except EDAError:
+            raise
+        except Exception:
+            # Continue polling on transient errors
+            pass
+
+        time.sleep(poll_interval)
+
+    raise EDAError(
+        f"Timeout waiting for project import to complete after {timeout} seconds. "
+        f"Last state: {last_import_state}"
+    )
 
 
 def main() -> None:
@@ -148,6 +250,9 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         state=dict(choices=["present", "absent"], default="present"),
         sync=dict(type="bool", default=False),
+        wait=dict(type="bool", default=True),
+        update_revision_on_launch=dict(type="bool", default=False),
+        scm_update_cache_timeout=dict(type="int", default=0),
     )
 
     argument_spec.update(AUTH_ARGSPEC)
@@ -175,6 +280,7 @@ def main() -> None:
     url = module.params.get("url")
     proxy = module.params.get("proxy")
     sync_enabled = module.params.get("sync")
+    wait_for_completion = module.params.get("wait")
     project = {}
 
     try:
@@ -201,6 +307,18 @@ def main() -> None:
     scm_branch = module.params.get("scm_branch")
     credential = module.params.get("credential")
     ret = {}
+    update_revision_on_launch = module.params.get("update_revision_on_launch")
+    scm_update_cache_timeout = module.params.get("scm_update_cache_timeout")
+
+    # Validate that update_revision_on_launch is enabled when scm_update_cache_timeout is set
+    if (
+        scm_update_cache_timeout
+        and scm_update_cache_timeout > 0
+        and not update_revision_on_launch
+    ):
+        module.fail_json(
+            msg="scm_update_cache_timeout requires update_revision_on_launch to be true"
+        )
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -248,6 +366,20 @@ def main() -> None:
     else:
         project_params["name"] = project_name
 
+    if (
+        "update_revision_on_launch" in module.params
+        and module.params.get("update_revision_on_launch") is not None
+    ):
+        project_params["update_revision_on_launch"] = module.params.get(
+            "update_revision_on_launch"
+        )
+    if (
+        "scm_update_cache_timeout" in module.params
+        and module.params.get("scm_update_cache_timeout") is not None
+    ):
+        project_params["scm_update_cache_timeout"] = module.params.get(
+            "scm_update_cache_timeout"
+        )
     # If the state was present and we can let the module build or update the existing project,
     # this will return on its own
     try:
@@ -260,6 +392,13 @@ def main() -> None:
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
 
+    # Wait for project import to complete if project was created or updated
+    if wait_for_completion and ret.get("changed") and ret.get("id"):
+        try:
+            wait_for_project_sync(controller, ret["id"])
+        except EDAError as eda_err:
+            module.fail_json(msg=str(eda_err))
+
     if sync_enabled and project:
         sync_endpoint = f"{project_endpoint}/{ret['id']}/sync"
         try:
@@ -270,6 +409,13 @@ def main() -> None:
             )
         except EDAError as eda_err:
             module.fail_json(msg=str(eda_err))
+
+        # Wait for sync to complete
+        if wait_for_completion:
+            try:
+                wait_for_project_sync(controller, ret["id"])
+            except EDAError as eda_err:
+                module.fail_json(msg=str(eda_err))
 
     module.exit_json(**ret)
 

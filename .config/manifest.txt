@@ -10,6 +10,7 @@ examples/
 examples/eda-setup.yml
 extensions/
 extensions/eda/
+extensions/eda/eda_runtime.yml
 extensions/eda/plugins/
 extensions/eda/plugins/event_filter/
 extensions/eda/plugins/event_filter/dashes_to_underscores.py

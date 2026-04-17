@@ -122,6 +122,12 @@ options:
       - This field will be removed in version 3.0.0.
     type: bool
     default: true
+  restart_on_project_update:
+    description:
+      - Used to indicate if an activation should restart after a project update.
+    type: bool
+    default: False
+    version_added: '2.12.0'
   event_streams:
     description:
       - A list of event stream names that this rulebook activation listens to.
@@ -154,6 +160,16 @@ options:
     type: str
     default: "error"
     choices: ["debug", "info", "error"]
+  enable_persistence:
+    description:
+      - Enable event persistence for this activation.
+    type: bool
+    default: false
+  rule_engine_credential_id:
+    description:
+      - The ID of the Event-Driven Ansible Rule Engine Credential.
+      - Optional parameter. When omitted, the field will not be sent in the request.
+    type: int
   state:
     description:
       - Desired state of the resource.
@@ -181,6 +197,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     state: disabled
+    restart_on_project_update: False
 
 - name: Create a rulebook activation with event_streams option
   ansible.eda.rulebook_activation:
@@ -194,6 +211,7 @@ EXAMPLES = r"""
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
+    restart_on_project_update: False
 
 - name: Rename a rulebook activation
   ansible.eda.rulebook_activation:
@@ -203,6 +221,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
+    restart_on_project_update: False
 
 - name: Update a rulebook activation
   ansible.eda.rulebook_activation:
@@ -214,27 +233,42 @@ EXAMPLES = r"""
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
 
+- name: Restart a rulebook activation on project update
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    log_level: debug
+    restart_policy: always
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    restart_on_project_update: True
+
 - name: Enable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: enabled
+    restart_on_project_update: False
 
 - name: Disable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     new_name: "Example Rulebook Activation New Name"
     state: disabled
+    restart_on_project_update: False
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - Restart"
     organization_name: "Default"
     restart: true
+    restart_on_project_update: False
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
+    restart_on_project_update: False
 """
 
 
@@ -488,6 +522,22 @@ def create_params(
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
 
+    if (
+        "restart_on_project_update" in module.params
+        and module.params.get("restart_on_project_update") is not None
+    ):
+        activation_params["restart_on_project_update"] = module.params[
+            "restart_on_project_update"
+        ]
+
+    if module.params.get("enable_persistence") is not None:
+        activation_params["enable_persistence"] = module.params["enable_persistence"]
+
+    if module.params.get("rule_engine_credential_id") is not None:
+        activation_params["rule_engine_credential_id"] = module.params[
+            "rule_engine_credential_id"
+        ]
+
     return activation_params
 
 
@@ -537,9 +587,12 @@ def main() -> None:
             removed_from_collection="ansible.eda",
         ),
         log_level=dict(type="str", choices=["debug", "info", "error"], default="error"),
+        enable_persistence=dict(type="bool", default=False),
+        rule_engine_credential_id=dict(type="int"),
         state=dict(
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
+        restart_on_project_update=dict(type="bool", default=False),
     )
 
     # Define the state the activation is transitioning to, and uses
@@ -601,6 +654,8 @@ def main() -> None:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
 
     if restart:
+        if not activation:
+            module.fail_json(msg="Cannot restart activation that does not exist.")
         try:
             result = controller.restart_if_needed(
                 activation,

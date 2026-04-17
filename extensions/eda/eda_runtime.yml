@@ -1,0 +1,49 @@
+---
+plugin_routing:
+  event_filter:
+    noop:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          No-op filter, simply stop using it.
+  event_source:
+    aws_cloudtrail:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use amazon.aws.aws_cloudtrail instead.
+    aws_sqs_queue:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use amazon.aws.aws_sqs_queue instead.
+    azure_service_bus:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use azure.azcollection.azure_service_bus instead.
+    file:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.file instead.
+    file_watch:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.file_watch instead.
+    journald:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.journald instead.
+    tick:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use the eda.builtin.generic or eda.builtin.range source instead.
+    url_check:
+      deprecation:
+        removal_version: "3.0.0"
+        warning_text: |
+          Please use community.eda.url_check instead.

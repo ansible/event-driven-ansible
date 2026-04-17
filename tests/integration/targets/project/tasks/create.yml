@@ -8,6 +8,7 @@
     url: "{{ url }}"
     description: "Example project description"
     organization_name: Default
+    update_revision_on_launch: false
     state: present
   check_mode: true
   register: r
@@ -24,6 +25,7 @@
     url: "{{ url }}"
     proxy: "{{ proxy }}"
     organization_name: Default
+    update_revision_on_launch: false
     state: present
   register: r
 
@@ -95,6 +97,11 @@
   ansible.eda.project:
     name: "{{ item }}"
     state: absent
+  retries: 3
+  delay: 2
+  until: r is not failed
+  register: r
+  ignore_errors: true
 
 - name: Check create project with missing url
   ansible.eda.project:
@@ -110,3 +117,70 @@
     that:
       - r.failed
       - "'Parameter url is required' in r.msg"
+
+- name: Create project with update_revision_on_launch enabled
+  ansible.eda.project:
+    name: "{{ project_name }}_update_revision_on_launch"
+    url: "{{ url }}"
+    description: "Project with auto-sync enabled"
+    organization_name: Default
+    update_revision_on_launch: true
+    scm_update_cache_timeout: 3600
+    state: present
+  register: r
+
+- name: Check project creation with auto-sync
+  assert:
+    that:
+      - r.changed
+
+- name: Get project info to verify auto-sync parameters
+  ansible.eda.project_info:
+    name: "{{ project_name }}_update_revision_on_launch"
+  register: r_info
+
+- name: Verify update_revision_on_launch and scm_update_cache_timeout are set
+  assert:
+    that:
+      - r_info.projects | length > 0
+      - r_info.projects[0].update_revision_on_launch is true
+      - r_info.projects[0].scm_update_cache_timeout == 3600
+
+- name: Update project with different auto-sync timeout
+  ansible.eda.project:
+    name: "{{ project_name }}_update_revision_on_launch"
+    url: "{{ url }}"
+    description: "Project with updated auto-sync timeout"
+    organization_name: Default
+    update_revision_on_launch: true
+    scm_update_cache_timeout: 7200
+    state: present
+  register: r
+
+- name: Check project update
+  assert:
+    that:
+      - r.changed
+
+- name: Get project info after update
+  ansible.eda.project_info:
+    name: "{{ project_name }}_update_revision_on_launch"
+  register: r_info
+
+- name: Verify auto-sync parameters are updated
+  assert:
+    that:
+      - r_info.projects | length > 0
+      - r_info.projects[0].update_revision_on_launch is true
+      - r_info.projects[0].scm_update_cache_timeout == 7200
+
+- name: Delete project with auto-sync
+  ansible.eda.project:
+    name: "{{ project_name }}_update_revision_on_launch"
+    state: absent
+  register: r
+
+- name: Check if delete project with auto-sync
+  assert:
+    that:
+      - r.changed

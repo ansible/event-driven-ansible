@@ -8,12 +8,9 @@ on:
       - "v*.*"
   pull_request:
     branches: ["main"]
-  # Run the tox tests every 8 hours.
-  # This will help to identify faster if
-  # there is a CI failure related to a
-  # change in any dependency.
+  # Run daily to catch dependency issues
   schedule:
-    - cron: '0 */8 * * *'
+    - cron: "0 10 * * *"
   # Run on demand
   workflow_dispatch:
 
@@ -36,7 +33,7 @@ jobs:
     steps:
       - name: Determine matrix
         id: generate_matrix
-        uses: ansible/actions/matrix@v0
+        uses: ansible/actions/matrix@v1
         with:
           min_python: "3.9"
           max_python: "3.12"
@@ -59,6 +56,20 @@ jobs:
           # building docs on macos is needed to avoid diverging behavior
           platforms: linux,macos,linux-arm64:ubuntu-24.04-arm
           skip_explode: "1"
+
+      - name: Notify to slack if failure
+        if: ${{ failure() && github.event_name == 'schedule' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_USERNAME: GH Slack Notifier for EDA
+          SLACK_TITLE: Failure of scheduled tests for event-driven-ansible
+          SLACK_MESSAGE: |
+            Scheduled tests for event-driven-ansible failed.
+            Job: prepare
+            Id: ${{ github.run_id }}
+            Workflow: ${{ github.workflow }}
+
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
@@ -137,7 +148,7 @@ jobs:
         if: ${{ matrix.command5 }}
 
       - name: Archive logs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: ${{ matrix.name != 'lint' }}
         with:
           name: logs-${{ matrix.name }}
@@ -149,7 +160,7 @@ jobs:
             ansible_collections/ansible/eda/tests/output/junit/*.xml
 
       - name: Archive collection archive
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         # we need to do for only one job, 'tox -e docs' when run on linux:
         if: ${{ matrix.name == 'docs-sanity' }}
         with:
@@ -168,6 +179,20 @@ jobs:
             exit 99
           fi
         # https://github.com/actions/toolkit/issues/193
+
+      - name: Notify to slack if failure
+        if: ${{ failure() && github.event_name == 'schedule' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_USERNAME: GH Slack Notifier for EDA
+          SLACK_TITLE: Failure of scheduled tests for event-driven-ansible
+          SLACK_MESSAGE: |
+            Scheduled tests for event-driven-ansible failed.
+            Job: ${{ matrix.name }}
+            Id: ${{ github.run_id }}
+            Workflow: ${{ github.workflow }}
+
   check:
     if: always()
     environment: check
@@ -192,7 +217,7 @@ jobs:
       - run: pip3 install 'coverage>=7.5.1'
 
       - name: Merge logs into a single archive
-        uses: actions/upload-artifact/merge@v6
+        uses: actions/upload-artifact/merge@v7
         with:
           name: logs
           include-hidden-files: true
@@ -202,7 +227,7 @@ jobs:
           separate-directories: true
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: logs
           path: .
@@ -225,7 +250,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage data
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v6.0.0
         with:
           name: ${{ matrix.name }}
           # verbose: true # optional (default = false)
@@ -252,7 +277,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download the artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: collection-artifact
 

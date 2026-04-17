@@ -24,7 +24,7 @@
         project_name: "test_project_{{ test_id }}"
         url: "https://github.com/ansible/eda-sample-project"
         scm_branch: "stable-1.1"
-        proxy: "http://eda:testpass@host.docker.internal:3128"
+        proxy: "http://eda:testpass@squid:3128"
 
 
     - include_tasks: create.yml
@@ -40,4 +40,6 @@
       loop:
         - "{{ project_name }}"
         - "{{ project_name }}_new"
+        - "{{ project_name }}_test_partial"
+        - "{{ project_name }}_update_revision_on_launch"
       ignore_errors: true

@@ -35,6 +35,8 @@
         project_name: "Test_Project_{{ test_id }}"
         token_value: "your_private_access_token_name"
         image_url: "quay.io/ansible/awx:latest"
+        project_update_revision_on_launch: true
+        project_scm_update_cache_timeout: 3600
         scm_url: https://github.com/ansible/event-driven-ansible.git
         rulebook_name: "demo_controller_rulebook.yml"
         event_stream_name: "Test_EventStream_{{ test_id }}"
@@ -73,7 +75,7 @@
             - id: "authorize_password"
               label: "SSL Certificate Passphrase"
               type: "string"
-              secret": true
+              secret: true
         injectors:
           extra_vars:
             username: joe
@@ -166,6 +168,8 @@
         url: "{{ scm_url }}"
         credential: "{{ credential_name }}"
         organization_name: Default
+        update_revision_on_launch: "{{ project_update_revision_on_launch }}"
+        scm_update_cache_timeout: "{{ project_scm_update_cache_timeout }}"
         state: present
       register: project_creation
 
@@ -246,13 +250,14 @@
         _source_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name) | list | first }}"
         _copied_activation: "{{ _result_activation_info.activations | selectattr('name', 'equalto', activation_name_copy) | list | first }}"
 
-    - name: Assert that rulebook activation was copied and all fields are equal except
-            'name', 'id', 'created_at', 'updated_at', 'modified_at',
-            'status' and 'status_message'
+    - name:
+        Assert that rulebook activation was copied and all fields are equal except
+        'name', 'id', 'created_at', 'updated_at', 'modified_at',
+        'status' and 'status_message'
       ansible.builtin.assert:
         that:
           - _source_activation | dict2items | rejectattr('key', 'in', ignored_fields) | items2dict ==
-             _copied_activation | dict2items | rejectattr('key', 'in', ignored_fields) | items2dict
+            _copied_activation | dict2items | rejectattr('key', 'in', ignored_fields) | items2dict
           - _source_activation.name + '_Copy' == _copied_activation.name
       vars:
         ignored_fields:
@@ -282,7 +287,7 @@
       assert:
         that:
           - _result.failed
-          - "\"Unable to access 'id' of the activation to copy from.\" in _result.msg"
+          - '"Unable to access ''id'' of the activation to copy from." in _result.msg'
 
     - name: Copy activation and use existing name
       ansible.eda.rulebook_activation_copy:
@@ -662,34 +667,102 @@
         that:
           - event_stream_name_2 in (source_mappings_dict | map(attribute='event_stream_name') | list )
 
-    - name: Delete project
-      ansible.eda.project:
-        name: "{{ project_name }}"
-        state: absent
-      register: project_deletion
-
-    - name: Assert that the project was deleted successfully
-      assert:
-        that:
-          - project_deletion is changed
-          - project_deletion is success
-
-    - name: Delete credential
-      ansible.eda.credential:
-        name: "{{ credential_name }}"
-        state: absent
-      register: credential_deletion
-
-    - name: Assert that the credential was created successfully
-      assert:
-        that:
-          - credential_deletion is changed
-          - credential_deletion is success
-
-    - name: Delete rulebook activation
+    - name: Create activation with restart_on_project_update enabled
       ansible.eda.rulebook_activation:
-        name: "{{ activation_name }}"
+        name: "{{ activation_name }}_restart_on_update"
+        description: "Test activation with restart on project update"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        restart_on_project_update: true
+        state: disabled
+      register: r
+
+    - name: Assert activation with restart_on_project_update was created
+      assert:
+        that:
+          - r.changed
+          - r.id is defined
+
+    - name: Delete activation with restart_on_project_update
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_restart_on_update"
         state: absent
+      register: r
+
+    - name: Assert activation with restart_on_project_update was deleted
+      assert:
+        that:
+          - r.changed
+
+    # Test event persistence with rule_engine_credential_id
+    - name: Create a Rule Engine credential for persistence testing
+      ansible.eda.credential:
+        state: present
+        name: "Test_Credential_RuleEngine_{{ test_id }}"
+        description: "Rule Engine credential for event persistence testing"
+        credential_type_name: "Event-Driven Ansible Rule Engine"
+        inputs:
+          postgres_db_host: "localhost"
+          postgres_db_port: "5432"
+          postgres_db_name: "eda"
+          postgres_db_user: "eda_user"
+          postgres_db_password: "eda_password"
+        organization_name: Default
+      register: _rule_engine_cred_result
+
+    - name: Get credential ID for rule engine
+      ansible.eda.credential_info:
+        name: "Test_Credential_RuleEngine_{{ test_id }}"
+      register: _rule_engine_cred_for_persistence
+
+    - name: Create activation with event persistence
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_with_persistence"
+        description: "Test activation with event persistence enabled"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        eda_credentials:
+          - "{{ credential_name_aap }}"
+        enable_persistence: true
+        rule_engine_credential_id: "{{ _rule_engine_cred_for_persistence.credentials[0].id }}"
+        state: disabled
+      register: r
+
+    - name: Assert activation with persistence was created
+      assert:
+        that:
+          - r.changed
+          - r.id is defined
+
+    - name: Get information about the activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}_with_persistence"
+      register: _result_persistence_activation
+
+    - name: Assert that persistence attributes are set correctly
+      assert:
+        that:
+          - _result_persistence_activation.activations[0].enable_persistence is defined
+          - _result_persistence_activation.activations[0].enable_persistence == true
+          - _result_persistence_activation.activations[0].rule_engine_credential_id is defined
+          - _result_persistence_activation.activations[0].rule_engine_credential_id == _rule_engine_cred_for_persistence.credentials[0].id
+
+    - name: Delete activation with persistence
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_with_persistence"
+        state: absent
+      register: r
+
+    - name: Assert activation was deleted
+      assert:
+        that:
+          - r.changed
 
   always:
     - name: Delete project
@@ -709,6 +782,8 @@
         - "{{ activation_name_source_index }}"
         - "{{ activation_name_wrong_source }}"
         - "{{ activation_name_copy }}"
+        - "{{ activation_name }}_restart_on_update"
+        - "{{ activation_name }}_with_persistence"
         - Invalid_activation
       ignore_errors: true
 
@@ -736,6 +811,7 @@
         - "{{ credential_name_basic }}"
         - "{{ credential_name_aap }}"
         - "{{ credential_name_container_registry }}"
+        - "Test_Credential_RuleEngine_{{ test_id }}"
       ignore_errors: true
 
     - name: Delete credential type

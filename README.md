@@ -30,6 +30,21 @@ Several event sources and event filters have been migrated from this collection 
 
 **Note:** For backwards compatibility, these plugins remain available in the `ansible.eda` namespace and are automatically mapped to `eda.builtin`. However, they are no longer actively maintained in this collection. Please update your rulebooks to use the `eda.builtin` versions.
 
+### Deprecated Event Sources
+
+- `ansible.eda.aws_cloudtrail` → `amazon.aws.aws_cloudtrail`
+- `ansible.eda.aws_sqs_queue` → `amazon.aws.aws_sqs_queue`
+- `ansible.eda.azure_service_bus` → `azure.azcollection.azure_service_bus`
+- `ansible.eda.file` → `community.eda.file`
+- `ansible.eda.file_watch` → `community.eda.file_watch`
+- `ansible.eda.journald` → `community.eda.journald`
+- `ansible.eda.tick` → use either `eda.builtin.generic` or `eda.builtin.range`
+- `ansible.eda.url_check` → `community.eda.url_check`
+
+### Deprecated Event Filters
+
+- `ansible.eda.noop` -- no replacement for it, simply stop using it
+
 ## Requirements
 
 ### Ansible version compatibility
@@ -127,6 +142,12 @@ See [CONTRIBUTING.md](https://github.com/ansible/event-driven-ansible/blob/main/
 
 - [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) - Details on contributing to Ansible
 - [Contributing to Collections](https://docs.ansible.com/ansible/devel/dev_guide/developing_collections.html#contributing-to-collections) - How to check out collection git repositories correctly
+
+## Support
+
+If you installed this collection from either from Galaxy or GitHub, there may community help available on the [Ansible Forum](https://forum.ansible.com/).
+
+Red Hat customers are entitled to support for certified content through Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner.
 
 ## Release notes
 

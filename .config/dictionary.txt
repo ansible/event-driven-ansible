@@ -23,7 +23,9 @@ alertmanager
 alinabuzachis
 antsibull
 auths
+autosync
 awxuser
+azcollection
 basepython
 benthomasosn
 bindep

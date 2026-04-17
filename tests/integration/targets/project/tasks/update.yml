@@ -36,7 +36,8 @@
     name: "{{ project_name }}_new"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
-    url: "https://example.com/project1"
+    url: "https://github.com/ansible/event-driven-ansible"
+    proxy: "{{ proxy }}"
     organization_name: Default
     state: present
   register: r
@@ -51,7 +52,8 @@
     name: "{{ project_name }}_new"
     new_name: "{{ project_name }}_new"
     description: "Example project description"
-    url: "https://example.com/project1"
+    url: "https://github.com/ansible/event-driven-ansible"
+    proxy: "{{ proxy }}"
     organization_name: Default
     state: present
   register: r
@@ -61,11 +63,23 @@
     that:
       - not r.changed
 
+- name: Wait for project sync to complete before delete
+  ansible.eda.project_info:
+    name: "{{ project_name }}_new"
+  register: project_info
+  until: project_info.projects[0].import_state == "completed"
+  failed_when: project_info.projects[0].import_state == "failed"
+  retries: 30
+  delay: 2
+
 - name: Delete updated project
   ansible.eda.project:
     name: "{{ project_name }}_new"
     state: absent
   register: r
+  retries: 3
+  delay: 2
+  until: r is not failed
 
 - name: Check if delete project
   assert:
