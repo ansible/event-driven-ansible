@@ -3,6 +3,7 @@
 This module provides an event source plugin for consuming messages from Apache Kafka
 topics using the aiokafka library with support for SSL/SASL authentication.
 """
+
 from __future__ import annotations
 
 import asyncio
