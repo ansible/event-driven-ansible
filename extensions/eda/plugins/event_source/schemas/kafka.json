@@ -129,6 +129,65 @@
             "type": "integer",
             "title": "Feedback Timeout",
             "default": 120
+        },
+        "message_format": {
+            "title": "Message Format",
+            "description": "The deserialization format for Kafka message values. Use 'json' for JSON messages (default) or 'avro' for Apache Avro binary messages.",
+            "type": "string",
+            "enum": [
+                "json",
+                "avro"
+            ],
+            "default": "json"
+        },
+        "avro_schema_file": {
+            "title": "Avro Schema File",
+            "description": "Path to a local Avro schema file (.avsc) used for deserializing Avro messages. Required when message_format is 'avro' and messages are in raw binary format.",
+            "type": "string"
+        },
+        "schema_registry_url": {
+            "title": "Schema Registry URL",
+            "description": "URL of a Confluent-compatible Schema Registry. Enables automatic schema lookup for Avro messages with wire format headers.",
+            "type": "string"
+        },
+        "schema_registry_basic_auth": {
+            "title": "Schema Registry Basic Auth",
+            "description": "Basic auth credentials for Schema Registry in user:password format.",
+            "type": "string",
+            "format": "password"
+        },
+        "schema_registry_bearer_token": {
+            "title": "Schema Registry Bearer Token",
+            "description": "Static bearer or JWT token for Schema Registry authentication.",
+            "type": "string",
+            "format": "password"
+        },
+        "schema_registry_oauth_client_id": {
+            "title": "Schema Registry OAuth Client ID",
+            "description": "OAuth 2.0 client ID for Schema Registry authentication.",
+            "type": "string"
+        },
+        "schema_registry_oauth_client_secret": {
+            "title": "Schema Registry OAuth Client Secret",
+            "description": "OAuth 2.0 client secret for Schema Registry authentication.",
+            "type": "string",
+            "format": "password"
+        },
+        "schema_registry_oauth_token_url": {
+            "title": "Schema Registry OAuth Token URL",
+            "description": "OAuth 2.0 token endpoint URL for obtaining access tokens.",
+            "type": "string"
+        },
+        "schema_registry_oauth_scope": {
+            "title": "Schema Registry OAuth Scope",
+            "description": "OAuth 2.0 scope to request when obtaining access tokens.",
+            "type": "string"
+        },
+        "schema_registry_ssl": {
+            "title": "Schema Registry SSL",
+            "description": "When true, reuse Kafka SSL settings (cafile, certfile, keyfile) for Schema Registry HTTPS connections.",
+            "type": "boolean",
+            "default": true
         }
     },
     "required": [

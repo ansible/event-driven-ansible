@@ -61,6 +61,7 @@ module = [
   "aiokafka.*", # https://github.com/aio-libs/aiokafka/issues/980
   "ansible.*", # https://github.com/ansible/ansible/issues/83801
   "asyncmock", # https://github.com/timsavage/asyncmock/issues/8
+  "fastavro", # No py.typed / stubs available
   "kafka.*", # https://github.com/dpkp/kafka-python/issues/2446
 ]
 ignore_missing_imports = true

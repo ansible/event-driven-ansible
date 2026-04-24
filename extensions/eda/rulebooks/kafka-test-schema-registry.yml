@@ -1,0 +1,30 @@
+---
+- name: Test Kafka Avro with Schema Registry
+  hosts: localhost
+  match_multiple_rules: true
+  sources:
+    - ansible.eda.kafka:
+        topic: "{{ topic }}"
+        host: "{{ host }}"
+        port: "{{ port }}"
+        offset: "{{ offset }}"
+        group_id: "{{ group_id }}"
+        message_format: "{{ message_format }}"
+        schema_registry_url: "{{ schema_registry_url }}"
+  rules:
+    - name: match avro event from schema registry
+      condition: event.body.name == "Avro Schema Registry Test"
+      action:
+        debug:
+          msg: "Rule fired successfully - Avro + Schema Registry works! value={{ event.body.value }}"
+
+    - name: match any avro event
+      condition: event.body.name is defined and event.body.name != "stop"
+      action:
+        debug:
+          msg: "Received Avro event: name={{ event.body.name }}, value={{ event.body.value }}"
+
+    - name: stop
+      condition: event.body.name == "stop"
+      action:
+        shutdown:
