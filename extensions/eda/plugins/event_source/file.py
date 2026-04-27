@@ -1,3 +1,9 @@
+"""Event source plugin for loading facts from YAML files.
+
+This module provides an event source plugin for loading facts from YAML files
+initially and when the file changes using watchdog library.
+"""
+
 import pathlib
 from asyncio import Queue
 from typing import Any, Union
@@ -66,6 +72,8 @@ def main(queue: Queue[Any], args: dict[str, Any]) -> None:
 
 
 def _observe_files(queue: Queue[Any], files: list[str]) -> None:
+    """Observe file changes and send facts when files are modified."""
+
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 
@@ -73,18 +81,20 @@ def _observe_files(queue: Queue[Any], files: list[str]) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self, event: FileSystemEvent) -> None:
+            """Handle file creation events."""
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
         def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
-            pass
+            """Handle file deletion events."""
 
         def on_modified(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file modification events."""
             if event.src_path in files:
                 send_facts(queue, event.src_path)
 
         def on_moved(self: "Handler", event: FileSystemEvent) -> None:
-            pass
+            """Handle file move events."""
 
     observer = Observer()
     handler = Handler()
