@@ -521,9 +521,7 @@ def create_params(
         ]
 
     if not is_aap_24 and module.params.get("k8s_pod_tolerations"):
-        activation_params["k8s_pod_tolerations"] = module.params[
-            "k8s_pod_tolerations"
-        ]
+        activation_params["k8s_pod_tolerations"] = module.params["k8s_pod_tolerations"]
 
     if not is_aap_24 and module.params.get("event_streams"):
         # Process event streams and source mappings
