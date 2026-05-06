@@ -1,6 +1,16 @@
 # Example playbook that demonstrates how to use the Ansible EDA collection to perform a basic setup.
+#
+# Authentication:
+#   When connecting through AAP Gateway (AAP 2.5+), only OAuth token
+#   authentication is supported. Use aap_token instead of
+#   aap_username/aap_password. See the "Gateway token authentication"
+#   play below for an example.
+#
+#   When connecting directly to EDA Controller (not through Gateway),
+#   both basic auth and token auth are supported.
 
-- name: Example playbook for Ansible EDA collection
+# --- Direct EDA Controller connection (basic auth) ---
+- name: Example playbook for Ansible EDA collection (basic auth)
   hosts: localhost
   connection: local
   gather_facts: false
@@ -115,3 +125,28 @@
       delay: 2
       ansible.eda.rulebook_activation_info:
         name: activation-example
+
+# --- Gateway connection (token auth, required for AAP 2.5+) ---
+- name: Gateway token authentication example
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    # Generate a token in the AAP UI (User > Tokens) or via:
+    #   POST /api/gateway/v1/tokens/
+    aap_hostname: your gateway url, e.g. https://aap-gateway.example.com
+    aap_token: your oauth token
+    aap_validate_certs: false
+  module_defaults:
+    group/ansible.eda.eda:
+      aap_hostname: "{{ aap_hostname }}"
+      aap_token: "{{ aap_token }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
+  tasks:
+    - name: List projects via Gateway
+      ansible.eda.project_info:
+      register: projects
+
+    - name: Show projects
+      ansible.builtin.debug:
+        var: projects
