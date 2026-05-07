@@ -44,6 +44,12 @@ Generating a Token
 
 **Via the API:**
 
+.. note::
+
+   The ``/api/gateway/v1/tokens/`` endpoint accepts basic auth as a bootstrap
+   mechanism for initial token creation. This is the only Gateway endpoint
+   where basic auth is supported.
+
 .. code-block:: bash
 
    curl -X POST https://aap-gateway.example.com/api/gateway/v1/tokens/ \

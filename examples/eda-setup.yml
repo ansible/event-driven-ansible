@@ -136,7 +136,8 @@
     #   POST /api/gateway/v1/tokens/
     aap_hostname: your gateway url, e.g. https://aap-gateway.example.com
     aap_token: your oauth token
-    aap_validate_certs: false
+    # Set to false only in lab environments with self-signed certificates.
+    aap_validate_certs: true
   module_defaults:
     group/ansible.eda.eda:
       aap_hostname: "{{ aap_hostname }}"
