@@ -1,5 +1,3 @@
 extra_links:
   - description: Changelog
     url: changelog.html
-  - description: Gateway Authentication
-    url: gateway_authentication.html
