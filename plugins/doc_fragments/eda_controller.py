@@ -6,6 +6,14 @@
 
 class ModuleDocFragment:
     AUTHS = """
+notes:
+    - When connecting through AAP Gateway (AAP 2.5+), only OAuth token
+      authentication is supported. Basic auth (username/password) is
+      B(not supported) through Gateway.
+    - Tokens can be generated in the AAP UI under User > Tokens, or
+      via the C(/api/gateway/v1/tokens/) API endpoint.
+    - When connecting directly to EDA Controller (not through Gateway),
+      both basic auth and token auth are supported.
 options:
     controller_host:
         description:
