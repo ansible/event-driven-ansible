@@ -250,7 +250,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage data
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@v6.0.1
         with:
           name: ${{ matrix.name }}
           # verbose: true # optional (default = false)
