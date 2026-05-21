@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from ssl import CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED
 from typing import TYPE_CHECKING, Any
@@ -18,10 +19,14 @@ DOCUMENTATION = r"""
 short_description: Receive events via a kafka topic.
 description:
   - An ansible-rulebook event source plugin for receiving events via a kafka topic.
-  - To make each message unique you can either add message_uuid to the header or
-  - add message_uuid to the message body
-  - if both of these are missing we will use the {topic}:{partition}.{offset} to
-  - make the unique message uuid
+  - Each event is assigned a valid RFC 4122 UUID under meta.uuid.
+  - By default, a deterministic UUID5 is generated from the Kafka message
+    coordinates (topic, partition, offset).
+  - You can override this by providing a valid UUID via the "message_uuid"
+    header or the "message_uuid" field in the message body. Headers take
+    precedence over body.
+  - If a provided "message_uuid" is not a valid UUID, the generated UUID is
+    used instead and the original value is preserved under meta.message_id.
 options:
   host:
     description:
@@ -170,6 +175,7 @@ EXAMPLES = r"""
 
 MESSAGE_UUID_KEY = "message_uuid"
 QUEUE_TIMEOUT = 120
+_uuid_warning = {"emitted": False}
 
 
 def _validate_and_normalize_topics(args: dict[str, Any]) -> list[str] | None:
@@ -330,6 +336,15 @@ def get_message_timestamp(msg: ConsumerRecord) -> str:
     )
 
 
+def is_valid_uuid(value: str) -> bool:
+    """Check if a string is a valid RFC 4122 UUID."""
+    try:
+        uuid.UUID(value)
+        return True  # noqa: TRY300
+    except (ValueError, AttributeError):
+        return False
+
+
 async def main(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
@@ -389,6 +404,52 @@ async def main(
         await kafka_consumer.stop()
 
 
+def _process_event_uuid(
+    msg: ConsumerRecord,
+    headers: dict[str, str],
+    data: dict[str, Any] | str | None,
+    event: dict[str, Any],
+) -> None:
+    """Process the event UUID from headers, body, or Kafka coordinates.
+
+    Priority: header message_uuid > body message_uuid > generated UUID5.
+    If a provided message_uuid is not a valid UUID, the generated UUID is
+    used and the original value is preserved under event.meta.message_id.
+    """
+    logger = logging.getLogger()
+
+    event_uuid = str(
+        uuid.uuid5(
+            uuid.NAMESPACE_OID,
+            f"{msg.topic}:{msg.partition}:{msg.offset}",
+        ),
+    )
+
+    message_id = None
+    if MESSAGE_UUID_KEY in headers:
+        message_id = headers[MESSAGE_UUID_KEY]
+    elif isinstance(data, dict) and MESSAGE_UUID_KEY in data:
+        message_id = data[MESSAGE_UUID_KEY]
+
+    if message_id:
+        if is_valid_uuid(message_id):
+            event_uuid = message_id
+        else:
+            # If not a valid UUID, we must warn the user and use
+            # the generated UUID instead. The original UUID is copied to
+            # event.meta.message_id for tracking purposes.
+            event["meta"]["message_id"] = message_id
+            if not _uuid_warning["emitted"]:
+                _uuid_warning["emitted"] = True
+                logger.warning(
+                    "Provided message_uuid is not a valid UUID,"
+                    " using generated UUID. The original value has been"
+                    " stored under event.meta.message_id for tracking.",
+                )
+
+    event["meta"]["uuid"] = event_uuid
+
+
 async def receive_msg(
     queue: asyncio.Queue[Any],
     kafka_consumer: AIOKafkaConsumer,
@@ -402,24 +463,20 @@ async def receive_msg(
     async for msg in kafka_consumer:
         event: dict[str, Any] = {
             "meta": {
-                "uuid": f"{msg.topic}:{msg.partition}:{msg.offset}",
                 "produced_at": get_message_timestamp(msg),
             },
         }
 
         # Process headers
+        headers: dict[str, str] = {}
         try:
-            headers: dict[str, str] = {
-                header[0]: header[1].decode(encoding) for header in msg.headers
-            }
+            headers = {header[0]: header[1].decode(encoding) for header in msg.headers}
             event["meta"]["headers"] = headers
-            if MESSAGE_UUID_KEY in headers:
-                event["meta"]["uuid"] = headers[MESSAGE_UUID_KEY]
-
         except UnicodeError:
             logger.exception("Unicode error while decoding headers")
 
         # Process message body
+        data = None
         try:
             value = msg.value.decode(encoding)
             data = json.loads(value)
@@ -428,17 +485,12 @@ async def receive_msg(
             data = value
         except UnicodeError:
             logger.exception("Unicode error while decoding message body")
-            data = None
+
+        # Process event UUID
+        _process_event_uuid(msg, headers, data, event)
 
         # Add data to the event and put it into the queue
         if data:
-            if (
-                MESSAGE_UUID_KEY not in event["meta"].get("headers", {})
-                and isinstance(data, dict)
-                and MESSAGE_UUID_KEY in data
-            ):
-                event["meta"]["uuid"] = data[MESSAGE_UUID_KEY]
-
             event["body"] = data
             await queue.put(event)
             if eda_feedback_queue:
