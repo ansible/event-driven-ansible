@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import uuid
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -124,7 +125,9 @@ def test_receive_from_kafka_place_in_queue(
         # Check for the new meta fields: uuid and produced_at
         assert "uuid" in myqueue.queue[0]["meta"]
         assert "produced_at" in myqueue.queue[0]["meta"]
-        assert myqueue.queue[0]["meta"]["uuid"] == "test-topic:0:0"
+        # UUID should be a valid UUID5 generated from topic:partition:offset
+        expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "test-topic:0:0"))
+        assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
         assert len(myqueue.queue) == TEST_ITEMS_COUNT
 
 
@@ -149,13 +152,14 @@ def test_mixed_topics_and_patterns(
 
 
 def test_message_uuid_in_headers(myqueue: MockQueue) -> None:
-    """Test that message_uuid from headers is used as the event uuid."""
+    """Test that valid message_uuid from headers is used as the event uuid."""
+    valid_uuid = "8472ff2c-6045-4418-8d4e-46f6cffc8557"
 
     class MockConsumerWithUUID(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
             self.async_iterator = AsyncIterator(
                 count=1,
-                headers={"message_uuid": "test-uuid-123", "foo": "bar"},
+                headers={"message_uuid": valid_uuid, "foo": "bar"},
             )
             return self.async_iterator
 
@@ -175,19 +179,20 @@ def test_message_uuid_in_headers(myqueue: MockQueue) -> None:
             ),
         )
         assert len(myqueue.queue) == 1
-        assert myqueue.queue[0]["meta"]["uuid"] == "test-uuid-123"
-        assert myqueue.queue[0]["meta"]["headers"]["message_uuid"] == "test-uuid-123"
+        assert myqueue.queue[0]["meta"]["uuid"] == valid_uuid
+        assert myqueue.queue[0]["meta"]["headers"]["message_uuid"] == valid_uuid
 
 
 def test_message_uuid_in_body(myqueue: MockQueue) -> None:
-    """Test that message_uuid from body overrides the generated uuid."""
+    """Test that valid message_uuid from body overrides the generated uuid."""
+    valid_uuid = "a1b2c3d4-e5f6-4789-abcd-ef0123456789"
 
     class MockConsumerWithBodyUUID(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
             self.async_iterator = AsyncIterator(
                 count=1,
                 headers={"foo": "bar"},
-                body={"message_uuid": "body-uuid-456", "data": "test"},
+                body={"message_uuid": valid_uuid, "data": "test"},
             )
             return self.async_iterator
 
@@ -207,19 +212,21 @@ def test_message_uuid_in_body(myqueue: MockQueue) -> None:
             ),
         )
         assert len(myqueue.queue) == 1
-        assert myqueue.queue[0]["meta"]["uuid"] == "body-uuid-456"
-        assert myqueue.queue[0]["body"]["message_uuid"] == "body-uuid-456"
+        assert myqueue.queue[0]["meta"]["uuid"] == valid_uuid
+        assert myqueue.queue[0]["body"]["message_uuid"] == valid_uuid
 
 
 def test_message_uuid_header_takes_precedence(myqueue: MockQueue) -> None:
     """Test that message_uuid from header takes precedence over body."""
+    header_uuid = "8472ff2c-6045-4418-8d4e-46f6cffc8557"
+    body_uuid = "a1b2c3d4-e5f6-4789-abcd-ef0123456789"
 
     class MockConsumerWithBothUUID(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
             self.async_iterator = AsyncIterator(
                 count=1,
-                headers={"message_uuid": "header-uuid", "foo": "bar"},
-                body={"message_uuid": "body-uuid", "data": "test"},
+                headers={"message_uuid": header_uuid, "foo": "bar"},
+                body={"message_uuid": body_uuid, "data": "test"},
             )
             return self.async_iterator
 
@@ -240,11 +247,11 @@ def test_message_uuid_header_takes_precedence(myqueue: MockQueue) -> None:
         )
         assert len(myqueue.queue) == 1
         # Header uuid should take precedence over body uuid
-        assert myqueue.queue[0]["meta"]["uuid"] == "header-uuid"
+        assert myqueue.queue[0]["meta"]["uuid"] == header_uuid
 
 
 def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
-    """Test that uuid is generated from topic:partition:offset when not provided."""
+    """Test that a valid UUID5 is generated from topic:partition:offset."""
 
     class MockConsumerWithCoordinates(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
@@ -274,7 +281,8 @@ def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
             ),
         )
         assert len(myqueue.queue) == 1
-        assert myqueue.queue[0]["meta"]["uuid"] == "my-topic:5:100"
+        expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "my-topic:5:100"))
+        assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
 
 
 def test_produced_at_timestamp(myqueue: MockQueue) -> None:
@@ -752,3 +760,41 @@ def test_feedback_queue_timeout(myqueue: MockQueue) -> None:
         assert len(myqueue.queue) == 1
         # Commit should not be called when timeout occurs
         assert commit_count_tracker["count"] == 0
+
+
+def test_invalid_uuid_in_header_falls_back_to_generated(myqueue: MockQueue) -> None:
+    """Test that invalid message_uuid in header falls back to generated UUID."""
+
+    class MockConsumerWithInvalidHeaderUUID(MockConsumer):
+        def __aiter__(self) -> AsyncIterator:
+            self.async_iterator = AsyncIterator(
+                count=1,
+                headers={"message_uuid": "not-a-valid-uuid", "foo": "bar"},
+                body={"data": "test"},
+                topic="my-topic",
+                partition=0,
+                offset=42,
+            )
+            return self.async_iterator
+
+    with patch(
+        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+        new=MockConsumerWithInvalidHeaderUUID,
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            ),
+        )
+        assert len(myqueue.queue) == 1
+        # Should use the generated UUID, not the invalid one
+        expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "my-topic:0:42"))
+        assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
+        # Original value should be preserved in message_id
+        assert myqueue.queue[0]["meta"]["message_id"] == "not-a-valid-uuid"
