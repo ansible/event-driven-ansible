@@ -103,6 +103,7 @@ testenv
 testpass
 testsecret
 testuser
+tolerations
 toctree
 toxinidir
 trustore
