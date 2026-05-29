@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 import aiohttp
+import yaml
 from aiokafka import AIOKafkaConsumer
 from aiokafka.helpers import create_ssl_context
 
@@ -239,8 +240,8 @@ options:
     default: true
 notes:
   - >-
-    A custom EDA credential type for this plugin is available as a GitHub Gist
-    at U(https://gist.github.com/B-Whitt/7b4d08dbc8b78a706b5db4a5ad00e22d). It uses C(extra_vars) and C(file) injectors
+    A custom EDA credential type for this plugin is included in the collection
+    at C(extensions/eda/plugins/event_source/credential_types/kafka-avro/). It uses C(extra_vars) and C(file) injectors
     to securely manage Kafka, SSL, Avro, and Schema Registry parameters.
   - >-
     For EDA credential type documentation, see
@@ -322,7 +323,7 @@ class AvroDeserializer:
     def __init__(
         self,
         *,  # keyword-only: prevents ambiguous boolean positional args (FBT001)
-        avro_schema_file: str | None = None,
+        avro_schema_file: str | dict[str, Any] | None = None,
         schema_registry_url: str | None = None,
         schema_registry_basic_auth: str | None = None,
         schema_registry_bearer_token: str | None = None,
@@ -331,10 +332,10 @@ class AvroDeserializer:
         schema_registry_oauth_token_url: str | None = None,
         schema_registry_oauth_scope: str | None = None,
         schema_registry_ssl: bool = True,
-        ssl_cafile: str | None = None,
-        ssl_certfile: str | None = None,
-        ssl_keyfile: str | None = None,
-        ssl_password: str | None = None,
+        schema_ssl_cafile: str | None = None,
+        schema_ssl_certfile: str | None = None,
+        schema_ssl_keyfile: str | None = None,
+        schema_ssl_password: str | None = None,
     ) -> None:
         """Initialize with local schema file and/or Schema Registry config.
 
@@ -348,10 +349,10 @@ class AvroDeserializer:
             schema_registry_oauth_token_url: OAuth 2.0 token endpoint URL.
             schema_registry_oauth_scope: OAuth 2.0 scope.
             schema_registry_ssl: Reuse Kafka SSL settings for Registry.
-            ssl_cafile: CA file for SSL connections.
-            ssl_certfile: Client certificate file for SSL.
-            ssl_keyfile: Client key file for SSL.
-            ssl_password: Password for encrypted keyfiles.
+            schema_ssl_cafile: CA file for SSL connections.
+            schema_ssl_certfile: Client certificate file for SSL.
+            schema_ssl_keyfile: Client key file for SSL.
+            schema_ssl_password: Password for encrypted keyfiles.
 
         Raises:
             ImportError: If fastavro is not installed.
@@ -388,7 +389,11 @@ class AvroDeserializer:
         self._oauth_token_expiry: float = 0.0
 
         if avro_schema_file:
-            self._load_schema_file(avro_schema_file)
+            if isinstance(avro_schema_file, dict):
+                self._schema = fastavro.parse_schema(avro_schema_file)
+                self._logger.info("Loaded Avro schema from inline definition")
+            else:
+                self._load_schema_file(avro_schema_file)
 
         if schema_registry_url:
             self._configure_registry(
@@ -399,10 +404,10 @@ class AvroDeserializer:
                 oauth_client_secret=schema_registry_oauth_client_secret,
                 oauth_token_url=schema_registry_oauth_token_url,
                 use_ssl=schema_registry_ssl,
-                ssl_cafile=ssl_cafile,
-                ssl_certfile=ssl_certfile,
-                ssl_keyfile=ssl_keyfile,
-                ssl_password=ssl_password,
+                ssl_cafile=schema_ssl_cafile,
+                ssl_certfile=schema_ssl_certfile,
+                ssl_keyfile=schema_ssl_keyfile,
+                ssl_password=schema_ssl_password,
             )
 
     def _configure_registry(  # pylint: disable=too-many-locals
@@ -697,7 +702,14 @@ class AvroDeserializer:
             raise FileNotFoundError(msg)
 
         with resolved.open(encoding="utf-8") as f:
-            raw_schema = json.load(f)
+            raw_schema = yaml.safe_load(f)
+
+        if not isinstance(raw_schema, dict):
+            msg = (
+                f"Avro schema must be a JSON object, "
+                f"got {type(raw_schema).__name__}"
+            )
+            raise TypeError(msg)
 
         self._schema = fastavro.parse_schema(raw_schema)
         self._logger.info("Loaded Avro schema from %s", resolved)
@@ -810,10 +822,10 @@ class AvroDeserializer:
 
 def _configure_avro(
     args: dict[str, Any],
-    ssl_cafile: str | None = None,
-    ssl_certfile: str | None = None,
-    ssl_keyfile: str | None = None,
-    ssl_password: str | None = None,
+    schema_ssl_cafile: str | None = None,
+    schema_ssl_certfile: str | None = None,
+    schema_ssl_keyfile: str | None = None,
+    schema_ssl_password: str | None = None,
 ) -> tuple[str, AvroDeserializer | None]:
     """Validate and configure Avro deserialization from plugin args."""
     logger = logging.getLogger()
@@ -839,10 +851,10 @@ def _configure_avro(
             schema_registry_oauth_token_url=args.get("schema_registry_oauth_token_url"),
             schema_registry_oauth_scope=args.get("schema_registry_oauth_scope"),
             schema_registry_ssl=schema_registry_ssl,
-            ssl_cafile=ssl_cafile if schema_registry_ssl else None,
-            ssl_certfile=ssl_certfile if schema_registry_ssl else None,
-            ssl_keyfile=ssl_keyfile if schema_registry_ssl else None,
-            ssl_password=ssl_password if schema_registry_ssl else None,
+            schema_ssl_cafile=schema_ssl_cafile if schema_registry_ssl else None,
+            schema_ssl_certfile=schema_ssl_certfile if schema_registry_ssl else None,
+            schema_ssl_keyfile=schema_ssl_keyfile if schema_registry_ssl else None,
+            schema_ssl_password=schema_ssl_password if schema_registry_ssl else None,
         )
         logger.info("Avro deserialization enabled")
 
@@ -1060,10 +1072,10 @@ async def main(
 
     message_format, deserializer = _configure_avro(
         args,
-        ssl_cafile=config["cafile"],
-        ssl_certfile=config["certfile"],
-        ssl_keyfile=config["keyfile"],
-        ssl_password=config["password"],
+        schema_ssl_cafile=config["cafile"],
+        schema_ssl_certfile=config["certfile"],
+        schema_ssl_keyfile=config["keyfile"],
+        schema_ssl_password=config["password"],
     )
 
     kafka_consumer.subscribe(topics=topics, pattern=topic_pattern)

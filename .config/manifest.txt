@@ -25,7 +25,9 @@ extensions/eda/plugins/event_source/aws_cloudtrail.py
 extensions/eda/plugins/event_source/aws_sqs_queue.py
 extensions/eda/plugins/event_source/azure_service_bus.py
 extensions/eda/plugins/event_source/credential_types/
-extensions/eda/plugins/event_source/credential_types/kafka-avro-schema-registry.yml
+extensions/eda/plugins/event_source/credential_types/kafka-avro/
+extensions/eda/plugins/event_source/credential_types/kafka-avro/injectors.yml
+extensions/eda/plugins/event_source/credential_types/kafka-avro/input.yml
 extensions/eda/plugins/event_source/file.py
 extensions/eda/plugins/event_source/file_watch.py
 extensions/eda/plugins/event_source/generic.py

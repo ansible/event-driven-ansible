@@ -884,6 +884,25 @@ class TestAvroDeserializer:
         with pytest.raises(FileNotFoundError):
             AvroDeserializer(avro_schema_file="~/nonexistent_schema.avsc")
 
+    def test_init_with_dict_schema(self) -> None:
+        """Accept avro_schema_file as an already-parsed dict."""
+        deserializer = AvroDeserializer(avro_schema_file=SAMPLE_AVRO_SCHEMA)
+        assert deserializer._schema is not None
+
+    def test_init_with_mangled_schema_file(self, tmp_path: Any) -> None:
+        """Handle single-quoted Python dict syntax from Jinja2 mangling."""
+        mangled = tmp_path / "mangled.avsc"
+        mangled.write_text(str(SAMPLE_AVRO_SCHEMA))
+        deserializer = AvroDeserializer(avro_schema_file=str(mangled))
+        assert deserializer._schema is not None
+
+    def test_init_with_invalid_schema_content_raises_error(self, tmp_path: Any) -> None:
+        """Non-dict content raises a helpful ValueError."""
+        bad_file = tmp_path / "garbage.avsc"
+        bad_file.write_text("not valid json or python")
+        with pytest.raises(TypeError, match="Avro schema must be a JSON object"):
+            AvroDeserializer(avro_schema_file=str(bad_file))
+
     def test_deserialize_schemaless_record(self, avro_schema_file: str) -> None:
         deserializer = AvroDeserializer(avro_schema_file=avro_schema_file)
         record = {"name": "test-event", "value": 42}
@@ -2081,9 +2100,9 @@ class TestConfigureAvro:
                 "schema_registry_url": "http://localhost:8081",
                 "schema_registry_ssl": False,
             },
-            ssl_cafile="/some/ca.pem",
-            ssl_certfile="/some/cert.pem",
-            ssl_keyfile="/some/key.pem",
+            schema_ssl_cafile="/some/ca.pem",
+            schema_ssl_certfile="/some/cert.pem",
+            schema_ssl_keyfile="/some/key.pem",
         )
         assert deserializer is not None
         assert deserializer._ssl_context is None
