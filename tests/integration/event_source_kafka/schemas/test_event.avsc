@@ -1,0 +1,9 @@
+{
+    "type": "record",
+    "name": "TestEvent",
+    "namespace": "com.example.eda.test",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "value", "type": "int"}
+    ]
+}

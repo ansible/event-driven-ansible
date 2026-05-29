@@ -1,0 +1,39 @@
+---
+# Write cert/key/schema content to temp files
+file:
+  template.cafile: "{{ cafile }}"
+  template.certfile: "{{ certfile }}"
+  template.keyfile: "{{ keyfile }}"
+  template.avro_schema_file: "{{ avro_schema_file | to_json }}"
+
+# Pass all values to the plugin via extra_vars.
+# File fields reference the temp file paths via eda.filename.<name>.
+# Optional fields use | default('', true) to avoid StrictUndefined errors
+# when the user leaves them blank in the credential form.
+extra_vars:
+  # Required fields — no default needed
+  kafka_avro_host: "{{ host }}"
+  kafka_avro_port: "{{ port }}"
+  kafka_avro_topic: "{{ topic }}"
+  # Optional fields — must have defaults to avoid StrictUndefined
+  kafka_avro_group_id: "{{ group_id | default('', true) }}"
+  kafka_avro_offset: "{{ offset | default('latest', true) }}"
+  security_protocol: "{{ security_protocol | default('PLAINTEXT', true) }}"
+  sasl_mechanism: "{{ sasl_mechanism | default('PLAIN', true) }}"
+  sasl_plain_username: "{{ sasl_plain_username | default('', true) }}"
+  sasl_plain_password: "{{ sasl_plain_password | default('', true) }}"
+  kafka_avro_cafile: "{{ eda.filename.cafile | default('', true) }}"
+  kafka_avro_certfile: "{{ eda.filename.certfile | default('', true) }}"
+  kafka_avro_keyfile: "{{ eda.filename.keyfile | default('', true) }}"
+  check_hostname: "{{ check_hostname | default(true, true) }}"
+  verify_mode: "{{ verify_mode | default('CERT_REQUIRED', true) }}"
+  message_format: "{{ message_format | default('json', true) }}"
+  avro_schema_file: "{{ eda.filename.avro_schema_file | default('', true) }}"
+  schema_registry_url: "{{ schema_registry_url | default('', true) }}"
+  schema_registry_basic_auth: "{{ schema_registry_basic_auth | default('', true) }}"
+  schema_registry_bearer_token: "{{ schema_registry_bearer_token | default('', true) }}"
+  schema_registry_oauth_client_id: "{{ schema_registry_oauth_client_id | default('', true) }}"
+  schema_registry_oauth_client_secret: "{{ schema_registry_oauth_client_secret | default('', true) }}"
+  schema_registry_oauth_token_url: "{{ schema_registry_oauth_token_url | default('', true) }}"
+  schema_registry_oauth_scope: "{{ schema_registry_oauth_scope | default('', true) }}"
+  schema_registry_ssl: "{{ schema_registry_ssl }}"

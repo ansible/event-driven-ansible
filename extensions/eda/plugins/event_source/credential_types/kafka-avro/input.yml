@@ -1,0 +1,172 @@
+---
+# EDA Kafka Avro + Schema Registry — Custom Credential Type (Input)
+#
+# Docs: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/using_automation_decisions/eda-credential-types
+
+fields:
+  # --- Kafka Broker ---
+  - id: host
+    type: string
+    label: Kafka Host
+    default: localhost
+    help_text: The host where the Kafka broker is running.
+  - id: port
+    type: string
+    label: Kafka Port
+    default: "9092"
+    help_text: The port where the Kafka broker is listening.
+  - id: topic
+    type: string
+    label: Topic
+    help_text: The Kafka topic to subscribe to.
+  - id: group_id
+    type: string
+    label: Group ID
+    help_text: A Kafka consumer group ID.
+  - id: offset
+    type: string
+    label: Reading Offset
+    choices:
+      - earliest
+      - latest
+    default: latest
+    help_text: Where to automatically reset the offset.
+
+  # --- Security Protocol ---
+  - id: security_protocol
+    type: string
+    label: Security Protocol
+    choices:
+      - PLAINTEXT
+      - SSL
+      - SASL_PLAINTEXT
+      - SASL_SSL
+    default: PLAINTEXT
+    help_text: Protocol used to communicate with the Kafka broker.
+  - id: sasl_mechanism
+    type: string
+    label: SASL Mechanism
+    choices:
+      - PLAIN
+      - GSSAPI
+      - SCRAM-SHA-256
+      - SCRAM-SHA-512
+      - OAUTHBEARER
+    default: PLAIN
+    help_text: >-
+      Authentication mechanism when security_protocol is
+      SASL_PLAINTEXT or SASL_SSL.
+  - id: sasl_plain_username
+    type: string
+    label: SASL Username
+    help_text: Username for SASL PLAIN or SCRAM authentication.
+  - id: sasl_plain_password
+    type: string
+    label: SASL Password
+    secret: true
+    help_text: Password for SASL PLAIN or SCRAM authentication.
+
+  # --- SSL / mTLS ---
+  - id: cafile
+    type: string
+    label: CA Certificate
+    multiline: true
+    help_text: >-
+      PEM-encoded CA certificate(s) used to verify the Kafka broker.
+      Paste the certificate content here.
+  - id: certfile
+    type: string
+    label: Client Certificate
+    multiline: true
+    help_text: >-
+      PEM-encoded client certificate for mTLS authentication.
+      Paste the certificate content here.
+  - id: keyfile
+    type: string
+    label: Client Key
+    multiline: true
+    secret: true
+    help_text: >-
+      PEM-encoded client private key for mTLS authentication.
+      Paste the key content here.
+  - id: check_hostname
+    type: boolean
+    label: Check Hostname
+    default: true
+    help_text: Enable SSL hostname verification.
+  - id: verify_mode
+    type: string
+    label: Verify Mode
+    choices:
+      - CERT_NONE
+      - CERT_OPTIONAL
+      - CERT_REQUIRED
+    default: CERT_REQUIRED
+    help_text: How to verify the broker's SSL certificate.
+
+  # --- Avro ---
+  - id: message_format
+    type: string
+    label: Message Format
+    choices:
+      - json
+      - avro
+    default: json
+    help_text: >-
+      Deserialization format for Kafka message values. Set to 'avro'
+      to enable Avro deserialization.
+  - id: avro_schema_file
+    type: string
+    label: Avro Schema
+    multiline: true
+    help_text: >-
+      Avro schema definition in JSON format. Paste the .avsc content
+      here. Required when message_format is 'avro' and messages are
+      in raw binary format (no Schema Registry).
+
+  # --- Schema Registry ---
+  - id: schema_registry_url
+    type: string
+    label: Schema Registry URL
+    help_text: >-
+      URL of a Confluent-compatible Schema Registry
+      (e.g., https://registry.example.com:8081).
+  - id: schema_registry_basic_auth
+    type: string
+    label: Schema Registry Basic Auth
+    secret: true
+    help_text: Basic auth credentials in 'user:password' format.
+  - id: schema_registry_bearer_token
+    type: string
+    label: Schema Registry Bearer Token
+    secret: true
+    help_text: Static bearer or JWT token for Schema Registry authentication.
+  - id: schema_registry_oauth_client_id
+    type: string
+    label: Schema Registry OAuth Client ID
+    help_text: OAuth 2.0 client ID for Schema Registry (Client Credentials flow).
+  - id: schema_registry_oauth_client_secret
+    type: string
+    label: Schema Registry OAuth Client Secret
+    secret: true
+    help_text: OAuth 2.0 client secret for Schema Registry authentication.
+  - id: schema_registry_oauth_token_url
+    type: string
+    label: Schema Registry OAuth Token URL
+    help_text: OAuth 2.0 token endpoint URL for obtaining access tokens.
+  - id: schema_registry_oauth_scope
+    type: string
+    label: Schema Registry OAuth Scope
+    help_text: OAuth 2.0 scope to request when obtaining access tokens.
+  - id: schema_registry_ssl
+    type: boolean
+    label: Schema Registry SSL
+    default: true
+    help_text: >-
+      When true, reuse the Kafka SSL settings (cafile, certfile, keyfile)
+      for Schema Registry HTTPS connections.
+
+required:
+  - host
+  - port
+  - topic
