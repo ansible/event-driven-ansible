@@ -1,3 +1,9 @@
+"""Event source plugin for generating events with an increasing index.
+
+This module provides an event source plugin that generates a limited number of
+events with an increasing index counter.
+"""
+
 import asyncio
 from typing import Any
 
