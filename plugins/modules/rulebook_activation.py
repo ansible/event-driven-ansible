@@ -275,7 +275,7 @@ id:
 """
 
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 try:
     import yaml
@@ -402,73 +402,105 @@ def process_event_streams(
 
 
 def create_params(
-    module: AnsibleModule, controller: Controller, is_aap_24: bool
+    module: AnsibleModule,
+    controller: Controller,
+    is_aap_24: bool,
+    existing: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     activation_params: Dict[str, Any] = {}
-
-    # Get the project id, only required to get the rulebook id
-    project_name = module.params["project_name"]
-    project_id = lookup_resource_id(module, controller, "projects", project_name)
-
-    if project_id is None:
-        module.fail_json(msg=f"Project {project_name} not found.")
-
-    # Get the rulebook id
-    rulebook_name = module.params["rulebook_name"]
-    params = {"data": {"project_id": project_id}}
-    rulebook_id = lookup_resource_id(
-        module,
-        controller,
-        "rulebooks",
-        rulebook_name,
-        params,
-    )
-    if rulebook_id is None:
-        module.fail_json(
-            msg=f"Rulebook {rulebook_name} not found for project {project_name}."
-        )
-
-    activation_params["rulebook_id"] = rulebook_id
-
-    # Get the decision environment id
-    decision_environment_name = module.params["decision_environment_name"]
-    decision_environment_id = lookup_resource_id(
-        module,
-        controller,
-        "decision-environments",
-        decision_environment_name,
-    )
-    if decision_environment_id is None:
-        module.fail_json(
-            msg=f"Decision Environment {decision_environment_name} not found."
-        )
-    activation_params["decision_environment_id"] = decision_environment_id
-
-    # Get the organization id
-    organization_name = module.params["organization_name"]
-    if not is_aap_24:
-        organization_id = lookup_resource_id(
-            module, controller, "organizations", organization_name
-        )
-        if organization_id is None:
-            module.fail_json(msg=f"Organization {organization_name} not found.")
-        activation_params["organization_id"] = organization_id
-
     # Get the AWX token id
     awx_token_id = None
+    eda_credential_ids = None
+    if existing:
+        updatable_fields = {
+            "name",
+            "description",
+            "decision_environment_id",
+            "rulebook_id",
+            "extra_var",
+            "organization_id",
+            "restart_policy",
+            "awx_token_id",
+            "is_enabled",
+            "log_level",
+            "eda_credentials",
+            "k8s_service_name",
+            "source_mappings",
+            "skip_audit_events",
+            "enable_persistence",
+            "rule_engine_credential_id",
+            "restart_on_project_update",
+        }
+        activation_params = {k: v for k, v in existing.items() if k in updatable_fields}
+        rulebook_id = activation_params.get("rulebook_id")
+    else:
+
+        # Get the project id, only required to get the rulebook id
+        project_name = module.params["project_name"]
+        project_id = lookup_resource_id(module, controller, "projects", project_name)
+
+        if project_id is None:
+            module.fail_json(msg=f"Project {project_name} not found.")
+
+        # Get the rulebook id
+        rulebook_name = module.params["rulebook_name"]
+        params = {"data": {"project_id": project_id}}
+        
+        rulebook_id = lookup_resource_id(
+            module,
+            controller,
+            "rulebooks",
+            rulebook_name,
+            params,
+        )       
+        if rulebook_id is None:
+            module.fail_json(
+                msg=f"Rulebook {rulebook_name} not found for project {project_name}."
+            )
+
+        activation_params["rulebook_id"] = rulebook_id
+
+        # Get the decision environment id
+        decision_environment_name = module.params["decision_environment_name"]
+        decision_environment_id = lookup_resource_id(
+            module,
+            controller,
+            "decision-environments",
+            decision_environment_name,
+        )
+        if decision_environment_id is None:
+            module.fail_json(
+                msg=f"Decision Environment {decision_environment_name} not found."
+            )
+        activation_params["decision_environment_id"] = decision_environment_id
+
+        # Get the organization id
+        organization_name = module.params["organization_name"]
+        if not is_aap_24:
+            organization_id = lookup_resource_id(
+                module, controller, "organizations", organization_name
+            )
+            if organization_id is None:
+                module.fail_json(msg=f"Organization {organization_name} not found.")
+            activation_params["organization_id"] = organization_id
+ 
     if module.params.get("awx_token_name"):
         awx_token_id = lookup_resource_id(
-            module, controller, "/users/me/awx-tokens/", module.params["awx_token_name"]
+            module,
+            controller,
+            "/users/me/awx-tokens/",
+            module.params["awx_token_name"],
         )
     if awx_token_id is not None:
         activation_params["awx_token_id"] = awx_token_id
 
     # Get the eda credential ids
-    eda_credential_ids = None
     if not is_aap_24 and module.params.get("eda_credentials"):
         eda_credential_ids = []
         for item in module.params["eda_credentials"]:
-            cred_id = lookup_resource_id(module, controller, "eda-credentials", item)
+            cred_id = lookup_resource_id(
+                module, controller, "eda-credentials", item
+            )
             if cred_id is not None:
                 eda_credential_ids.append(cred_id)
 
@@ -499,10 +531,14 @@ def create_params(
     if module.params.get("restart_policy"):
         activation_params["restart_policy"] = module.params["restart_policy"]
 
-    if module.params.get("state") == "disabled":
-        activation_params["is_enabled"] = False
+    if existing:
+        if module.params.get("state") in ("disabled", "enabled"):
+            activation_params["is_enabled"] = module.params.get("state") != "disabled"
     else:
-        activation_params["is_enabled"] = True
+        if module.params.get("state") == "disabled":
+            activation_params["is_enabled"] = False
+        else:
+            activation_params["is_enabled"] = True
 
     if not is_aap_24 and module.params.get("log_level"):
         activation_params["log_level"] = module.params["log_level"]
@@ -579,8 +615,6 @@ def main() -> None:
         restart_on_project_update=dict(type="bool", default=False),
     )
 
-    # Define the state the activation is transitioning to, and uses
-    # this in the call to the according post endpoint.
     # Returns an empty string in case the state is not changing.
     def endpoint_state(activation: Dict[str, Any], state: str) -> str:
         return {(False, "enabled"): "enable", (True, "disabled"): "disable"}.get(
@@ -670,10 +704,10 @@ def main() -> None:
                     msg=f"Failed to enable/disable rulebook activation: {e}"
                 )
 
-        module.exit_json(changed=False)
-
     # Activation Data that will be sent for create/update
-    activation_params = create_params(module, controller, is_aap_24=is_aap_24)
+    activation_params = create_params(
+        module, controller, is_aap_24, existing=activation if activation else None
+    )
     activation_params["name"] = (
         new_name
         if new_name
