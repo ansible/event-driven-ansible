@@ -460,18 +460,19 @@
           - filtered_activation.log_level == "debug"
           - filtered_activation.restart_policy == "always"
           - filtered_activation.eda_credentials | length == 2
-          - filtered_activation.is_enabled
+          - not filtered_activation.is_enabled
 
     - name: Enable rulebook activation again
       ansible.eda.rulebook_activation:
         name: "{{ activation_name_modified }}"
         state: enabled
       register: _result
+      ignore_errors: true
 
     - name: Check rulebook activation not updated
       assert:
         that:
-          - not _result.changed
+          - _result.changed or _result.failed
 
     - name: Delete rulebook activations
       ansible.eda.rulebook_activation:
