@@ -475,6 +475,21 @@ async def receive_msg(
         except UnicodeError:
             logger.exception("Unicode error while decoding headers")
 
+        # Process key
+        try:
+            key = msg.key.decode(encoding)
+            data = json.loads(key)
+        except json.decoder.JSONDecodeError:
+            logger.info("JSON decode error, storing raw key")
+            data = key
+        except UnicodeError:
+            logger.exception("Unicode error while decoding key")
+            data = None
+
+        # Add key to the event and put it into the queue
+        if data:
+            event["meta"]["key"] = data
+
         # Process message body
         data = None
         try:
@@ -489,7 +504,7 @@ async def receive_msg(
         # Process event UUID
         _process_event_uuid(msg, headers, data, event)
 
-        # Add data to the event and put it into the queue
+        # Add body to the event and put it into the queue
         if data:
             event["body"] = data
             await queue.put(event)
