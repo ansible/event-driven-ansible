@@ -1,3 +1,9 @@
+"""Event source plugin for reading events from PostgreSQL pub/sub.
+
+This module provides an event source plugin for listening to PostgreSQL NOTIFY
+events using psycopg async connection. Supports message chunking for large payloads.
+"""
+
 import asyncio
 import json
 import logging
@@ -101,6 +107,7 @@ class MissingChunkKeyError(Exception):
 
 
 def _validate_chunked_payload(payload: dict[str, Any]) -> None:
+    """Validate that chunked payload contains all required keys."""
     for key in REQUIRED_CHUNK_KEYS:
         if key not in payload:
             raise MissingChunkKeyError(key)
@@ -134,7 +141,7 @@ def _validate_args(args: dict[str, Any]) -> None:
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Listen for events from a channel."""
+    """Listen for events from a PostgreSQL channel."""
     _validate_args(args)
 
     try:
@@ -168,6 +175,7 @@ async def _handle_chunked_message(
     chunked_cache: dict[str, Any],
     queue: asyncio.Queue[Any],
 ) -> None:
+    """Handle chunked message assembly and validation."""
     message_uuid = data[MESSAGE_CHUNKED_UUID]
     number_of_chunks = data[MESSAGE_CHUNK_COUNT]
     message_length = data[MESSAGE_LENGTH]

@@ -1,3 +1,10 @@
+"""Event filter plugin for extracting hosts from event data and inserting into meta.
+
+This module provides functionality to extract host information from event data
+using JSON paths and insert them into the event's meta dictionary for limiting
+action execution to specific hosts.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -68,7 +75,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 class PathNotExistError(Exception):
-    """Cannot find the path in the event."""
+    """Exception raised when the specified path does not exist in the event.
+
+    This exception is raised when the host_path parameter points to a location
+    that does not exist in the event data structure and raise_error is True.
+    """
 
 
 # pylint: disable=too-many-arguments

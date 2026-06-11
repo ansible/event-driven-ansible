@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events from Azure Service Bus.
+
+This module provides an event source plugin for receiving messages from an
+Azure Service Bus queue.
+"""
+
 import asyncio
 import contextlib
 import json
@@ -64,7 +70,7 @@ async def main(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
-    """Receive events from service bus in a loop."""
+    """Receive events from service bus."""
     await receive_events(queue, args)
 
 

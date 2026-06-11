@@ -1,3 +1,10 @@
+"""Event filter plugin for filtering keys from events.
+
+This module provides functionality to include or exclude specific keys from
+event dictionaries using pattern matching. Include patterns override exclude
+patterns.
+"""
+
 from __future__ import annotations
 
 import fnmatch
@@ -51,10 +58,12 @@ EXAMPLES = r"""
 
 
 def _matches_include_keys(include_keys: list[str], string: str) -> bool:
+    """Check if a string matches any of the include key patterns."""
     return any(fnmatch.fnmatch(string, pattern) for pattern in include_keys)
 
 
 def _matches_exclude_keys(exclude_keys: list[str], string: str) -> bool:
+    """Check if a string matches any of the exclude key patterns."""
     return any(fnmatch.fnmatch(string, pattern) for pattern in exclude_keys)
 
 
