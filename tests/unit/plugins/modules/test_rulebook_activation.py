@@ -146,10 +146,13 @@ class TestCreateParamsWithExisting:
         mock_module.params["project_name"] = "test-project"
         mock_module.fail_json.side_effect = Exception("fail")
 
-        with patch(
-            "plugins.modules.rulebook_activation.lookup_resource_id",
-            return_value=None,
-        ), pytest.raises(Exception, match="fail"):
+        with (
+            patch(
+                "plugins.modules.rulebook_activation.lookup_resource_id",
+                return_value=None,
+            ),
+            pytest.raises(Exception, match="fail"),
+        ):
             create_params(mock_module, mock_controller, is_aap_24=False, existing=None)
 
         mock_module.fail_json.assert_called()
