@@ -1,15 +1,27 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import json
+import struct
+import time
 import uuid
-from typing import Any
+from typing import Any, cast
+from unittest.mock import AsyncMock as StdAsyncMock
 from unittest.mock import MagicMock, patch
 
+import aiohttp
+import fastavro
 import pytest
 from asyncmock import AsyncMock
 
-from extensions.eda.plugins.event_source.kafka import get_message_timestamp
+from extensions.eda.plugins.event_source.kafka import (
+    AvroDeserializer,
+    SchemaRegistryAuthError,
+    _configure_avro,
+    _decode_message_body,
+    get_message_timestamp,
+)
 from extensions.eda.plugins.event_source.kafka import main as kafka_main
 
 TEST_ITEMS_COUNT = 2
@@ -122,9 +134,10 @@ def test_receive_from_kafka_place_in_queue(
         )
         assert myqueue.queue[0]["body"] == {"i": 0}
         assert myqueue.queue[0]["meta"]["headers"] == {"foo": "bar"}
-        # Check for the new meta fields: uuid and produced_at
-        assert "uuid" in myqueue.queue[0]["meta"]
+        # Check for the new meta fields: source_offset and produced_at
+        assert "source_offset" in myqueue.queue[0]["meta"]
         assert "produced_at" in myqueue.queue[0]["meta"]
+        assert myqueue.queue[0]["meta"]["source_offset"] == "test-topic:0:0"
         # UUID should be a valid UUID5 generated from topic:partition:offset
         expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "test-topic:0:0"))
         assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
@@ -251,7 +264,7 @@ def test_message_uuid_header_takes_precedence(myqueue: MockQueue) -> None:
 
 
 def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
-    """Test that a valid UUID5 is generated from topic:partition:offset."""
+    """Test that UUID5 and source_offset are generated from topic:partition:offset."""
 
     class MockConsumerWithCoordinates(MockConsumer):
         def __aiter__(self) -> AsyncIterator:
@@ -281,6 +294,7 @@ def test_generated_uuid_from_coordinates(myqueue: MockQueue) -> None:
             ),
         )
         assert len(myqueue.queue) == 1
+        assert myqueue.queue[0]["meta"]["source_offset"] == "my-topic:5:100"
         expected_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, "my-topic:5:100"))
         assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
 
@@ -798,3 +812,1601 @@ def test_invalid_uuid_in_header_falls_back_to_generated(myqueue: MockQueue) -> N
         assert myqueue.queue[0]["meta"]["uuid"] == expected_uuid
         # Original value should be preserved in message_id
         assert myqueue.queue[0]["meta"]["message_id"] == "not-a-valid-uuid"
+
+
+# --- Avro Deserialization Tests ---
+
+SAMPLE_AVRO_SCHEMA = {
+    "type": "record",
+    "name": "TestEvent",
+    "namespace": "com.example.eda",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "value", "type": "int"},
+    ],
+}
+
+
+@pytest.fixture
+def avro_schema_file(tmp_path: Any) -> str:
+    """Create a temporary Avro schema file."""
+    schema_path = tmp_path / "test_schema.avsc"
+    schema_path.write_text(json.dumps(SAMPLE_AVRO_SCHEMA))
+    return str(schema_path)
+
+
+def _serialize_avro_schemaless(record: dict[str, Any], schema: dict[str, Any]) -> bytes:
+    """Helper to serialize a record to raw Avro binary (schemaless)."""
+    parsed = fastavro.parse_schema(schema)
+    buf = io.BytesIO()
+    fastavro.schemaless_writer(buf, parsed, record)
+    return buf.getvalue()
+
+
+def _serialize_avro_object_container(
+    records: list[dict[str, Any]], schema: dict[str, Any]
+) -> bytes:
+    """Helper to serialize records to Avro Object Container format."""
+    parsed = fastavro.parse_schema(schema)
+    buf = io.BytesIO()
+    fastavro.writer(buf, parsed, records)
+    return buf.getvalue()
+
+
+class TestAvroDeserializer:
+    """Tests for the AvroDeserializer class."""
+
+    def test_init_with_valid_schema_file(self, avro_schema_file: str) -> None:
+        deserializer = AvroDeserializer(avro_schema_file=avro_schema_file)
+        assert deserializer._schema is not None
+
+    def test_init_without_schema_file(self) -> None:
+        deserializer = AvroDeserializer()
+        assert deserializer._schema is None
+
+    def test_init_nonexistent_schema_file_raises_error(self) -> None:
+        with pytest.raises(FileNotFoundError):
+            AvroDeserializer(avro_schema_file="/nonexistent/path/schema.avsc")
+
+    def test_init_invalid_schema_raises_error(self, tmp_path: Any) -> None:
+        bad_schema = tmp_path / "bad.avsc"
+        bad_schema.write_text('{"type": "invalid_type"}')
+        with pytest.raises(Exception):
+            AvroDeserializer(avro_schema_file=str(bad_schema))
+
+    def test_init_path_with_tilde_expansion(self) -> None:
+        """Verify ~ in paths is expanded properly."""
+        with pytest.raises(FileNotFoundError):
+            AvroDeserializer(avro_schema_file="~/nonexistent_schema.avsc")
+
+    def test_init_with_dict_schema(self) -> None:
+        """Accept avro_schema_file as an already-parsed dict."""
+        deserializer = AvroDeserializer(avro_schema_file=SAMPLE_AVRO_SCHEMA)
+        assert deserializer._schema is not None
+
+    def test_init_with_mangled_schema_file(self, tmp_path: Any) -> None:
+        """Handle single-quoted Python dict syntax from Jinja2 mangling."""
+        mangled = tmp_path / "mangled.avsc"
+        mangled.write_text(str(SAMPLE_AVRO_SCHEMA))
+        deserializer = AvroDeserializer(avro_schema_file=str(mangled))
+        assert deserializer._schema is not None
+
+    def test_init_with_invalid_schema_content_raises_error(self, tmp_path: Any) -> None:
+        """Non-dict content raises a helpful ValueError."""
+        bad_file = tmp_path / "garbage.avsc"
+        bad_file.write_text("not valid json or python")
+        with pytest.raises(TypeError, match="Avro schema must be a JSON object"):
+            AvroDeserializer(avro_schema_file=str(bad_file))
+
+    def test_deserialize_schemaless_record(self, avro_schema_file: str) -> None:
+        deserializer = AvroDeserializer(avro_schema_file=avro_schema_file)
+        record = {"name": "test-event", "value": 42}
+        avro_bytes = _serialize_avro_schemaless(record, SAMPLE_AVRO_SCHEMA)
+
+        result = asyncio.run(deserializer.deserialize(avro_bytes))
+        assert result == {"name": "test-event", "value": 42}
+
+    def test_deserialize_object_container(self) -> None:
+        deserializer = AvroDeserializer()  # no local schema
+        record = {"name": "container-event", "value": 99}
+        avro_bytes = _serialize_avro_object_container([record], SAMPLE_AVRO_SCHEMA)
+
+        result = asyncio.run(deserializer.deserialize(avro_bytes))
+        assert result == {"name": "container-event", "value": 99}
+
+    def test_deserialize_message_exceeds_size_limit(
+        self, avro_schema_file: str
+    ) -> None:
+        deserializer = AvroDeserializer(avro_schema_file=avro_schema_file)
+        large_data = b"\x00" * (AvroDeserializer.MAX_MESSAGE_SIZE + 1)
+
+        result = asyncio.run(deserializer.deserialize(large_data))
+        assert result is None
+
+    def test_deserialize_corrupt_data_returns_none(self, avro_schema_file: str) -> None:
+        deserializer = AvroDeserializer(avro_schema_file=avro_schema_file)
+        result = asyncio.run(deserializer.deserialize(b"\xff\xfe\xfd\xfc"))
+        assert result is None
+
+    def test_deserialize_empty_data_returns_none(self, avro_schema_file: str) -> None:
+        deserializer = AvroDeserializer(avro_schema_file=avro_schema_file)
+        result = asyncio.run(deserializer.deserialize(b""))
+        assert result is None
+
+    def test_deserialize_object_container_corrupt_data_returns_none(self) -> None:
+        deserializer = AvroDeserializer()  # no local schema
+        result = asyncio.run(deserializer.deserialize(b"\xff\xfe\xfd\xfc"))
+        assert result is None
+
+    def test_json_format_unchanged(self, myqueue: MockQueue) -> None:
+        """Verify existing JSON behavior is unaffected by Avro changes."""
+        with patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=MockConsumer,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "message_format": "json",
+                    },
+                )
+            )
+            assert myqueue.queue[0]["body"] == {"i": 0}
+            assert myqueue.queue[0]["meta"]["headers"] == {"foo": "bar"}
+            assert "source_offset" in myqueue.queue[0]["meta"]
+            assert "produced_at" in myqueue.queue[0]["meta"]
+            assert len(myqueue.queue) == 2
+
+    def test_invalid_message_format_raises_error(self, myqueue: MockQueue) -> None:
+        with pytest.raises(ValueError, match="Invalid message_format"):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "message_format": "protobuf",
+                    },
+                )
+            )
+
+
+class TestAvroKafkaIntegration:
+    """Test Avro deserialization through the full kafka main() flow."""
+
+    def test_avro_messages_through_main(
+        self, myqueue: MockQueue, avro_schema_file: str
+    ) -> None:
+        """Verify Avro messages flow through main() and end up in the queue."""
+        record1 = {"name": "event-1", "value": 10}
+        record2 = {"name": "event-2", "value": 20}
+
+        avro_bytes1 = _serialize_avro_schemaless(record1, SAMPLE_AVRO_SCHEMA)
+        avro_bytes2 = _serialize_avro_schemaless(record2, SAMPLE_AVRO_SCHEMA)
+
+        class AvroAsyncIterator:
+            def __init__(self) -> None:
+                self.messages = [avro_bytes1, avro_bytes2]
+                self.index = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.index < len(self.messages):
+                    mock = MagicMock()
+                    mock.value = self.messages[self.index]
+                    mock.headers = [("source", b"test")]
+                    mock.timestamp = 1708714664000
+                    mock.topic = "avro-test"
+                    mock.partition = 0
+                    mock.offset = self.index
+                    self.index += 1
+                    return mock
+                raise StopAsyncIteration
+
+        class AvroMockConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> AvroAsyncIterator:
+                return AvroAsyncIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        with patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=AvroMockConsumer,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "avro-test",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "message_format": "avro",
+                        "avro_schema_file": avro_schema_file,
+                    },
+                )
+            )
+
+        assert len(myqueue.queue) == 2
+        assert myqueue.queue[0]["body"] == {"name": "event-1", "value": 10}
+        assert myqueue.queue[1]["body"] == {"name": "event-2", "value": 20}
+        assert myqueue.queue[0]["meta"]["headers"] == {"source": "test"}
+        assert myqueue.queue[0]["meta"]["source_offset"] == "avro-test:0:0"
+        assert myqueue.queue[1]["meta"]["source_offset"] == "avro-test:0:1"
+
+
+# --- Schema Registry Tests ---
+
+
+def _serialize_wire_format(
+    record: dict[str, Any], schema: dict[str, Any], schema_id: int
+) -> bytes:
+    """Serialize a record with the Confluent wire format header."""
+    parsed = fastavro.parse_schema(schema)
+    buf = io.BytesIO()
+    fastavro.schemaless_writer(buf, parsed, record)
+    avro_payload = buf.getvalue()
+    header = struct.pack(">bI", 0, schema_id)
+    return header + avro_payload
+
+
+class TestSchemaRegistryConfig:
+    """Tests for Schema Registry configuration validation."""
+
+    def test_registry_url_validation_invalid_scheme(self) -> None:
+        with pytest.raises(ValueError, match="http or https"):
+            AvroDeserializer(schema_registry_url="ftp://localhost:8081")
+
+    def test_registry_url_validation_no_host(self) -> None:
+        with pytest.raises(ValueError, match="hostname"):
+            AvroDeserializer(schema_registry_url="http://")
+
+    def test_auth_mutual_exclusion(self) -> None:
+        with pytest.raises(ValueError, match="Only one Schema Registry auth"):
+            AvroDeserializer(
+                schema_registry_url="http://localhost:8081",
+                schema_registry_basic_auth="user:pass",
+                schema_registry_bearer_token="token123",
+            )
+
+    def test_oauth_requires_secret_and_url(self) -> None:
+        with pytest.raises(ValueError, match="schema_registry_oauth_client_secret"):
+            AvroDeserializer(
+                schema_registry_url="http://localhost:8081",
+                schema_registry_oauth_client_id="my-client",
+            )
+
+    def test_valid_registry_url(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        assert d._registry_url == "http://localhost:8081"
+
+    def test_valid_basic_auth(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_basic_auth="user:pass",
+        )
+        assert d._basic_auth_header is not None
+        assert d._basic_auth_header.startswith("Basic ")
+
+    def test_valid_bearer_token(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_bearer_token="mytoken",
+        )
+        assert d._bearer_token == "mytoken"
+
+    def test_valid_oauth_config(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="client-secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+            schema_registry_oauth_scope="schema:read",
+        )
+        assert d._oauth_client_id == "client-id"
+        assert d._oauth_scope == "schema:read"
+
+
+class TestWireFormatDetection:
+    """Tests for Confluent wire format detection and parsing."""
+
+    def test_is_wire_format_with_valid_header(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        data = struct.pack(">bI", 0, 1) + b"\x00\x01\x02"
+        assert d._is_wire_format(data) is True
+
+    def test_is_wire_format_without_registry(self) -> None:
+        d = AvroDeserializer()
+        data = struct.pack(">bI", 0, 1) + b"\x00\x01\x02"
+        assert d._is_wire_format(data) is False
+
+    def test_is_wire_format_wrong_magic_byte(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        data = b"\x01" + struct.pack(">I", 1) + b"\x00\x01\x02"
+        assert d._is_wire_format(data) is False
+
+    def test_is_wire_format_too_short(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        assert d._is_wire_format(b"\x00\x01\x02") is False
+
+    def test_extract_schema_id(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        data = struct.pack(">bI", 0, 42) + b"\x00"
+        assert d._extract_schema_id(data) == 42
+
+    def test_extract_schema_id_large(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        data = struct.pack(">bI", 0, 999999) + b"\x00"
+        assert d._extract_schema_id(data) == 999999
+
+
+class TestSchemaCache:
+    """Tests for the LRU schema cache."""
+
+    def test_cache_eviction(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        parsed = fastavro.parse_schema(SAMPLE_AVRO_SCHEMA)
+        for i in range(d._SCHEMA_CACHE_MAX_SIZE + 5):
+            d._schema_cache[i] = parsed
+            if len(d._schema_cache) >= d._SCHEMA_CACHE_MAX_SIZE:
+                d._schema_cache.popitem(last=False)
+        assert len(d._schema_cache) == d._SCHEMA_CACHE_MAX_SIZE - 1
+        assert 0 not in d._schema_cache
+        assert d._SCHEMA_CACHE_MAX_SIZE + 4 in d._schema_cache
+
+
+class TestSchemaRegistryDeserialize:
+    """Tests for wire format deserialization with mocked registry."""
+
+    def test_wire_format_fallback_to_local_schema(self, avro_schema_file: str) -> None:
+        """When registry lookup fails, fall back to local schema."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "fallback-event", "value": 77}
+        # Strip wire format header to simulate what local schema would see
+        raw_data = _serialize_avro_schemaless(record, SAMPLE_AVRO_SCHEMA)
+
+        result = asyncio.run(d.deserialize(raw_data))
+        assert result == {"name": "fallback-event", "value": 77}
+
+    def test_non_wire_format_uses_local_schema(self, avro_schema_file: str) -> None:
+        """Raw Avro (no wire format header) uses local schema even with registry configured."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "raw-event", "value": 55}
+        raw_data = _serialize_avro_schemaless(record, SAMPLE_AVRO_SCHEMA)
+
+        result = asyncio.run(d.deserialize(raw_data))
+        assert result == {"name": "raw-event", "value": 55}
+
+    def test_wire_format_registry_success(self) -> None:
+        """Wire format message deserialized successfully via mocked registry."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "registry-event", "value": 123}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=42)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"schema": json.dumps(SAMPLE_AVRO_SCHEMA)}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "registry-event", "value": 123}
+        assert 42 in d._schema_cache
+
+    def test_wire_format_registry_oauth_headers_passed(self) -> None:
+        """OAuth auth headers are passed through to the registry GET request."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="client-secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        # Pre-set a valid token to avoid mocking the token fetch
+        d._oauth_access_token = "my-oauth-token"
+        d._oauth_token_expiry = time.time() + 3600
+
+        record = {"name": "oauth-event", "value": 99}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=10)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"schema": json.dumps(SAMPLE_AVRO_SCHEMA)}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+
+        # Verify deserialization succeeded
+        assert result == {"name": "oauth-event", "value": 99}
+
+        # Verify OAuth token was passed in the GET request headers
+        call_kwargs = mock_session.get.call_args[1]
+        assert call_kwargs["headers"]["Authorization"] == "Bearer my-oauth-token"
+        assert (
+            call_kwargs["headers"]["Accept"] == "application/vnd.schemaregistry.v1+json"
+        )
+
+    def test_wire_format_registry_cache_hit(self) -> None:
+        """Second call with same schema ID uses cache, no HTTP call."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        parsed = fastavro.parse_schema(SAMPLE_AVRO_SCHEMA)
+        d._schema_cache[42] = parsed
+
+        record = {"name": "cached-event", "value": 7}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=42)
+
+        result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "cached-event", "value": 7}
+
+    def test_wire_format_registry_failure_falls_back_to_local(
+        self, avro_schema_file: str
+    ) -> None:
+        """When registry fetch fails, fall back to local schema with stripped header."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "fallback-event", "value": 33}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(), history=(), status=404, message="Not Found"
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        # Registry fails -> warning logged -> header stripped -> local schema succeeds
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "fallback-event", "value": 33}
+
+    def test_wire_format_registry_transient_error_falls_back_to_local(
+        self, avro_schema_file: str
+    ) -> None:
+        """Transient registry error (500) retries then falls back to local schema."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "transient-fallback", "value": 77}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(), history=(), status=500, message="Error"
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with (
+            patch("aiohttp.ClientSession", return_value=mock_session),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+        ):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "transient-fallback", "value": 77}
+
+    def test_wire_format_registry_transient_error_no_local_schema_skips(
+        self,
+    ) -> None:
+        """Transient registry error (500) without local schema skips message after retries."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "no-fallback", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(), history=(), status=500, message="Error"
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with (
+            patch("aiohttp.ClientSession", return_value=mock_session),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+        ):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result is None
+
+    def test_wire_format_registry_network_error_no_local_schema_skips(
+        self,
+    ) -> None:
+        """Network error without local schema skips message after retries."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "network-fail", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(
+            side_effect=aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("Connection refused")
+            )
+        )
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with (
+            patch("aiohttp.ClientSession", return_value=mock_session),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+        ):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result is None
+
+    def test_wire_format_registry_malformed_response_falls_back(
+        self, avro_schema_file: str
+    ) -> None:
+        """Malformed registry response (missing 'schema' key) is permanent — falls back to local."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "malformed-resp", "value": 55}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=42)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"unexpected_key": "no schema field here"}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "malformed-resp", "value": 55}
+        assert 42 not in d._schema_cache
+
+
+EVOLVED_AVRO_SCHEMA = {
+    "type": "record",
+    "name": "TestEvent",
+    "namespace": "com.example.eda",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "value", "type": "int"},
+        {"name": "severity", "type": "string", "default": "info"},
+    ],
+}
+
+
+class TestSchemaEvolution:
+    """Tests for Avro schema evolution via reader schema."""
+
+    def test_v1_message_gets_v2_defaults(self) -> None:
+        """A v1 message read with v2 reader schema gets default values filled in."""
+        d = AvroDeserializer(
+            avro_schema_file=EVOLVED_AVRO_SCHEMA,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "old-event", "value": 10}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=1)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"schema": json.dumps(SAMPLE_AVRO_SCHEMA)}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "old-event", "value": 10, "severity": "info"}
+
+    def test_v2_message_read_with_v2_reader(self) -> None:
+        """A v2 message read with v2 reader schema preserves all fields."""
+        d = AvroDeserializer(
+            avro_schema_file=EVOLVED_AVRO_SCHEMA,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "new-event", "value": 99, "severity": "critical"}
+        wire_data = _serialize_wire_format(record, EVOLVED_AVRO_SCHEMA, schema_id=2)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"schema": json.dumps(EVOLVED_AVRO_SCHEMA)}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "new-event", "value": 99, "severity": "critical"}
+
+    def test_v2_message_read_with_v1_reader_drops_extra_field(self) -> None:
+        """A v2 message read with v1 reader schema drops fields not in reader."""
+        d = AvroDeserializer(
+            avro_schema_file=SAMPLE_AVRO_SCHEMA,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "new-event", "value": 77, "severity": "warning"}
+        wire_data = _serialize_wire_format(record, EVOLVED_AVRO_SCHEMA, schema_id=2)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"schema": json.dumps(EVOLVED_AVRO_SCHEMA)}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "new-event", "value": 77}
+        assert "severity" not in result
+
+    def test_no_reader_schema_no_evolution(self) -> None:
+        """Without a reader schema, writer schema is used as-is (no defaults)."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "plain-event", "value": 5}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=1)
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"schema": json.dumps(SAMPLE_AVRO_SCHEMA)}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            result = asyncio.run(d.deserialize(wire_data))
+        assert result == {"name": "plain-event", "value": 5}
+        assert "severity" not in result
+
+
+class TestSchemaRegistryRetry:
+    """Tests for retry with exponential backoff on transient registry errors."""
+
+    def test_retry_succeeds_on_second_attempt(self) -> None:
+        """Registry fetch succeeds on second attempt after transient failure."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        parsed = cast("dict[str, Any]", fastavro.parse_schema(SAMPLE_AVRO_SCHEMA))
+
+        call_count = {"n": 0}
+
+        async def mock_fetch(
+            schema_id: int, _session: aiohttp.ClientSession
+        ) -> dict[str, Any] | None:
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                raise aiohttp.ClientConnectorError(
+                    connection_key=MagicMock(), os_error=OSError("refused")
+                )
+            return parsed
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=mock_fetch),
+            patch("asyncio.sleep", new_callable=StdAsyncMock) as mock_sleep,
+        ):
+            result = asyncio.run(d._get_schema_with_retry(42))
+
+        assert result == parsed
+        assert call_count["n"] == 2
+        mock_sleep.assert_awaited_once_with(1.0)
+
+    def test_retry_exhausted_returns_none(self) -> None:
+        """All retries fail — returns None (message skipped)."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def always_fail(schema_id: int, _session: aiohttp.ClientSession) -> None:
+            raise aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("refused")
+            )
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=always_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+        ):
+            result = asyncio.run(d._get_schema_with_retry(42))
+
+        assert result is None
+
+    def test_retry_does_not_retry_auth_error(self) -> None:
+        """SchemaRegistryAuthError is never retried."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def auth_fail(schema_id: int, _session: aiohttp.ClientSession) -> None:
+            raise SchemaRegistryAuthError("auth failed", status=401)
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=auth_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock) as mock_sleep,
+        ):
+            with pytest.raises(SchemaRegistryAuthError):
+                asyncio.run(d._get_schema_with_retry(42))
+
+        mock_sleep.assert_not_awaited()
+
+    def test_retry_logs_each_attempt(self) -> None:
+        """Each retry attempt is logged with attempt count and delay."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def always_fail(schema_id: int, _session: aiohttp.ClientSession) -> None:
+            raise aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("refused")
+            )
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=always_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock),
+            patch(
+                "extensions.eda.plugins.event_source.kafka.logger",
+            ) as mock_logger,
+        ):
+            asyncio.run(d._get_schema_with_retry(42))
+
+        warning_calls = mock_logger.warning.call_args_list
+        assert len(warning_calls) == 2
+        assert "attempt 1/3" in warning_calls[0].args[0] % warning_calls[0].args[1:]
+        assert "attempt 2/3" in warning_calls[1].args[0] % warning_calls[1].args[1:]
+        mock_logger.error.assert_called_once()
+
+    def test_retry_backoff_delays(self) -> None:
+        """Sleep durations follow exponential backoff: 1s, 2s."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+
+        async def always_fail(schema_id: int, _session: aiohttp.ClientSession) -> None:
+            raise aiohttp.ClientConnectorError(
+                connection_key=MagicMock(), os_error=OSError("refused")
+            )
+
+        with (
+            patch.object(d, "_get_schema_from_registry", side_effect=always_fail),
+            patch("asyncio.sleep", new_callable=StdAsyncMock) as mock_sleep,
+        ):
+            asyncio.run(d._get_schema_with_retry(42))
+
+        assert mock_sleep.await_args_list == [
+            ((1.0,),),
+            ((2.0,),),
+        ]
+
+
+class TestSchemaRegistryAuthErrors:
+    """Tests for permanent auth failure handling (401/403)."""
+
+    def _make_auth_error_session(self, status: int) -> StdAsyncMock:
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=status,
+                message="Unauthorized" if status == 401 else "Forbidden",
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+        return mock_session
+
+    def test_401_raises_schema_registry_auth_error(self) -> None:
+        """HTTP 401 raises SchemaRegistryAuthError immediately."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        session = self._make_auth_error_session(401)
+
+        with pytest.raises(SchemaRegistryAuthError, match="authentication failed"):
+            asyncio.run(d._get_schema_from_registry(42, session))
+
+    def test_403_raises_schema_registry_auth_error(self) -> None:
+        """HTTP 403 raises SchemaRegistryAuthError immediately."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        session = self._make_auth_error_session(403)
+
+        with pytest.raises(SchemaRegistryAuthError, match="authentication failed"):
+            asyncio.run(d._get_schema_from_registry(42, session))
+
+    def test_auth_error_propagates_through_deserialize(self) -> None:
+        """SchemaRegistryAuthError propagates through deserialize uncaught."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        record = {"name": "auth-test", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+        session = self._make_auth_error_session(401)
+
+        with (
+            patch("aiohttp.ClientSession", return_value=session),
+            pytest.raises(SchemaRegistryAuthError),
+        ):
+            asyncio.run(d.deserialize(wire_data))
+
+    def test_auth_error_bypasses_local_schema_fallback(
+        self, avro_schema_file: str
+    ) -> None:
+        """Even with local schema, auth error still propagates (no fallback)."""
+        d = AvroDeserializer(
+            avro_schema_file=avro_schema_file,
+            schema_registry_url="http://localhost:8081",
+        )
+        record = {"name": "auth-bypass", "value": 1}
+        wire_data = _serialize_wire_format(record, SAMPLE_AVRO_SCHEMA, schema_id=99)
+        session = self._make_auth_error_session(401)
+
+        with (
+            patch("aiohttp.ClientSession", return_value=session),
+            pytest.raises(SchemaRegistryAuthError),
+        ):
+            asyncio.run(d.deserialize(wire_data))
+
+    def test_auth_error_kills_plugin_via_main(self, myqueue: MockQueue) -> None:
+        """Auth error from registry propagates through main(), stopping plugin."""
+
+        class AuthFailConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> AuthFailIterator:
+                return AuthFailIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        class AuthFailIterator:
+            def __init__(self) -> None:
+                self.count = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.count < 1:
+                    mock = MagicMock()
+                    mock.value = _serialize_wire_format(
+                        {"name": "test", "value": 1},
+                        SAMPLE_AVRO_SCHEMA,
+                        schema_id=99,
+                    )
+                    mock.headers = [(b"foo", b"bar")]
+                    mock.timestamp = 1708714664000
+                    mock.topic = "test-topic"
+                    mock.partition = 0
+                    mock.offset = 0
+                    self.count += 1
+                    return mock
+                raise StopAsyncIteration
+
+        with (
+            patch(
+                "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+                new=AuthFailConsumer,
+            ),
+            patch(
+                "extensions.eda.plugins.event_source.kafka.AvroDeserializer"
+                "._get_schema_with_retry",
+                side_effect=SchemaRegistryAuthError("auth failed", status=401),
+            ),
+            pytest.raises(SchemaRegistryAuthError),
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "message_format": "avro",
+                        "schema_registry_url": "http://localhost:8081",
+                    },
+                ),
+            )
+
+
+class TestSchemaRegistryOAuthAuthError:
+    """Tests for OAuth-specific error messages on 401."""
+
+    def _make_auth_error_session(self, status: int) -> StdAsyncMock:
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=status,
+                message="Unauthorized" if status == 401 else "Forbidden",
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = StdAsyncMock(spec=aiohttp.ClientSession)
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+        return mock_session
+
+    def test_401_with_oauth_mentions_token_expiry(self) -> None:
+        """401 with OAuth configured includes token expiry hint."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        d._oauth_access_token = "expired-token"
+        d._oauth_token_expiry = time.time() + 3600
+        session = self._make_auth_error_session(401)
+
+        with pytest.raises(
+            SchemaRegistryAuthError, match="OAuth token may have expired"
+        ):
+            asyncio.run(d._get_schema_from_registry(42, session))
+
+    def test_401_without_oauth_generic_message(self) -> None:
+        """401 without OAuth uses generic auth error message."""
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        session = self._make_auth_error_session(401)
+
+        with pytest.raises(SchemaRegistryAuthError, match="stopping plugin"):
+            asyncio.run(d._get_schema_from_registry(42, session))
+
+    def test_403_with_oauth_mentions_token_expiry(self) -> None:
+        """403 with OAuth configured includes token expiry hint."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        d._oauth_access_token = "expired-token"
+        d._oauth_token_expiry = time.time() + 3600
+        session = self._make_auth_error_session(403)
+
+        with pytest.raises(
+            SchemaRegistryAuthError, match="OAuth token may have expired"
+        ):
+            asyncio.run(d._get_schema_from_registry(42, session))
+
+
+class TestGetAuthHeaders:
+    """Tests for _get_auth_headers method."""
+
+    def test_auth_headers_basic(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_basic_auth="user:pass",
+        )
+        headers = asyncio.run(d._get_auth_headers())
+        assert headers["Authorization"].startswith("Basic ")
+        assert "Accept" in headers
+
+    def test_auth_headers_bearer(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_bearer_token="my-jwt-token",
+        )
+        headers = asyncio.run(d._get_auth_headers())
+        assert headers["Authorization"] == "Bearer my-jwt-token"
+
+    def test_auth_headers_oauth_triggers_fetch(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="client-secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        # Pre-set a token and valid expiry so it doesn't actually fetch
+        d._oauth_access_token = "pre-fetched-token"
+        d._oauth_token_expiry = time.time() + 3600
+
+        headers = asyncio.run(d._get_auth_headers())
+        assert headers["Authorization"] == "Bearer pre-fetched-token"
+
+    def test_auth_headers_oauth_expired_triggers_refresh(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="client-secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        # Set expired token
+        d._oauth_access_token = "old-token"
+        d._oauth_token_expiry = 0.0
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"access_token": "new-token", "expires_in": 3600}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            headers = asyncio.run(d._get_auth_headers())
+
+        assert headers["Authorization"] == "Bearer new-token"
+        assert d._oauth_access_token == "new-token"
+        assert d._oauth_token_expiry > time.time()
+
+    def test_auth_headers_no_auth(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        headers = asyncio.run(d._get_auth_headers())
+        assert "Authorization" not in headers
+        assert "Accept" in headers
+
+
+class TestFetchOAuthToken:
+    """Tests for _fetch_oauth_token method."""
+
+    def test_fetch_oauth_token_success(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+            schema_registry_oauth_scope="registry:read",
+        )
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"access_token": "fetched-token", "expires_in": 1800}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            asyncio.run(d._fetch_oauth_token())
+
+        assert d._oauth_access_token == "fetched-token"
+        # expires_in=1800 minus 30s buffer
+        assert d._oauth_token_expiry > time.time()
+
+        # Verify the POST body sent to the token endpoint
+        mock_session.post.assert_called_once_with(
+            "https://auth.example.com/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": "client-id",
+                "client_secret": "secret",
+                "scope": "registry:read",
+            },
+            ssl=None,  # http:// registry URL produces no SSL context
+            timeout=d._REQUEST_TIMEOUT,
+        )
+
+    def test_fetch_oauth_token_without_scope(self) -> None:
+        """When no scope is configured, scope must not appear in the POST body."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"access_token": "no-scope-token", "expires_in": 3600}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            asyncio.run(d._fetch_oauth_token())
+
+        assert d._oauth_access_token == "no-scope-token"
+
+        # Verify scope is NOT in the POST body
+        post_data = mock_session.post.call_args[1]["data"]
+        assert "scope" not in post_data
+        assert post_data == {
+            "grant_type": "client_credentials",
+            "client_id": "client-id",
+            "client_secret": "secret",
+        }
+
+    def test_fetch_oauth_token_default_expiry(self) -> None:
+        """When response omits expires_in, default to 3600s with 30s buffer."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(return_value={"access_token": "no-expiry-token"})
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        before = time.time()
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            asyncio.run(d._fetch_oauth_token())
+
+        assert d._oauth_access_token == "no-expiry-token"
+        # Default expires_in=3600, minus 30s buffer
+        expected_expiry = before + 3600 - 30
+        assert abs(d._oauth_token_expiry - expected_expiry) < 2
+
+    def test_fetch_oauth_token_initial_failure_raises(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(), history=(), status=401, message="Unauthorized"
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with (
+            patch("aiohttp.ClientSession", return_value=mock_session),
+            pytest.raises(RuntimeError, match="Initial OAuth token acquisition failed"),
+        ):
+            asyncio.run(d._fetch_oauth_token())
+
+        assert d._oauth_access_token is None
+
+    def test_fetch_oauth_token_refresh_failure_keeps_stale(self) -> None:
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+        )
+        # Simulate a previously acquired token
+        d._oauth_access_token = "old-token"
+        d._oauth_token_expiry = time.time() + 10
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(), history=(), status=500, message="Server Error"
+            )
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            asyncio.run(d._fetch_oauth_token())
+
+        # Stale token should be preserved
+        assert d._oauth_access_token == "old-token"
+
+    def test_fetch_oauth_token_no_url(self) -> None:
+        d = AvroDeserializer(schema_registry_url="http://localhost:8081")
+        d._oauth_token_url = None
+        asyncio.run(d._fetch_oauth_token())
+        assert d._oauth_access_token is None
+
+    def test_fetch_oauth_token_passes_ssl_context(self) -> None:
+        """SSL context is passed to the OAuth token endpoint POST request."""
+        d = AvroDeserializer(
+            schema_registry_url="https://registry.example.com:8081",
+            schema_registry_oauth_client_id="client-id",
+            schema_registry_oauth_client_secret="secret",
+            schema_registry_oauth_token_url="https://auth.example.com/token",
+            schema_registry_ssl=True,
+        )
+        assert d._ssl_context is not None
+
+        mock_resp = StdAsyncMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = StdAsyncMock(
+            return_value={"access_token": "ssl-token", "expires_in": 3600}
+        )
+        mock_resp.__aenter__ = StdAsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = StdAsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_resp)
+        mock_session.__aenter__ = StdAsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = StdAsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            asyncio.run(d._fetch_oauth_token())
+
+        assert d._oauth_access_token == "ssl-token"
+
+        # Verify ssl= was passed to session.post()
+        call_kwargs = mock_session.post.call_args[1]
+        assert call_kwargs["ssl"] is d._ssl_context
+
+
+class TestSSLContext:
+    """Tests for SSL context configuration."""
+
+    def test_ssl_context_built_for_https(self, tmp_path: Any) -> None:
+        """SSL context is created when registry uses https and schema_registry_ssl=True."""
+        d = AvroDeserializer(
+            schema_registry_url="https://registry.example.com:8081",
+            schema_registry_ssl=True,
+        )
+        assert d._ssl_context is not None
+
+    def test_ssl_context_not_built_for_http(self) -> None:
+        """No SSL context for http registry URLs."""
+        d = AvroDeserializer(
+            schema_registry_url="http://localhost:8081",
+            schema_registry_ssl=True,
+        )
+        assert d._ssl_context is None
+
+    def test_ssl_context_not_built_when_disabled(self) -> None:
+        """No SSL context when schema_registry_ssl=False."""
+        d = AvroDeserializer(
+            schema_registry_url="https://registry.example.com:8081",
+            schema_registry_ssl=False,
+        )
+        assert d._ssl_context is None
+
+
+class TestNonDictRecordWrapping:
+    """Tests for non-dict record wrapping in deserializers."""
+
+    def test_schemaless_non_dict_wrapped(self) -> None:
+        """Non-dict records from schemaless_reader are wrapped as {'value': record}."""
+        # Schema that produces a single string value
+        string_schema = {"type": "string"}
+        parsed = fastavro.parse_schema(string_schema)
+        buf = io.BytesIO()
+        fastavro.schemaless_writer(buf, parsed, "hello-world")
+        avro_bytes = buf.getvalue()
+
+        d = AvroDeserializer()
+        d._schema = parsed
+        result = asyncio.run(d.deserialize(avro_bytes))
+        assert result == {"value": "hello-world"}
+
+    def test_object_container_non_dict_wrapped(self) -> None:
+        """Non-dict records from object container are wrapped as {'value': record}."""
+        string_schema = {"type": "string"}
+        parsed = fastavro.parse_schema(string_schema)
+        buf = io.BytesIO()
+        fastavro.writer(buf, parsed, ["hello-container"])
+        avro_bytes = buf.getvalue()
+
+        d = AvroDeserializer()
+        result = asyncio.run(d.deserialize(avro_bytes))
+        assert result == {"value": "hello-container"}
+
+
+class TestConfigureAvro:
+    """Tests for the _configure_avro helper function."""
+
+    def test_json_format_returns_none_deserializer(self) -> None:
+        msg_fmt, deserializer = _configure_avro(message_format="json")
+        assert msg_fmt == "json"
+        assert deserializer is None
+
+    def test_default_format_is_json(self) -> None:
+        msg_fmt, deserializer = _configure_avro(message_format="json")
+        assert msg_fmt == "json"
+        assert deserializer is None
+
+    def test_avro_format_creates_deserializer(self, avro_schema_file: str) -> None:
+        msg_fmt, deserializer = _configure_avro(
+            message_format="avro", avro_schema_file=avro_schema_file
+        )
+        assert msg_fmt == "avro"
+        assert deserializer is not None
+
+    def test_avro_with_registry_passes_ssl(self) -> None:
+        msg_fmt, deserializer = _configure_avro(
+            message_format="avro",
+            schema_registry_url="https://registry.example.com",
+            schema_registry_ssl=True,
+        )
+        assert deserializer is not None
+        assert deserializer._registry_url == "https://registry.example.com"
+        assert deserializer._ssl_context is not None
+
+    def test_avro_with_ssl_disabled_no_ssl_passthrough(self) -> None:
+        msg_fmt, deserializer = _configure_avro(
+            message_format="avro",
+            schema_registry_url="http://localhost:8081",
+            schema_registry_ssl=False,
+            schema_ssl_cafile="/some/ca.pem",
+            schema_ssl_certfile="/some/cert.pem",
+            schema_ssl_keyfile="/some/key.pem",
+        )
+        assert deserializer is not None
+        assert deserializer._ssl_context is None
+
+    def test_avro_registry_specific_ssl_params_accepted(self) -> None:
+        """Registry-specific SSL params are accepted by _configure_avro."""
+        msg_fmt, deserializer = _configure_avro(
+            message_format="avro",
+            schema_registry_url="https://registry.example.com",
+            schema_registry_ssl=True,
+            schema_ssl_cafile=None,
+            schema_ssl_certfile=None,
+            schema_ssl_keyfile=None,
+            schema_ssl_password=None,
+        )
+        assert deserializer is not None
+        assert deserializer._ssl_context is not None
+
+
+class TestSchemaRegistrySSLFallback:
+    """Test that registry-specific SSL certs override Kafka broker certs in main()."""
+
+    def test_registry_ssl_uses_dedicated_certs_over_kafka(
+        self, myqueue: MockQueue
+    ) -> None:
+        """When schema_ssl_cafile is provided, it is passed instead of Kafka cafile."""
+        with (
+            patch(
+                "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+                new=MockConsumer,
+            ),
+            patch(
+                "extensions.eda.plugins.event_source.kafka._create_ssl_context",
+                return_value=(None, "PLAINTEXT"),
+            ),
+            patch(
+                "extensions.eda.plugins.event_source.kafka._configure_avro",
+                return_value=("json", None),
+            ) as mock_configure,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "cafile": "/kafka/ca.pem",
+                        "schema_ssl_cafile": "/registry/ca.pem",
+                    },
+                )
+            )
+            call_kwargs = mock_configure.call_args[1]
+            assert call_kwargs["schema_ssl_cafile"] == "/registry/ca.pem"
+
+    def test_registry_ssl_falls_back_to_kafka_certs(self, myqueue: MockQueue) -> None:
+        """When no schema_ssl_cafile, Kafka cafile is used for registry."""
+        with (
+            patch(
+                "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+                new=MockConsumer,
+            ),
+            patch(
+                "extensions.eda.plugins.event_source.kafka._create_ssl_context",
+                return_value=(None, "PLAINTEXT"),
+            ),
+            patch(
+                "extensions.eda.plugins.event_source.kafka._configure_avro",
+                return_value=("json", None),
+            ) as mock_configure,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "cafile": "/kafka/ca.pem",
+                    },
+                )
+            )
+            call_kwargs = mock_configure.call_args[1]
+            assert call_kwargs["schema_ssl_cafile"] == "/kafka/ca.pem"
+
+
+class TestAvroNoneSkipsMessage:
+    """Test that Avro deserialization returning None skips the message in main()."""
+
+    def test_avro_none_skips_message(self, myqueue: MockQueue) -> None:
+        """When avro deserializer returns None, message is not queued."""
+
+        class AvroNoneIterator:
+            def __init__(self) -> None:
+                self.count = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.count < 1:
+                    mock = MagicMock()
+                    mock.value = b"\xff\xfe\xfd"  # corrupt avro data
+                    mock.headers = [("foo", b"bar")]
+                    mock.timestamp = 1708714664000
+                    mock.topic = "test-topic"
+                    mock.partition = 0
+                    mock.offset = 0
+                    self.count += 1
+                    return mock
+                raise StopAsyncIteration
+
+        class AvroNoneConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> AvroNoneIterator:
+                return AvroNoneIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        with patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=AvroNoneConsumer,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                        "message_format": "avro",
+                    },
+                )
+            )
+            # Corrupt data returns None, message should be skipped
+            assert len(myqueue.queue) == 0
+
+
+class TestTombstoneMessage:
+    """Test that Kafka tombstone messages (value=None) are handled gracefully."""
+
+    def test_decode_message_body_returns_none_for_tombstone(self) -> None:
+        """_decode_message_body returns None when msg_value is None."""
+        result = asyncio.run(_decode_message_body(None, "utf-8", "json", None))
+        assert result is None
+
+    def test_decode_message_body_returns_none_for_avro_tombstone(
+        self, avro_schema_file: str
+    ) -> None:
+        """_decode_message_body returns None for tombstone in avro mode."""
+        _msg_format, deserializer = _configure_avro(
+            message_format="avro", avro_schema_file=avro_schema_file
+        )
+        result = asyncio.run(_decode_message_body(None, "utf-8", "avro", deserializer))
+        assert result is None
+
+    def test_tombstone_skipped_in_main(self, myqueue: MockQueue) -> None:
+        """Tombstone messages are skipped without crashing the consumer loop."""
+
+        class TombstoneIterator:
+            def __init__(self) -> None:
+                self.count = 0
+
+            async def __anext__(self) -> MagicMock:
+                if self.count < 1:
+                    mock = MagicMock()
+                    mock.value = None  # tombstone
+                    mock.headers = []
+                    mock.timestamp = 1708714664000
+                    mock.topic = "test-topic"
+                    mock.partition = 0
+                    mock.offset = 0
+                    self.count += 1
+                    return mock
+                raise StopAsyncIteration
+
+        class TombstoneConsumer(AsyncMock):  # type: ignore[misc]
+            def __aiter__(self) -> TombstoneIterator:
+                return TombstoneIterator()
+
+            def subscribe(self, topics: list[str], pattern: str | None = None) -> None:
+                pass
+
+        with patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=TombstoneConsumer,
+        ):
+            asyncio.run(
+                kafka_main(
+                    myqueue,
+                    {
+                        "topic": "eda",
+                        "host": "localhost",
+                        "port": "9092",
+                        "group_id": "test",
+                    },
+                )
+            )
+            # Tombstone returns None, if data: check skips it
+            assert len(myqueue.queue) == 0

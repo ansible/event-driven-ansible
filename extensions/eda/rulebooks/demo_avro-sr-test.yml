@@ -1,0 +1,44 @@
+---
+# Parameterized rulebook for EDA Controller UI testing.
+# Used by: Use Cases 1, 3a, 3b, 3c (Schema Registry + all auth variants)
+# All parameters are injected via credential type extra_vars.
+# Variable names match the kafka-avro credential type injectors.yml.
+# Unused auth params are handled by EDA controller (undefined optional fields are safe).
+- name: "Avro + Schema Registry Test"
+  hosts: localhost
+  sources:
+    - ansible.eda.kafka:
+        topic: "{{ kafka_avro_topic }}"
+        host: "{{ kafka_avro_host }}"
+        port: "{{ kafka_avro_port }}"
+        offset: "{{ kafka_avro_offset }}"
+        group_id: "{{ kafka_avro_group_id }}"
+        cafile: "{{ eda.filename.cafile | default('', true) }}"
+        certfile: "{{ eda.filename.certfile | default('', true) }}"
+        keyfile: "{{ eda.filename.keyfile | default('', true) }}"
+        password: "{{ password | default('', true) }}"
+        message_format: "{{ message_format }}"
+        schema_registry_url: "{{ schema_registry_url }}"
+        schema_registry_basic_auth: "{{ schema_registry_basic_auth }}"
+        schema_registry_bearer_token: "{{ schema_registry_bearer_token }}"
+        schema_registry_oauth_client_id: "{{ schema_registry_oauth_client_id }}"
+        schema_registry_oauth_client_secret: "{{ schema_registry_oauth_client_secret }}"
+        schema_registry_oauth_token_url: "{{ schema_registry_oauth_token_url }}"
+        schema_registry_oauth_scope: "{{ schema_registry_oauth_scope }}"
+  rules:
+    - name: Critical alert — trigger remediation
+      condition: event.body.severity == "critical"
+      action:
+        debug:
+          msg: >-
+            CRITICAL ALERT on {{ event.body.host }}:
+            {{ event.body.message }}
+            [source_offset={{ event.meta.source_offset }}]
+
+    - name: Warning alert — log for review
+      condition: event.body.severity == "warning"
+      action:
+        debug:
+          msg: >-
+            WARNING on {{ event.body.host }}:
+            {{ event.body.message }}

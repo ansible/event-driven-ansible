@@ -98,6 +98,7 @@ repos:
           - aiobotocore
           - aiohttp
           - aiokafka
+          - fastavro
           - ansible-core
           - asyncmock
           - azure-servicebus
