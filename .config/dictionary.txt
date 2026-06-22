@@ -91,6 +91,7 @@ rulebooks
 ruleset
 rulesets
 schemaregistry
+seealso
 selectattr
 servicebus
 skipsdist
