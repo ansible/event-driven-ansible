@@ -445,14 +445,14 @@ def create_params(
         # Get the rulebook id
         rulebook_name = module.params["rulebook_name"]
         params = {"data": {"project_id": project_id}}
-        
+
         rulebook_id = lookup_resource_id(
             module,
             controller,
             "rulebooks",
             rulebook_name,
             params,
-        )       
+        )
         if rulebook_id is None:
             module.fail_json(
                 msg=f"Rulebook {rulebook_name} not found for project {project_name}."
@@ -483,7 +483,7 @@ def create_params(
             if organization_id is None:
                 module.fail_json(msg=f"Organization {organization_name} not found.")
             activation_params["organization_id"] = organization_id
- 
+
     if module.params.get("awx_token_name"):
         awx_token_id = lookup_resource_id(
             module,
@@ -498,9 +498,7 @@ def create_params(
     if not is_aap_24 and module.params.get("eda_credentials"):
         eda_credential_ids = []
         for item in module.params["eda_credentials"]:
-            cred_id = lookup_resource_id(
-                module, controller, "eda-credentials", item
-            )
+            cred_id = lookup_resource_id(module, controller, "eda-credentials", item)
             if cred_id is not None:
                 eda_credential_ids.append(cred_id)
 
