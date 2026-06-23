@@ -314,26 +314,11 @@ def main() -> None:
         )
 
     if state == "absent":
-        # Retry delete when the server rejects it due to an active job
-        # (e.g. a sync that just finished but whose background work is
-        # still being cleaned up).
-        max_retries = 5
-        retry_delay = 3
-        for attempt in range(max_retries):
-            try:
-                ret = controller.delete_if_needed(project, endpoint=project_endpoint)
-                break
-            except EDAError as eda_err:
-                if attempt < max_retries - 1:
-                    time.sleep(retry_delay)
-                    try:
-                        project = controller.get_exactly_one(
-                            project_endpoint, name=project_name
-                        )
-                    except EDAError:
-                        pass
-                else:
-                    module.fail_json(msg=str(eda_err))
+        # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
+        try:
+            ret = controller.delete_if_needed(project, endpoint=project_endpoint)
+        except EDAError as eda_err:
+            module.fail_json(msg=str(eda_err))
         module.exit_json(**ret)
 
     project_params: dict[str, Any] = {}
