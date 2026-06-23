@@ -61,11 +61,23 @@
     that:
       - r.changed
 
+- name: Wait for project sync to complete before delete
+  ansible.eda.project_info:
+    name: "{{ project_name }}"
+  register: project_info
+  until: project_info.projects[0].import_state == "completed"
+  failed_when: project_info.projects[0].import_state == "failed"
+  retries: 30
+  delay: 2
+
 - name: Delete project
   ansible.eda.project:
     name: "{{ project_name }}"
     state: absent
   register: r
+  retries: 3
+  delay: 2
+  until: r is not failed
 
 - name: Check if delete project
   assert:
@@ -89,6 +101,18 @@
   assert:
     that:
       - item.changed
+
+- name: Wait for project sync to complete before partial name delete
+  loop:
+    - "{{ project_name }}"
+    - "{{ project_name }}_test_partial"
+  ansible.eda.project_info:
+    name: "{{ item }}"
+  register: project_info
+  until: project_info.projects[0].import_state == "completed"
+  failed_when: project_info.projects[0].import_state == "failed"
+  retries: 30
+  delay: 2
 
 - name: Delete project with partial name match
   loop:
@@ -174,11 +198,23 @@
       - r_info.projects[0].update_revision_on_launch is true
       - r_info.projects[0].scm_update_cache_timeout == 7200
 
+- name: Wait for project sync to complete before auto-sync delete
+  ansible.eda.project_info:
+    name: "{{ project_name }}_update_revision_on_launch"
+  register: project_info
+  until: project_info.projects[0].import_state == "completed"
+  failed_when: project_info.projects[0].import_state == "failed"
+  retries: 30
+  delay: 2
+
 - name: Delete project with auto-sync
   ansible.eda.project:
     name: "{{ project_name }}_update_revision_on_launch"
     state: absent
   register: r
+  retries: 3
+  delay: 2
+  until: r is not failed
 
 - name: Check if delete project with auto-sync
   assert:
