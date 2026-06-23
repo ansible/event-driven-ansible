@@ -22,6 +22,7 @@ action_groups:
     - rulebook_info
     - rulebook_activation
     - rulebook_activation_copy
+    - role_team_assignment
     - rulebook_activation_info
     - user
 plugin_routing:
