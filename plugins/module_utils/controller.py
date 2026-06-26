@@ -224,6 +224,8 @@ class Controller:
                     return True
         elif obj == Controller.ENCRYPTED_STRING:
             return True
+        elif isinstance(obj, str) and Controller.ENCRYPTED_STRING in obj:
+            return True
         return False
 
     @staticmethod
@@ -242,6 +244,8 @@ class Controller:
             return True  # all sub-fields are either equal or could be equal
         if old_field == Controller.ENCRYPTED_STRING:
             return True
+        if isinstance(old_field, str) and Controller.ENCRYPTED_STRING in old_field:
+            return True
 
         return bool(new_field == old_field)
 
@@ -259,6 +263,12 @@ class Controller:
             old_field = old.get(field, None)
 
             if old_field != new_field:
+                if (
+                    isinstance(old_field, str)
+                    and Controller.ENCRYPTED_STRING in old_field
+                    and old_field != Controller.ENCRYPTED_STRING
+                ):
+                    continue
                 if self.update_secrets or (
                     not self.fields_could_be_same(old_field, new_field)
                 ):
