@@ -363,6 +363,10 @@ class TestMainPresent:
         assert filter_data.get("object_ansible_id") == obj_uuid
 
     def test_post_failure_calls_fail_json(self) -> None:
+        from ansible_collections.ansible.eda.plugins.module_utils.errors import (  # type: ignore
+            EDAHTTPError,
+        )
+
         module, client = _setup_main(
             params_override={},
             get_responses=[
@@ -370,12 +374,8 @@ class TestMainPresent:
                 _resolve_response(1, "test-team"),
                 _make_api_list([]),
             ],
-            post_response=Mock(
-                status=400,
-                data='{"detail":"bad request"}',
-                json={"detail": "bad request"},
-            ),
         )
+        client.post.side_effect = EDAHTTPError("HTTP error {'detail': 'bad request'}")
         _run_main(module, client)
 
         module.fail_json.assert_called_once()
@@ -428,6 +428,10 @@ class TestMainAbsent:
         client.delete.assert_not_called()
 
     def test_delete_failure_calls_fail_json(self) -> None:
+        from ansible_collections.ansible.eda.plugins.module_utils.errors import (
+            EDAHTTPError,
+        )
+
         module, client = _setup_main(
             params_override={"state": "absent"},
             get_responses=[
@@ -435,8 +439,8 @@ class TestMainAbsent:
                 _resolve_response(1, "test-team"),
                 _make_api_list([_make_assignment()]),
             ],
-            delete_response=Mock(status=500, data="internal error"),
         )
+        client.delete.side_effect = EDAHTTPError("HTTP error internal error")
         _run_main(module, client)
 
         module.fail_json.assert_called_once()
@@ -479,7 +483,7 @@ class TestMainExists:
 class TestMainEdaError:
     def test_eda_error_calls_fail_json(self) -> None:
         """Verifies the except EDAError handler."""
-        from ansible_collections.ansible.eda.plugins.module_utils.errors import (  # type: ignore
+        from ansible_collections.ansible.eda.plugins.module_utils.errors import (
             EDAHTTPError,
         )
 
