@@ -260,9 +260,36 @@ notes:
   - C(fastavro) is used for Avro deserialization when O(message_format) is V(avro).
   - C(aiohttp) is required only when O(schema_registry_url) is configured.
   - >-
+    When O(message_format) is V(avro), the plugin applies a deserialization
+    fallback chain. B(1.) If O(schema_registry_url) is configured and the
+    message contains a Schema Registry wire format header, the schema is
+    fetched from the registry. B(2.) If O(avro_schema_file) is provided,
+    the local schema is used. B(3.) Otherwise, the message is treated as
+    an Avro Object Container Format (OCF) file with an embedded schema.
+  - >-
+    When using Avro Object Container Format (OCF) messages, do B(not)
+    provide O(avro_schema_file). It will cause deserialization to fail
+    because the fallback chain (step 2) cannot parse the OCF container header.
+  - >-
+    The Schema Registry integration is compatible with any registry that
+    implements the Confluent Schema Registry REST API, including Confluent
+    Platform, Confluent Cloud, Karapace, Redpanda, and Apicurio Registry
+    (via its Confluent compatibility API at C(/apis/ccompat/v7)). It is
+    B(not) compatible with AWS Glue Schema Registry, which uses a different
+    18-byte wire format.
+  - >-
+    Schema Registry authentication methods are mutually exclusive. Configure at most
+    one of O(schema_registry_basic_auth), O(schema_registry_bearer_token),
+    or the OAuth 2.0 parameters (O(schema_registry_oauth_client_id),
+    O(schema_registry_oauth_client_secret), O(schema_registry_oauth_token_url)).
+    The plugin raises an error if more than one method is configured.
+  - >-
     A custom EDA credential type for this plugin is included in the collection
     at C(extensions/eda/plugins/event_source/credential_types/kafka-avro/). It uses C(extra_vars) and C(file) injectors
     to securely manage Kafka, SSL, Avro, and Schema Registry parameters.
+    The C(file) injector writes certificate and schema content to temporary
+    files inside the Decision Environment at runtime; the C(eda.filename.<name>)
+    Jinja variable resolves to the temporary file path.
   - >-
     For EDA credential type documentation, see
     U(https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/using_automation_decisions/eda-credential-types).
@@ -277,9 +304,29 @@ notes:
     (Keycloak, Okta, Azure AD), the same O(schema_ssl_cafile) is used for both
     the OAuth token endpoint and the Schema Registry API. If they use different
     CAs, concatenate both CA certificates into a single PEM file.
+seealso:
+  - name: Apache Avro Specification
+    description: The Apache Avro data serialization format specification, including Object Container Files.
+    link: https://avro.apache.org/docs/1.12.0/specification/
+  - name: Confluent Wire Format
+    description: The Confluent Schema Registry wire format (magic byte + schema ID + Avro binary).
+    link: https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html
+  - name: Confluent Schema Registry REST API
+    description: REST API reference for the Confluent Schema Registry.
+    link: https://docs.confluent.io/platform/current/schema-registry/develop/api.html
+  - name: fastavro Documentation
+    description: Python library used for Avro serialization and deserialization.
+    link: https://fastavro.readthedocs.io/
+  - name: aiokafka Documentation
+    description: Async Python client for Apache Kafka used by this plugin.
+    link: https://aiokafka.readthedocs.io/
 """
 
 EXAMPLES = r"""
+# For complete rulebook examples with rules and credential injection,
+# see extensions/eda/rulebooks/demo_avro-*.yml
+
+# JSON messages (default behavior, no message_format needed)
 - ansible.eda.kafka:
     host: "localhost"
     port: "9092"
@@ -296,6 +343,10 @@ EXAMPLES = r"""
     sasl_plain_username: "admin"
     sasl_plain_password: "test"
 
+# Avro with a local schema file (.avsc)
+# Use when messages are raw Avro binary (no wire format header, no
+# embedded schema). The schema file must be valid JSON containing an
+# Avro schema definition.
 - ansible.eda.kafka:
     host: "localhost"
     port: "9092"
@@ -305,6 +356,18 @@ EXAMPLES = r"""
     message_format: "avro"
     avro_schema_file: "/path/to/schema.avsc"
 
+# Avro Object Container Format (self-describing messages)
+# Each message carries its own embedded schema. No schema file or
+# Schema Registry is needed — just set message_format to avro.
+- ansible.eda.kafka:
+    host: "localhost"
+    port: "9092"
+    topic: "avro-ocf-events"
+    group_id: "eda-ocf-consumer"
+    offset: "earliest"
+    message_format: "avro"
+
+# Avro with Schema Registry (no authentication)
 - ansible.eda.kafka:
     host: "localhost"
     port: "9092"
@@ -314,14 +377,73 @@ EXAMPLES = r"""
     message_format: "avro"
     schema_registry_url: "http://localhost:8081"
 
+# Schema Registry with Basic Auth
 - ansible.eda.kafka:
     host: "localhost"
     port: "9092"
     topic: "avro-events"
-    group_id: "eda-sr-auth"
+    group_id: "eda-sr-basic"
     offset: "earliest"
     message_format: "avro"
-    schema_registry_url: "https://registry.example.com:8080/apis/ccompat/v7"
+    schema_registry_url: "https://registry.example.com:8081"
+    schema_registry_basic_auth: "user:password"
+
+# Schema Registry with Bearer Token
+- ansible.eda.kafka:
+    host: "localhost"
+    port: "9092"
+    topic: "avro-events"
+    group_id: "eda-sr-bearer"
+    offset: "earliest"
+    message_format: "avro"
+    schema_registry_url: "https://registry.example.com:8081"
+    schema_registry_bearer_token: "my-bearer-token"
+
+# Schema Registry with OAuth 2.0 Client Credentials
+# The plugin acquires an access token from the token endpoint, caches it,
+# and refreshes it automatically before expiry.
+- ansible.eda.kafka:
+    host: "localhost"
+    port: "9092"
+    topic: "avro-events"
+    group_id: "eda-sr-oauth"
+    offset: "earliest"
+    message_format: "avro"
+    schema_registry_url: "https://registry.example.com:8081"
+    schema_registry_oauth_client_id: "my-client-id"
+    schema_registry_oauth_client_secret: "my-client-secret"
+    schema_registry_oauth_token_url: "https://auth.example.com/oauth/token"
+    schema_registry_oauth_scope: "registry:read"
+
+# Schema Registry with SSL and dedicated registry certificates
+# Use schema_ssl_* to provide separate certificates for the Schema Registry
+# when it uses a different CA than the Kafka broker.
+- ansible.eda.kafka:
+    host: "kafka.example.com"
+    port: "9093"
+    topic: "avro-events"
+    group_id: "eda-sr-ssl"
+    offset: "earliest"
+    security_protocol: "SSL"
+    cafile: "/certs/kafka-ca.pem"
+    certfile: "/certs/kafka-client.pem"
+    keyfile: "/certs/kafka-client-key.pem"
+    message_format: "avro"
+    schema_registry_url: "https://registry.example.com:8081"
+    schema_registry_ssl: true
+    schema_ssl_cafile: "/certs/registry-ca.pem"
+    schema_ssl_certfile: "/certs/registry-client.pem"
+    schema_ssl_keyfile: "/certs/registry-client-key.pem"
+
+# Schema Registry with Apicurio Registry (Confluent compatibility API)
+- ansible.eda.kafka:
+    host: "localhost"
+    port: "9092"
+    topic: "avro-events"
+    group_id: "eda-apicurio"
+    offset: "earliest"
+    message_format: "avro"
+    schema_registry_url: "https://apicurio.example.com:8080/apis/ccompat/v7"
     schema_registry_basic_auth: "user:password"
 """
 
