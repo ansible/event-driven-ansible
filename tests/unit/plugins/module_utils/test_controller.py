@@ -172,6 +172,26 @@ def test_has_encrypted_values() -> None:
     assert Controller.has_encrypted_values({"key": "value"}) is False
 
 
+@pytest.mark.parametrize(
+    "obj, expected",
+    [
+        ("$encrypted$", True),
+        ("http://user:$encrypted$@host:3128", True),
+        ("prefix$encrypted$suffix", True),
+        ("no_secrets_here", False),
+        ("", False),
+        (42, False),
+        (None, False),
+        (["$encrypted$"], True),
+        (["http://user:$encrypted$@host:3128"], True),
+        (["plain"], False),
+        ({"key": "http://user:$encrypted$@host:3128"}, True),
+    ],
+)
+def test_has_encrypted_values_substring(obj: object, expected: bool) -> None:
+    assert Controller.has_encrypted_values(obj) is expected
+
+
 def test_fail_wanted_one(mock_client: Mock, controller: Controller) -> None:
     response = MagicMock()
     response.json.return_value = {"count": 2, "results": [{"id": 1}, {"id": 2}]}
@@ -192,13 +212,67 @@ def test_fields_could_be_same() -> None:
 
 
 @pytest.mark.parametrize(
+    "old_field, new_field, expected",
+    [
+        ("$encrypted$", "anything", True),
+        ("http://user:$encrypted$@host:3128", "http://user:realpass@host:3128", True),
+        ("prefix$encrypted$suffix", "prefixVALUEsuffix", True),
+        ("same_value", "same_value", True),
+        ("different", "values", False),
+        ("no_secret", "other_value", False),
+    ],
+)
+def test_fields_could_be_same_embedded_encrypted(
+    old_field: str, new_field: str, expected: bool
+) -> None:
+    assert Controller.fields_could_be_same(old_field, new_field) is expected
+
+
+@pytest.mark.parametrize(
     "old, new, expected",
     [
         ({"key": "$encrypted$"}, {"key": "value"}, True),
         ({"key": "value"}, {"key": "value"}, False),
+        # Embedded $encrypted$ is skipped even with update_secrets=True
+        (
+            {
+                "proxy": "http://user:$encrypted$@host:3128",
+                "url": "https://example.com",
+            },
+            {"proxy": "http://user:realpass@host:3128", "url": "https://example.com"},
+            False,
+        ),
+        (
+            {
+                "proxy": "http://user:$encrypted$@host:3128",
+                "url": "https://example.com",
+            },
+            {"proxy": "http://user:realpass@host:3128", "url": "https://changed.com"},
+            True,
+        ),
     ],
 )
 def test_objects_could_be_different(
     controller: "Controller", old: dict[str, str], new: dict[str, str], expected: bool
 ) -> None:
     assert controller.objects_could_be_different(old, new) is expected
+
+
+def test_objects_could_be_different_no_update_secrets(
+    mock_client: Mock, mock_module: Mock
+) -> None:
+    """With update_secrets=False (real module default), embedded $encrypted$ is a wildcard."""
+    mock_module.params = {"update_secrets": False}
+    ctrl = Controller(client=mock_client, module=mock_module)
+    old = {
+        "proxy": "http://user:$encrypted$@host:3128",
+        "url": "https://example.com",
+    }
+    new = {"proxy": "http://user:realpass@host:3128", "url": "https://example.com"}
+    assert ctrl.objects_could_be_different(old, new) is False
+
+    new_changed_url = {
+        "proxy": "http://user:realpass@host:3128",
+        "url": "https://changed.com",
+    }
+    assert ctrl.objects_could_be_different(old, new_changed_url) is True
