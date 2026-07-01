@@ -1,0 +1,199 @@
+---
+- name: Role Team Assignment integration tests
+  module_defaults:
+    group/ansible.eda.eda:
+      aap_hostname: "{{ aap_hostname }}"
+      aap_username: "{{ aap_username }}"
+      aap_password: "{{ aap_password }}"
+      aap_validate_certs: "{{ aap_validate_certs }}"
+  block:
+    - name: Generate unique test ID
+      ansible.builtin.set_fact:
+        random_string: "{{ lookup('password', '/dev/null chars=ascii_lowercase length=8') }}"
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        test_team_name: "test-rta-{{ random_string }}"
+        test_role_name: "Organization Auditor"
+        test_org_id: 1
+
+    # Detect whether Gateway is available (full AAP) or only EDA standalone.
+    # When ALLOW_LOCAL_RESOURCE_MANAGEMENT=False (AAP with Gateway), teams
+    # must be created via the Gateway API. When True (standalone eda-server
+    # or staging CI), use the EDA API directly.
+    - name: Check if Gateway API is available
+      ansible.builtin.uri:
+        url: "{{ aap_hostname }}/api/gateway/v1/teams/"
+        method: GET
+        user: "{{ aap_username }}"
+        password: "{{ aap_password }}"
+        force_basic_auth: true
+        validate_certs: "{{ aap_validate_certs }}"
+        status_code: [200, 403, 404, 405, 502]
+      register: gateway_check
+      ignore_errors: true
+
+    - name: Set teams API endpoint
+      ansible.builtin.set_fact:
+        use_gateway: >-
+          {{ gateway_check.status == 200 and
+             gateway_check.content_type is defined and
+             'application/json' in gateway_check.content_type }}
+        teams_api_url: >-
+          {{ (gateway_check.status == 200 and
+              gateway_check.content_type is defined and
+              'application/json' in gateway_check.content_type) |
+             ternary(aap_hostname ~ '/api/gateway/v1/teams/',
+                     aap_hostname ~ '/api/eda/v1/teams/') }}
+
+    - name: Create test team
+      ansible.builtin.uri:
+        url: "{{ teams_api_url }}"
+        method: POST
+        user: "{{ aap_username }}"
+        password: "{{ aap_password }}"
+        force_basic_auth: true
+        validate_certs: "{{ aap_validate_certs }}"
+        body_format: json
+        body: >-
+          {{ (use_gateway | bool) |
+             ternary({'name': test_team_name, 'organization': test_org_id},
+                     {'name': test_team_name, 'organization_id': test_org_id}) }}
+        status_code: [201]
+      register: create_team_result
+
+    # -- state=present: create assignment -----------------------------------
+
+    - name: Create role team assignment
+      ansible.eda.role_team_assignment:
+        role_definition: "{{ test_role_name }}"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: present
+      register: create_result
+
+    - name: Assert create changed
+      ansible.builtin.assert:
+        that:
+          - create_result is changed
+          - create_result.id is defined
+        fail_msg: "Create should report changed with an id. result={{ create_result }}"
+
+    # -- state=present: idempotency -----------------------------------------
+
+    - name: Create same assignment again (idempotency)
+      ansible.eda.role_team_assignment:
+        role_definition: "{{ test_role_name }}"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: present
+      register: idem_result
+
+    - name: Assert idempotent (no change)
+      ansible.builtin.assert:
+        that:
+          - idem_result is not changed
+          - idem_result.id is defined
+        fail_msg: "Second run should not report changed. result={{ idem_result }}"
+
+    # -- state=exists: check assignment exists ------------------------------
+
+    - name: Check assignment exists
+      ansible.eda.role_team_assignment:
+        role_definition: "{{ test_role_name }}"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: exists
+      register: exists_result
+
+    - name: Assert exists returns details
+      ansible.builtin.assert:
+        that:
+          - exists_result is not changed
+          - exists_result.id is defined
+          - exists_result.content_type == "shared.organization"
+        fail_msg: "state=exists should return assignment details. result={{ exists_result }}"
+
+    # -- state=absent: delete assignment ------------------------------------
+
+    - name: Delete role team assignment
+      ansible.eda.role_team_assignment:
+        role_definition: "{{ test_role_name }}"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: absent
+      register: delete_result
+
+    - name: Assert delete changed
+      ansible.builtin.assert:
+        that:
+          - delete_result is changed
+        fail_msg: "Delete should report changed. result={{ delete_result }}"
+
+    # -- state=absent: idempotency (already gone) ---------------------------
+
+    - name: Delete again (idempotency)
+      ansible.eda.role_team_assignment:
+        role_definition: "{{ test_role_name }}"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: absent
+      register: delete_idem_result
+
+    - name: Assert delete idempotent
+      ansible.builtin.assert:
+        that:
+          - delete_idem_result is not changed
+        fail_msg: "Second delete should not report changed. result={{ delete_idem_result }}"
+
+    # -- state=exists: verify assignment is gone ----------------------------
+
+    - name: Check assignment no longer exists
+      ansible.eda.role_team_assignment:
+        role_definition: "{{ test_role_name }}"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: exists
+      register: gone_result
+
+    - name: Assert not found
+      ansible.builtin.assert:
+        that:
+          - gone_result is not changed
+          - gone_result.msg is defined
+          - "'not found' in gone_result.msg"
+        fail_msg: "Should report not found after deletion. result={{ gone_result }}"
+
+    # -- Error case: non-existent role definition ---------------------------
+
+    - name: Assign with non-existent role definition
+      ansible.eda.role_team_assignment:
+        role_definition: "Nonexistent Role That Does Not Exist"
+        team: "{{ test_team_name }}"
+        object_id: "{{ test_org_id }}"
+        state: present
+      register: bad_role_result
+      ignore_errors: true
+
+    - name: Assert failure on bad role definition
+      ansible.builtin.assert:
+        that:
+          - bad_role_result is failed
+        fail_msg: "Should fail with non-existent role. result={{ bad_role_result }}"
+
+  always:
+    - name: Delete test team
+      ansible.builtin.uri:
+        url: "{{ teams_api_url }}{{ create_team_result.json.id }}/"
+        method: DELETE
+        user: "{{ aap_username }}"
+        password: "{{ aap_password }}"
+        force_basic_auth: true
+        validate_certs: "{{ aap_validate_certs }}"
+        status_code: [204, 404]
+      when:
+        - teams_api_url is defined
+        - create_team_result is defined
+        - create_team_result.json is defined
+        - create_team_result.json.id is defined
+      ignore_errors: true
