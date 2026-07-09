@@ -119,7 +119,7 @@ EXAMPLES = r"""
     scm_branch: "devel"
     organization_name: Default
     state: present
-    update_revision_on_launch: True
+    update_revision_on_launch: true
     scm_update_cache_timeout: 3600
 
 - name: Delete the project
