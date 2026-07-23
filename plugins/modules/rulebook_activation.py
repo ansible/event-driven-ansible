@@ -109,6 +109,27 @@ options:
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
+  k8s_pod_node_selector:
+    description:
+      - A dictionary of Kubernetes node selector labels used to schedule
+        activation job pods onto specific nodes.
+      - Only applies when the activation engine is Kubernetes.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
+    type: dict
+    version_added: 2.13.0
+  k8s_pod_tolerations:
+    description:
+      - A list of Kubernetes tolerations applied to activation job pods,
+        allowing them to be scheduled onto nodes with matching taints.
+      - Each entry is a dictionary with optional keys C(key), C(operator),
+        C(value), C(effect), and C(tolerationSeconds).
+      - Only applies when the activation engine is Kubernetes.
+      - This parameter is supported in AAP 2.5 and onwards.
+        If specified for AAP 2.4, value will be ignored.
+    type: list
+    elements: dict
+    version_added: 2.13.0
   swap_single_source:
     description:
       - Allow swapping of single sources in a rulebook without name match.
@@ -257,6 +278,22 @@ EXAMPLES = r"""
     organization_name: "Default"
     restart: true
     restart_on_project_update: False
+
+- name: Create a rulebook activation with Kubernetes pod metadata
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    description: "Activation on dedicated nodes"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    k8s_pod_node_selector:
+      workload: eda
+    k8s_pod_tolerations:
+      - key: dedicated
+        operator: Equal
+        value: eda
+        effect: NoSchedule
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
@@ -478,6 +515,14 @@ def create_params(
     if not is_aap_24 and module.params.get("k8s_service_name"):
         activation_params["k8s_service_name"] = module.params["k8s_service_name"]
 
+    if not is_aap_24 and module.params.get("k8s_pod_node_selector"):
+        activation_params["k8s_pod_node_selector"] = module.params[
+            "k8s_pod_node_selector"
+        ]
+
+    if not is_aap_24 and module.params.get("k8s_pod_tolerations"):
+        activation_params["k8s_pod_tolerations"] = module.params["k8s_pod_tolerations"]
+
     if not is_aap_24 and module.params.get("event_streams"):
         # Process event streams and source mappings
         activation_params["source_mappings"] = yaml.dump(
@@ -555,6 +600,8 @@ def main() -> None:
         organization_name=dict(type="str", aliases=["organization"]),
         eda_credentials=dict(type="list", elements="str", aliases=["credentials"]),
         k8s_service_name=dict(type="str"),
+        k8s_pod_node_selector=dict(type="dict"),
+        k8s_pod_tolerations=dict(type="list", elements="dict"),
         event_streams=dict(
             type="list",
             elements="dict",
