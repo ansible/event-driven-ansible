@@ -91,7 +91,7 @@ def main(
         # does not contain host
         msg = f"Event {event} does not contain {host_path}"
         if log_error:
-            LOGGER.error(msg)  # noqa: TRY400
+            LOGGER.error(msg)
         if raise_error:
             raise PathNotExistError(msg) from error
         return event
