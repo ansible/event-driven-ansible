@@ -89,3 +89,7 @@ max-line-length=120
 
 [tool.ruff.lint]
 ignore = [ "E402" ]
+
+[tool.ruff.lint.flake8-copyright]
+# Do not enforce copyright notices for empty files
+min-file-size = 1
