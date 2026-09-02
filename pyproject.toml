@@ -93,3 +93,25 @@ ignore = [ "E402" ]
 [tool.ruff.lint.flake8-copyright]
 # Do not enforce copyright notices for empty files
 min-file-size = 1
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore copyright notices for now
+"extensions/eda/plugins/event_source/alertmanager.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/kafka.py" = ["CPY001"]
+# Deprecated plugins
+"extensions/eda/plugins/event_filter/dashes_to_underscores.py" = ["CPY001"]
+"extensions/eda/plugins/event_filter/insert_hosts_to_meta.py" = ["CPY001"]
+"extensions/eda/plugins/event_filter/json_filter.py" = ["CPY001"]
+"extensions/eda/plugins/event_filter/noop.py" = ["CPY001"]
+"extensions/eda/plugins/event_filter/normalize_keys.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/aws_cloudtrail.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/aws_sqs_queue.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/azure_service_bus.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/file_watch.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/file.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/journald.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/pg_listener.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/range.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/tick.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/url_check.py" = ["CPY001"]
+"extensions/eda/plugins/event_source/webhook.py" = ["CPY001"]
