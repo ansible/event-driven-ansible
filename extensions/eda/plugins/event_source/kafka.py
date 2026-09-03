@@ -1371,7 +1371,7 @@ def _process_event_uuid(
     event["meta"]["uuid"] = event_uuid
 
 
-async def receive_msg(  # noqa: PLR0917
+async def receive_msg(
     queue: asyncio.Queue[Any],
     kafka_consumer: AIOKafkaConsumer,
     encoding: str,

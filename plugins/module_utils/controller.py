@@ -1,4 +1,3 @@
-
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 from __future__ import annotations
@@ -97,9 +96,7 @@ class Controller:
 
         self.fail_wanted_one(result)
 
-    def resolve_name_to_id(
-        self, endpoint: str, name: str, **kwargs: Any
-    ) -> int | None:
+    def resolve_name_to_id(self, endpoint: str, name: str, **kwargs: Any) -> int | None:
         result = self.get_exactly_one(endpoint, name, **kwargs)
         if result:
             if isinstance(result["id"], int):

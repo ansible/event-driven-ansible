@@ -494,9 +494,12 @@ def test_unicode_error_decoding_headers(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_bad_headers), patch(
-        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
-        new=MockConsumerWithBadHeaders,
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_bad_headers),
+        patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=MockConsumerWithBadHeaders,
+        ),
     ):
         asyncio.run(
             kafka_main(
@@ -537,9 +540,12 @@ def test_json_decode_error(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_bad_json), patch(
-        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
-        new=MockConsumerWithInvalidJSON,
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_bad_json),
+        patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=MockConsumerWithInvalidJSON,
+        ),
     ):
         asyncio.run(
             kafka_main(
@@ -583,9 +589,12 @@ def test_unicode_error_decoding_body(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_bad_body), patch(
-        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
-        new=MockConsumerWithBadBody,
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_bad_body),
+        patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=MockConsumerWithBadBody,
+        ),
     ):
         asyncio.run(
             kafka_main(
@@ -626,9 +635,12 @@ def test_empty_data_not_queued(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_empty_data), patch(
-        "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
-        new=MockConsumerWithEmptyData,
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_empty_data),
+        patch(
+            "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
+            new=MockConsumerWithEmptyData,
+        ),
     ):
         asyncio.run(
             kafka_main(
