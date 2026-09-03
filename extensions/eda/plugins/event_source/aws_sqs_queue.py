@@ -79,7 +79,7 @@ class DeleteMessageBatchRequestEntryTypeDef(TypedDict):
 
 
 # pylint: disable=too-many-locals
-async def main(  # noqa: C901, PLR0912
+async def main(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
@@ -206,6 +206,6 @@ if __name__ == "__main__":
 
         async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(main(MockQueue(), {"region": "us-east-1", "name": "eda"}))

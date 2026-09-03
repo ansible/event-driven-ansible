@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
-
-from typing import Literal, Optional, Union
+from typing import Literal
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -55,7 +50,7 @@ def test_create_if_needed(
     controller: Controller,
     new_item: dict[str, str],
     mock_response: Mock,
-    expected_result: dict[str, Union[bool, int]],
+    expected_result: dict[str, bool | int],
     expected_calls: Literal[1],
 ) -> None:
     if mock_response:
@@ -64,7 +59,7 @@ def test_create_if_needed(
     assert result == expected_result
     assert mock_client.post.call_count == expected_calls
     if expected_calls > 0:
-        mock_client.post.assert_called_with(ENDPOINT, **{"data": new_item})
+        mock_client.post.assert_called_with(ENDPOINT, data=new_item)
 
 
 @pytest.mark.parametrize(
@@ -89,10 +84,10 @@ def test_create_if_needed(
 def test_delete_if_needed(
     mock_client: Mock,
     controller: Controller,
-    existing_item: dict[str, Union[int, str]],
-    mock_response: Optional[Mock],
-    expected_result: dict[str, Union[bool, int]],
-    expected_calls: Union[Literal[1], Literal[0]],
+    existing_item: dict[str, int | str],
+    mock_response: Mock | None,
+    expected_result: dict[str, bool | int],
+    expected_calls: Literal[1, 0],
 ) -> None:
     if mock_response:
         mock_client.delete.return_value = mock_response
@@ -101,7 +96,7 @@ def test_delete_if_needed(
     assert result == expected_result
     assert mock_client.delete.call_count == expected_calls
     if expected_calls > 0:
-        mock_client.delete.assert_called_with(ENDPOINT, **{"id": existing_item["id"]})
+        mock_client.delete.assert_called_with(ENDPOINT, id=existing_item["id"])
 
 
 def test_update_if_needed_with_existing_item(
@@ -114,7 +109,7 @@ def test_update_if_needed_with_existing_item(
     result = controller.update_if_needed(
         existing_item, new_item, ENDPOINT, "resource type"
     )
-    mock_client.patch.assert_called_with(ENDPOINT, **{"data": new_item, "id": 1})
+    mock_client.patch.assert_called_with(ENDPOINT, data=new_item, id=1)
     assert result["changed"] is True
     assert result["id"] == 1
 
@@ -157,7 +152,7 @@ def test_get_name_field_from_endpoint() -> None:
 def test_get_item_name(
     controller: Controller,
     item: dict[str, str],
-    expected_name: Optional[Union[Literal["test_item"], Literal["test_user"]]],
+    expected_name: Literal["test_item", "test_user"] | None,
     should_raise: bool,
 ) -> None:
     if should_raise:

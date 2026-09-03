@@ -1,18 +1,11 @@
-# -*- coding: utf-8 -*-
-
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
-
-from http.client import HTTPMessage
-from typing import Any, Iterator, Literal, Optional, Union
-
-from typing_extensions import LiteralString
-
-__metaclass__ = type
 
 import json
+from collections.abc import Iterator
+from http.client import HTTPMessage
+from typing import Any, Literal
 from unittest.mock import Mock, patch
 from urllib.error import HTTPError, URLError
 
@@ -24,6 +17,7 @@ from ansible_collections.ansible.eda.plugins.module_utils.errors import (  # typ
     AuthError,
     EDAHTTPError,
 )
+from typing_extensions import LiteralString
 
 ENDPOINT = "/api/test_endpoint"
 QUERY_PARAMS = {"param": "value"}
@@ -129,7 +123,7 @@ def test_client_init_host_processing_valid_inputs(
     ],
 )
 def test_client_init_invalid_host_raises_error(
-    invalid_host_input: Optional[str],
+    invalid_host_input: str | None,
 ) -> None:
     """
     Tests that passing host=None or host="" raises a ValueError.
@@ -191,14 +185,12 @@ def test_client_init_default_optional_attributes() -> None:
 )
 def test_client_methods(
     method: str,
-    status_code: Optional[
-        Union[Literal[200], Literal[201], Literal[204], Literal[401], Literal[404]]
-    ],
-    expected_response: Optional[dict[str, str]],
-    exception_type: Optional[Any],
-    exception_message: Optional[Union[LiteralString, Literal["URL error"]]],
+    status_code: Literal[200, 201, 204, 401, 404] | None,
+    expected_response: dict[str, str] | None,
+    exception_type: Any | None,
+    exception_message: LiteralString | Literal["URL error"] | None,
     headers: dict[str, str],
-    data: Optional[dict[str, str]],
+    data: dict[str, str] | None,
     client: tuple[Any, Mock],
     mock_response: Mock,
     mock_http_error: HTTPError,

@@ -1,12 +1,7 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
 
 
 DOCUMENTATION = r"""
@@ -168,7 +163,7 @@ msg:
 """
 
 
-from typing import Any, Optional
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -185,7 +180,7 @@ def _resolve_id(
     endpoint: str,
     value: str,
     label: str,
-) -> Optional[int]:
+) -> int | None:
     """Resolve a name-or-ID string to an integer ID."""
     try:
         return int(value)
@@ -201,9 +196,9 @@ def _resolve_id(
 def _find_existing(
     controller: Controller,
     filter_params: dict[str, Any],
-    object_id: Optional[int],
-    object_ansible_id: Optional[str] = None,
-) -> Optional[dict[str, Any]]:
+    object_id: int | None,
+    object_ansible_id: str | None = None,
+) -> dict[str, Any] | None:
     """Find an existing role_team_assignment matching the filter and object."""
     params = dict(filter_params, page_size=200)
     response = controller.get_endpoint("role_team_assignments", data=params)

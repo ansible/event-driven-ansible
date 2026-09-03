@@ -75,7 +75,7 @@ class AsyncIterator:
             if self.body:
                 mock.value = json.dumps(self.body).encode("utf-8")
             else:
-                mock.value = f'{{"i": {self.count}}}'.encode("utf-8")
+                mock.value = f'{{"i": {self.count}}}'.encode()
             mock.headers = [
                 (key, value.encode("utf-8")) for key, value in self.headers.items()
             ]
@@ -494,25 +494,27 @@ def test_unicode_error_decoding_headers(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_bad_headers):
-        with patch(
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_bad_headers),
+        patch(
             "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
             new=MockConsumerWithBadHeaders,
-        ):
-            asyncio.run(
-                kafka_main(
-                    myqueue,
-                    {
-                        "topic": "eda",
-                        "host": "localhost",
-                        "port": "9092",
-                        "group_id": "test",
-                    },
-                ),
-            )
-            # Message should still be processed despite header decoding error
-            assert len(myqueue.queue) == 1
-            assert myqueue.queue[0]["body"]["data"] == "test"
+        ),
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            ),
+        )
+        # Message should still be processed despite header decoding error
+        assert len(myqueue.queue) == 1
+        assert myqueue.queue[0]["body"]["data"] == "test"
 
 
 def test_json_decode_error(myqueue: MockQueue) -> None:
@@ -538,25 +540,27 @@ def test_json_decode_error(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_bad_json):
-        with patch(
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_bad_json),
+        patch(
             "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
             new=MockConsumerWithInvalidJSON,
-        ):
-            asyncio.run(
-                kafka_main(
-                    myqueue,
-                    {
-                        "topic": "eda",
-                        "host": "localhost",
-                        "port": "9092",
-                        "group_id": "test",
-                    },
-                ),
-            )
-            # Raw value should be stored when JSON decode fails
-            assert len(myqueue.queue) == 1
-            assert myqueue.queue[0]["body"] == "not valid json {{{{"
+        ),
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            ),
+        )
+        # Raw value should be stored when JSON decode fails
+        assert len(myqueue.queue) == 1
+        assert myqueue.queue[0]["body"] == "not valid json {{{{"
 
 
 def test_unicode_error_decoding_body(myqueue: MockQueue) -> None:
@@ -585,25 +589,27 @@ def test_unicode_error_decoding_body(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_bad_body):
-        with patch(
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_bad_body),
+        patch(
             "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
             new=MockConsumerWithBadBody,
-        ):
-            asyncio.run(
-                kafka_main(
-                    myqueue,
-                    {
-                        "topic": "eda",
-                        "host": "localhost",
-                        "port": "9092",
-                        "group_id": "test",
-                    },
-                ),
-            )
-            # No message should be added to queue when body decoding fails
-            # because data is set to None and the "if data:" check prevents queueing
-            assert len(myqueue.queue) == 0
+        ),
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            ),
+        )
+        # No message should be added to queue when body decoding fails
+        # because data is set to None and the "if data:" check prevents queueing
+        assert len(myqueue.queue) == 0
 
 
 def test_empty_data_not_queued(myqueue: MockQueue) -> None:
@@ -629,24 +635,26 @@ def test_empty_data_not_queued(myqueue: MockQueue) -> None:
             return mock
         raise StopAsyncIteration
 
-    with patch.object(AsyncIterator, "__anext__", mock_anext_empty_data):
-        with patch(
+    with (
+        patch.object(AsyncIterator, "__anext__", mock_anext_empty_data),
+        patch(
             "extensions.eda.plugins.event_source.kafka.AIOKafkaConsumer",
             new=MockConsumerWithEmptyData,
-        ):
-            asyncio.run(
-                kafka_main(
-                    myqueue,
-                    {
-                        "topic": "eda",
-                        "host": "localhost",
-                        "port": "9092",
-                        "group_id": "test",
-                    },
-                ),
-            )
-            # Empty string data should not be queued (falsy value)
-            assert len(myqueue.queue) == 0
+        ),
+    ):
+        asyncio.run(
+            kafka_main(
+                myqueue,
+                {
+                    "topic": "eda",
+                    "host": "localhost",
+                    "port": "9092",
+                    "group_id": "test",
+                },
+            ),
+        )
+        # Empty string data should not be queued (falsy value)
+        assert len(myqueue.queue) == 0
 
 
 def test_feedback_enabled_without_queue_raises_error(myqueue: MockQueue) -> None:

@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
-
-from typing import Any, Optional
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -49,12 +44,12 @@ from ansible_collections.ansible.eda.plugins.module_utils.errors import (  # typ
 def test_lookup_resource_id(
     endpoint: str,
     name: str,
-    params: Optional[dict[str, Any]],
+    params: dict[str, Any] | None,
     resolve_name_to_id_return: Any,
-    resolve_name_to_id_side_effect: Optional[Exception],
-    expected_result: Optional[Any],
+    resolve_name_to_id_side_effect: Exception | None,
+    expected_result: Any | None,
     fail_json_called: bool,
-    fail_json_args: Optional[dict[str, Any]],
+    fail_json_args: dict[str, Any] | None,
 ) -> None:
     mock_controller = MagicMock()
     mock_module = MagicMock()

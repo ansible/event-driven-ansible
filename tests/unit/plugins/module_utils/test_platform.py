@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
-
-from typing import Any, Dict, Optional
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -20,7 +15,7 @@ from ansible_collections.ansible.eda.plugins.module_utils.controller import (  #
 )
 
 
-def create_mock_module(params: Optional[Dict[str, Any]] = None) -> Mock:
+def create_mock_module(params: dict[str, Any] | None = None) -> Mock:
     """Create a mock AnsibleModule with the given parameters."""
     mock_module = Mock(spec=AnsibleModule)
     mock_module.params = params or {}
@@ -28,7 +23,7 @@ def create_mock_module(params: Optional[Dict[str, Any]] = None) -> Mock:
 
 
 @pytest.fixture
-def token_module_params() -> Dict[str, Any]:
+def token_module_params() -> dict[str, Any]:
     """Module parameters for token authentication."""
     return {
         "controller_host": "https://aap.example.com",
@@ -39,7 +34,7 @@ def token_module_params() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def basic_auth_module_params() -> Dict[str, Any]:
+def basic_auth_module_params() -> dict[str, Any]:
     """Module parameters for username/password authentication."""
     return {
         "controller_host": "https://aap.example.com",
@@ -51,7 +46,7 @@ def basic_auth_module_params() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def mixed_auth_module_params() -> Dict[str, Any]:
+def mixed_auth_module_params() -> dict[str, Any]:
     """Module parameters with both token and username/password."""
     return {
         "controller_host": "https://aap.example.com",
@@ -68,7 +63,7 @@ class TestControllerTokenValidation:
 
     @patch("ansible_collections.ansible.eda.plugins.module_utils.client.Request")
     def test_client_creation_with_controller_token(
-        self, mock_request: Mock, token_module_params: Dict[str, Any]
+        self, mock_request: Mock, token_module_params: dict[str, Any]
     ) -> None:
         """Test Client creation using controller_token parameter."""
         mock_request_instance = Mock()
@@ -91,7 +86,7 @@ class TestControllerTokenValidation:
 
     @patch("ansible_collections.ansible.eda.plugins.module_utils.client.Request")
     def test_controller_token_precedence_over_basic_auth(
-        self, mock_request: Mock, mixed_auth_module_params: Dict[str, Any]
+        self, mock_request: Mock, mixed_auth_module_params: dict[str, Any]
     ) -> None:
         """Test that controller_token takes precedence over username/password."""
         mock_request_instance = Mock()
@@ -113,7 +108,7 @@ class TestControllerTokenValidation:
 
     @patch("ansible_collections.ansible.eda.plugins.module_utils.client.Request")
     def test_controller_token_authentication_flow(
-        self, mock_request: Mock, token_module_params: Dict[str, Any]
+        self, mock_request: Mock, token_module_params: dict[str, Any]
     ) -> None:
         """Test the complete authentication flow using controller_token."""
         mock_request_instance = Mock()
@@ -153,7 +148,7 @@ class TestControllerTokenValidation:
 
     @patch("ansible_collections.ansible.eda.plugins.module_utils.client.Request")
     def test_controller_token_with_controller_instance(
-        self, mock_request: Mock, token_module_params: Dict[str, Any]
+        self, mock_request: Mock, token_module_params: dict[str, Any]
     ) -> None:
         """Test Controller class using Client with controller_token."""
         mock_request_instance = Mock()

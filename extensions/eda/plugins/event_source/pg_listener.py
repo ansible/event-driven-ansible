@@ -117,7 +117,7 @@ def _validate_args(args: dict[str, Any]) -> None:
         raise MissingRequiredArgumentError(msg)
 
     # Type checking
-    # TODO(alejandro): We should implement a standard way to validate the schema, # noqa: TD003, FIX002
+    # TODO(alejandro): We should implement a standard way to validate the schema,
     # of the arguments for all the plugins
     err_msg = None
     if not isinstance(args["channels"], list) or not args["channels"]:
@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
         async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(
         main(
