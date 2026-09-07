@@ -1,3 +1,9 @@
+"""Event source plugin for generating infinite events with increasing index.
+
+This module provides an event source plugin that generates events with an
+increasing index that never ends, similar to a ticker.
+"""
+
 import asyncio
 import itertools
 from typing import Any

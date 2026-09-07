@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events via AWS SQS queue.
+
+This module provides an event source plugin for receiving events from an AWS SQS queue
+using the aiobotocore library. It supports all authentication methods provided by boto.
+"""
+
 import asyncio
 import json
 import logging

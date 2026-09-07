@@ -2,6 +2,14 @@
 
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
+
+"""Controller for managing Event-Driven Ansible resources.
+
+This module provides the Controller class for managing resources
+on the EDA controller via API, including create, update, delete,
+and other operations on resources.
+"""
+
 from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type
@@ -17,10 +25,25 @@ from .errors import EDAError
 
 
 class Controller:
+    """Controller for managing Event-Driven Ansible resources.
+
+    Provides high-level methods for working with resources
+    on the EDA controller, including CRUD operations and special actions
+    like copying and restarting activations.
+    """
+
+    #: Mapping of endpoints to identity fields for special resource types
     IDENTITY_FIELDS = {"users": "username"}
+
+    #: Marker for encrypted values in API responses
     ENCRYPTED_STRING = "$encrypted$"
 
     def __init__(self, client: Client, module: AnsibleModule) -> None:
+        """Initialize the controller.
+
+        :param client: HTTP client for making API requests
+        :param module: Ansible module instance for accessing parameters and results
+        """
         self.client = client
         self.module = module
         self.result = {"changed": False}
@@ -32,12 +55,35 @@ class Controller:
 
     @staticmethod
     def get_name_field_from_endpoint(endpoint: str) -> str:
+        """Get the identity field name for an endpoint.
+
+        Returns the name of the field used to identify a resource
+        (usually 'name', but may be different for some resources).
+
+        :param endpoint: API endpoint of the resource
+        :returns: Identity field name ('name' or type-specific)
+        """
         return Controller.IDENTITY_FIELDS.get(endpoint, "name")
 
     def get_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
+        """Execute a GET request to the endpoint.
+
+        :param endpoint: API endpoint for the request
+        :param kwargs: Additional parameters for the request
+        :returns: Response object from the API
+        """
         return self.client.get(endpoint, **kwargs)
 
     def post_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
+        """Execute a POST request to the endpoint.
+
+        Respects check mode - if enabled, returns a mock successful response
+        without making the actual request.
+
+        :param endpoint: API endpoint for the request
+        :param kwargs: Additional parameters for the request (usually data)
+        :returns: Response object from the API or mock response in check mode
+        """
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
@@ -46,6 +92,15 @@ class Controller:
         return self.client.post(endpoint, **kwargs)
 
     def patch_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
+        """Execute a PATCH request to the endpoint.
+
+        Respects check mode - if enabled, returns a mock successful response
+        without making the actual request.
+
+        :param endpoint: API endpoint for the request
+        :param kwargs: Additional parameters for the request (usually data and id)
+        :returns: Response object from the API or mock response in check mode
+        """
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
@@ -54,6 +109,15 @@ class Controller:
         return self.client.patch(endpoint, **kwargs)
 
     def delete_endpoint(self, endpoint: str, **kwargs: Any) -> Response:
+        """Execute a DELETE request to the endpoint.
+
+        Respects check mode - if enabled, returns a mock successful response
+        without making the actual request.
+
+        :param endpoint: API endpoint for the request
+        :param kwargs: Additional parameters for the request (usually id)
+        :returns: Response object from the API or mock response in check mode
+        """
         # Handle check mode
         if self.module.check_mode:
             self.result["changed"] = True
@@ -62,6 +126,14 @@ class Controller:
         return self.client.delete(endpoint, **kwargs)
 
     def get_item_name(self, item: Any) -> Any:
+        """Get the name of an item from its data.
+
+        Extracts the value of the item's identity field (usually 'name',
+        but may be another field, e.g., 'username' for users).
+
+        :param item: Item data from the API
+        :returns: Value of the item's identity field
+        """
         if item:
             if "name" in item:
                 return item["name"]
@@ -77,6 +149,10 @@ class Controller:
         raise EDAError(msg)
 
     def fail_wanted_one(self, response: list[Any]) -> NoReturn:
+        """Raise an error when multiple results are received instead of one.
+
+        :param response: List of received items
+        """
         sample = response.copy()
         sample = sample[:2] + ["...more results snipped..."]
         msg = f"Request returned {len(response)} items, expected 1. See: {sample}"
@@ -85,6 +161,17 @@ class Controller:
     def get_exactly_one(
         self, endpoint: str, name: Optional[str], **kwargs: Any
     ) -> dict[str, Any]:
+        """Get exactly one item by name.
+
+        Searches for an item and verifies that exactly one result is found.
+        If 0 items are found, returns an empty dictionary.
+        If more than one is found - raises an error.
+
+        :param endpoint: API endpoint for the search
+        :param name: Name of the item to search for
+        :param kwargs: Additional parameters for the search
+        :returns: Data of the found item or empty dictionary
+        """
         result = self.get_one_or_many(endpoint, name=name, **kwargs)
         matches = []
         name_field = self.get_name_field_from_endpoint(endpoint)
@@ -104,6 +191,15 @@ class Controller:
     def resolve_name_to_id(
         self, endpoint: str, name: str, **kwargs: Any
     ) -> Optional[int]:
+        """Convert a resource name to its ID.
+
+        Finds a resource by name and returns its ID.
+
+        :param endpoint: API endpoint for the search
+        :param name: Resource name
+        :param kwargs: Additional parameters for the search
+        :returns: ID of the found resource or None if not found
+        """
         result = self.get_exactly_one(endpoint, name, **kwargs)
         if result:
             if isinstance(result["id"], int):
@@ -119,6 +215,16 @@ class Controller:
         name: Optional[str] = None,
         **kwargs: Any,
     ) -> List[dict[str, Any]]:
+        """Get one or more items from an endpoint.
+
+        Executes a GET request to the endpoint and returns a list of found items.
+        Can filter by name if specified.
+
+        :param endpoint: API endpoint for the request
+        :param name: Name to filter results by (optional)
+        :param kwargs: Additional parameters for the request
+        :returns: List of found items
+        """
         new_kwargs = kwargs.copy()
 
         if name:
@@ -157,6 +263,16 @@ class Controller:
         endpoint: str,
         item_type: str = "unknown",
     ) -> dict[str, bool]:
+        """Create a new item if necessary.
+
+        Executes a POST request to create a new resource.
+        Used when it's known that the item does not exist.
+
+        :param new_item: Data for the new item
+        :param endpoint: API endpoint for creation
+        :param item_type: Item type for error messages
+        :returns: Dictionary with 'changed' and 'id' keys
+        """
         response = None
         if not endpoint:
             msg = f"Unable to create new {item_type}, missing endpoint"
@@ -185,7 +301,15 @@ class Controller:
     def create(
         self, new_item: dict[str, Any], endpoint: str, item_type: str = "unknown"
     ) -> dict[str, bool]:
-        """Run a create (post) operation unconditionally and return the result."""
+        """Unconditionally execute a create (POST) operation and return the result.
+
+        Creates a new resource without preliminary existence checks.
+
+        :param new_item: Data for the new item
+        :param endpoint: API endpoint for creation
+        :param item_type: Item type for error messages
+        :returns: Dictionary with 'changed' key
+        """
 
         response = self.post_endpoint(endpoint, data=new_item)
 
@@ -202,6 +326,15 @@ class Controller:
     def _encrypted_changed_warning(
         self, field: str, old: dict[str, Any], warning: bool = False
     ) -> None:
+        """Issue a warning about an encrypted field.
+
+        Shows a warning when a field contains encrypted data
+        and changes may be detected inaccurately.
+
+        :param field: Name of the field with encrypted data
+        :param old: Old item data
+        :param warning: Whether to show the warning
+        """
         if not warning:
             return
         self.module.warn(
@@ -211,8 +344,13 @@ class Controller:
 
     @staticmethod
     def has_encrypted_values(obj: Any) -> bool:
-        """Returns True if JSON-like python content in obj has $encrypted$
-        anywhere in the data as a value
+        """Check for encrypted values in an object.
+
+        Recursively checks whether the object (dict, list, or value)
+        contains the $encrypted$ marker anywhere in the data structure.
+
+        :param obj: Object to check (dict, list, or scalar value)
+        :returns: True if encrypted values are found
         """
         if isinstance(obj, dict):
             for val in obj.values():
@@ -228,10 +366,16 @@ class Controller:
 
     @staticmethod
     def fields_could_be_same(old_field: Any, new_field: Any) -> bool:
-        """Treating $encrypted$ as a wild card,
-        return False if the two values are KNOWN to be different
-        return True if the two values are the same, or could potentially be same
-        depending on the unknown $encrypted$ value or sub-values
+        """Check if fields could be the same.
+
+        Compares two fields, treating $encrypted$ as a wildcard.
+        Returns False if values are definitely different.
+        Returns True if values are the same or could be the same
+        depending on unknown encrypted values.
+
+        :param old_field: Old field value
+        :param new_field: New field value
+        :returns: True if fields are the same or could be the same
         """
         if isinstance(old_field, dict) and isinstance(new_field, dict):
             if set(old_field.keys()) != set(new_field.keys()):
@@ -252,6 +396,17 @@ class Controller:
         field_set: Optional[set[str]] = None,
         warning: bool = False,
     ) -> bool:
+        """Check if objects could be different.
+
+        Compares two objects, considering encrypted fields and the
+        update_secrets setting. Returns True if objects differ or could differ.
+
+        :param old: Old object data
+        :param new: New object data
+        :param field_set: Set of fields to compare (if None, all fields from new)
+        :param warning: Whether to show warnings about encrypted fields
+        :returns: True if objects differ or could differ
+        """
         if field_set is None:
             field_set = set(fd for fd in new.keys())
         for field in field_set:
@@ -281,6 +436,17 @@ class Controller:
         endpoint: str,
         item_type: str,
     ) -> dict[str, bool]:
+        """Update an item if necessary.
+
+        Compares the existing item with new data and executes
+        a PATCH request if differences are found.
+
+        :param existing_item: Existing item data from the API
+        :param new_item: New data for the update
+        :param endpoint: API endpoint for the update
+        :param item_type: Item type for error messages
+        :returns: Dictionary with 'changed' and 'id' keys
+        """
         response = None
         if not existing_item:
             raise RuntimeError(
@@ -334,6 +500,17 @@ class Controller:
         endpoint: str,
         item_type: str = "unknown",
     ) -> dict[str, bool]:
+        """Create or update an item as needed.
+
+        Creates if the item doesn't exist, or updates
+        if the item exists and there are differences.
+
+        :param existing_item: Existing item data or empty dictionary
+        :param new_item: New item data
+        :param endpoint: API endpoint for the operation
+        :param item_type: Item type for error messages
+        :returns: Dictionary with 'changed' and 'id' keys
+        """
         if existing_item:
             return self.update_if_needed(
                 existing_item,
@@ -350,6 +527,15 @@ class Controller:
     def delete_if_needed(
         self, existing_item: dict[str, Any], endpoint: str
     ) -> dict[str, Any]:
+        """Delete an item if it exists.
+
+        Executes a DELETE request to remove the resource if it exists.
+        If the item doesn't exist, returns result unchanged.
+
+        :param existing_item: Existing item data or empty dictionary
+        :param endpoint: API endpoint for deletion
+        :returns: Dictionary with 'changed' and 'id' keys
+        """
         if not existing_item:
             return self.result
 
@@ -391,6 +577,16 @@ class Controller:
         endpoint: str,
         item_type: str = "unknown",
     ) -> dict[str, bool]:
+        """Copy an item if needed.
+
+        Creates a copy of an existing resource with a new name.
+
+        :param name: Name for the new item
+        :param copy_from: Name or ID of the source item to copy
+        :param endpoint: API endpoint for copying
+        :param item_type: Item type for error messages
+        :returns: Dictionary with 'changed' and 'id' keys
+        """
         response = None
         if not copy_from:
             msg = f"Unable to copy {item_type}, missing copy_from parameter"
@@ -417,6 +613,14 @@ class Controller:
         existing_item: dict[str, Any],
         endpoint: str,
     ) -> dict[str, bool]:
+        """Restart an activation if needed.
+
+        Executes a restart of an existing EDA activation.
+
+        :param existing_item: Existing activation data with ID
+        :param endpoint: API endpoint for restart
+        :returns: Dictionary with 'changed' and 'id' keys
+        """
         response = None
         if not endpoint:
             msg = "Unable to restart activation, missing endpoint"

@@ -1,3 +1,9 @@
+"""Event filter plugin that performs no operations.
+
+This module provides a no-operation filter that returns the input event
+unchanged. It can be used for testing or as a placeholder.
+"""
+
 from typing import Any
 
 DOCUMENTATION = r"""
@@ -9,5 +15,5 @@ description:
 
 
 def main(event: dict[str, Any]) -> dict[str, Any]:
-    """Return the input."""
+    """Return the input event unchanged."""
     return event
