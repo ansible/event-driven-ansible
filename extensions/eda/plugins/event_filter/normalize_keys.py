@@ -45,7 +45,7 @@ normalize_regex = re.compile("[^0-9a-zA-Z_]+")
 
 def main(
     event: dict[str, Any],
-    overwrite: bool = True,  # noqa: FBT001, FBT002
+    overwrite: bool = True,
 ) -> dict[str, Any]:
     """Change keys that contain non-alphanumeric characters to underscores."""
     logger = mp.get_logger()
@@ -55,7 +55,7 @@ def main(
 
 def _normalize_embedded_keys(
     obj: dict[str, Any],
-    overwrite: bool,  # noqa: FBT001
+    overwrite: bool,
     logger: logging.Logger,
 ) -> dict[str, Any]:
     if isinstance(obj, dict):

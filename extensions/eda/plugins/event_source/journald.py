@@ -5,7 +5,7 @@ from typing import Any
 # Also systemd-python fails to install on pre-commit.ci due to:
 # No such file or directory: 'pkg-config'
 # pylint: disable=import-error
-from systemd import journal  # type: ignore # noqa: PGH003
+from systemd import journal  # type: ignore
 
 DOCUMENTATION = r"""
 ---
@@ -89,6 +89,6 @@ if __name__ == "__main__":
 
         async def put(self, event: str) -> None:
             """Add the event to the queue and print it."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(main(MockQueue(), {"match": "ALL"}))
