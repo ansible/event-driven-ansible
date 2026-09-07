@@ -1,5 +1,5 @@
+from collections.abc import Callable, Iterator
 from subprocess import Popen
-from typing import Callable, Iterator
 
 import pytest
 

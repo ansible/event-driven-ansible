@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 import time
-from typing import Callable
+from collections.abc import Callable
 
 import requests
 
