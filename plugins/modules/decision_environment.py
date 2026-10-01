@@ -170,12 +170,28 @@ def main() -> None:
     pull_policy = module.params.get("pull_policy")
     ret = {}
 
+    organization_id = None
+    if config_endpoint_avail.status not in (404,) and organization_name:
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", organization_name
+        )
+
     try:
         decision_environment = controller.get_exactly_one(
             decision_environment_endpoint, name=decision_environment_name
         )
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
+
+    if state == "present" and decision_environment and organization_id:
+        existing_org_id = decision_environment.get("organization_id")
+        if existing_org_id is not None and existing_org_id != organization_id:
+            module.fail_json(
+                msg=f"A decision environment with the name "
+                f"'{decision_environment_name}' already exists "
+                f"in a different organization (id={existing_org_id}). "
+                "Resource names must be unique across organizations."
+            )
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -205,12 +221,6 @@ def main() -> None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
         decision_environment_params["eda_credential_id"] = credential_id
-
-    organization_id = None
-    if config_endpoint_avail.status not in (404,) and organization_name:
-        organization_id = lookup_resource_id(
-            module, controller, "organizations", organization_name
-        )
 
     if organization_id:
         decision_environment_params["organization_id"] = organization_id
