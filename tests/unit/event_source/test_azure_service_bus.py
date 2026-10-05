@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, Optional, Type
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -42,8 +42,8 @@ async def test_receive_events() -> None:
 
         async def __aexit__(
             self,
-            exc_type: Optional[Type[BaseException]],
-            exc: Optional[BaseException],
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
             tb: Any,
         ) -> None:
             pass
@@ -60,13 +60,13 @@ async def test_receive_events() -> None:
 
         async def __aexit__(
             self,
-            exc_type: Optional[Type[BaseException]],
-            exc: Optional[BaseException],
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
             tb: Any,
         ) -> None:
             pass
 
-        def get_queue_receiver(self, queue_name: Optional[str] = None) -> MockReceiver:
+        def get_queue_receiver(self, queue_name: str | None = None) -> MockReceiver:
             return MockReceiver()
 
     with patch(
@@ -74,7 +74,7 @@ async def test_receive_events() -> None:
         return_value=MockServiceBusClient(),
     ):
         queue: asyncio.Queue[Any] = asyncio.Queue()
-        args: Dict[str, Any] = {"conn_str": "fake", "queue_name": "queue"}
+        args: dict[str, Any] = {"conn_str": "fake", "queue_name": "queue"}
         await receive_events(queue, args)
 
         result1 = await queue.get()
