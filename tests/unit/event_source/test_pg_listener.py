@@ -3,7 +3,7 @@
 import asyncio
 import json
 import uuid
-from typing import Any, Type
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import psycopg
@@ -303,7 +303,7 @@ def test_validate_args_with_valid_args() -> None:
 )
 def test_validate_args_type_checks(
     args: dict[str, Any],
-    expected_exception: Type[Exception],
+    expected_exception: type[Exception],
     expected_message: str,
 ) -> None:
     """Test _validate_args type checks."""

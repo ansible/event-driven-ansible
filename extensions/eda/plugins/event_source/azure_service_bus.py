@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
         async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     args = {
         "conn_str": "Endpoint=sb://foo.servicebus.windows.net/",

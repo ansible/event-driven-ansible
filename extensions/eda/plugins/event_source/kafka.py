@@ -803,7 +803,6 @@ class AvroDeserializer:
         last_exc: Exception | None = None
         delay = self._REGISTRY_RETRY_INITIAL_DELAY
 
-        # ruff: disable[PERF203]
         async with aiohttp.ClientSession() as session:
             for attempt in range(1, self._REGISTRY_MAX_RETRIES + 1):
                 try:
@@ -834,7 +833,6 @@ class AvroDeserializer:
                             delay * self._REGISTRY_RETRY_BACKOFF_FACTOR,
                             self._REGISTRY_RETRY_MAX_DELAY,
                         )
-        # ruff: enable[PERF203]
 
         logger.error(
             "Registry fetch failed for schema ID %d after %d attempts, "
@@ -1215,7 +1213,7 @@ def is_valid_uuid(value: str) -> bool:
     """Check if a string is a valid RFC 4122 UUID."""
     try:
         uuid.UUID(value)
-        return True  # noqa: TRY300
+        return True
     except (ValueError, AttributeError):
         return False
 
@@ -1373,7 +1371,7 @@ def _process_event_uuid(
     event["meta"]["uuid"] = event_uuid
 
 
-async def receive_msg(  # noqa: PLR0917
+async def receive_msg(
     queue: asyncio.Queue[Any],
     kafka_consumer: AIOKafkaConsumer,
     encoding: str,
@@ -1435,7 +1433,7 @@ if __name__ == "__main__":
 
         async def put(self: MockQueue, event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(
         main(
