@@ -191,7 +191,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     state: disabled
-    restart_on_project_update: False
+    restart_on_project_update: false
 
 - name: Create a rulebook activation with event_streams option
   ansible.eda.rulebook_activation:
@@ -205,7 +205,7 @@ EXAMPLES = r"""
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
-    restart_on_project_update: False
+    restart_on_project_update: false
 
 - name: Rename a rulebook activation
   ansible.eda.rulebook_activation:
@@ -215,7 +215,7 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
-    restart_on_project_update: False
+    restart_on_project_update: false
 
 - name: Update a rulebook activation
   ansible.eda.rulebook_activation:
@@ -236,33 +236,33 @@ EXAMPLES = r"""
     rulebook_name: "hello_controller.yml"
     decision_environment_name: "Example Decision Environment"
     organization_name: "Default"
-    restart_on_project_update: True
+    restart_on_project_update: true
 
 - name: Enable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: enabled
-    restart_on_project_update: False
+    restart_on_project_update: false
 
 - name: Disable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     new_name: "Example Rulebook Activation New Name"
     state: disabled
-    restart_on_project_update: False
+    restart_on_project_update: false
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation - Restart"
     organization_name: "Default"
     restart: true
-    restart_on_project_update: False
+    restart_on_project_update: false
 
 - name: Delete a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
     state: absent
-    restart_on_project_update: False
+    restart_on_project_update: false
 """
 
 
