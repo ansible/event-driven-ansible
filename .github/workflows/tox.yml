@@ -171,6 +171,8 @@ jobs:
 
       - name: Report failure if git reports dirty status
         run: |
+          ls -lha
+          git status -s --ignored
           if [[ -n $(git status -s) ]]; then
             # shellcheck disable=SC2016
             echo -n '::error file=git-status::'
