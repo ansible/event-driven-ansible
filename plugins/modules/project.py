@@ -276,10 +276,25 @@ def main() -> None:
     wait_for_completion = module.params.get("wait")
     project = {}
 
+    organization_id = None
+    if config_endpoint_avail.status not in (404,) and organization_name:
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", organization_name
+        )
+
     try:
         project = controller.get_exactly_one(project_endpoint, name=project_name)
     except EDAError as eda_err:
         module.fail_json(msg=str(eda_err))
+
+    if state == "present" and project and organization_id:
+        existing_org_id = project.get("organization_id")
+        if existing_org_id is not None and existing_org_id != organization_id:
+            module.fail_json(
+                msg=f"A project with the name '{project_name}' already exists "
+                f"in a different organization (id={existing_org_id}). "
+                "Resource names must be unique across organizations."
+            )
 
     if state == "present":
         if not project and not url:
@@ -341,13 +356,6 @@ def main() -> None:
         # this is resolved earlier, so save an API call and don't do it again
         # in the loop above
         project_params["eda_credential_id"] = credential_id
-
-    organization_id = None
-
-    if config_endpoint_avail.status not in (404,) and organization_name:
-        organization_id = lookup_resource_id(
-            module, controller, "organizations", organization_name
-        )
 
     if organization_id:
         project_params["organization_id"] = organization_id
