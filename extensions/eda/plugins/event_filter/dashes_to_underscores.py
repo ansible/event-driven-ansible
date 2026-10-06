@@ -1,3 +1,9 @@
+"""Event filter plugin for converting dashes to underscores in event keys.
+
+This module provides functionality to transform dictionary keys by replacing
+dashes with underscores throughout the event data structure.
+"""
+
 import multiprocessing as mp
 from typing import Any
 

@@ -1,3 +1,10 @@
+"""Event source plugin for receiving events from alertmanager or compatible alerting systems.
+
+This module provides an event source plugin that receives alerts via webhook
+from alertmanager or compatible alerting systems, parses alert data and
+forwards it to the event queue.
+"""
+
 import asyncio
 import logging
 from typing import Any
@@ -71,7 +78,7 @@ async def status(_request: web.Request) -> web.Response:
 
 @routes.post("/{endpoint}")
 async def webhook(request: web.Request) -> web.Response:
-    """Read events from webhook."""
+    """Read events from webhook and process alert data."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
 
