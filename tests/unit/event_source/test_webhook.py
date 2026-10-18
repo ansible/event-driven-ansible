@@ -4,7 +4,7 @@ import shutil
 import ssl
 import subprocess
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 import pytest
@@ -64,7 +64,7 @@ async def assert_post(
     server_task: asyncio.Task[None],
     info: dict[str, Any],
     expected_status: HTTPStatus = HTTPStatus.OK,
-    expected_text: Optional[str] = None,
+    expected_text: str | None = None,
 ) -> None:
     url = f'http://{info["host"]}/{info["endpoint"]}'
     payload = info["payload"]
@@ -167,7 +167,7 @@ async def test_post_hmac_hex_endpoint() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": args["hmac_header"],
-        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",  # noqa: E501
+        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
@@ -200,7 +200,7 @@ async def test_post_hmac_hex_wo_digest_prefix_endpoint() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": args["hmac_header"],
-        "hmac_digest": "9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",  # noqa: E501
+        "hmac_digest": "9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
@@ -233,7 +233,7 @@ async def test_post_hmac_hex_endpoint_invalid_signature() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": args["hmac_header"],
-        "hmac_digest": "sha256=11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",  # noqa: E501
+        "hmac_digest": "sha256=11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
@@ -263,7 +263,7 @@ async def test_post_hmac_hex_endpoint_missing_signature() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-not-a-signature-header",
-        "hmac_digest": "sha256=205009e3e895e0fe0ff982e1020dd0fb4b6d16cf9c666652b3492e20429ccdb8",  # noqa: E501
+        "hmac_digest": "sha256=205009e3e895e0fe0ff982e1020dd0fb4b6d16cf9c666652b3492e20429ccdb8",
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
     }
@@ -354,7 +354,7 @@ async def test_post_token_and_hmac_hex_endpoint() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-hub-signature-256",
-        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",  # noqa: E501
+        "hmac_digest": "sha256=9ec8272937a36a4b4427d4f9ab7b0425856c5ef5d7e1b496f864aaf99c1910ca",
         "token": args["token"],
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
@@ -386,7 +386,7 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_signature() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-hub-signature-256",
-        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",  # noqa: E501
+        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",
         "token": args["token"],
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',
@@ -416,7 +416,7 @@ async def test_post_token_and_hmac_hex_endpoint_invalid_token() -> None:
     task_info = {
         "payload": {"src_path": "https://example.com/payload"},
         "hmac_header": "x-hub-signature-256",
-        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",  # noqa: E501
+        "hmac_digest": "11f8feeab79372c842f0097fc105dd66d90c41412ab9d3c4071859d7b6ae864b",
         "token": "invalid_token",
         "endpoint": "test",
         "host": f'{args["host"]}:{args["port"]}',

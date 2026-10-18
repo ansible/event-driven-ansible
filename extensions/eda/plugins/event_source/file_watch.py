@@ -47,7 +47,7 @@ def watch(
     class Handler(RegexMatchingEventHandler):
         """A handler for file system events."""
 
-        def __init__(self: "Handler", **kwargs: Any) -> None:  # noqa: ANN401
+        def __init__(self: "Handler", **kwargs: Any) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self: "Handler", event: FileSystemEvent) -> None:
@@ -130,6 +130,6 @@ if __name__ == "__main__":
 
         def put_nowait(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
-    asyncio.run(main(MockQueue(), {"path": "/tmp", "recursive": True}))  # noqa: S108
+    asyncio.run(main(MockQueue(), {"path": "/tmp", "recursive": True}))

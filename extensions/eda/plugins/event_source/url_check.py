@@ -65,7 +65,7 @@ async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
                             },
                         )
 
-            except aiohttp.ClientError as exc:  # noqa: PERF203
+            except aiohttp.ClientError as exc:
                 client_error = str(exc)
                 await queue.put(
                     {
@@ -88,6 +88,6 @@ if __name__ == "__main__":
 
         async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(main(MockQueue(), {"urls": ["http://redhat.com"]}))

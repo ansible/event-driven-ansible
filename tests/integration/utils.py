@@ -4,7 +4,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any
 
 from . import TESTS_PATH
 
@@ -55,7 +55,7 @@ def wait_for_http_server(
             with socket.create_connection((host, port), timeout=1):
                 print(f"HTTP server at {host}:{port} is ready")
                 return
-        except (socket.timeout, socket.error, OSError) as e:
+        except (TimeoutError, OSError) as e:
             last_error = e
             if first_attempt:
                 print(f"Waiting for HTTP server at {host}:{port} to be ready...")
@@ -119,7 +119,7 @@ def wait_for_kafka_ready(
                 with socket.create_connection((host, port), timeout=1):
                     print(f"Kafka broker port {bootstrap_servers} is listening")
                     return
-            except (socket.timeout, socket.error, OSError):
+            except (TimeoutError, OSError):
                 if first_attempt:
                     print(
                         f"Waiting for Kafka broker port {bootstrap_servers} to be listening..."
@@ -162,20 +162,20 @@ class CLIRunner:
     cwd: str = TESTS_PATH
     base_cmd: str = "ansible-rulebook"
     inventory: str = os.path.join(TESTS_PATH, "default_inventory.yml")
-    rules: Optional[str] = None
-    sources: Optional[str] = None
-    extra_vars: Optional[str] = None
-    envvars: Optional[str] = None
-    proc_id: Optional[str] = None
+    rules: str | None = None
+    sources: str | None = None
+    extra_vars: str | None = None
+    envvars: str | None = None
+    proc_id: str | None = None
     verbose: bool = False
     debug: bool = False
     timeout: float = 30.0  # Increased from 10.0 for better reliability
-    env: Optional[dict[str, str]] = None
+    env: dict[str, str] | None = None
 
     def __post_init__(self) -> None:
         self.env = os.environ.copy() if self.env is None else self.env
 
-    def _process_args(self) -> List[str]:
+    def _process_args(self) -> list[str]:
         args = [
             self.base_cmd,
         ]

@@ -282,7 +282,7 @@ class Generic:
 
         data.update(event)
         if self.my_args.display:
-            print(data)  # noqa: T201
+            print(data)
         await self.queue.put(data)
 
     async def _check_env_vars(self: Generic) -> None:
@@ -297,7 +297,7 @@ class Generic:
         if not self.my_args.payload_file:
             return
         path = Path(self.my_args.payload_file)
-        if not path.is_file():  # noqa: ASYNC240
+        if not path.is_file():
             msg = f"File {self.my_args.payload_file} not found"
             raise ValueError(msg)
         with path.open(mode="r", encoding="utf-8") as file:  # noqa: ASYNC230
@@ -341,7 +341,7 @@ if __name__ == "__main__":
 
         async def put(self: MockQueue, event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(
         main(

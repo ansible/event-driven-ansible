@@ -2,7 +2,8 @@ import http.server
 import os
 import threading
 import time
-from typing import Any, Callable, Generator
+from collections.abc import Callable, Generator
+from typing import Any
 
 import pytest
 
@@ -109,7 +110,7 @@ def test_url_check_source_urls(
     time.sleep(10)
     runner.terminate()
 
-    (stdout, stderr) = runner.communicate()
+    stdout, stderr = runner.communicate()
     assert stdout is not None
     msgs = [line for line in stdout.decode().splitlines() if "msg" in line]
     assert len(msgs) == 3
