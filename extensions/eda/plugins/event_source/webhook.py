@@ -1,3 +1,9 @@
+"""Event source plugin for receiving events via webhook.
+
+This module provides an event source plugin for receiving JSON events via webhooks
+with support for TLS, mTLS, bearer token authentication, and HMAC verification.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -120,6 +126,7 @@ async def webhook(request: web.Request) -> web.Response:
 
 
 def _parse_token(request: web.Request) -> tuple[str, str]:
+    """Parse and validate bearer token from request."""
     scheme, token = request.headers["Authorization"].strip().split(" ")
     if scheme != "Bearer":
         raise web.HTTPUnauthorized(text="Only Bearer type is accepted")
@@ -129,6 +136,7 @@ def _parse_token(request: web.Request) -> tuple[str, str]:
 
 
 async def _hmac_verify(request: web.Request) -> bool:
+    """Verify HMAC signature of the request payload."""
     hmac_secret = request.app["hmac_secret"]
     hmac_header = request.app["hmac_header"]
     hmac_algo = request.app["hmac_algo"]
@@ -191,6 +199,7 @@ async def hmac_verify(
 
 
 def _get_ssl_context(args: dict[str, Any]) -> ssl.SSLContext | None:
+    """Create and configure SSL context for TLS/mTLS support."""
     context = None
     if "certfile" in args:
         certfile = args.get("certfile")

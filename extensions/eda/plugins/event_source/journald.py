@@ -1,3 +1,9 @@
+"""Event source plugin for tailing systemd journald logs.
+
+This module provides an event source plugin for reading and monitoring systemd
+journal logs using the systemd-python library.
+"""
+
 import asyncio
 from typing import Any
 
@@ -42,20 +48,7 @@ EXAMPLES = r"""
 
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
-    """Read journal entries and add them to the provided queue.
-
-    Args:
-    ----
-        queue (asyncio.Queue): The queue to which journal entries will be added.
-        args (dict[str, Any]): Additional arguments:
-            - delay (int): The delay in seconds. Defaults to 0.
-            - match (str): A string to match.
-
-    Returns:
-    -------
-        None
-
-    """
+    """Read journal entries and add them to the provided queue."""
     delay = args.get("delay", 0)
     match = args.get("match", [])
 
