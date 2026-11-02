@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -19,7 +17,7 @@ class _AnsibleExit(Exception):
     """Simulates module.exit_json / module.fail_json halting execution."""
 
 
-def _make_module(params_override: Optional[dict[str, Any]] = None) -> MagicMock:
+def _make_module(params_override: dict[str, Any] | None = None) -> MagicMock:
     """Build a mock AnsibleModule with sensible defaults."""
     params: dict[str, Any] = {
         "controller_host": "https://eda.example.com",
@@ -50,7 +48,7 @@ def _make_assignment(
     assignment_id: int = 1,
     role_def_id: int = 6,
     team_id: int = 1,
-    object_id: Optional[str] = "1",
+    object_id: str | None = "1",
 ) -> dict[str, Any]:
     return {
         "id": assignment_id,
@@ -72,7 +70,7 @@ def _make_api_list(assignments: list[dict[str, Any]]) -> Mock:
 def _resolve_response(
     resource_id: int,
     name: str,
-    extra: Optional[dict[str, Any]] = None,
+    extra: dict[str, Any] | None = None,
 ) -> Mock:
     """Build a paginated GET response for name-based ID resolution."""
     item: dict[str, Any] = {"id": resource_id, "name": name}
@@ -85,10 +83,10 @@ def _resolve_response(
 
 
 def _setup_main(
-    params_override: Optional[dict[str, Any]],
+    params_override: dict[str, Any] | None,
     get_responses: list[Mock],
-    post_response: Optional[Mock] = None,
-    delete_response: Optional[Mock] = None,
+    post_response: Mock | None = None,
+    delete_response: Mock | None = None,
     check_mode: bool = False,
 ) -> tuple[MagicMock, MagicMock]:
     """Wire up mocks for a main() test and return (module, mock_client)."""

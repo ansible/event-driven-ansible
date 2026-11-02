@@ -11,7 +11,7 @@ import struct
 import time
 import uuid
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
 from ssl import CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED
@@ -765,7 +765,7 @@ class AvroDeserializer:
                 schema_id,
             )
             raise
-        except (aiohttp.ClientError, asyncio.TimeoutError):
+        except (TimeoutError, aiohttp.ClientError):
             logger.exception(
                 "Registry connection error for schema ID %d",
                 schema_id,
@@ -803,7 +803,6 @@ class AvroDeserializer:
         last_exc: Exception | None = None
         delay = self._REGISTRY_RETRY_INITIAL_DELAY
 
-        # ruff: disable[PERF203]
         async with aiohttp.ClientSession() as session:
             for attempt in range(1, self._REGISTRY_MAX_RETRIES + 1):
                 try:
@@ -813,11 +812,7 @@ class AvroDeserializer:
                     )
                 except SchemaRegistryAuthError:  # pylint: disable=try-except-raise
                     raise
-                except (
-                    aiohttp.ClientResponseError,
-                    aiohttp.ClientError,
-                    asyncio.TimeoutError,
-                ) as exc:
+                except (TimeoutError, aiohttp.ClientResponseError, aiohttp.ClientError) as exc:
                     last_exc = exc
                     if attempt < self._REGISTRY_MAX_RETRIES:
                         logger.warning(
@@ -834,7 +829,6 @@ class AvroDeserializer:
                             delay * self._REGISTRY_RETRY_BACKOFF_FACTOR,
                             self._REGISTRY_RETRY_MAX_DELAY,
                         )
-        # ruff: enable[PERF203]
 
         logger.error(
             "Registry fetch failed for schema ID %d after %d attempts, "
@@ -1205,7 +1199,7 @@ def get_message_timestamp(msg: ConsumerRecord) -> str:
 
     """
     return (
-        datetime.fromtimestamp(msg.timestamp / 1000.0, tz=timezone.utc)
+        datetime.fromtimestamp(msg.timestamp / 1000.0, tz=UTC)
         .isoformat()
         .replace("+00:00", "Z")
     )
@@ -1215,7 +1209,7 @@ def is_valid_uuid(value: str) -> bool:
     """Check if a string is a valid RFC 4122 UUID."""
     try:
         uuid.UUID(value)
-        return True  # noqa: TRY300
+        return True
     except (ValueError, AttributeError):
         return False
 
@@ -1373,7 +1367,7 @@ def _process_event_uuid(
     event["meta"]["uuid"] = event_uuid
 
 
-async def receive_msg(  # noqa: PLR0917
+async def receive_msg(
     queue: asyncio.Queue[Any],
     kafka_consumer: AIOKafkaConsumer,
     encoding: str,
@@ -1420,7 +1414,7 @@ async def receive_msg(  # noqa: PLR0917
                         timeout=feedback_timeout,
                     )
                     await kafka_consumer.commit()
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     logger.exception("Timed out waiting for feedback")
                     raise
 
@@ -1435,7 +1429,7 @@ if __name__ == "__main__":
 
         async def put(self: MockQueue, event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     asyncio.run(
         main(

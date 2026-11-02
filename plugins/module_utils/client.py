@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
-
-from typing import Any, Optional
-
-__metaclass__ = type
 
 import json
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import ParseResult, urlencode, urlparse
 
@@ -19,7 +14,7 @@ from .errors import AuthError, EDAHTTPError
 
 
 class Response:
-    def __init__(self, status: int, data: str, headers: Optional[Any] = None) -> None:
+    def __init__(self, status: int, data: str, headers: Any | None = None) -> None:
         self.status = status
         self.data = data
         # [('h1', 'v1'), ('H2', 'V2')] -> {'h1': 'v1', 'h2': 'V2'}
@@ -45,11 +40,11 @@ class Client:
     def __init__(
         self,
         host: str,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        token: Optional[str] = None,
-        timeout: Optional[Any] = None,
-        validate_certs: Optional[Any] = None,
+        username: str | None = None,
+        password: str | None = None,
+        token: str | None = None,
+        timeout: Any | None = None,
+        validate_certs: Any | None = None,
     ) -> None:
         if not host:
             raise ValueError("Host must be a non-empty string.")
@@ -81,8 +76,8 @@ class Client:
         self,
         method: str,
         path: str,
-        data: Optional[Any] = None,
-        headers: Optional[Any] = None,
+        data: Any | None = None,
+        headers: Any | None = None,
     ) -> Response:
         try:
             raw_resp = self.session.open(
@@ -116,8 +111,8 @@ class Client:
     def build_url(
         self,
         endpoint: str,
-        query_params: Optional[Any] = None,
-        identifier: Optional[Any] = None,
+        query_params: Any | None = None,
+        identifier: Any | None = None,
     ) -> ParseResult:
         # Make sure we start with /api/vX
         if not endpoint.startswith("/"):

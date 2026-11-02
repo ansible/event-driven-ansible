@@ -1,12 +1,9 @@
 #!/usr/bin/python
-# coding: utf-8 -*-
 
 # GNU General Public License v3.0+
 # (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
@@ -275,7 +272,7 @@ id:
 """
 
 import traceback
-from typing import Any, Dict, List
+from typing import Any
 
 try:
     import yaml
@@ -296,8 +293,8 @@ from ..module_utils.errors import EDAError
 
 
 def find_matching_source(
-    event: Dict[str, Any], sources: List[Dict[str, Any]], module: AnsibleModule
-) -> Dict[str, Any]:
+    event: dict[str, Any], sources: list[dict[str, Any]], module: AnsibleModule
+) -> dict[str, Any]:
     """
     Finds a matching source based on the source_name in the event.
     Raises an error if no match is found.
@@ -320,7 +317,7 @@ def process_event_streams(
     rulebook_id: int,
     controller: Controller,
     module: AnsibleModule,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Processes event streams and updates activation_params with source mappings.
 
@@ -403,8 +400,8 @@ def process_event_streams(
 
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
-) -> Dict[str, Any]:
-    activation_params: Dict[str, Any] = {}
+) -> dict[str, Any]:
+    activation_params: dict[str, Any] = {}
 
     # Get the project id, only required to get the rulebook id
     project_name = module.params["project_name"]
@@ -582,7 +579,7 @@ def main() -> None:
     # Define the state the activation is transitioning to, and uses
     # this in the call to the according post endpoint.
     # Returns an empty string in case the state is not changing.
-    def endpoint_state(activation: Dict[str, Any], state: str) -> str:
+    def endpoint_state(activation: dict[str, Any], state: str) -> str:
         return {(False, "enabled"): "enable", (True, "disabled"): "disable"}.get(
             (activation["is_enabled"], state), ""
         )
