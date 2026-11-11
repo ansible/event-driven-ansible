@@ -96,7 +96,7 @@ options:
       - organization
   eda_credentials:
     description:
-      - A list of IDs for EDA credentials used by the rulebook activation.
+      - A list of EDA credential names used by the rulebook activation.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: list
@@ -205,6 +205,20 @@ EXAMPLES = r"""
     event_streams:
       - event_stream: "Example Event Stream"
         source_name: "Sample source"
+    restart_on_project_update: false
+
+- name: Create a rulebook activation with credentials
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    description: "Example Activation description"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    eda_credentials:
+      - "Example Credential"
+      - "Example Vault Credential"
+    state: disabled
     restart_on_project_update: false
 
 - name: Rename a rulebook activation
