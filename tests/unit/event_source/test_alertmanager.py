@@ -8,8 +8,8 @@ from multidict import CIMultiDict, CIMultiDictProxy
 
 from extensions.eda.plugins.event_source.alertmanager import (
     _event_headers,
-    main as alert_main,
 )
+from extensions.eda.plugins.event_source.alertmanager import main as alert_main
 
 
 async def start_server(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
@@ -186,7 +186,6 @@ async def test_status_does_not_require_token() -> None:
     with contextlib.suppress(asyncio.CancelledError):
         await plugin_task
     assert status == 200
-
 
 
 @pytest.mark.parametrize("name", ["Authorization", "authorization", "AUTHORIZATION"])
