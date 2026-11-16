@@ -57,19 +57,6 @@ jobs:
           platforms: linux,macos,linux-arm64:ubuntu-24.04-arm
           skip_explode: "1"
 
-      - name: Notify to slack if failure
-        if: ${{ failure() && github.event_name == 'schedule' }}
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_USERNAME: GH Slack Notifier for EDA
-          SLACK_TITLE: Failure of scheduled tests for event-driven-ansible
-          SLACK_MESSAGE: |
-            Scheduled tests for event-driven-ansible failed.
-            Job: prepare
-            Id: ${{ github.run_id }}
-            Workflow: ${{ github.workflow }}
-
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
@@ -178,19 +165,6 @@ jobs:
             exit 99
           fi
         # https://github.com/actions/toolkit/issues/193
-
-      - name: Notify to slack if failure
-        if: ${{ failure() && github.event_name == 'schedule' }}
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_USERNAME: GH Slack Notifier for EDA
-          SLACK_TITLE: Failure of scheduled tests for event-driven-ansible
-          SLACK_MESSAGE: |
-            Scheduled tests for event-driven-ansible failed.
-            Job: ${{ matrix.name }}
-            Id: ${{ github.run_id }}
-            Workflow: ${{ github.workflow }}
 
   check:
     if: always()
