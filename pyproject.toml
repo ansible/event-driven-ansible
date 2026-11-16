@@ -87,6 +87,12 @@ disable = [
 ]
 max-line-length=120
 
+[tool.ruff]
+# Must match the oldest supported Python: ansible-core >= 2.16 (meta/runtime.yml)
+# requires Python 3.10. Without it, ruff defaults to 3.11 and suggests syntax and
+# APIs that break 3.10.
+target-version = "py310"
+
 [tool.ruff.lint]
 ignore = [ "E402" ]
 

@@ -33,7 +33,10 @@ jobs:
     steps:
       - name: Determine matrix
         id: generate_matrix
-        uses: ansible/actions/matrix@v1
+        # Pinned: v1 still locks cffi 2.0.0, which has no cp315 wheel and fails
+        # to build in the action image (Python 3.15, no C compiler).
+        # Revert to @v1 once a release includes cffi 2.1.1.
+        uses: ansible/actions/matrix@ebb68d3c201e8e72fd0bf4449f938ee0eccea400
         with:
           min_python: "3.9"
           max_python: "3.12"
