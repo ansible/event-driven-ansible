@@ -39,6 +39,20 @@ def leaf_values(value: Any) -> Iterable[str]:
         yield str(value)
 
 
+def secret_field_ids(
+    schema: Optional[Mapping[str, Any]], section: str = "fields"
+) -> set[str]:
+    """Return the ids of the fields a credential type marks as secret."""
+    if not schema:
+        return set()
+    fields = schema.get(section) or []
+    return {
+        field["id"]
+        for field in fields
+        if isinstance(field, Mapping) and field.get("secret") and field.get("id")
+    }
+
+
 def protect_dict_values(
     module: AnsibleModule,
     param_name: str,
