@@ -160,7 +160,11 @@ from ..module_utils.client import Client
 from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
-from ..module_utils.redaction import protect_dict_values, secret_field_ids
+from ..module_utils.redaction import (
+    RedactingAnsibleModule,
+    protect_dict_values,
+    secret_field_ids,
+)
 
 
 def _resolve_credential_type(
@@ -266,7 +270,9 @@ def build_argument_spec() -> dict[str, Any]:
 def main() -> None:
     argument_spec = build_argument_spec()
 
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    module = RedactingAnsibleModule(
+        argument_spec=argument_spec, supports_check_mode=True
+    )
     copy_from = module.params.get("copy_from", None)
 
     required_if = []
@@ -279,7 +285,7 @@ def main() -> None:
             )
         ]
 
-    module = AnsibleModule(
+    module = RedactingAnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
 

@@ -10,14 +10,16 @@ __metaclass__ = type
 import json
 from typing import Any, Callable
 
+import pytest
 from ansible.module_utils.common.parameters import remove_values
 from ansible_collections.ansible.eda.plugins.module_utils.redaction import (  # type: ignore
+    RedactingAnsibleModule,
     leaf_values,
     protect_dict_values,
     secret_field_ids,
 )
 
-BuildModule = Callable[[dict[str, Any], dict[str, Any]], Any]
+BuildModule = Callable[..., Any]
 
 INPUTS_SPEC: dict[str, Any] = {"inputs": {"type": "dict", "no_log": True}}
 
@@ -197,6 +199,14 @@ class TestProtectDictValues:
         module = build_module(INPUTS_SPEC, {"inputs": None})
         assert protect_dict_values(module, "inputs", {"password"}) == set()
 
+    def test_non_mapping_value_is_registered(self, build_module: BuildModule) -> None:
+        module = build_module({"inputs": {"type": "raw"}}, {"inputs": "raw-secret"})
+
+        masked = protect_dict_values(module, "inputs")
+
+        assert masked == {"raw-secret"}
+        assert module.no_log_values == {"raw-secret"}
+
 
 class TestMaskedResult:
     def test_only_secret_values_are_removed(self, build_module: BuildModule) -> None:
@@ -237,3 +247,46 @@ class TestMaskedResult:
         )
 
         assert "s3cr3t" not in json.dumps(result)
+
+
+class TestRedactingAnsibleModule:
+    def test_fail_json_registers_coerced_values(
+        self, build_module: BuildModule
+    ) -> None:
+        module = build_module(
+            INPUTS_SPEC,
+            {"inputs": '{"password": "s3cr3t"}'},
+            RedactingAnsibleModule,
+        )
+        # A validation failure exits from inside __init__, so the
+        # post-construction marker has not been set yet.
+        module._no_log_ready = False
+
+        with pytest.raises(SystemExit):
+            module.fail_json(msg="missing required arguments: name")
+
+        result = remove_values(
+            {"invocation": {"module_args": module.params}},
+            module.no_log_values,
+        )
+        assert "s3cr3t" not in json.dumps(result)
+
+    def test_exit_keeps_narrowed_values(self, build_module: BuildModule) -> None:
+        module = build_module(
+            INPUTS_SPEC,
+            {"inputs": {"username": "webhook-user", "password": "s3cr3t"}},
+            RedactingAnsibleModule,
+        )
+        protect_dict_values(module, "inputs", {"password"})
+
+        with pytest.raises(SystemExit):
+            module.exit_json(changed=True)
+
+        result = remove_values(
+            {"invocation": {"module_args": module.params}},
+            module.no_log_values,
+        )
+        dumped = json.dumps(result)
+
+        assert "s3cr3t" not in dumped
+        assert "webhook-user" in dumped

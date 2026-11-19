@@ -115,3 +115,41 @@ def _other_no_log_values(module: AnsibleModule, param_name: str) -> set[str]:
             continue
         protected.update(leaf_values(module.params.get(name)))
     return protected
+
+
+class RedactingAnsibleModule(AnsibleModule):  # type: ignore[misc]
+    """AnsibleModule that masks coerced no_log dict values on early exits.
+
+    ansible-core collects no_log values before coercing a parameter to its
+    declared type, so a dict supplied as a JSON/key=value string is not
+    registered. Callers fix that with :func:`protect_dict_values` after
+    construction, but argument validation failures exit from inside
+    ``__init__``, before the caller gets a chance to run.
+
+    Until the caller marks the instance as ready, every no_log dict
+    parameter is registered in full (fail closed). After construction the
+    caller can narrow the registration without it being widened again.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._no_log_ready = False
+        super().__init__(*args, **kwargs)
+        self._no_log_ready = True
+
+    def _register_coerced_no_log_values(self) -> None:
+        if getattr(self, "_no_log_ready", False):
+            return
+        for name, spec in self.argument_spec.items():
+            if not spec.get("no_log"):
+                continue
+            value = self.params.get(name)
+            if isinstance(value, Mapping):
+                self.no_log_values.update(leaf_values(value))
+
+    def exit_json(self, **kwargs: Any) -> None:
+        self._register_coerced_no_log_values()
+        super().exit_json(**kwargs)
+
+    def fail_json(self, *args: Any, **kwargs: Any) -> None:
+        self._register_coerced_no_log_values()
+        super().fail_json(*args, **kwargs)

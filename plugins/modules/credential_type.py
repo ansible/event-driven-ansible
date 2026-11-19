@@ -156,7 +156,11 @@ from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
-from ..module_utils.redaction import protect_dict_values, secret_field_ids
+from ..module_utils.redaction import (
+    RedactingAnsibleModule,
+    protect_dict_values,
+    secret_field_ids,
+)
 
 
 def _protect_test_inputs(
@@ -198,7 +202,7 @@ def main() -> None:
 
     required_if = [("state", "present", ("inputs", "injectors"))]
 
-    module = AnsibleModule(
+    module = RedactingAnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
 

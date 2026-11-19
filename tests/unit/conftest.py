@@ -8,13 +8,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, Optional
 
 import pytest
 from ansible.module_utils import basic
 from ansible.module_utils.common.text.converters import to_bytes
 
-ModuleBuilder = Callable[[dict[str, Any], dict[str, Any]], Any]
+ModuleBuilder = Callable[..., Any]
 
 
 @pytest.fixture
@@ -28,12 +28,18 @@ def build_module() -> Iterator[ModuleBuilder]:
     original_args = getattr(basic, "_ANSIBLE_ARGS", None)
     original_profile = getattr(basic, "_ANSIBLE_PROFILE", None)
 
-    def _build(argument_spec: dict[str, Any], params: dict[str, Any]) -> Any:
+    def _build(
+        argument_spec: dict[str, Any],
+        params: dict[str, Any],
+        module_class: Optional[Callable[..., Any]] = None,
+    ) -> Any:
         basic._ANSIBLE_ARGS = to_bytes(json.dumps({"ANSIBLE_MODULE_ARGS": params}))
         # ansible-core >= 2.19 requires a serialization profile; older
         # versions ignore the attribute.
         basic._ANSIBLE_PROFILE = "legacy"
-        return basic.AnsibleModule(
+        if module_class is None:
+            module_class = basic.AnsibleModule
+        return module_class(
             argument_spec=argument_spec,
             supports_check_mode=True,
         )
