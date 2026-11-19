@@ -148,6 +148,8 @@ test_result:
 """
 
 
+from typing import Any
+
 from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.arguments import AUTH_ARGSPEC
@@ -157,7 +159,25 @@ from ..module_utils.errors import EDAError
 from ..module_utils.redaction import protect_dict_values, secret_field_ids
 
 
-def main() -> None:
+def _protect_test_inputs(
+    module: AnsibleModule, credential_type: dict[str, Any]
+) -> None:
+    """Narrow the fail-closed no_log registration using the type schema."""
+    test_inputs = module.params.get("test_inputs")
+    if not isinstance(test_inputs, dict):
+        return
+
+    schema = credential_type.get("inputs") or {}
+    known_fields = {
+        field["id"]
+        for field in schema.get("fields") or []
+        if isinstance(field, dict) and field.get("id")
+    }
+    if schema and set(test_inputs) <= known_fields:
+        protect_dict_values(module, "test_inputs", secret_field_ids(schema))
+
+
+def build_argument_spec() -> dict[str, Any]:
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),
@@ -170,6 +190,11 @@ def main() -> None:
     )
 
     argument_spec.update(AUTH_ARGSPEC)
+    return argument_spec
+
+
+def main() -> None:
+    argument_spec = build_argument_spec()
 
     required_if = [("state", "present", ("inputs", "injectors"))]
 
@@ -228,17 +253,8 @@ def main() -> None:
 
     # Narrow the fail-closed registration using the schema of the credential
     # type under test, so only fields it marks as secret are masked.
-    if state == "test" and isinstance(test_inputs, dict):
-        schema = credential_type.get("inputs") or {}
-        known_fields = {
-            field["id"]
-            for field in schema.get("fields") or []
-            if isinstance(field, dict) and field.get("id")
-        }
-        if schema and set(test_inputs) <= known_fields:
-            protect_dict_values(module, "test_inputs", secret_field_ids(schema))
-
     if state == "test":
+        _protect_test_inputs(module, credential_type)
 
         if not credential_type:
             module.fail_json(msg=f"Credential type '{name}' not found")

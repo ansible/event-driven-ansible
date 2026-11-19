@@ -233,7 +233,20 @@ def create_params(
     return credential_params
 
 
-def main() -> None:
+def _protect_inputs(module: AnsibleModule, credential_type: dict[str, Any]) -> None:
+    """Narrow the fail-closed no_log registration using the type schema."""
+    schema = credential_type.get("inputs") or {}
+    known_fields = {
+        field["id"]
+        for field in schema.get("fields") or []
+        if isinstance(field, dict) and field.get("id")
+    }
+    inputs = module.params.get("inputs")
+    if isinstance(inputs, dict) and schema and set(inputs) <= known_fields:
+        protect_dict_values(module, "inputs", secret_field_ids(schema))
+
+
+def build_argument_spec() -> dict[str, Any]:
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),
@@ -247,6 +260,11 @@ def main() -> None:
     )
 
     argument_spec.update(AUTH_ARGSPEC)
+    return argument_spec
+
+
+def main() -> None:
+    argument_spec = build_argument_spec()
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     copy_from = module.params.get("copy_from", None)
@@ -307,15 +325,7 @@ def main() -> None:
     credential_type: dict[str, Any] = {}
     if state == "present" and not copy_from:
         credential_type = _resolve_credential_type(module, controller, credential)
-        schema = credential_type.get("inputs") or {}
-        known_fields = {
-            field["id"]
-            for field in schema.get("fields") or []
-            if isinstance(field, dict) and field.get("id")
-        }
-        inputs = module.params.get("inputs")
-        if isinstance(inputs, dict) and schema and set(inputs) <= known_fields:
-            protect_dict_values(module, "inputs", secret_field_ids(schema))
+        _protect_inputs(module, credential_type)
 
     if state == "test":
         if not credential:
