@@ -10,7 +10,9 @@ __metaclass__ = type
 import importlib
 import json
 from typing import Any, Callable
+from unittest.mock import MagicMock, patch
 
+import pytest
 from ansible.module_utils.common.parameters import remove_values
 from ansible_collections.ansible.eda.plugins.module_utils.redaction import (  # type: ignore
     protect_dict_values,
@@ -149,3 +151,102 @@ class TestMaskedResult:
         )
 
         assert "s3cr3t" not in json.dumps(result)
+
+
+class _AnsibleExit(Exception):
+    pass
+
+
+def _make_main_module(params: dict[str, Any]) -> MagicMock:
+    module = MagicMock()
+    module.params = params
+    module.argument_spec = credential_type.build_argument_spec()
+    module.no_log_values = set()
+    module.check_mode = False
+    module.exit_json.side_effect = _AnsibleExit
+    module.fail_json.side_effect = _AnsibleExit
+    return module
+
+
+def _run_main(module: MagicMock, controller: MagicMock) -> None:
+    with (
+        patch.object(credential_type, "RedactingAnsibleModule", return_value=module),
+        patch.object(credential_type, "Client", return_value=MagicMock()),
+        patch.object(credential_type, "Controller", return_value=controller),
+        pytest.raises(_AnsibleExit),
+    ):
+        credential_type.main()
+
+
+class TestMain:
+    @staticmethod
+    def _params(**overrides: Any) -> dict[str, Any]:
+        params: dict[str, Any] = {
+            "name": "Test Credential Type",
+            "new_name": None,
+            "description": None,
+            "inputs": {"fields": SCHEMA["fields"]},
+            "injectors": None,
+            "test_inputs": None,
+            "test_metadata": None,
+            "state": "present",
+            "controller_host": "https://eda.example.com",
+        }
+        params.update(overrides)
+        return params
+
+    def test_present_creates_type(self) -> None:
+        module = _make_main_module(self._params())
+        controller = MagicMock()
+        controller.get_endpoint.return_value.status = 200
+        controller.get_exactly_one.return_value = {
+            "id": 1,
+            "name": "Test Credential Type",
+            "inputs": SCHEMA,
+        }
+        controller.create_or_update_if_needed.return_value = {
+            "changed": True,
+            "id": 1,
+        }
+
+        _run_main(module, controller)
+
+        controller.create_or_update_if_needed.assert_called_once()
+        module.exit_json.assert_called_once_with(changed=True, id=1)
+
+    def test_test_state_posts_to_endpoint(self) -> None:
+        module = _make_main_module(
+            self._params(state="test", test_inputs=dict(TEST_INPUTS))
+        )
+        controller = MagicMock()
+        controller.get_endpoint.return_value.status = 200
+        controller.get_exactly_one.return_value = {
+            "id": 1,
+            "name": "Test Credential Type",
+            "inputs": SCHEMA,
+        }
+        response = MagicMock()
+        response.status = 202
+        response.json = {}
+        controller.post_endpoint.return_value = response
+
+        _run_main(module, controller)
+
+        controller.post_endpoint.assert_called_once()
+        module.exit_json.assert_called_once()
+
+    def test_absent_deletes_type(self) -> None:
+        module = _make_main_module(self._params(state="absent"))
+        controller = MagicMock()
+        controller.get_endpoint.return_value.status = 200
+        controller.get_exactly_one.return_value = {
+            "id": 1,
+            "name": "Test Credential Type",
+            "inputs": SCHEMA,
+        }
+        controller.delete_if_needed.return_value = {"changed": True}
+
+        _run_main(module, controller)
+
+        controller.delete_if_needed.assert_called_once()
+        module.exit_json.assert_called_once_with(changed=True)
