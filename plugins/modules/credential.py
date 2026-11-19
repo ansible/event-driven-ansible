@@ -160,6 +160,7 @@ from ..module_utils.client import Client
 from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
+from ..module_utils.redaction import protect_dict_values
 
 
 def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
@@ -227,6 +228,13 @@ def main() -> None:
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
+
+    # ``inputs`` is declared with no_log=True, but ansible-core collects
+    # no_log values before coercing the parameter to a dict. A value supplied
+    # as a JSON/k=v string is therefore not registered and would be printed
+    # in clear text. Re-register the coerced values. The credential type is
+    # not known yet, so register all of them (fail closed).
+    protect_dict_values(module, "inputs")
 
     client = Client(
         host=module.params.get("controller_host"),
