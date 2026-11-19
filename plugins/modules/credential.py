@@ -202,7 +202,7 @@ def main() -> None:
         new_name=dict(type="str"),
         copy_from=dict(type="str"),
         description=dict(type="str"),
-        inputs=dict(type="dict"),
+        inputs=dict(type="dict", no_log=True),
         credential_type_name=dict(type="str"),
         organization_name=dict(type="str", aliases=["organization"]),
         metadata=dict(type="dict"),
