@@ -8,24 +8,27 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
+from typing import Any, Callable, Iterator
 
 import pytest
 from ansible.module_utils import basic
 from ansible.module_utils.common.text.converters import to_bytes
 
+ModuleBuilder = Callable[[dict[str, Any], dict[str, Any]], Any]
+
 
 @pytest.fixture
-def build_module():
+def build_module() -> Iterator[ModuleBuilder]:
     """Instantiate an AnsibleModule with the given argument spec and args.
 
     ansible-core reads module arguments from ``basic._ANSIBLE_ARGS``. The
     original value is restored after the test so tests do not leak state.
     """
 
-    original = getattr(basic, "_ANSIBLE_ARGS", None)
+    original_args = getattr(basic, "_ANSIBLE_ARGS", None)
     original_profile = getattr(basic, "_ANSIBLE_PROFILE", None)
 
-    def _build(argument_spec, params):
+    def _build(argument_spec: dict[str, Any], params: dict[str, Any]) -> Any:
         basic._ANSIBLE_ARGS = to_bytes(json.dumps({"ANSIBLE_MODULE_ARGS": params}))
         # ansible-core >= 2.19 requires a serialization profile; older
         # versions ignore the attribute.
@@ -36,5 +39,5 @@ def build_module():
         )
 
     yield _build
-    basic._ANSIBLE_ARGS = original
+    basic._ANSIBLE_ARGS = original_args
     basic._ANSIBLE_PROFILE = original_profile

@@ -109,6 +109,7 @@ plugins/module_utils/client.py
 plugins/module_utils/common.py
 plugins/module_utils/controller.py
 plugins/module_utils/errors.py
+plugins/module_utils/redaction.py
 plugins/module_utils/__init__.py
 plugins/README.md
 README.md
