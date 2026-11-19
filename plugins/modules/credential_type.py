@@ -154,6 +154,7 @@ from ..module_utils.arguments import AUTH_ARGSPEC
 from ..module_utils.client import Client
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
+from ..module_utils.redaction import protect_dict_values, secret_field_ids
 
 
 def main() -> None:
@@ -163,7 +164,7 @@ def main() -> None:
         description=dict(type="str"),
         inputs=dict(type="dict"),
         injectors=dict(type="dict"),
-        test_inputs=dict(type="dict"),
+        test_inputs=dict(type="dict", no_log=True),
         test_metadata=dict(type="dict"),
         state=dict(choices=["present", "absent", "test"], default="present"),
     )
@@ -175,6 +176,13 @@ def main() -> None:
     module = AnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
+
+    # ``test_inputs`` carries live credential material when the test performs
+    # a real connection. ansible-core registers no_log values before coercing
+    # the parameter to a dict, so a JSON/k=v string would not be registered.
+    # Re-register the coerced values; the schema is not known yet, so register
+    # all of them (fail closed).
+    protect_dict_values(module, "test_inputs")
 
     client = Client(
         host=module.params.get("controller_host"),
@@ -217,6 +225,18 @@ def main() -> None:
         )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential type: {e}")
+
+    # Narrow the fail-closed registration using the schema of the credential
+    # type under test, so only fields it marks as secret are masked.
+    if state == "test" and isinstance(test_inputs, dict):
+        schema = credential_type.get("inputs") or {}
+        known_fields = {
+            field["id"]
+            for field in schema.get("fields") or []
+            if isinstance(field, dict) and field.get("id")
+        }
+        if schema and set(test_inputs) <= known_fields:
+            protect_dict_values(module, "test_inputs", secret_field_ids(schema))
 
     if state == "test":
 
