@@ -236,12 +236,27 @@ def main() -> None:
     name = module.params.get("name")
     new_name = module.params.get("new_name")
 
+    organization_id = None
+    if organization_name:
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", organization_name
+        )
+
     # Attempt to look up event stream based on the provided name
     event_stream = {}
     try:
         event_stream = controller.get_exactly_one(event_stream_endpoint, name=name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get event stream: {e}")
+
+    if state == "present" and event_stream and organization_id:
+        existing_org_id = event_stream.get("organization", {}).get("id")
+        if existing_org_id is not None and existing_org_id != organization_id:
+            module.fail_json(
+                msg=f"An event stream with the name '{name}' already exists "
+                f"in a different organization (id={existing_org_id}). "
+                "Resource names must be unique across organizations."
+            )
 
     if state == "absent":
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this

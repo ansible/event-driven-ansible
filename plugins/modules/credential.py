@@ -249,6 +249,12 @@ def main() -> None:
     new_name = module.params.get("new_name")
     state = module.params.get("state")
 
+    organization_id = None
+    if module.params.get("organization_name"):
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", module.params["organization_name"]
+        )
+
     # Attempt to look up credential based on the provided name
     try:
         credential = controller.get_exactly_one(
@@ -256,6 +262,15 @@ def main() -> None:
         )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
+
+    if state == "present" and credential and not copy_from and organization_id:
+        existing_org_id = credential.get("organization", {}).get("id")
+        if existing_org_id is not None and existing_org_id != organization_id:
+            module.fail_json(
+                msg=f"A credential with the name '{name}' already exists "
+                f"in a different organization (id={existing_org_id}). "
+                "Resource names must be unique across organizations."
+            )
 
     if state == "test":
         if not credential:

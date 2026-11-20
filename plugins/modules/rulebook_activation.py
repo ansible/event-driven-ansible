@@ -623,12 +623,29 @@ def main() -> None:
                 "is present for this version of EDA."
             ),
         )
+    organization_id = None
+    if not is_aap_24 and organization_name:
+        organization_id = lookup_resource_id(
+            module, controller, "organizations", organization_name
+        )
+
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:
         activation = controller.get_exactly_one("activations", name=name)
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
+
+    if state in ("present", "enabled", "disabled") and activation and organization_id:
+        existing_org_id = activation.get("organization_id") or activation.get(
+            "organization", {}
+        ).get("id")
+        if existing_org_id is not None and existing_org_id != organization_id:
+            module.fail_json(
+                msg=f"A rulebook activation with the name '{name}' already "
+                f"exists in a different organization (id={existing_org_id}). "
+                "Resource names must be unique across organizations."
+            )
 
     if state == "absent":
         try:
