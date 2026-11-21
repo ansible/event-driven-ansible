@@ -1,3 +1,9 @@
+"""Event source plugin for polling URLs and checking their status.
+
+This module provides an event source plugin that continuously polls a set of URLs
+and sends events with their status information using aiohttp.
+"""
+
 import asyncio
 from typing import Any
 

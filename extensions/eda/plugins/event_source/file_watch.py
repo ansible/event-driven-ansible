@@ -1,3 +1,9 @@
+"""Event source plugin for watching file system changes.
+
+This module provides an event source plugin for monitoring file system changes
+using the watchdog library.
+"""
+
 import asyncio
 import concurrent.futures
 from typing import Any
@@ -51,6 +57,7 @@ def watch(
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file creation events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -64,6 +71,7 @@ def watch(
             )
 
         def on_deleted(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file deletion events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -77,6 +85,7 @@ def watch(
             )
 
         def on_modified(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file modification events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
@@ -90,6 +99,7 @@ def watch(
             )
 
         def on_moved(self: "Handler", event: FileSystemEvent) -> None:
+            """Handle file move events."""
             asyncio.run_coroutine_threadsafe(
                 queue.put(
                     {
