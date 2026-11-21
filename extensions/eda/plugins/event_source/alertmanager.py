@@ -1,5 +1,7 @@
 import asyncio
+import hmac
 import logging
+from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
 
 from aiohttp import web
@@ -48,6 +50,14 @@ options:
         false: put sequentially both the received original data and each parsed alert item to the queue.
     type: bool
     default: false
+  token:
+    description:
+      - The optional bearer token expected in the Authorization header of
+        webhook requests.
+      - Set it in alertmanager with C(http_config.authorization.credentials)
+        of the webhook receiver.
+      - The status endpoint C(GET /) does not require the token.
+    type: str
 """
 
 EXAMPLES = r"""
@@ -57,6 +67,21 @@ EXAMPLES = r"""
     data_alerts_path: alerts
     data_host_path: labels.instance
     data_path_separator: .
+
+- ansible.eda.alertmanager:
+    host: 0.0.0.0
+    port: 8000
+    token: "{{ alertmanager_token }}"
+
+# Matching alertmanager receiver
+# receivers:
+#   - name: eda
+#     webhook_configs:
+#       - url: http://eda.example.com:8000/endpoint
+#         http_config:
+#           authorization:
+#             type: Bearer
+#             credentials: <token>
 """
 
 
@@ -69,16 +94,22 @@ async def status(_request: web.Request) -> web.Response:
     return web.Response(status=200, text="up")
 
 
+def _event_headers(headers: Mapping[str, str]) -> dict[str, str]:
+    """Copy request headers without the Authorization header, in any case."""
+    return {k: v for k, v in headers.items() if k.lower() != "authorization"}
+
+
 @routes.post("/{endpoint}")
 async def webhook(request: web.Request) -> web.Response:
     """Read events from webhook."""
     payload = await request.json()
     endpoint = request.match_info["endpoint"]
+    headers = _event_headers(request.headers)
 
     if not request.app["skip_original_data"]:
         data = {
             "payload": payload,
-            "meta": {"endpoint": endpoint, "headers": dict(request.headers)},
+            "meta": {"endpoint": endpoint, "headers": headers},
         }
         await request.app["queue"].put(data)
 
@@ -119,13 +150,30 @@ async def webhook(request: web.Request) -> web.Response:
                 "alert": alert,
                 "meta": {
                     "endpoint": endpoint,
-                    "headers": dict(request.headers),
+                    "headers": headers,
                     "hosts": hosts,
                 },
             },
         )
 
     return web.Response(status=202, text="Received")
+
+
+@web.middleware
+async def bearer_auth(
+    request: web.Request,
+    handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+) -> web.StreamResponse:
+    """Verify the Authorization header carries the expected bearer token."""
+    if request.method == "GET" and request.path == "/":
+        return await handler(request)
+
+    scheme, _, token = request.headers.get("Authorization", "").strip().partition(" ")
+    valid = hmac.compare_digest(token.strip().encode("utf-8"), request.app["token"])
+    if scheme != "Bearer" or not valid:
+        raise web.HTTPUnauthorized(text="Invalid authorization token")
+
+    return await handler(request)
 
 
 def clean_host(host: str) -> str:
@@ -137,8 +185,14 @@ def clean_host(host: str) -> str:
 
 async def main(queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
     """Receive events via alertmanager webhook."""
-    app = web.Application()
+    middlewares = []
+    if args.get("token"):
+        middlewares.append(bearer_auth)
+
+    app = web.Application(middlewares=middlewares)
     app["queue"] = queue
+    if args.get("token"):
+        app["token"] = str(args["token"]).encode("utf-8")
     app["data_host_path"] = str(args.get("data_host_path", "labels.instance"))
     app["data_path_separator"] = str(args.get("data_path_separator", "."))
     app["data_alerts_path"] = str(args.get("data_alerts_path", "alerts"))
