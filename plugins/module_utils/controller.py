@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
-from __future__ import absolute_import, annotations, division, print_function
-
-__metaclass__ = type
-
+from __future__ import annotations
 
 import json
-from typing import Any, List, NoReturn, Optional
+from typing import Any, NoReturn
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -83,7 +79,7 @@ class Controller:
         raise EDAError(msg)
 
     def get_exactly_one(
-        self, endpoint: str, name: Optional[str], **kwargs: Any
+        self, endpoint: str, name: str | None, **kwargs: Any
     ) -> dict[str, Any]:
         result = self.get_one_or_many(endpoint, name=name, **kwargs)
         matches = []
@@ -103,7 +99,7 @@ class Controller:
 
     def resolve_name_to_id(
         self, endpoint: str, name: str, **kwargs: Any
-    ) -> Optional[int]:
+    ) -> int | None:
         result = self.get_exactly_one(endpoint, name, **kwargs)
         if result:
             if isinstance(result["id"], int):
@@ -116,9 +112,9 @@ class Controller:
     def get_one_or_many(
         self,
         endpoint: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         **kwargs: Any,
-    ) -> List[dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         new_kwargs = kwargs.copy()
 
         if name:
@@ -168,7 +164,7 @@ class Controller:
         # We don't have an existing_item, we can try to create it
         # We will pull the item_name out from the new_item, if it exists
         item_name = self.get_item_name(new_item)
-        response = self.post_endpoint(endpoint, **{"data": new_item})
+        response = self.post_endpoint(endpoint, data=new_item)
         if response.status in [200, 201]:
             self.result["id"] = response.json["id"]
             self.result["changed"] = True
@@ -249,11 +245,11 @@ class Controller:
         self,
         old: dict[str, Any],
         new: dict[str, Any],
-        field_set: Optional[set[str]] = None,
+        field_set: set[str] | None = None,
         warning: bool = False,
     ) -> bool:
         if field_set is None:
-            field_set = set(fd for fd in new.keys())
+            field_set = set(fd for fd in new)
         for field in field_set:
             new_field = new.get(field, None)
             old_field = old.get(field, None)
@@ -308,7 +304,7 @@ class Controller:
                 return {"changed": True}
 
             response = self.patch_endpoint(
-                endpoint, **{"data": new_item, "id": self.result["id"]}
+                endpoint, data=new_item, id=self.result["id"]
             )
             if response.status == 200:
                 # compare apples-to-apples, old API data to new API data
@@ -364,7 +360,7 @@ class Controller:
         if self.module.check_mode:
             return {"changed": True}
 
-        response = self.delete_endpoint(endpoint, **{"id": item_id})
+        response = self.delete_endpoint(endpoint, id=item_id)
 
         if response.status in [202, 204]:
             self.result["changed"] = True

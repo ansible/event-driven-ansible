@@ -11,7 +11,7 @@ from tests.conftest import ListQueue
 async def test_receive_from_sqs(eda_queue: ListQueue) -> None:
     session = AsyncMock()
     with patch(
-        "extensions.eda.plugins.event_source.aws_sqs_queue.get_session",  # noqa: E501
+        "extensions.eda.plugins.event_source.aws_sqs_queue.get_session",
         return_value=session,
     ):
         client = AsyncMock()

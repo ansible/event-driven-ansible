@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the Ansible project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
 
 
-from typing import Any, Optional
+
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -21,8 +18,8 @@ def lookup_resource_id(
     controller: Controller,
     endpoint: str,
     name: str,
-    params: Optional[dict[str, Any]] = None,
-) -> Optional[int]:
+    params: dict[str, Any] | None = None,
+) -> int | None:
     result = None
 
     try:

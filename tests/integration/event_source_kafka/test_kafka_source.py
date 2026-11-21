@@ -6,7 +6,8 @@ import os
 import platform
 import re
 import subprocess
-from typing import Any, Generator, Optional
+from collections.abc import Generator
+from typing import Any
 
 import fastavro
 import pytest
@@ -50,8 +51,8 @@ def send_kafka_messages_and_run_test(
     ruleset: str,
     expected_output_pattern: str,
     expected_match_count: int = 1,
-    headers: Optional[list[tuple[str, bytes]]] = None,
-    extra_vars: Optional[str] = None,
+    headers: list[tuple[str, bytes]] | None = None,
+    extra_vars: str | None = None,
 ) -> None:
     """
     Helper function to send Kafka messages and run tests with improved reliability.

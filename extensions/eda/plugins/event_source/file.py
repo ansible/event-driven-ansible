@@ -1,6 +1,6 @@
 import pathlib
 from asyncio import Queue
-from typing import Any, Union
+from typing import Any
 
 import yaml
 from watchdog.events import FileSystemEvent, RegexMatchingEventHandler
@@ -27,7 +27,7 @@ EXAMPLES = r"""
 """
 
 
-def send_facts(queue: Queue[Any], filename: Union[str, bytes]) -> None:
+def send_facts(queue: Queue[Any], filename: str | bytes) -> None:
     """Send facts to the queue."""
     if isinstance(filename, bytes):
         filename = str(filename, "utf-8")
@@ -69,7 +69,7 @@ def _observe_files(queue: Queue[Any], files: list[str]) -> None:
     class Handler(RegexMatchingEventHandler):
         """A handler for file events."""
 
-        def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
+        def __init__(self, **kwargs: Any) -> None:
             RegexMatchingEventHandler.__init__(self, **kwargs)
 
         def on_created(self, event: FileSystemEvent) -> None:
@@ -109,6 +109,6 @@ if __name__ == "__main__":
 
         async def put(self: "MockQueue", event: dict[str, Any]) -> None:
             """Print the event."""
-            print(event)  # noqa: T201
+            print(event)
 
     main(MockQueue(), {"files": ["facts.yml"]})
