@@ -104,6 +104,7 @@ testpass
 testsecret
 testuser
 toctree
+tolerations
 toxinidir
 trustore
 truststore
