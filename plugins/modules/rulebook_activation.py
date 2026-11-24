@@ -50,7 +50,9 @@ options:
   extra_vars:
     description:
       - The extra variables for the rulebook activation.
-    type: str
+      - Either a dictionary or a string in YAML or JSON format.
+      - A dictionary is converted to YAML before it is sent to the API.
+    type: raw
   restart:
     description:
       - Performs a restart of the activation. This is a non idempotent operation.
@@ -415,6 +417,18 @@ def process_event_streams(
     return source_mappings
 
 
+def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
+    """Return extra_vars as the YAML/JSON string the API expects."""
+    if isinstance(extra_vars, dict):
+        return str(yaml.safe_dump(extra_vars))
+    if isinstance(extra_vars, str):
+        return extra_vars
+    module.fail_json(
+        msg="Parameter extra_vars must be a dictionary or a string in YAML or JSON format."
+    )
+    return ""  # not reached, fail_json exits
+
+
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
 ) -> Dict[str, Any]:
@@ -508,7 +522,9 @@ def create_params(
         activation_params["description"] = module.params["description"]
 
     if module.params.get("extra_vars"):
-        activation_params["extra_var"] = module.params["extra_vars"]
+        activation_params["extra_var"] = format_extra_vars(
+            module, module.params["extra_vars"]
+        )
 
     if module.params.get("restart_policy"):
         activation_params["restart_policy"] = module.params["restart_policy"]
@@ -547,7 +563,7 @@ def main() -> None:
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
-        extra_vars=dict(type="str"),
+        extra_vars=dict(type="raw"),
         restart=dict(type="bool", default=False),
         restart_policy=dict(
             type="str",
