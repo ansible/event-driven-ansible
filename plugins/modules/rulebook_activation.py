@@ -173,8 +173,8 @@ options:
       - Desired state of the resource.
       - The state of an activation itself is controlled by this parameter, whether I(enabled) or
         I(disabled).
-      - When an activation is created, it is I(enabled) by default. Thus, I(present) is equivalent to
-        I(enabled).
+      - When an activation is created, it is I(enabled) by default. Thus, I(present) and I(enabled)
+        create the same activation.
       - Whether I(present), I(enabled), or I(disabled) is specified, an activation will be created if it
         doesn't exist already.
       - To create a disabled activation, specify C(state) as I(disabled).
@@ -183,6 +183,11 @@ options:
         I(project_name), I(rulebook_name), I(decision_environment_name) and, on AAP 2.5
         and later, I(organization_name) are given. A running activation is disabled first,
         because the API only accepts updates to a disabled activation.
+      - With I(enabled), the definition of an existing, disabled activation is applied in
+        the same way before it is started.
+      - A running activation is not restarted to apply a changed definition. With I(present)
+        the update fails, because the API only accepts updates to a disabled activation.
+        With I(enabled) the changed definition is not applied.
     default: "present"
     choices: ["present", "absent", "disabled", "enabled"]
     type: str
@@ -788,12 +793,13 @@ def main() -> None:
             )
 
     # Without the full definition, enabled and disabled only switch an
-    # existing activation on or off
+    # existing activation on or off. A running activation is not restarted
+    # to apply its definition.
     has_definition = not missing
     toggle_only = (
         bool(activation)
         and state in ("enabled", "disabled")
-        and (state == "enabled" or not has_definition)
+        and (not has_definition or (state == "enabled" and activation["is_enabled"]))
     )
     if (
         toggle_only

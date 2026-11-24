@@ -454,3 +454,36 @@ def test_disabled_with_definition_without_wait_fails_while_stopping() -> None:
     )
 
     assert "not in disabled mode and in stopped status" in msg
+
+
+def test_enabled_with_definition_updates_and_starts_disabled_activation() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(_run(eda, state="enabled", description="new", **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == "new"
+    assert eda.activation["is_enabled"]
+    assert ("POST", f"activations/{ACTIVATION_ID}/enable") not in eda.requests
+
+
+def test_enabled_with_definition_does_not_restart_running_activation() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    result = _exit(_run(eda, state="enabled", description="new", **DEFINITION))
+
+    assert not result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == ""
+    assert [method for method, _ in eda.requests] == ["GET"] * len(eda.requests)
+
+
+def test_enabled_with_unchanged_definition_starts_disabled_activation() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(_run(eda, state="enabled", **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["is_enabled"]
