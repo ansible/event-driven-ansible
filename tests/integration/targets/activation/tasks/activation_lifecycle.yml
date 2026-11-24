@@ -169,6 +169,38 @@
         that:
           - not result.changed
 
+    - name: Apply the same definition with extra_vars as a differently formatted string
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_extra_vars"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        extra_vars: '{"alpha": {"path": "C:\\temp", "nothing": null}, "zeta": 1}'
+      register: result
+
+    - name: Check that the running activation was not updated
+      ansible.builtin.assert:
+        that:
+          - not result.changed
+
+    - name: Apply changed extra_vars in check_mode
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}_extra_vars"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        extra_vars:
+          zeta: 2
+      check_mode: true
+      register: result
+
+    - name: Check that changed extra_vars are detected
+      ansible.builtin.assert:
+        that:
+          - result.changed
+
   always:
     - name: Delete project
       ansible.eda.project:

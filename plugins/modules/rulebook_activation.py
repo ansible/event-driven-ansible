@@ -429,6 +429,18 @@ def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
     return ""  # not reached, fail_json exits
 
 
+def extra_vars_are_equal(old: Any, new: Any) -> bool:
+    """Compare two extra_vars strings by their parsed content.
+
+    The API returns extra_var re-serialized as YAML, so a string comparison
+    reports a difference even when the content is the same.
+    """
+    try:
+        return bool(yaml.safe_load(old or "") == yaml.safe_load(new or ""))
+    except yaml.YAMLError:
+        return False
+
+
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
 ) -> Dict[str, Any]:
@@ -709,6 +721,17 @@ def main() -> None:
         if new_name
         else (controller.get_item_name(activation) if activation else name)
     )
+
+    # Keep the API's formatting of extra_var when the content is the same, so
+    # that formatting differences alone do not trigger an update
+    if (
+        activation
+        and "extra_var" in activation_params
+        and extra_vars_are_equal(
+            activation.get("extra_var"), activation_params["extra_var"]
+        )
+    ):
+        activation_params["extra_var"] = activation["extra_var"]
 
     # If the state was one of (present, enabled or disabled), and we can let the module
     # build or update the existing activation, this will return on its own

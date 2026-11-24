@@ -13,6 +13,7 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 from ansible_collections.ansible.eda.plugins.modules.rulebook_activation import (  # type: ignore
+    extra_vars_are_equal,
     format_extra_vars,
 )
 
@@ -51,3 +52,29 @@ def test_format_extra_vars_rejects_other_types(value: Any) -> None:
         format_extra_vars(module, value)
 
     module.fail_json.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "old, new",
+    [
+        ("alpha: 1\nzeta: 2\n", "zeta: 2\nalpha: 1"),
+        ("alpha: 1\nzeta: 2\n", '{"zeta": 2, "alpha": 1}'),
+        ("alpha:\n  nothing: null\n", "{alpha: {nothing: ~}}"),
+        ("", None),
+    ],
+)
+def test_extra_vars_are_equal_same_content(old: Any, new: Any) -> None:
+    assert extra_vars_are_equal(old, new)
+
+
+@pytest.mark.parametrize(
+    "old, new",
+    [
+        ("alpha: 1\n", "alpha: 2"),
+        ("alpha: 1\n", "alpha: 1\nzeta: 2"),
+        ("alpha: 1\n", ""),
+        ("alpha: 1\n", "alpha: [1"),
+    ],
+)
+def test_extra_vars_are_equal_different_content(old: Any, new: Any) -> None:
+    assert not extra_vars_are_equal(old, new)
