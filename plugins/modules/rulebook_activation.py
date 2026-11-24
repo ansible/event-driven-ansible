@@ -52,6 +52,7 @@ options:
       - The extra variables for the rulebook activation.
       - Either a dictionary or a string in YAML or JSON format.
       - A dictionary is converted to YAML before it is sent to the API.
+      - An empty dictionary or string removes all variables.
     type: raw
   restart:
     description:
@@ -429,16 +430,42 @@ def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
     return ""  # not reached, fail_json exits
 
 
+def values_are_equal(old: Any, new: Any) -> bool:
+    """Compare parsed values, treating values of different types as different.
+
+    Python considers True == 1 and 1 == 1.0, but these are different values
+    for the variables of an activation.
+    """
+    if isinstance(old, dict) and isinstance(new, dict):
+        return old.keys() == new.keys() and all(
+            values_are_equal(old[key], new[key]) for key in old
+        )
+    if isinstance(old, list) and isinstance(new, list):
+        return len(old) == len(new) and all(
+            values_are_equal(a, b) for a, b in zip(old, new)
+        )
+    if isinstance(old, bool) != isinstance(new, bool):
+        return False
+    if isinstance(old, float) != isinstance(new, float):
+        return False
+    return bool(old == new)
+
+
 def extra_vars_are_equal(old: Any, new: Any) -> bool:
     """Compare two extra_vars strings by their parsed content.
 
     The API returns extra_var re-serialized as YAML, so a string comparison
-    reports a difference even when the content is the same.
+    reports a difference even when the content is the same. No variables and
+    an empty mapping are the same.
     """
     try:
-        return bool(yaml.safe_load(old or "") == yaml.safe_load(new or ""))
+        old_value = yaml.safe_load(old or "")
+        new_value = yaml.safe_load(new or "")
     except yaml.YAMLError:
         return False
+    return values_are_equal(
+        {} if old_value is None else old_value, {} if new_value is None else new_value
+    )
 
 
 def create_params(
@@ -533,7 +560,7 @@ def create_params(
     if module.params.get("description"):
         activation_params["description"] = module.params["description"]
 
-    if module.params.get("extra_vars"):
+    if module.params.get("extra_vars") is not None:
         activation_params["extra_var"] = format_extra_vars(
             module, module.params["extra_vars"]
         )
