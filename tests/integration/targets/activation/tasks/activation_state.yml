@@ -84,6 +84,70 @@
           - result.changed
           - not activation_status.activations[0].is_enabled
 
+    - name: Enable the activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        state: enabled
+
+    - name: Wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Disable the running activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        state: disabled
+
+    - name: Enable the activation again while it is stopping
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        state: enabled
+      register: result
+
+    - name: Check that the activation was enabled
+      ansible.builtin.assert:
+        that:
+          - result.changed
+
+    - name: Wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Disable the running activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        state: disabled
+
+    - name: Update the activation while it is stopping
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        description: "Updated while stopping"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+      register: result
+
+    - name: Get information about the updated activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+      register: activation_status
+
+    - name: Check that the activation was updated and enabled
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - activation_status.activations[0].description == "Updated while stopping"
+          - activation_status.activations[0].is_enabled
+
   always:
     - name: Delete rulebook activation
       ansible.eda.rulebook_activation:

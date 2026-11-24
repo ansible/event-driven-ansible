@@ -283,6 +283,7 @@ def _run(eda: FakeEDA, check_mode: bool = False, **params: Any) -> MagicMock:
         "rule_engine_credential_id": None,
         "state": "present",
         "restart_on_project_update": False,
+        "wait": True,
         **params,
     }
     module.check_mode = check_mode
@@ -330,3 +331,50 @@ def test_missing_activation_is_created_in_desired_state(
     assert result["changed"]
     assert eda.activation is not None
     assert eda.activation["is_enabled"] is is_enabled
+
+
+@pytest.fixture
+def no_sleep() -> Any:
+    with patch(f"{MODULE_PATH}.time.sleep") as sleep:
+        yield sleep
+
+
+def test_enable_waits_for_stopping_activation(no_sleep: MagicMock) -> None:
+    eda = FakeEDA(FakeEDA.stopped(status="stopping"), stop_after=2)
+
+    result = _exit(_run(eda, state="enabled"))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["is_enabled"]
+    assert no_sleep.called
+
+
+def test_update_waits_for_stopping_activation(no_sleep: MagicMock) -> None:
+    eda = FakeEDA(FakeEDA.stopped(status="stopping"), stop_after=2)
+
+    result = _exit(_run(eda, description="new", **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == "new"
+    assert eda.activation["is_enabled"]
+
+
+def test_no_wait_when_disabled(no_sleep: MagicMock) -> None:
+    eda = FakeEDA(FakeEDA.stopped(status="stopping"), stop_after=2)
+
+    msg = _failure(_run(eda, state="enabled", wait=False))
+
+    assert "Activation not enabled" in msg
+    no_sleep.assert_not_called()
+
+
+def test_wait_times_out(no_sleep: MagicMock) -> None:
+    eda = FakeEDA(FakeEDA.stopped(status="stopping"), stop_after=100)
+
+    with patch(f"{MODULE_PATH}.WAIT_TIMEOUT", 0):
+        msg = _failure(_run(eda, state="enabled"))
+
+    assert "Timeout waiting" in msg
+    assert "Last status: stopping" in msg

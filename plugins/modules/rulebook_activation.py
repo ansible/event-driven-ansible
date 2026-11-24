@@ -182,6 +182,15 @@ options:
     default: "present"
     choices: ["present", "absent", "disabled", "enabled"]
     type: str
+  wait:
+    description:
+      - Wait for a disabled activation to finish starting or stopping before
+        enabling or updating it.
+      - The API rejects these changes while the activation is starting or stopping,
+        for example right after it was disabled.
+    type: bool
+    default: true
+    version_added: 2.14.0
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
 """
@@ -292,6 +301,7 @@ id:
   sample: 37
 """
 
+import time
 import traceback
 from typing import Any, Dict, List
 
@@ -417,6 +427,33 @@ def process_event_streams(
         source_mappings.append(source_mapping)
 
     return source_mappings
+
+
+# The API rejects updates and enabling while an activation is in these states
+BUSY_STATUSES = ("starting", "running", "stopping", "unresponsive")
+WAIT_TIMEOUT = 120
+WAIT_INTERVAL = 2
+
+
+def wait_for_activation(controller: Controller, name: str) -> Dict[str, Any]:
+    """Wait until a disabled activation has finished starting or stopping.
+
+    Returns the activation as last read from the API.
+    """
+    start_time = time.time()
+    while True:
+        activation = controller.get_exactly_one("activations", name=name)
+        if not activation:
+            raise EDAError(f"Rulebook activation {name} no longer exists.")
+        if activation["status"] not in BUSY_STATUSES:
+            return activation
+        if time.time() - start_time >= WAIT_TIMEOUT:
+            raise EDAError(
+                f"Timeout waiting for rulebook activation {name} to finish "
+                f"starting or stopping after {WAIT_TIMEOUT} seconds. "
+                f"Last status: {activation['status']}"
+            )
+        time.sleep(WAIT_INTERVAL)
 
 
 def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
@@ -647,6 +684,7 @@ def main() -> None:
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
         restart_on_project_update=dict(type="bool", default=False),
+        wait=dict(type="bool", default=True),
     )
 
     # Define the state the activation is transitioning to, and uses
@@ -739,6 +777,21 @@ def main() -> None:
                     f"these parameters are required: {', '.join(missing)}."
                 )
             )
+
+    # A disabled activation can only be enabled or updated once it has
+    # finished starting or stopping. Disabling needs no wait.
+    if (
+        activation
+        and not activation["is_enabled"]
+        and activation["status"] in BUSY_STATUSES
+        and state != "disabled"
+        and module.params.get("wait")
+        and not module.check_mode
+    ):
+        try:
+            activation = wait_for_activation(controller, name)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to wait for rulebook activation: {e}")
 
     # Parse credential IDs in existing activation
     if activation:
