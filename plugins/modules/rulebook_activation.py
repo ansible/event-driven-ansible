@@ -188,12 +188,28 @@ options:
         because the API only accepts updates to a disabled activation.
       - With I(enabled), the definition of an existing, disabled activation is applied in
         the same way before it is started.
-      - A running activation is not restarted to apply a changed definition. With I(present)
-        the update fails, because the API only accepts updates to a disabled activation.
-        With I(enabled) the changed definition is not applied, and a warning is shown.
+      - A running activation is not restarted to apply a changed definition, unless
+        I(restart_on_change) is set. With I(present) the update fails, because the API only
+        accepts updates to a disabled activation. With I(enabled) the changed definition is
+        not applied, and a warning is shown.
     default: "present"
     choices: ["present", "absent", "disabled", "enabled"]
     type: str
+  restart_on_change:
+    description:
+      - Restart a running activation to apply a changed definition with I(state=present)
+        or I(state=enabled).
+      - The activation is disabled, updated and started again, only when its definition
+        differs from the given one.
+      - The activation does not receive events while it restarts, so events can be missed.
+      - Without this option, a running activation is not restarted. With I(state=present)
+        the update fails, because the API only accepts updates to a disabled activation.
+        With I(state=enabled) the changed definition is not applied, and a warning is shown.
+      - Not used with I(state=disabled), which always disables the activation before
+        applying its definition.
+    type: bool
+    default: false
+    version_added: 2.14.0
   wait:
     description:
       - Wait for a disabled activation to finish starting or stopping before
@@ -311,6 +327,17 @@ EXAMPLES = r"""
     name: "Example Rulebook Activation"
     state: absent
     restart_on_project_update: false
+
+- name: Apply a changed definition, restarting the activation if it is running
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    extra_vars:
+      message: "Updated"
+    restart_on_change: true
 """
 
 
@@ -478,6 +505,13 @@ def wait_for_activation(controller: Controller, name: str) -> Dict[str, Any]:
                 f"Last status: {activation['status']}"
             )
         time.sleep(WAIT_INTERVAL)
+
+
+def parse_credential_ids(activation: Dict[str, Any]) -> None:
+    """Replace the credentials of an activation read from the API with their IDs."""
+    activation["eda_credentials"] = [
+        credential["id"] for credential in activation["eda_credentials"]
+    ]
 
 
 def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
@@ -708,6 +742,7 @@ def main() -> None:
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
         restart_on_project_update=dict(type="bool", default=False),
+        restart_on_change=dict(type="bool", default=False),
         wait=dict(type="bool", default=True),
     )
 
@@ -848,10 +883,7 @@ def main() -> None:
 
     # Parse credential IDs in existing activation
     if activation:
-        credential_ids = [
-            credential_id["id"] for credential_id in activation["eda_credentials"]
-        ]
-        activation["eda_credentials"] = credential_ids
+        parse_credential_ids(activation)
 
     if toggle_only:
         change_state = endpoint_state(activation=activation, state=state)
@@ -888,8 +920,30 @@ def main() -> None:
     ):
         activation_params["extra_var"] = activation["extra_var"]
 
+    # With restart_on_change, restart a running activation to apply a changed
+    # definition: disable it here, then the update below starts it again
+    restarted = False
+    if (
+        activation
+        and activation["is_enabled"]
+        and state in ("present", "enabled")
+        and module.params.get("restart_on_change")
+        and controller.objects_could_be_different(activation, activation_params)
+    ):
+        try:
+            controller.post_endpoint(endpoint=f"activations/{activation['id']}/disable")
+            if not module.check_mode:
+                if module.params.get("wait"):
+                    activation = wait_for_activation(controller, name)
+                else:
+                    activation = controller.get_exactly_one("activations", name=name)
+                parse_credential_ids(activation)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to restart rulebook activation: {e}")
+        restarted = True
+
     # A running activation is not restarted to apply its definition
-    if activation and activation["is_enabled"] and state == "enabled":
+    if activation and activation["is_enabled"] and state == "enabled" and not restarted:
         if controller.objects_could_be_different(activation, activation_params):
             module.warn(
                 f"Rulebook activation {name} is running, so its changed "

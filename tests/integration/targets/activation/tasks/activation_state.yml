@@ -327,6 +327,68 @@
         that:
           - not result.changed
 
+    - name: Enable the activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        state: enabled
+
+    - name: Wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Apply a changed definition to the running activation with restart_on_change
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        description: "Restarted on change"
+        restart_on_change: true
+      register: result
+
+    - name: Wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Check that the activation was restarted with the changed definition
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - activation_status.activations[0].description == "Restarted on change"
+          - activation_status.activations[0].is_enabled
+
+    - name: Apply the same definition with restart_on_change again
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        description: "Restarted on change"
+        restart_on_change: true
+      register: result
+
+    - name: Get information about the running activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+      register: activation_status_after
+
+    - name: Check that the activation was not restarted again
+      ansible.builtin.assert:
+        that:
+          - not result.changed
+          - activation_status_after.activations[0].modified_at == activation_status.activations[0].modified_at
+          - activation_status_after.activations[0].status == "running"
+
   always:
     - name: Delete rulebook activation
       ansible.eda.rulebook_activation:

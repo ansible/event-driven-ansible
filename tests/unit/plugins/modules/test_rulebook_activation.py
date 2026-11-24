@@ -538,3 +538,59 @@ def test_enabled_does_not_warn_when_running_definition_is_unchanged() -> None:
 
     assert not _exit(module)["changed"]
     module.warn.assert_not_called()
+
+
+@pytest.mark.parametrize("state", ["present", "enabled"])
+def test_restart_on_change_restarts_running_activation(
+    state: str, no_sleep: MagicMock
+) -> None:
+    eda = FakeEDA(FakeEDA.running(), stop_after=1)
+
+    result = _exit(
+        _run(eda, state=state, restart_on_change=True, description="new", **DEFINITION)
+    )
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == "new"
+    assert eda.activation["is_enabled"]
+    assert ("POST", f"activations/{ACTIVATION_ID}/disable") in eda.requests
+
+
+@pytest.mark.parametrize("state", ["present", "enabled"])
+def test_restart_on_change_does_not_restart_unchanged_activation(state: str) -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    result = _exit(_run(eda, state=state, restart_on_change=True, **DEFINITION))
+
+    assert not result["changed"]
+    assert [method for method, _ in eda.requests] == ["GET"] * len(eda.requests)
+
+
+def test_restart_on_change_in_check_mode_changes_nothing() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    result = _exit(
+        _run(
+            eda,
+            check_mode=True,
+            restart_on_change=True,
+            description="new",
+            **DEFINITION,
+        )
+    )
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == ""
+    assert [method for method, _ in eda.requests] == ["GET"] * len(eda.requests)
+
+
+def test_present_without_restart_on_change_fails_for_running_activation() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    msg = _failure(_run(eda, description="new", **DEFINITION))
+
+    assert "not in disabled mode and in stopped status" in msg
+    assert eda.activation is not None
+    assert eda.activation["is_enabled"]
