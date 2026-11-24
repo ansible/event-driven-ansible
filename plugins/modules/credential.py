@@ -151,7 +151,7 @@ test_result:
 """
 
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -160,9 +160,48 @@ from ..module_utils.client import Client
 from ..module_utils.common import lookup_resource_id
 from ..module_utils.controller import Controller
 from ..module_utils.errors import EDAError
+from ..module_utils.redaction import (
+    RedactingAnsibleModule,
+    protect_dict_values,
+    secret_field_ids,
+)
 
 
-def create_params(module: AnsibleModule, controller: Controller) -> dict[str, Any]:
+def _resolve_credential_type(
+    module: AnsibleModule,
+    controller: Controller,
+    credential: Optional[dict[str, Any]],
+) -> dict[str, Any]:
+    """Return the credential type that describes the credential inputs."""
+    name = module.params.get("credential_type_name")
+    if name:
+        try:
+            return controller.get_exactly_one("credential-types", name=name)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to lookup credential type: {e}")
+
+    type_id = None
+    if credential:
+        credential_type = credential.get("credential_type")
+        if isinstance(credential_type, dict):
+            type_id = credential_type.get("id")
+        elif isinstance(credential_type, int):
+            type_id = credential_type
+        type_id = type_id or credential.get("credential_type_id")
+
+    if type_id:
+        response = controller.get_endpoint(f"credential-types/{type_id}/")
+        if response.status == 200 and isinstance(response.json, dict):
+            return response.json
+
+    return {}
+
+
+def create_params(
+    module: AnsibleModule,
+    controller: Controller,
+    credential_type: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     credential_params: dict[str, Any] = {}
 
     credential_params = {}
@@ -173,7 +212,9 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
         credential_params["inputs"] = module.params["inputs"]
 
     credential_type_id = None
-    if module.params.get("credential_type_name"):
+    if credential_type:
+        credential_type_id = credential_type.get("id")
+    elif module.params.get("credential_type_name"):
         credential_type_id = lookup_resource_id(
             module,
             controller,
@@ -196,7 +237,20 @@ def create_params(module: AnsibleModule, controller: Controller) -> dict[str, An
     return credential_params
 
 
-def main() -> None:
+def _protect_inputs(module: AnsibleModule, credential_type: dict[str, Any]) -> None:
+    """Narrow the fail-closed no_log registration using the type schema."""
+    schema = credential_type.get("inputs") or {}
+    known_fields = {
+        field["id"]
+        for field in schema.get("fields") or []
+        if isinstance(field, dict) and field.get("id")
+    }
+    inputs = module.params.get("inputs")
+    if isinstance(inputs, dict) and schema and set(inputs) <= known_fields:
+        protect_dict_values(module, "inputs", secret_field_ids(schema))
+
+
+def build_argument_spec() -> dict[str, Any]:
     argument_spec = dict(
         name=dict(type="str", required=True),
         new_name=dict(type="str"),
@@ -210,8 +264,15 @@ def main() -> None:
     )
 
     argument_spec.update(AUTH_ARGSPEC)
+    return argument_spec
 
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+
+def main() -> None:
+    argument_spec = build_argument_spec()
+
+    module = RedactingAnsibleModule(
+        argument_spec=argument_spec, supports_check_mode=True
+    )
     copy_from = module.params.get("copy_from", None)
 
     required_if = []
@@ -224,9 +285,16 @@ def main() -> None:
             )
         ]
 
-    module = AnsibleModule(
+    module = RedactingAnsibleModule(
         argument_spec=argument_spec, required_if=required_if, supports_check_mode=True
     )
+
+    # ``inputs`` is declared with no_log=True, but ansible-core collects
+    # no_log values before coercing the parameter to a dict. A value supplied
+    # as a JSON/k=v string is therefore not registered and would be printed
+    # in clear text. Re-register the coerced values. The credential type is
+    # not known yet, so register all of them (fail closed).
+    protect_dict_values(module, "inputs")
 
     client = Client(
         host=module.params.get("controller_host"),
@@ -256,6 +324,14 @@ def main() -> None:
         )
     except EDAError as e:
         module.fail_json(msg=f"Failed to get credential: {e}")
+
+    # Resolve the credential type schema so only the fields it marks as
+    # secret are masked. If the type or the schema cannot be trusted, leave
+    # the fail-closed registration performed above untouched.
+    credential_type: dict[str, Any] = {}
+    if state == "present" and not copy_from:
+        credential_type = _resolve_credential_type(module, controller, credential)
+        _protect_inputs(module, credential_type)
 
     if state == "test":
         if not credential:
@@ -319,7 +395,7 @@ def main() -> None:
             module.fail_json(msg=f"Failed to delete credential: {e}")
 
     # Activation Data that will be sent for create/update
-    credential_params = create_params(module, controller)
+    credential_params = create_params(module, controller, credential_type)
     credential_params["name"] = (
         new_name
         if new_name

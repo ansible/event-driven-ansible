@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+
+# Copyright: Contributors to the Ansible project
+# Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
+
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+import json
+from typing import Any, Callable, Iterator, Optional
+
+import pytest
+from ansible.module_utils import basic
+from ansible.module_utils.common.text.converters import to_bytes
+
+ModuleBuilder = Callable[..., Any]
+
+
+@pytest.fixture
+def build_module() -> Iterator[ModuleBuilder]:
+    """Instantiate an AnsibleModule with the given argument spec and args.
+
+    ansible-core reads module arguments from ``basic._ANSIBLE_ARGS``. The
+    original value is restored after the test so tests do not leak state.
+    """
+
+    original_args = getattr(basic, "_ANSIBLE_ARGS", None)
+    original_profile = getattr(basic, "_ANSIBLE_PROFILE", None)
+
+    def _build(
+        argument_spec: dict[str, Any],
+        params: dict[str, Any],
+        module_class: Optional[Callable[..., Any]] = None,
+    ) -> Any:
+        basic._ANSIBLE_ARGS = to_bytes(json.dumps({"ANSIBLE_MODULE_ARGS": params}))
+        # ansible-core >= 2.19 requires a serialization profile; older
+        # versions ignore the attribute.
+        basic._ANSIBLE_PROFILE = "legacy"
+        if module_class is None:
+            module_class = basic.AnsibleModule
+        return module_class(
+            argument_spec=argument_spec,
+            supports_check_mode=True,
+        )
+
+    yield _build
+    basic._ANSIBLE_ARGS = original_args
+    basic._ANSIBLE_PROFILE = original_profile
