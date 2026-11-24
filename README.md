@@ -120,7 +120,7 @@ You can either call modules, rulebooks and playbooks by their Fully Qualified Co
       project: "Example Project"
       rulebook_name: "basic_short.yml"
       decision_environment_name: "Example Decision Environment"
-      enabled: False
+      state: disabled
       awx_token_name: "Example AWX Token"
 
   - name: Get information about the rulebook activation
