@@ -69,10 +69,13 @@ options:
     type: str
   enabled:
     description:
+      - Deprecated, use I(state=disabled) instead to create or keep a disabled
+        activation.
       - Whether the rulebook activation is enabled or not.
       - This field will be removed in version 3.0.0.
       - The logic of controlling the state of an activation is going to be controlled
         by the C(state) parameter itself.
+      - Until then, I(enabled=false) with I(state=present) is the same as I(state=disabled).
     type: bool
     default: true
   decision_environment_name:
@@ -752,6 +755,9 @@ def main() -> None:
                 "is present for this version of EDA."
             ),
         )
+    # enabled is deprecated in favor of state, but still honored until removed
+    if state == "present" and module.params.get("enabled") is False:
+        state = module.params["state"] = "disabled"
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:

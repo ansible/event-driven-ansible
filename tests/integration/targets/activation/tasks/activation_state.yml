@@ -287,6 +287,44 @@
           - activation_status.activations[0].description == "Updated while enabling"
           - activation_status.activations[0].restart_count == restart_count | int
 
+    - name: Apply the definition with the deprecated enabled option set to false
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        description: "Updated while enabling"
+        enabled: false
+      register: result
+
+    - name: Get information about the activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+      register: activation_status
+
+    - name: Check that the activation was disabled
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - not activation_status.activations[0].is_enabled
+
+    - name: Apply the same definition with enabled set to false again
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        description: "Updated while enabling"
+        enabled: false
+      register: result
+
+    - name: Check that the activation was not changed
+      ansible.builtin.assert:
+        that:
+          - not result.changed
+
   always:
     - name: Delete rulebook activation
       ansible.eda.rulebook_activation:

@@ -487,3 +487,35 @@ def test_enabled_with_unchanged_definition_starts_disabled_activation() -> None:
     assert result["changed"]
     assert eda.activation is not None
     assert eda.activation["is_enabled"]
+
+
+def test_deprecated_enabled_false_creates_disabled_activation() -> None:
+    eda = FakeEDA()
+
+    result = _exit(_run(eda, enabled=False, **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert not eda.activation["is_enabled"]
+
+
+def test_deprecated_enabled_false_disables_running_activation(
+    no_sleep: MagicMock,
+) -> None:
+    eda = FakeEDA(FakeEDA.running(), stop_after=1)
+
+    result = _exit(_run(eda, enabled=False, description="new", **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == "new"
+    assert not eda.activation["is_enabled"]
+
+
+def test_deprecated_enabled_false_does_not_override_state_enabled() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    _exit(_run(eda, state="enabled", enabled=False, **DEFINITION))
+
+    assert eda.activation is not None
+    assert eda.activation["is_enabled"]
