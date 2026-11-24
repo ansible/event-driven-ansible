@@ -204,6 +204,7 @@
         decision_environment_name: "{{ decision_env_name }}"
         organization_name: "{{ organization_name }}"
         state: disabled
+      diff: true
       register: result
 
     - name: Get information about the disabled activation
@@ -217,6 +218,9 @@
           - result.changed
           - activation_status.activations[0].description == "Updated while disabled"
           - not activation_status.activations[0].is_enabled
+          - result.diff.before.description == "Updated while disabling"
+          - result.diff.after.description == "Updated while disabled"
+          - not result.diff.after.is_enabled
 
     - name: Enable the disabled activation and update its definition
       ansible.eda.rulebook_activation:

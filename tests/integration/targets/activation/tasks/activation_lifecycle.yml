@@ -194,12 +194,15 @@
         extra_vars:
           zeta: 2
       check_mode: true
+      diff: true
       register: result
 
-    - name: Check that changed extra_vars are detected
+    - name: Check that changed extra_vars are detected and shown in the diff
       ansible.builtin.assert:
         that:
           - result.changed
+          - (result.diff.before.extra_var | from_yaml).zeta == 1
+          - "(result.diff.after.extra_var | from_yaml) == {'zeta': 2}"
 
     - name: Apply extra_vars that differ only in a value's type in check_mode
       ansible.eda.rulebook_activation:

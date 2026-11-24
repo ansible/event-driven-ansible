@@ -17,6 +17,9 @@ author:
 short_description: Manage rulebook activations in the EDA Controller
 description:
   - This module allows the user to create, delete, or restart rulebook activations in the EDA Controller.
+notes:
+  - Supports check mode and diff mode. In diff mode, the activation fields that the
+    module manages are shown before and after a change, with IDs for related resources.
 options:
   name:
     description:
@@ -507,6 +510,27 @@ def wait_for_activation(controller: Controller, name: str) -> Dict[str, Any]:
         time.sleep(WAIT_INTERVAL)
 
 
+# Activation fields shown in diff mode when an activation is deleted
+DIFF_FIELDS = (
+    "name",
+    "description",
+    "is_enabled",
+    "rulebook_id",
+    "decision_environment_id",
+    "organization_id",
+    "extra_var",
+    "restart_policy",
+    "log_level",
+    "enable_persistence",
+    "restart_on_project_update",
+    "eda_credentials",
+    "awx_token_id",
+    "k8s_service_name",
+    "source_mappings",
+    "rule_engine_credential_id",
+)
+
+
 def parse_credential_ids(activation: Dict[str, Any]) -> None:
     """Replace the credentials of an activation read from the API with their IDs."""
     activation["eda_credentials"] = [
@@ -800,10 +824,19 @@ def main() -> None:
     except EDAError as e:
         module.fail_json(msg=f"Failed to get rulebook activation: {e}")
 
+    # The activation before any change, and the change shown in diff mode
+    original = dict(activation)
+    if original:
+        parse_credential_ids(original)
+    diff: Dict[str, Any] = {}
+
     if state == "absent":
         try:
             result = controller.delete_if_needed(activation, endpoint="activations")
-            module.exit_json(**result)
+            if module._diff and result.get("changed"):
+                diff["before"] = {k: original[k] for k in DIFF_FIELDS if k in original}
+                diff["after"] = {}
+            module.exit_json(**result, **({"diff": diff} if diff else {}))
         except EDAError as e:
             module.fail_json(msg=f"Failed to delete rulebook activation: {e}")
 
@@ -893,7 +926,10 @@ def main() -> None:
                 # Call disable or enable endpoint
                 endpoint = f"activations/{activation['id']}/{change_state}"
                 controller.post_endpoint(endpoint=endpoint)
-                module.exit_json(changed=True)
+                if module._diff:
+                    diff["before"] = {"is_enabled": activation["is_enabled"]}
+                    diff["after"] = {"is_enabled": change_state == "enable"}
+                module.exit_json(changed=True, **({"diff": diff} if diff else {}))
             except EDAError as e:
                 module.fail_json(
                     msg=f"Failed to enable/disable rulebook activation: {e}"
@@ -961,7 +997,10 @@ def main() -> None:
             item_type="activation",
         )
         result["changed"] = result.get("changed", False) or disabled
-        module.exit_json(**result)
+        if module._diff and result["changed"]:
+            diff["before"] = {k: original.get(k) for k in activation_params if original}
+            diff["after"] = activation_params
+        module.exit_json(**result, **({"diff": diff} if diff else {}))
     except EDAError as e:
         module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
 

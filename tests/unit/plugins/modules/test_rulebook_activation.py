@@ -252,7 +252,9 @@ class FakeEDA:
         return Mock(status=200, json=self._read())
 
 
-def _run(eda: FakeEDA, check_mode: bool = False, **params: Any) -> MagicMock:
+def _run(
+    eda: FakeEDA, check_mode: bool = False, diff: bool = False, **params: Any
+) -> MagicMock:
     """Run main() with the given parameters against eda; return the module mock."""
     module = MagicMock()
     module.params = {
@@ -287,6 +289,7 @@ def _run(eda: FakeEDA, check_mode: bool = False, **params: Any) -> MagicMock:
         **params,
     }
     module.check_mode = check_mode
+    module._diff = diff
     module.exit_json.side_effect = _AnsibleExit
     module.fail_json.side_effect = _AnsibleExit
 
@@ -594,3 +597,84 @@ def test_present_without_restart_on_change_fails_for_running_activation() -> Non
     assert "not in disabled mode and in stopped status" in msg
     assert eda.activation is not None
     assert eda.activation["is_enabled"]
+
+
+def test_diff_on_create() -> None:
+    eda = FakeEDA()
+
+    result = _exit(_run(eda, diff=True, state="disabled", **DEFINITION))
+
+    assert result["diff"]["before"] == {}
+    assert result["diff"]["after"]["name"] == "activation"
+    assert result["diff"]["after"]["is_enabled"] is False
+
+
+def test_diff_on_update() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(
+        _run(eda, diff=True, state="disabled", description="new", **DEFINITION)
+    )
+
+    assert result["diff"]["before"]["description"] == ""
+    assert result["diff"]["after"]["description"] == "new"
+    assert result["diff"]["before"].keys() == result["diff"]["after"].keys()
+
+
+def test_diff_on_changed_extra_vars_in_check_mode() -> None:
+    eda = FakeEDA(FakeEDA.stopped(extra_var="alpha: 1\n"))
+
+    result = _exit(
+        _run(
+            eda,
+            check_mode=True,
+            diff=True,
+            state="disabled",
+            extra_vars={"alpha": 2},
+            **DEFINITION,
+        )
+    )
+
+    assert result["diff"]["before"]["extra_var"] == "alpha: 1\n"
+    assert result["diff"]["after"]["extra_var"] == "alpha: 2\n"
+    assert eda.activation is not None
+    assert eda.activation["extra_var"] == "alpha: 1\n"
+
+
+def test_diff_on_disable() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    result = _exit(_run(eda, diff=True, state="disabled"))
+
+    assert result["diff"] == {
+        "before": {"is_enabled": True},
+        "after": {"is_enabled": False},
+    }
+
+
+def test_diff_on_delete() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+    eda.delete = MagicMock(return_value=Mock(status=204, json=None))  # type: ignore
+
+    result = _exit(_run(eda, diff=True, state="absent"))
+
+    assert result["diff"]["before"]["name"] == "activation"
+    assert result["diff"]["after"] == {}
+
+
+def test_no_diff_without_change() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(_run(eda, diff=True, state="disabled", **DEFINITION))
+
+    assert not result["changed"]
+    assert "diff" not in result
+
+
+def test_no_diff_without_diff_mode() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(_run(eda, state="disabled", description="new", **DEFINITION))
+
+    assert result["changed"]
+    assert "diff" not in result
