@@ -190,7 +190,7 @@ options:
         the same way before it is started.
       - A running activation is not restarted to apply a changed definition. With I(present)
         the update fails, because the API only accepts updates to a disabled activation.
-        With I(enabled) the changed definition is not applied.
+        With I(enabled) the changed definition is not applied, and a warning is shown.
     default: "present"
     choices: ["present", "absent", "disabled", "enabled"]
     type: str
@@ -799,13 +799,10 @@ def main() -> None:
             )
 
     # Without the full definition, enabled and disabled only switch an
-    # existing activation on or off. A running activation is not restarted
-    # to apply its definition.
+    # existing activation on or off
     has_definition = not missing
     toggle_only = (
-        bool(activation)
-        and state in ("enabled", "disabled")
-        and (not has_definition or (state == "enabled" and activation["is_enabled"]))
+        bool(activation) and state in ("enabled", "disabled") and not has_definition
     )
     if (
         toggle_only
@@ -890,6 +887,15 @@ def main() -> None:
         )
     ):
         activation_params["extra_var"] = activation["extra_var"]
+
+    # A running activation is not restarted to apply its definition
+    if activation and activation["is_enabled"] and state == "enabled":
+        if controller.objects_could_be_different(activation, activation_params):
+            module.warn(
+                f"Rulebook activation {name} is running, so its changed "
+                "definition was not applied."
+            )
+        module.exit_json(changed=False)
 
     # If the state was one of (present, enabled or disabled), and we can let the module
     # build or update the existing activation, this will return on its own

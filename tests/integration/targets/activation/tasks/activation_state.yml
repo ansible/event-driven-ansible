@@ -259,6 +259,7 @@
       ansible.builtin.assert:
         that:
           - not result.changed
+          - result.warnings | default([]) | select('search', 'definition was not applied') | list | length == 0
 
     - name: Record the restart count of the running activation
       set_fact:
@@ -284,6 +285,7 @@
       ansible.builtin.assert:
         that:
           - not result.changed
+          - result.warnings | default([]) | select('search', 'definition was not applied') | list | length == 1
           - activation_status.activations[0].description == "Updated while enabling"
           - activation_status.activations[0].restart_count == restart_count | int
 

@@ -519,3 +519,22 @@ def test_deprecated_enabled_false_does_not_override_state_enabled() -> None:
 
     assert eda.activation is not None
     assert eda.activation["is_enabled"]
+
+
+def test_enabled_warns_when_running_definition_differs() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    module = _run(eda, state="enabled", description="new", **DEFINITION)
+
+    assert not _exit(module)["changed"]
+    module.warn.assert_called_once()
+    assert "changed definition was not applied" in module.warn.call_args.args[0]
+
+
+def test_enabled_does_not_warn_when_running_definition_is_unchanged() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    module = _run(eda, state="enabled", **DEFINITION)
+
+    assert not _exit(module)["changed"]
+    module.warn.assert_not_called()
