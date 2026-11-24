@@ -148,6 +148,76 @@
           - activation_status.activations[0].description == "Updated while stopping"
           - activation_status.activations[0].is_enabled
 
+    - name: Wait for the activation to be running
+      register: activation_status
+      until: activation_status.activations[0].status == "running"
+      retries: 30
+      delay: 2
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+
+    - name: Disable the running activation and update its definition
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        description: "Updated while disabling"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        state: disabled
+      register: result
+
+    - name: Get information about the disabled activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+      register: activation_status
+
+    - name: Check that the activation was disabled and updated
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - activation_status.activations[0].description == "Updated while disabling"
+          - not activation_status.activations[0].is_enabled
+
+    - name: Disable the activation with the same definition again
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        description: "Updated while disabling"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        state: disabled
+      register: result
+
+    - name: Check that the activation was not changed
+      ansible.builtin.assert:
+        that:
+          - not result.changed
+
+    - name: Update the definition of the disabled activation
+      ansible.eda.rulebook_activation:
+        name: "{{ activation_name }}"
+        description: "Updated while disabled"
+        project_name: "{{ project_name }}"
+        rulebook_name: "{{ rulebook_name }}"
+        decision_environment_name: "{{ decision_env_name }}"
+        organization_name: "{{ organization_name }}"
+        state: disabled
+      register: result
+
+    - name: Get information about the disabled activation
+      ansible.eda.rulebook_activation_info:
+        name: "{{ activation_name }}"
+      register: activation_status
+
+    - name: Check that the activation was updated and is still disabled
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - activation_status.activations[0].description == "Updated while disabled"
+          - not activation_status.activations[0].is_enabled
+
   always:
     - name: Delete rulebook activation
       ansible.eda.rulebook_activation:

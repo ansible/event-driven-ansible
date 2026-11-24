@@ -378,3 +378,79 @@ def test_wait_times_out(no_sleep: MagicMock) -> None:
 
     assert "Timeout waiting" in msg
     assert "Last status: stopping" in msg
+
+
+def test_disabled_with_definition_disables_and_updates_running_activation(
+    no_sleep: MagicMock,
+) -> None:
+    eda = FakeEDA(FakeEDA.running(), stop_after=1)
+
+    result = _exit(_run(eda, state="disabled", description="new", **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == "new"
+    assert not eda.activation["is_enabled"]
+
+
+def test_disabled_with_definition_updates_stopped_activation() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(_run(eda, state="disabled", description="new", **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == "new"
+    assert not eda.activation["is_enabled"]
+
+
+def test_disabled_with_unchanged_definition_is_idempotent() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    result = _exit(_run(eda, state="disabled", **DEFINITION))
+
+    assert not result["changed"]
+    assert ("PATCH", "activations") not in eda.requests
+
+
+def test_disabled_without_definition_only_disables() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    result = _exit(_run(eda, state="disabled", description="new"))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["description"] == ""
+    assert not eda.activation["is_enabled"]
+
+
+def test_partial_definition_warns() -> None:
+    eda = FakeEDA(FakeEDA.stopped())
+
+    module = _run(eda, state="disabled", project_name="project")
+
+    module.warn.assert_called_once()
+    assert "decision_environment_name" in module.warn.call_args.args[0]
+
+
+def test_disabled_with_definition_in_check_mode_changes_nothing() -> None:
+    eda = FakeEDA(FakeEDA.running())
+
+    result = _exit(
+        _run(eda, check_mode=True, state="disabled", description="new", **DEFINITION)
+    )
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["is_enabled"]
+    assert [method for method, _ in eda.requests] == ["GET"] * len(eda.requests)
+
+
+def test_disabled_with_definition_without_wait_fails_while_stopping() -> None:
+    eda = FakeEDA(FakeEDA.running(), stop_after=1)
+
+    msg = _failure(
+        _run(eda, state="disabled", description="new", wait=False, **DEFINITION)
+    )
+
+    assert "not in disabled mode and in stopped status" in msg

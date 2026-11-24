@@ -179,6 +179,10 @@ options:
         doesn't exist already.
       - To create a disabled activation, specify C(state) as I(disabled).
       - Essentially, this parameter deprecates the usage of C(enabled).
+      - With I(disabled), the definition of an existing activation is also applied when
+        I(project_name), I(rulebook_name), I(decision_environment_name) and, on AAP 2.5
+        and later, I(organization_name) are given. A running activation is disabled first,
+        because the API only accepts updates to a disabled activation.
     default: "present"
     choices: ["present", "absent", "disabled", "enabled"]
     type: str
@@ -274,9 +278,18 @@ EXAMPLES = r"""
 - name: Disable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
-    new_name: "Example Rulebook Activation New Name"
     state: disabled
     restart_on_project_update: false
+
+- name: Update a rulebook activation and keep it disabled
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    log_level: debug
+    state: disabled
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
@@ -428,6 +441,9 @@ def process_event_streams(
 
     return source_mappings
 
+
+# Parameters that an activation's definition cannot be created or updated without
+DEFINITION_PARAMS = ("project_name", "rulebook_name", "decision_environment_name")
 
 # The API rejects updates and enabling while an activation is in these states
 BUSY_STATUSES = ("starting", "running", "stopping", "unresponsive")
@@ -757,19 +773,12 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to restart rulebook activation: {e}.")
 
-    # An activation can only be created from its full definition
+    # An activation can only be created or updated from its full definition
+    definition_params = DEFINITION_PARAMS + (
+        () if is_aap_24 else ("organization_name",)
+    )
+    missing = [param for param in definition_params if not module.params.get(param)]
     if not activation:
-        missing = [
-            param
-            for param in (
-                "project_name",
-                "rulebook_name",
-                "decision_environment_name",
-            )
-            if not module.params.get(param)
-        ]
-        if not is_aap_24 and organization_name is None:
-            missing.append("organization_name")
         if missing:
             module.fail_json(
                 msg=(
@@ -778,13 +787,48 @@ def main() -> None:
                 )
             )
 
+    # Without the full definition, enabled and disabled only switch an
+    # existing activation on or off
+    has_definition = not missing
+    toggle_only = (
+        bool(activation)
+        and state in ("enabled", "disabled")
+        and (state == "enabled" or not has_definition)
+    )
+    if (
+        toggle_only
+        and not has_definition
+        and any(module.params.get(param) for param in DEFINITION_PARAMS)
+    ):
+        module.warn(
+            f"The activation definition is not applied with state {state}, "
+            f"because these parameters are missing: {', '.join(missing)}."
+        )
+
+    # The API only accepts updates to a disabled activation, so disable an
+    # activation that is meant to be disabled before applying its definition
+    disabled = False
+    if (
+        state == "disabled"
+        and activation
+        and has_definition
+        and activation["is_enabled"]
+    ):
+        try:
+            controller.post_endpoint(endpoint=f"activations/{activation['id']}/disable")
+            if not module.check_mode:
+                activation = controller.get_exactly_one("activations", name=name)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to disable rulebook activation: {e}")
+        disabled = True
+
     # A disabled activation can only be enabled or updated once it has
-    # finished starting or stopping. Disabling needs no wait.
+    # finished starting or stopping. Only disabling it needs no wait.
     if (
         activation
         and not activation["is_enabled"]
         and activation["status"] in BUSY_STATUSES
-        and state != "disabled"
+        and not (toggle_only and state == "disabled")
         and module.params.get("wait")
         and not module.check_mode
     ):
@@ -800,7 +844,7 @@ def main() -> None:
         ]
         activation["eda_credentials"] = credential_ids
 
-    if state and state in ("enabled", "disabled") and activation:
+    if toggle_only:
         change_state = endpoint_state(activation=activation, state=state)
 
         if change_state:
@@ -844,6 +888,7 @@ def main() -> None:
             endpoint="activations",
             item_type="activation",
         )
+        result["changed"] = result.get("changed", False) or disabled
         module.exit_json(**result)
     except EDAError as e:
         module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
