@@ -36,21 +36,24 @@ options:
   project_name:
     description:
       - The name of the project associated with the rulebook activation.
-      - Required when state is present.
+      - Required to create or update an activation.
     type: str
     aliases:
       - project
   rulebook_name:
     description:
       - The name of the rulebook associated with the rulebook activation.
-      - Required when state is present.
+      - Required to create or update an activation.
     type: str
     aliases:
       - rulebook
   extra_vars:
     description:
       - The extra variables for the rulebook activation.
-    type: str
+      - Either a dictionary or a string in YAML or JSON format.
+      - A dictionary is converted to YAML before it is sent to the API.
+      - An empty dictionary or string removes all variables.
+    type: raw
   restart:
     description:
       - Performs a restart of the activation. This is a non idempotent operation.
@@ -66,16 +69,19 @@ options:
     type: str
   enabled:
     description:
+      - Deprecated, use I(state=disabled) instead to create or keep a disabled
+        activation.
       - Whether the rulebook activation is enabled or not.
       - This field will be removed in version 3.0.0.
       - The logic of controlling the state of an activation is going to be controlled
         by the C(state) parameter itself.
+      - Until then, I(enabled=false) with I(state=present) is the same as I(state=disabled).
     type: bool
     default: true
   decision_environment_name:
     description:
       - The name of the decision environment associated with the rulebook activation.
-      - Required when state is present.
+      - Required to create or update an activation.
     type: str
     aliases:
       - decision_environment
@@ -88,7 +94,8 @@ options:
       - token
   organization_name:
     description:
-      - The name of the organization. Required when state is present.
+      - The name of the organization.
+      - Required to create or update an activation on AAP 2.5 and later.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
@@ -169,15 +176,33 @@ options:
       - Desired state of the resource.
       - The state of an activation itself is controlled by this parameter, whether I(enabled) or
         I(disabled).
-      - When an activation is created, it is I(enabled) by default. Thus, I(present) is equivalent to
-        I(enabled).
+      - When an activation is created, it is I(enabled) by default. Thus, I(present) and I(enabled)
+        create the same activation.
       - Whether I(present), I(enabled), or I(disabled) is specified, an activation will be created if it
         doesn't exist already.
       - To create a disabled activation, specify C(state) as I(disabled).
       - Essentially, this parameter deprecates the usage of C(enabled).
+      - With I(disabled), the definition of an existing activation is also applied when
+        I(project_name), I(rulebook_name), I(decision_environment_name) and, on AAP 2.5
+        and later, I(organization_name) are given. A running activation is disabled first,
+        because the API only accepts updates to a disabled activation.
+      - With I(enabled), the definition of an existing, disabled activation is applied in
+        the same way before it is started.
+      - A running activation is not restarted to apply a changed definition. With I(present)
+        the update fails, because the API only accepts updates to a disabled activation.
+        With I(enabled) the changed definition is not applied.
     default: "present"
     choices: ["present", "absent", "disabled", "enabled"]
     type: str
+  wait:
+    description:
+      - Wait for a disabled activation to finish starting or stopping before
+        enabling or updating it.
+      - The API rejects these changes while the activation is starting or stopping,
+        for example right after it was disabled.
+    type: bool
+    default: true
+    version_added: 2.14.0
 extends_documentation_fragment:
   - ansible.eda.eda_controller.auths
 """
@@ -261,9 +286,18 @@ EXAMPLES = r"""
 - name: Disable a rulebook activation
   ansible.eda.rulebook_activation:
     name: "Example Rulebook Activation"
-    new_name: "Example Rulebook Activation New Name"
     state: disabled
     restart_on_project_update: false
+
+- name: Update a rulebook activation and keep it disabled
+  ansible.eda.rulebook_activation:
+    name: "Example Rulebook Activation"
+    project_name: "Example Project"
+    rulebook_name: "hello_controller.yml"
+    decision_environment_name: "Example Decision Environment"
+    organization_name: "Default"
+    log_level: debug
+    state: disabled
 
 - name: Restart activation
   ansible.eda.rulebook_activation:
@@ -288,6 +322,7 @@ id:
   sample: 37
 """
 
+import time
 import traceback
 from typing import Any, Dict, List
 
@@ -415,6 +450,86 @@ def process_event_streams(
     return source_mappings
 
 
+# Parameters that an activation's definition cannot be created or updated without
+DEFINITION_PARAMS = ("project_name", "rulebook_name", "decision_environment_name")
+
+# The API rejects updates and enabling while an activation is in these states
+BUSY_STATUSES = ("starting", "running", "stopping", "unresponsive")
+WAIT_TIMEOUT = 120
+WAIT_INTERVAL = 2
+
+
+def wait_for_activation(controller: Controller, name: str) -> Dict[str, Any]:
+    """Wait until a disabled activation has finished starting or stopping.
+
+    Returns the activation as last read from the API.
+    """
+    start_time = time.time()
+    while True:
+        activation = controller.get_exactly_one("activations", name=name)
+        if not activation:
+            raise EDAError(f"Rulebook activation {name} no longer exists.")
+        if activation["status"] not in BUSY_STATUSES:
+            return activation
+        if time.time() - start_time >= WAIT_TIMEOUT:
+            raise EDAError(
+                f"Timeout waiting for rulebook activation {name} to finish "
+                f"starting or stopping after {WAIT_TIMEOUT} seconds. "
+                f"Last status: {activation['status']}"
+            )
+        time.sleep(WAIT_INTERVAL)
+
+
+def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
+    """Return extra_vars as the YAML/JSON string the API expects."""
+    if isinstance(extra_vars, dict):
+        return str(yaml.safe_dump(extra_vars))
+    if isinstance(extra_vars, str):
+        return extra_vars
+    module.fail_json(
+        msg="Parameter extra_vars must be a dictionary or a string in YAML or JSON format."
+    )
+    return ""  # not reached, fail_json exits
+
+
+def values_are_equal(old: Any, new: Any) -> bool:
+    """Compare parsed values, treating values of different types as different.
+
+    Python considers True == 1 and 1 == 1.0, but these are different values
+    for the variables of an activation.
+    """
+    if isinstance(old, dict) and isinstance(new, dict):
+        return old.keys() == new.keys() and all(
+            values_are_equal(old[key], new[key]) for key in old
+        )
+    if isinstance(old, list) and isinstance(new, list):
+        return len(old) == len(new) and all(
+            values_are_equal(a, b) for a, b in zip(old, new)
+        )
+    if isinstance(old, bool) != isinstance(new, bool):
+        return False
+    if isinstance(old, float) != isinstance(new, float):
+        return False
+    return bool(old == new)
+
+
+def extra_vars_are_equal(old: Any, new: Any) -> bool:
+    """Compare two extra_vars strings by their parsed content.
+
+    The API returns extra_var re-serialized as YAML, so a string comparison
+    reports a difference even when the content is the same. No variables and
+    an empty mapping are the same.
+    """
+    try:
+        old_value = yaml.safe_load(old or "")
+        new_value = yaml.safe_load(new or "")
+    except yaml.YAMLError:
+        return False
+    return values_are_equal(
+        {} if old_value is None else old_value, {} if new_value is None else new_value
+    )
+
+
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
 ) -> Dict[str, Any]:
@@ -507,8 +622,10 @@ def create_params(
     if module.params.get("description"):
         activation_params["description"] = module.params["description"]
 
-    if module.params.get("extra_vars"):
-        activation_params["extra_var"] = module.params["extra_vars"]
+    if module.params.get("extra_vars") is not None:
+        activation_params["extra_var"] = format_extra_vars(
+            module, module.params["extra_vars"]
+        )
 
     if module.params.get("restart_policy"):
         activation_params["restart_policy"] = module.params["restart_policy"]
@@ -547,7 +664,7 @@ def main() -> None:
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
-        extra_vars=dict(type="str"),
+        extra_vars=dict(type="raw"),
         restart=dict(type="bool", default=False),
         restart_policy=dict(
             type="str",
@@ -591,6 +708,7 @@ def main() -> None:
             choices=["present", "absent", "enabled", "disabled"], default="present"
         ),
         restart_on_project_update=dict(type="bool", default=False),
+        wait=dict(type="bool", default=True),
     )
 
     # Define the state the activation is transitioning to, and uses
@@ -637,6 +755,9 @@ def main() -> None:
                 "is present for this version of EDA."
             ),
         )
+    # enabled is deprecated in favor of state, but still honored until removed
+    if state == "present" and module.params.get("enabled") is False:
+        state = module.params["state"] = "disabled"
     # Attempt to find rulebook activation based on the provided name
     activation = {}
     try:
@@ -663,6 +784,71 @@ def main() -> None:
         except EDAError as e:
             module.fail_json(msg=f"Failed to restart rulebook activation: {e}.")
 
+    # An activation can only be created or updated from its full definition
+    definition_params = DEFINITION_PARAMS + (
+        () if is_aap_24 else ("organization_name",)
+    )
+    missing = [param for param in definition_params if not module.params.get(param)]
+    if not activation:
+        if missing:
+            module.fail_json(
+                msg=(
+                    f"Rulebook activation {name} does not exist. To create it, "
+                    f"these parameters are required: {', '.join(missing)}."
+                )
+            )
+
+    # Without the full definition, enabled and disabled only switch an
+    # existing activation on or off. A running activation is not restarted
+    # to apply its definition.
+    has_definition = not missing
+    toggle_only = (
+        bool(activation)
+        and state in ("enabled", "disabled")
+        and (not has_definition or (state == "enabled" and activation["is_enabled"]))
+    )
+    if (
+        toggle_only
+        and not has_definition
+        and any(module.params.get(param) for param in DEFINITION_PARAMS)
+    ):
+        module.warn(
+            f"The activation definition is not applied with state {state}, "
+            f"because these parameters are missing: {', '.join(missing)}."
+        )
+
+    # The API only accepts updates to a disabled activation, so disable an
+    # activation that is meant to be disabled before applying its definition
+    disabled = False
+    if (
+        state == "disabled"
+        and activation
+        and has_definition
+        and activation["is_enabled"]
+    ):
+        try:
+            controller.post_endpoint(endpoint=f"activations/{activation['id']}/disable")
+            if not module.check_mode:
+                activation = controller.get_exactly_one("activations", name=name)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to disable rulebook activation: {e}")
+        disabled = True
+
+    # A disabled activation can only be enabled or updated once it has
+    # finished starting or stopping. Only disabling it needs no wait.
+    if (
+        activation
+        and not activation["is_enabled"]
+        and activation["status"] in BUSY_STATUSES
+        and not (toggle_only and state == "disabled")
+        and module.params.get("wait")
+        and not module.check_mode
+    ):
+        try:
+            activation = wait_for_activation(controller, name)
+        except EDAError as e:
+            module.fail_json(msg=f"Failed to wait for rulebook activation: {e}")
+
     # Parse credential IDs in existing activation
     if activation:
         credential_ids = [
@@ -670,7 +856,7 @@ def main() -> None:
         ]
         activation["eda_credentials"] = credential_ids
 
-    if state and state in ("enabled", "disabled") and activation:
+    if toggle_only:
         change_state = endpoint_state(activation=activation, state=state)
 
         if change_state:
@@ -694,6 +880,17 @@ def main() -> None:
         else (controller.get_item_name(activation) if activation else name)
     )
 
+    # Keep the API's formatting of extra_var when the content is the same, so
+    # that formatting differences alone do not trigger an update
+    if (
+        activation
+        and "extra_var" in activation_params
+        and extra_vars_are_equal(
+            activation.get("extra_var"), activation_params["extra_var"]
+        )
+    ):
+        activation_params["extra_var"] = activation["extra_var"]
+
     # If the state was one of (present, enabled or disabled), and we can let the module
     # build or update the existing activation, this will return on its own
     try:
@@ -703,6 +900,7 @@ def main() -> None:
             endpoint="activations",
             item_type="activation",
         )
+        result["changed"] = result.get("changed", False) or disabled
         module.exit_json(**result)
     except EDAError as e:
         module.fail_json(msg=f"Failed to create/update rulebook activation: {e}")
