@@ -36,14 +36,14 @@ options:
   project_name:
     description:
       - The name of the project associated with the rulebook activation.
-      - Required when state is present.
+      - Required to create or update an activation.
     type: str
     aliases:
       - project
   rulebook_name:
     description:
       - The name of the rulebook associated with the rulebook activation.
-      - Required when state is present.
+      - Required to create or update an activation.
     type: str
     aliases:
       - rulebook
@@ -78,7 +78,7 @@ options:
   decision_environment_name:
     description:
       - The name of the decision environment associated with the rulebook activation.
-      - Required when state is present.
+      - Required to create or update an activation.
     type: str
     aliases:
       - decision_environment
@@ -91,7 +91,8 @@ options:
       - token
   organization_name:
     description:
-      - The name of the organization. Required when state is present.
+      - The name of the organization.
+      - Required to create or update an activation on AAP 2.5 and later.
       - This parameter is supported in AAP 2.5 and onwards.
         If specified for AAP 2.4, value will be ignored.
     type: str
@@ -717,6 +718,27 @@ def main() -> None:
             module.exit_json(**result)
         except EDAError as e:
             module.fail_json(msg=f"Failed to restart rulebook activation: {e}.")
+
+    # An activation can only be created from its full definition
+    if not activation:
+        missing = [
+            param
+            for param in (
+                "project_name",
+                "rulebook_name",
+                "decision_environment_name",
+            )
+            if not module.params.get(param)
+        ]
+        if not is_aap_24 and organization_name is None:
+            missing.append("organization_name")
+        if missing:
+            module.fail_json(
+                msg=(
+                    f"Rulebook activation {name} does not exist. To create it, "
+                    f"these parameters are required: {', '.join(missing)}."
+                )
+            )
 
     # Parse credential IDs in existing activation
     if activation:

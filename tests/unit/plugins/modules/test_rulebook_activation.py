@@ -7,15 +7,19 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from typing import Any
-from unittest.mock import MagicMock, patch
+from typing import Any, Optional
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import yaml
+from ansible_collections.ansible.eda.plugins.module_utils.errors import (  # type: ignore
+    EDAHTTPError,
+)
 from ansible_collections.ansible.eda.plugins.modules.rulebook_activation import (  # type: ignore
     create_params,
     extra_vars_are_equal,
     format_extra_vars,
+    main,
 )
 
 MODULE_PATH = "ansible_collections.ansible.eda.plugins.modules.rulebook_activation"
@@ -116,3 +120,213 @@ def test_create_params_sends_given_extra_vars(extra_vars: Any, extra_var: str) -
 
 def test_create_params_leaves_omitted_extra_vars_out() -> None:
     assert "extra_var" not in _activation_params(None)
+
+
+# ---------------------------------------------------------------------------
+# main() against a fake EDA API
+# ---------------------------------------------------------------------------
+ACTIVATION_ID = 10
+
+LOOKUPS = {
+    "projects": {"id": 1, "name": "project"},
+    "rulebooks": {"id": 2, "name": "rulebook.yml"},
+    "decision-environments": {"id": 3, "name": "de"},
+    "organizations": {"id": 4, "name": "Default"},
+}
+
+DEFINITION: dict[str, Any] = {
+    "project_name": "project",
+    "rulebook_name": "rulebook.yml",
+    "decision_environment_name": "de",
+    "organization_name": "Default",
+}
+
+
+class FakeEDA:
+    """Stand-in for the EDA API activation endpoints.
+
+    Follows the eda-server rules the module relies on: an activation can only
+    be updated while it is disabled and not starting, running or stopping, and
+    a PATCH with is_enabled true updates the activation and then starts it.
+    Disabling a running activation leaves it stopping until it has been read
+    stop_after more times.
+    """
+
+    BUSY = ("starting", "running", "stopping", "unresponsive")
+
+    def __init__(
+        self, activation: Optional[dict[str, Any]] = None, stop_after: int = 0
+    ) -> None:
+        self.activation = activation
+        self.stop_after = stop_after
+        self.requests: list[tuple[str, str]] = []
+
+    @staticmethod
+    def running(**fields: Any) -> dict[str, Any]:
+        activation = {
+            "id": ACTIVATION_ID,
+            "name": "activation",
+            "description": "",
+            "is_enabled": True,
+            "status": "running",
+            "rulebook_id": 2,
+            "decision_environment_id": 3,
+            "organization_id": 4,
+            "eda_credentials": [],
+            "extra_var": "",
+            "restart_policy": "on-failure",
+            "log_level": "error",
+            "enable_persistence": False,
+            "restart_on_project_update": False,
+        }
+        activation.update(fields)
+        return activation
+
+    @staticmethod
+    def stopped(**fields: Any) -> dict[str, Any]:
+        return FakeEDA.running(**{"is_enabled": False, "status": "stopped", **fields})
+
+    def _read(self) -> dict[str, Any]:
+        assert self.activation is not None
+        if self.activation["status"] == "stopping":
+            if self.stop_after > 0:
+                self.stop_after -= 1
+            else:
+                self.activation["status"] = "stopped"
+        return dict(self.activation, eda_credentials=[])
+
+    def _start(self) -> None:
+        assert self.activation is not None
+        self.activation["is_enabled"] = True
+        self.activation["status"] = "running"
+
+    def get(self, path: str, **kwargs: Any) -> Mock:
+        self.requests.append(("GET", path))
+        if path == "config":
+            return Mock(status=200, json={})
+        if path == f"activations/{ACTIVATION_ID}":
+            return Mock(status=200, json=self._read())
+        name = kwargs.get("data", {}).get("name")
+        if path == "activations":
+            item = self._read() if self.activation else None
+        else:
+            item = LOOKUPS.get(path)
+        found = [item] if item and item["name"] == name else []
+        return Mock(status=200, json={"count": len(found), "results": found})
+
+    def post(self, path: str, **kwargs: Any) -> Mock:
+        self.requests.append(("POST", path))
+        if path == "activations":
+            data = dict(kwargs["data"])
+            is_enabled = data.pop("is_enabled")
+            self.activation = self.stopped(id=ACTIVATION_ID, **data)
+            if is_enabled:
+                self._start()
+            return Mock(status=201, json=self._read())
+        assert self.activation is not None
+        if path.endswith("/disable"):
+            if self.activation["is_enabled"]:
+                self.activation["is_enabled"] = False
+                self.activation["status"] = "stopping"
+            return Mock(status=204, json=None)
+        if path.endswith("/enable"):
+            if not self.activation["is_enabled"]:
+                if self.activation["status"] in self.BUSY:
+                    raise EDAHTTPError("HTTP error Activation not enabled")
+                self._start()
+            return Mock(status=204, json=None)
+        raise AssertionError(f"Unexpected POST {path}")
+
+    def patch(self, path: str, **kwargs: Any) -> Mock:
+        self.requests.append(("PATCH", path))
+        assert self.activation is not None
+        if self.activation["is_enabled"] or self.activation["status"] in self.BUSY:
+            raise EDAHTTPError(
+                "HTTP error Activation is not in disabled mode and in stopped status"
+            )
+        data = dict(kwargs["data"])
+        is_enabled = data.pop("is_enabled", False)
+        self.activation.update(data)
+        if is_enabled:
+            self._start()
+        return Mock(status=200, json=self._read())
+
+
+def _run(eda: FakeEDA, check_mode: bool = False, **params: Any) -> MagicMock:
+    """Run main() with the given parameters against eda; return the module mock."""
+    module = MagicMock()
+    module.params = {
+        "controller_host": "https://eda.example.com",
+        "controller_username": "admin",
+        "controller_password": "password",
+        "controller_token": None,
+        "request_timeout": 10.0,
+        "validate_certs": True,
+        "name": "activation",
+        "new_name": None,
+        "description": None,
+        "project_name": None,
+        "rulebook_name": None,
+        "extra_vars": None,
+        "restart": False,
+        "restart_policy": "on-failure",
+        "enabled": True,
+        "decision_environment_name": None,
+        "awx_token_name": None,
+        "organization_name": None,
+        "eda_credentials": None,
+        "k8s_service_name": None,
+        "event_streams": None,
+        "swap_single_source": True,
+        "log_level": "error",
+        "enable_persistence": False,
+        "rule_engine_credential_id": None,
+        "state": "present",
+        "restart_on_project_update": False,
+        **params,
+    }
+    module.check_mode = check_mode
+    module.exit_json.side_effect = _AnsibleExit
+    module.fail_json.side_effect = _AnsibleExit
+
+    with (
+        patch(f"{MODULE_PATH}.AnsibleModule", return_value=module),
+        patch(f"{MODULE_PATH}.Client", return_value=eda),
+        pytest.raises(_AnsibleExit),
+    ):
+        main()
+    return module
+
+
+def _exit(module: MagicMock) -> dict[str, Any]:
+    module.fail_json.assert_not_called()
+    return dict(module.exit_json.call_args.kwargs)
+
+
+def _failure(module: MagicMock) -> str:
+    module.exit_json.assert_not_called()
+    return str(module.fail_json.call_args.kwargs["msg"])
+
+
+@pytest.mark.parametrize("state", ["enabled", "disabled"])
+def test_missing_activation_without_definition_fails_clearly(state: str) -> None:
+    eda = FakeEDA()
+
+    msg = _failure(_run(eda, state=state, organization_name="Default"))
+
+    assert "activation does not exist" in msg
+    assert "project_name, rulebook_name, decision_environment_name" in msg
+    assert eda.activation is None
+
+
+@pytest.mark.parametrize("state, is_enabled", [("enabled", True), ("disabled", False)])
+def test_missing_activation_is_created_in_desired_state(
+    state: str, is_enabled: bool
+) -> None:
+    eda = FakeEDA()
+
+    result = _exit(_run(eda, state=state, **DEFINITION))
+
+    assert result["changed"]
+    assert eda.activation is not None
+    assert eda.activation["is_enabled"] is is_enabled
