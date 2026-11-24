@@ -50,7 +50,10 @@ options:
   extra_vars:
     description:
       - The extra variables for the rulebook activation.
-    type: str
+      - Either a dictionary or a string in YAML or JSON format.
+      - A dictionary is converted to YAML before it is sent to the API.
+      - An empty dictionary or string removes all variables.
+    type: raw
   restart:
     description:
       - Performs a restart of the activation. This is a non idempotent operation.
@@ -415,6 +418,56 @@ def process_event_streams(
     return source_mappings
 
 
+def format_extra_vars(module: AnsibleModule, extra_vars: Any) -> str:
+    """Return extra_vars as the YAML/JSON string the API expects."""
+    if isinstance(extra_vars, dict):
+        return str(yaml.safe_dump(extra_vars))
+    if isinstance(extra_vars, str):
+        return extra_vars
+    module.fail_json(
+        msg="Parameter extra_vars must be a dictionary or a string in YAML or JSON format."
+    )
+    return ""  # not reached, fail_json exits
+
+
+def values_are_equal(old: Any, new: Any) -> bool:
+    """Compare parsed values, treating values of different types as different.
+
+    Python considers True == 1 and 1 == 1.0, but these are different values
+    for the variables of an activation.
+    """
+    if isinstance(old, dict) and isinstance(new, dict):
+        return old.keys() == new.keys() and all(
+            values_are_equal(old[key], new[key]) for key in old
+        )
+    if isinstance(old, list) and isinstance(new, list):
+        return len(old) == len(new) and all(
+            values_are_equal(a, b) for a, b in zip(old, new)
+        )
+    if isinstance(old, bool) != isinstance(new, bool):
+        return False
+    if isinstance(old, float) != isinstance(new, float):
+        return False
+    return bool(old == new)
+
+
+def extra_vars_are_equal(old: Any, new: Any) -> bool:
+    """Compare two extra_vars strings by their parsed content.
+
+    The API returns extra_var re-serialized as YAML, so a string comparison
+    reports a difference even when the content is the same. No variables and
+    an empty mapping are the same.
+    """
+    try:
+        old_value = yaml.safe_load(old or "")
+        new_value = yaml.safe_load(new or "")
+    except yaml.YAMLError:
+        return False
+    return values_are_equal(
+        {} if old_value is None else old_value, {} if new_value is None else new_value
+    )
+
+
 def create_params(
     module: AnsibleModule, controller: Controller, is_aap_24: bool
 ) -> Dict[str, Any]:
@@ -507,8 +560,10 @@ def create_params(
     if module.params.get("description"):
         activation_params["description"] = module.params["description"]
 
-    if module.params.get("extra_vars"):
-        activation_params["extra_var"] = module.params["extra_vars"]
+    if module.params.get("extra_vars") is not None:
+        activation_params["extra_var"] = format_extra_vars(
+            module, module.params["extra_vars"]
+        )
 
     if module.params.get("restart_policy"):
         activation_params["restart_policy"] = module.params["restart_policy"]
@@ -547,7 +602,7 @@ def main() -> None:
         description=dict(type="str"),
         project_name=dict(type="str", aliases=["project"]),
         rulebook_name=dict(type="str", aliases=["rulebook"]),
-        extra_vars=dict(type="str"),
+        extra_vars=dict(type="raw"),
         restart=dict(type="bool", default=False),
         restart_policy=dict(
             type="str",
@@ -693,6 +748,17 @@ def main() -> None:
         if new_name
         else (controller.get_item_name(activation) if activation else name)
     )
+
+    # Keep the API's formatting of extra_var when the content is the same, so
+    # that formatting differences alone do not trigger an update
+    if (
+        activation
+        and "extra_var" in activation_params
+        and extra_vars_are_equal(
+            activation.get("extra_var"), activation_params["extra_var"]
+        )
+    ):
+        activation_params["extra_var"] = activation["extra_var"]
 
     # If the state was one of (present, enabled or disabled), and we can let the module
     # build or update the existing activation, this will return on its own
